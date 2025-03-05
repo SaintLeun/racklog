@@ -7,79 +7,11 @@
         </a>
       </div>
       <div class="flex-grow flex flex-wrap md:pl-20 -mb-10 md:mt-0 mt-10 md:text-left text-center">
-        <div class="lg:w-1/4 md:w-1/2 w-full px-4">
+        <div v-for="(productChunk, index) in productChunks" :key="index" class="lg:w-1/4 md:w-1/2 w-full px-4">
           <h2 class="title-font font-medium text-gray-900 tracking-widest text-sm mb-3">PRODUCTOS</h2>
           <nav class="list-none mb-10">
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Estantería Angulo Ranurado</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Rack Selectivo</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Rack PushBack</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Rack DriveIn</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Rack Autoportante</a>
-            </li>
-          </nav>
-        </div>
-
-        <div class="lg:w-1/4 md:w-1/2 w-full px-4">
-          <nav class="list-none mb-10 mt-8">
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Entreplantas</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Altillo Ánuglo Ranurado</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Base Movil</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Pallet Shuttle</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Rack Dinámico</a>
-            </li>
-          </nav>
-        </div>
-
-        <div class="lg:w-1/4 md:w-1/2 w-full px-4">
-          <h2 class="title-font font-medium text-gray-900 tracking-widest text-sm mb-3">MENU</h2>
-          <nav class="list-none mb-10">
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">First Link</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Second Link</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Third Link</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Fourth Link</a>
-            </li>
-          </nav>
-        </div>
-        
-        <div class="lg:w-1/4 md:w-1/2 w-full px-4">
-          <h2 class="title-font font-medium text-gray-900 tracking-widest text-sm mb-3">CONTACTO</h2>
-          <nav class="list-none mb-10">
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">First Link</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Second Link</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Third Link</a>
-            </li>
-            <li>
-              <a class="text-gray-600 hover:text-gray-800">Fourth Link</a>
+            <li v-for="product in productChunk" :key="product.name">
+              <a :href="product.url" class="text-gray-600 hover:text-gray-800">{{ product.name }}</a>
             </li>
           </nav>
         </div>
@@ -118,10 +50,22 @@
   </footer>
 </template>
 
-<script>
-export default {
-  name: 'Footer'
-}
+<script lang="ts" setup>
+import { computed } from 'vue';
+import { useProductStore } from '../stores/productStore';
+
+const productStore = useProductStore();
+const products = computed(() => productStore.products);
+
+const chunkArray = (array: any[], size: number) => {
+  const result = [];
+  for (let i = 0; i < array.length; i += size) {
+    result.push(array.slice(i, i + size));
+  }
+  return result;
+};
+
+const productChunks = computed(() => chunkArray(products.value, 5));
 </script>
 
 <style scoped>

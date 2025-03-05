@@ -1,20 +1,15 @@
 import { defineStore } from 'pinia';
-import productsData from '../locales/es/products.json';
+import productsData from '../locales/es-ES.json';
 
 interface Product {
   name: string;
   description: string;
-  image?: string;
+  image: string;
   url: string;
 }
 
 export const useProductStore = defineStore('productStore', {
   state: () => ({
-    products: productsData.products.map((product: Product) => ({
-      name: product.name,
-      description: product.description,
-      image: product.image || '/assets/images/default-image.png', // Default image if not provided
-      url: product.url,
-    })),
+    products: productsData.products as Record<string, Product>,
   }),
 });

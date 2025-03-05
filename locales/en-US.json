@@ -1,0 +1,48 @@
+{
+  "moreProducts": "More Products",
+  "otherSolutions": "Other Solutions",
+  "products": {
+    "rackSelectivo": {
+      "name": "Rack Selectivo",
+      "description": "Direct access, high turnover, and versatile shelving system. Optimal organization for an efficient warehouse.",
+      "image": "/assets/images/rack-selectivo-card.png",
+      "url": "/products/rack-selectivo"
+    },
+    "anguloRanurado": {
+      "name": "Ángulo Ranurado",
+      "description": "Lightweight storage, metal trays, easy assembly, supports up to 250kg and great versatility.",
+      "image": "/assets/images/angulo-ranurado-card.png",
+      "url": "/products/angulo-ranurado"
+    },
+    "rackPushback": {
+      "name": "Rack Pushback",
+      "description": "LIFO depth storage, optimizes space. Direct pallet access, custom-made, variable load and height.",
+      "image": "/assets/images/rack-pushback-card.png",
+      "url": "/products/rack-pushback"
+    },
+    "rackDriveIn": {
+      "name": "Rack Drive In",
+      "description": "High-density storage, large pallet volume. Ideal for low turnover. Optimizes warehouse space and stability.",
+      "image": "/assets/images/rack-dinamico-card.png",
+      "url": "/products/rack-dinamico"
+    },
+    "rackDinamico": {
+      "name": "Rack Dinámico",
+      "description": "FIFO gravity storage, rear access and front exit. Optimizes rotation, no forklift entry.",
+      "image": "/assets/images/rack-dinamico-card.png",
+      "url": "/products/rack-dinamico"
+    },
+    "rackAutoportante": {
+      "name": "Rack Autoportante",
+      "description": "Warehouse structure, maximum space. Building integration, high efficiency. Advanced and secure storage.",
+      "image": "/assets/images/rack-cantilever-card.png",
+      "url": "/products/rack-cantilever"
+    },
+    "miniRack": {
+      "name": "Mini Rack",
+      "description": "Manual and pallet storage. Efficient picking, medium load. Direct access, balanced capacity.",
+      "image": "/assets/images/rack-cantilever-card.png",
+      "url": "/products/rack-cantilever"
+    }
+  }
+}

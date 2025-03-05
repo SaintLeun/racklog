@@ -10,7 +10,6 @@ export default defineNuxtConfig({
     ],
   },
   plugins: [
-    '~/plugins/i18n.ts',
     '~/plugins/pinia.ts',
-  ]
+  ],
 });

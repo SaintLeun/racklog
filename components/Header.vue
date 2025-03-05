@@ -1,7 +1,9 @@
 <template>
   <header>
     <div class="container mx-auto flex justify-between p-3">
-      <img src="https://qa.racklog.cl/images/logorack.png" alt="racklog" class="w-70 h-auto" />
+      <a href="/">
+        <img src="https://qa.racklog.cl/images/logorack.png" alt="racklog" class="w-70 h-auto" />
+      </a>
       <div class="phone">
         <a href="tel:+56912345678" class="text-orange-500">+56 9 1234 5678</a>
       </div>

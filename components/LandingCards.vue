@@ -1,8 +1,7 @@
 <template>
   <div class="container mx-auto py-3">
     <section class="grid md:grid-cols-2 gap-6 max-md:max-w-xs mx-auto">
-      <!-- Card -->
-      <section v-for="product in products" :key="product.name" class="text-gray-600 body-font overflow-hidden">
+      <section v-for="(product, key) in filteredProducts" :key="key" class="text-gray-600 body-font overflow-hidden">
         <div class="container px-5 py-24 mx-auto">
           <div class="lg:w-full mx-auto flex flex-wrap">
             <img alt="ecommerce" class="lg:w-1/2 w-full lg:h-auto h-64 object-cover object-center rounded" :src="product.image" />
@@ -19,38 +18,31 @@
         </div>
       </section>
     </section>
-    <!-- Dummy element to include all possible classes -->
     <div class="hidden">
       <div class="bg-orange-400 hover:bg-orange-500 bg-indigo-400 hover:bg-indigo-500"></div>
     </div>
-    <!-- Modal -->
     <Modal :isVisible="isModalVisible" :title="modalTitle" @close="closeModal">
     </Modal>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { useProductStore } from '@/stores/productStore';
 import Modal from './ContactModal.vue';
 
-const products = [
-  {
-    name: 'Rack Selectivo',
-    headline: 'Almacenamiento Industrial',
-    description: 'Solucíon para almacenaje de pallets de alta carga, adaptable para selección manual (picking). Utilizado principalmente en bodegas para almacenar de manera selectiva una alta variedad de productos.',
-    image: 'https://qa.racklog.cl/images/productos/RS/detalles/500x500/rack_selectivo.jpg',
-    path: 'https://qa.racklog.cl/productos/rack-selectivo',
-    buttonColor: 'bg-orange'
-  },
-  {
-    name: 'Angulo Ranurado',
-    headline: 'Optimización de Espacios',
-    description: 'anguloRanuradoDescription',
-    image: 'https://qa.racklog.cl/images/anra_body.png',
-    path: 'https://qa.racklog.cl/productos/rack-selectivo',
-    buttonColor: 'bg-indigo'
-  },
-]
+const productStore = useProductStore();
+
+const filteredProducts = computed(() => {
+  return Object.values(productStore.products)
+    .filter(product => product.name === 'Rack Selectivo' || product.name === 'Ángulo Ranurado')
+    .map(product => ({
+      ...product,
+      image: product.name === 'Rack Selectivo' ? 'assets/images/rack_selectivo.jpg' : 'assets/images/anra_body.png',
+      headline: product.name === 'Rack Selectivo' ? 'Almacenamiento Industrial' : 'Optimización de Espacios',
+      buttonColor: product.name === 'Rack Selectivo' ? 'bg-orange' : 'bg-indigo'
+    }));
+});
 
 const isModalVisible = ref(false);
 const modalTitle = ref('');
