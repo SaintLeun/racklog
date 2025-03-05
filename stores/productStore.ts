@@ -22,8 +22,8 @@ export const useProductStore = defineStore('productStore', {
         image: '/assets/images/rack-selectivo-card.png',
       },
       { 
-        name: 'rackSelectivo',
-        description: 'descriptionRackSelectivo',
+        name: 'rackDriveIn',
+        description: 'descriptionRackDriveIn',
         path: 'Slide 1',
         image: '/assets/images/rack-selectivo-card.png',
       },

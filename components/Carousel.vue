@@ -1,10 +1,16 @@
 <template>
   <div class="carousel relative h-150">
     <div class="carousel-inner relative overflow-hidden w-full h-full">
-      <div v-for="(slide, index) in slides" :key="index" class="carousel-item absolute w-full h-full transition-opacity duration-500" :class="{ 'opacity-0': currentSlide !== index, 'opacity-100': currentSlide === index }" :style="{ backgroundColor: slide.backgroundColor }">
-        <img :src="slide.image" :alt="slide.alt" class="w-full h-full object-cover">
-        <div class="overlay-image absolute inset-0 flex items-center justify-center transition-transform duration-500" :class="{ 'translate-x-full': currentSlide !== index, 'translate-x-0': currentSlide === index }">
-          <img :src="slide.overlay" :alt="slide.alt" class="w-1/2 h-auto object-contain">
+      <div v-for="(slide, index) in slides" :key="index" class="carousel-item absolute w-full h-full duration-500" :class="{ 'opacity-100': currentSlide === index, 'opacity-0': currentSlide !== index }">
+        <div class="flex h-full">
+          <img :src="slide.image" :alt="slide.alt" class="w-full h-full object-cover">
+          <div class="overlay-image absolute inset-0 flex items-center justify-center transition-transform duration-500" :class="{ 'translate-x-full': currentSlide !== index, 'translate-x-0': currentSlide === index }">
+            <img :src="slide.overlay" :alt="slide.alt" class="object-contain">
+            <div class="text-card p-4 bg-white rounded shadow-lg">
+              <h2 class="text-2xl font-bold mb-4">{{ slide.title }}</h2>
+              <p class="text-base">{{ slide.description }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -20,9 +26,9 @@ export default {
     return {
       currentSlide: 0,
       slides: [
-        { image: 'https://placehold.co/1440x900/orange/white', overlay: 'https://placehold.co/400x300', alt: 'Slide 1', backgroundColor: 'red' },
-        { image: 'https://placehold.co/1440x900/pink/white', overlay: 'https://placehold.co/400x300', alt: 'Slide 2', backgroundColor: 'green' },
-        { image: 'https://placehold.co/1440x900/lightblue/white', overlay: 'https://placehold.co/400x300', alt: 'Slide 3', backgroundColor: 'blue' },
+        { image: '/assets/images/slide-1.png', overlay: 'https://qa.racklog.cl/images/slider/silder_1/palletslider1.png', alt: 'Slide 1', title: 'Slide 1 Title', description: 'Description for Slide 1' },
+        { image: '/assets/images/slide-2.png', overlay: 'https://qa.racklog.cl/images/slider/silder_1/palletslider1.png', alt: 'Slide 2', title: 'Slide 2 Title', description: 'Description for Slide 2' },
+        { image: '/assets/images/slide-3.png', overlay: 'https://qa.racklog.cl/images/slider/silder_1/palletslider1.png', alt: 'Slide 3', title: 'Slide 3 Title', description: 'Description for Slide 3' },
       ],
     };
   },
@@ -34,20 +40,18 @@ export default {
       this.currentSlide = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
     },
   },
+  mounted() {
+    this.currentSlide = 0;
+  }
 };
 </script>
 
 <style scoped>
-.carousel-item {
-  opacity: 0;
-}
-.carousel-item.opacity-100 {
-  opacity: 1;
-}
-.overlay-image {
-  transform: translateX(100%);
-}
-.overlay-image.translate-x-0 {
-  transform: translateX(0);
-}
+
+  .carousel-inner img {
+    object-position: bottom;
+  }
+  .text-card {
+    max-height: 80%;
+  }
 </style>

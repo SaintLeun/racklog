@@ -53,7 +53,7 @@
 </template>
 
 <script lang="ts" setup>
-import { defineProps, defineEmits, watch, ref } from 'vue';
+import { watch, ref } from 'vue';
 
 const props = defineProps({
   isVisible: Boolean,

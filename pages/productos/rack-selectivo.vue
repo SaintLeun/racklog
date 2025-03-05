@@ -1,74 +1,148 @@
 <template>
-  <Header />
-  <Carousel />
-  <div>
-    <section class="text-gray-600 body-font overflow-hidden">
-      <div class="container px-5 py-24 mx-auto">
-        <div class="lg:w-4/5 mx-auto flex flex-wrap">
-          <img alt="ecommerce" class="lg:w-1/2 w-full lg:h-auto h-64 object-cover object-center rounded" src="https://dummyimage.com/400x400">
-          <div class="lg:w-1/2 w-full lg:pl-10 lg:py-6 mt-6 lg:mt-0">
-            <h2 class="text-sm title-font text-gray-500 tracking-widest">BRAND NAME</h2>
-            <h1 class="text-gray-900 text-3xl title-font font-medium mb-1">The Catcher in the Rye</h1>
-            
-            <p class="leading-relaxed">Fam locavore kickstarter distillery. Mixtape chillwave tumeric sriracha taximy chia microdosing tilde DIY. XOXO fam indxgo juiceramps cornhole raw denim forage brooklyn. Everyday carry +1 seitan poutine tumeric. Gastropub blue bottle austin listicle pour-over, neutra jean shorts keytar banjo tattooed umami cardigan.</p>
+  <section class="text-gray-600 body-font overflow-hidden">
+    <div class="container p-5 mx-auto">
+      <Breadcrumbs :breadcrumbs="[{label: 'Rack Selectivo'}]" />
+    </div>
+  </section>
+  <section class="text-gray-600 body-font overflow-hidden">
+    <div class="container px-5 py-10 mx-auto">
+      <div class="lg:w-4/5 mx-auto flex flex-wrap">
+        <div class="lg:w-1/2 w-full lg:h-auto h-64 object-cover object-center rounded">
+          <iframe 
+            title="Modelo_RS_Ejemplo" 
+            class="w-full h-full"
+            frameborder="0" 
+            allowfullscreen 
+            mozallowfullscreen="true" 
+            webkitallowfullscreen="true" 
+            allow="autoplay; fullscreen; xr-spatial-tracking" 
+            xr-spatial-tracking 
+            execution-while-out-of-viewport 
+            execution-while-not-rendered 
+            web-share src="https://sketchfab.com/models/1d90e83ff7704eaa9d7b0cc5f0f6a804/embed">
+          </iframe>
+        </div>
+        <div class="lg:w-1/2 w-full lg:pl-10 lg:py-6 mt-6 lg:mt-0">
+          <h2 class="text-sm title-font text-gray-500 tracking-widest">TIPO DE CARGA: PALLETIZADA</h2>
+          <h1 class="text-gray-900 text-3xl title-font font-medium mb-1">RACK SELECTIVO</h1>
+          
+          <p class="leading-relaxed text-justify pt-3">Las estanterías Rack Selectivo es un producto que permite el almacenamiento de cargas paletizadas mediante grúa horquilla permitiendo el acceso directo a cada unidad de carga. 
+            Es uno de los productos más utilizados en el mercado logístico por su versatilidad, rápida construcción y equilibrio entre precio-calidad. 
+            Sus principales componentes son bastidores (marcos arriostrados) dispuestos de forma vertical y niveles de carga conformados por vigas horizontales.
+          </p>
+          <h3 class="text-2xl text-black py-3">Ventajas del Rack Selectivo</h3>
+          <ul class="list-disc pl-10">
+            <li><b>Acceso directo:</b> Cada paleta accesible, optimizando la gestión de inventario.</li>
+            <li><b>Alta selectividad:</b> Permite almacenar diversidad de productos con fácil localización.</li>
+            <li><b>Adaptabilidad:</b> Configuración flexible a distintos tipos y tamaños de carga.</li>
+            <li><b>Eficiencia operativa:</b> Reduce tiempos de carga y descarga, mejorando la productividad.</li>
+            <li><b>Óptimo uso del espacio:</b> Maximiza el almacenamiento vertical en cualquier almacén.</li>
+          </ul>
+          <div class="mt-10">
+            <button class="flex w-full bg-orange-400 hover:bg-orange-500 text-white border-0 py-2 px-6 focus:outline-none rounded mt-2 transition-colors">Arma tu Ángulo Ranurado </button>
+            <button class="flex w-full bg-orange-400 hover:bg-orange-500 text-white border-0 py-2 px-6 focus:outline-none rounded mt-2 transition-colors">Solicitar Cotización</button>
           </div>
         </div>
       </div>
-    </section>
-    <section>
-      <section class="text-gray-600 body-font">
-        <div class="container px-5 py-24 mx-auto">
-          <div class="flex flex-col">
-            <div class="h-1 bg-gray-200 rounded overflow-hidden">
-              <div class="w-24 h-full bg-indigo-500"></div>
+    </div>
+  </section>
+  <section class="text-gray-600 body-font">
+    <div class="container px-5 py-24 mx-auto">
+      <div class="flex flex-col">
+        <div class="h-1 bg-gray-200 rounded overflow-hidden">
+          <div class="w-24 h-full bg-yellow-500"></div>
+        </div>
+        <div class="flex flex-wrap sm:flex-row flex-col py-6 mb-12">
+          <h1 class="sm:w-2/5 text-gray-900 font-medium title-font text-2xl mb-2 sm:mb-0">Especificaciones Técnicas
+          </h1>
+          <p class="sm:w-3/5 leading-relaxed text-base sm:pl-10 pl-0">Estanterías industriales robustas: la solución definitiva en acero de alta resistencia para cargas pesadas. Vigas y bastidores diseñados para una durabilidad y capacidad de carga excepcionales.</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap -m-4">
+        <div class="xl:w-1/3 md:w-1/2 p-4">
+          <div class="border border-gray-200 p-6 rounded-lg flex flex-col h-full">
+            <div class="p-3 rounded-lg">
+              <img class="h-40 rounded w-50 mx-auto object-cover object-center mb-6"
+                src="https://qa.racklog.cl/images/productos/RS/especificaciones/150x150/vigas.png" alt="content">
             </div>
-            <div class="flex flex-wrap sm:flex-row flex-col py-6 mb-12">
-              <h1 class="sm:w-2/5 text-gray-900 font-medium title-font text-2xl mb-2 sm:mb-0">Space The Final Frontier</h1>
-              <p class="sm:w-3/5 leading-relaxed text-base sm:pl-10 pl-0">Street art subway tile salvia four dollar toast bitters selfies quinoa yuccie synth meditation iPhone intelligentsia prism tofu. Viral gochujang bitters dreamcatcher.</p>
-            </div>
-          </div>
-          <div class="flex flex-wrap sm:-m-4 -mx-4 -mb-10 -mt-4">
-            <div class="p-4 md:w-1/3 sm:mb-0 mb-6">
-              <div class="rounded-lg h-64 overflow-hidden">
-                <img alt="content" class="object-cover object-center h-full w-full" src="https://dummyimage.com/1203x503">
-              </div>
-              <h2 class="text-xl font-medium title-font text-gray-900 mt-5">Shooting Stars</h2>
-              <p class="text-base leading-relaxed mt-2">Swag shoivdigoitch literally meditation subway tile tumblr cold-pressed. Gastropub street art beard dreamcatcher neutra, ethical XOXO lumbersexual.</p>
-              <a class="text-indigo-500 inline-flex items-center mt-3">Learn More
-                <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-4 h-4 ml-2" viewBox="0 0 24 24">
-                  <path d="M5 12h14M12 5l7 7-7 7"></path>
-                </svg>
-              </a>
-            </div>
-            <div class="p-4 md:w-1/3 sm:mb-0 mb-6">
-              <div class="rounded-lg h-64 overflow-hidden">
-                <img alt="content" class="object-cover object-center h-full w-full" src="https://dummyimage.com/1204x504">
-              </div>
-              <h2 class="text-xl font-medium title-font text-gray-900 mt-5">The Catalyzer</h2>
-              <p class="text-base leading-relaxed mt-2">Swag shoivdigoitch literally meditation subway tile tumblr cold-pressed. Gastropub street art beard dreamcatcher neutra, ethical XOXO lumbersexual.</p>
-              <a class="text-indigo-500 inline-flex items-center mt-3">Learn More
-                <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-4 h-4 ml-2" viewBox="0 0 24 24">
-                  <path d="M5 12h14M12 5l7 7-7 7"></path>
-                </svg>
-              </a>
-            </div>
-            <div class="p-4 md:w-1/3 sm:mb-0 mb-6">
-              <div class="rounded-lg h-64 overflow-hidden">
-                <img alt="content" class="object-cover object-center h-full w-full" src="https://dummyimage.com/1205x505">
-              </div>
-              <h2 class="text-xl font-medium title-font text-gray-900 mt-5">The 400 Blows</h2>
-              <p class="text-base leading-relaxed mt-2">Swag shoivdigoitch literally meditation subway tile tumblr cold-pressed. Gastropub street art beard dreamcatcher neutra, ethical XOXO lumbersexual.</p>
-              <a class="text-indigo-500 inline-flex items-center mt-3">Learn More
-                <svg fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="w-4 h-4 ml-2" viewBox="0 0 24 24">
-                  <path d="M5 12h14M12 5l7 7-7 7"></path>
-                </svg>
-              </a>
-            </div>
+            <h2 class="text-lg text-gray-900 font-medium title-font mb-2">Vigas</h2>
+            <p class="leading-relaxed text-base text-justify flex-grow">
+              Todos nuestras vigas son apernadas y fabricadas en <b>Acero ASTM A36</b> de 1,2 mts a 3,5 mts de largo, en diferentes altos y espesores dependiendo del peso de la Carga.
+            </p>
+            <ul class="list-disc pl-10 pt-5">
+                <li>VC7050: Viga 70 mm x 50 mm</li>
+                <li>VC10050: Viga 100 mm x 50 mm</li>
+                <li>VC712550: Viga 125 mm x 50 mm</li>
+                <li>VC715050: Viga 150 mm x 50 mm</li>
+              </ul>
           </div>
         </div>
-      </section>
-    </section>
-  </div>
+        <div class="xl:w-1/3 md:w-1/2 p-4">
+          <div class="border border-gray-200 p-6 rounded-lg flex flex-col h-full">
+            <div class="p-3 rounded-lg">
+              <img class="h-40 rounded w-50 mx-auto object-cover object-center mb-6"
+                src="https://qa.racklog.cl/images/productos/RS/especificaciones/150x150/anclaje.png" alt="content">
+            </div>
+            <h2 class="text-lg text-gray-900 font-medium title-font mb-2">Bastidores</h2>
+            <p class="leading-relaxed text-base text-justify flex-grow">
+              Todos nuestros bastidores son fabricados en <b>Acero ASTM A36</b> de 1 mts a 9,5 mts en diferentes espesores y anchos.
+            </p>
+            <ul class="list-disc pl-10 pt-5">
+                <li>PC8081: Pilar 80 mm x 81 mm</li>
+                <li>PC10081: Pilar 100 mm x 81 mm</li>
+                <li>PC100105: Pilar 100 mm x 105 mm</li>
+                <li>PC120105: Pilar 120 mm x 105 mm</li>
+                <li>PC140105: Pilar 140 mm x 105 mm</li>
+                <li>PC160105: Pilar 160 mm x 105 mm</li>
+              </ul>
+          </div>
+        </div>
+        <div class="xl:w-1/3 md:w-1/2 p-4">
+          <div class="border border-gray-200 p-6 rounded-lg flex flex-col h-full">
+            <div class="p-3 rounded-lg">
+              <img class="h-40 rounded w-50 mx-auto object-cover object-center mb-6"
+                src="https://qa.racklog.cl/images/productos/RS/especificaciones/150x150/radio.png" alt="content">
+            </div>
+            <h2 class="text-lg text-gray-900 font-medium title-font mb-2">Resistencias de Carga</h2>
+            <p class="leading-relaxed text-base text-justify flex-grow">Nuestras estanterías industriales selectivas están
+              meticulosamente diseñadas para soportar cargas pesadas y diversas, adaptándose a las exigencias de
+              cualquier almacén moderno.
+              <br><br>Con una capacidad de carga que supera los 2.000 kg por plano de carga,
+              garantizamos la seguridad y estabilidad de sus productos.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="text-gray-600 body-font">
+    <div class="container px-5 py-24 mx-auto">
+      <div class="flex flex-wrap -m-4">
+        <div class="p-4 md:w-1/2 w-full">
+          <div class="h-full bg-gray-100 text-gray-700 text-lg p-8 rounded">
+            <h3 class="text-2xl mb-4">¿Cómo funciona?</h3>
+            <p class="leading-relaxed mb-6">Este producto está diseñado para operar principalmente con grúa horquilla. Su estructura es adaptable a la unidad de carga tanto en volumen como en peso.
+              Los operadores de grúa pueden acceder de forma rápida a todos los niveles de la estantería disminuyendo los tiempos en la operación.</p>
+          </div>
+        </div>
+        <div class="p-4 md:w-1/2 w-full">
+          <div class="h-full bg-gray-100 text-gray-700 text-lg p-8 rounded">
+            <h3 class="text-2xl mb-4">Usos</h3>
+            <p class="leading-relaxed mb-6">Es un producto adaptable a toda la industria. Se le pueden incluir accesorios como: </p>
+            <ul class="list-disc pl-10">
+              <li>Tableros de madera o metálicos</li>
+              <li>Rejillas metálicas</li>
+              <li>Travesaños para pallets</li>
+              <li>Tope para pallets (tope fin de carrera)</li>
+              <li>Protecciones de pilares (canilleras)</li>
+              <li>Planos de carga para picking en los niveles mas bajos</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 </template>
 
 <script lang="ts" setup>

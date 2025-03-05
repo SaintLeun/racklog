@@ -1,12 +1,9 @@
 <template>
-  <div>
-    <Header />
-    <Carousel />
-    <LandingCards />
-    <Cta />
-    <ProductsSection />
-    <Gallery />
-  </div>
+  <Carousel />
+  <LandingCards />
+  <Cta />
+  <ProductsSection />
+  <Gallery />
 </template>
 
 <script setup>
