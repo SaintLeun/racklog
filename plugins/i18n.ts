@@ -14,7 +14,7 @@ const messages = {
 
 const i18n = createI18n({
   legacy: false, // Use Composition API mode
-  locale: 'en',
+  locale: 'es',
   messages,
 });
 

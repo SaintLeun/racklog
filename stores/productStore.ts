@@ -1,62 +1,18 @@
 import { defineStore } from 'pinia';
+import productsData from '../locales/es/products.json';
+
+interface Product {
+  name: string;
+  description: string;
+  image?: string;
+}
 
 export const useProductStore = defineStore('productStore', {
   state: () => ({
-    products: [
-      { 
-        name: 'rackSelectivo',
-        description: 'descriptionRackSelectivo',
-        path: 'Slide 1',
-        image: '/assets/images/rack-selectivo-card.png',
-      },
-      { 
-        name: 'anguloRanurado',
-        description: 'descriptionAnguloRanurado',
-        path: 'Slide2',
-        image: '/assets/images/rack-selectivo-card.png',
-      },
-      { 
-        name: 'rackPushback',
-        description: 'descriptionRackPushback',
-        path: 'Slide2',
-        image: '/assets/images/rack-selectivo-card.png',
-      },
-      { 
-        name: 'rackDriveIn',
-        description: 'descriptionRackDriveIn',
-        path: 'Slide 1',
-        image: '/assets/images/rack-selectivo-card.png',
-      },
-      { 
-        name: 'anguloRanurado',
-        description: 'descriptionAnguloRanurado',
-        path: 'Slide2',
-        image: '/assets/images/rack-selectivo-card.png',
-      },
-      { 
-        name: 'rackPushback',
-        description: 'descriptionRackPushback',
-        path: 'Slide2',
-        image: '/assets/images/rack-selectivo-card.png',
-      },
-      { 
-        name: 'rackSelectivo',
-        description: 'descriptionRackSelectivo',
-        path: 'Slide 1',
-        image: '/assets/images/rack-selectivo-card.png',
-      },
-      { 
-        name: 'anguloRanurado',
-        description: 'descriptionAnguloRanurado',
-        path: 'Slide2',
-        image: '/assets/images/rack-selectivo-card.png',
-      },
-      { 
-        name: 'rackPushback',
-        description: 'descriptionRackPushback',
-        path: 'Slide2',
-        image: '/assets/images/rack-selectivo-card.png',
-      },
-    ],
+    products: productsData.products.map((product: Product) => ({
+      name: product.name,
+      description: product.description,
+      image: product.image || '/assets/images/default-image.png', // Default image if not provided
+    })),
   }),
 });

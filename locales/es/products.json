@@ -1,10 +1,21 @@
 {
-    "moreProducts": "Más Productos",
-    "otherSolutions": "Otras Soluciones",
-    "rackSelectivo": "Rack Selectivo",
-    "anguloRanurado": "Ángulo Ranurado",
-    "rackPushback": "Rack Pushback",
-    "descriptionRackSelectivo": "Botella azul crucifijo vinilo post-irónico tostada de cuatro dólares taxidermia vegana. Gastropub indxgo jugo poutine.",
-    "descriptionAnguloRanurado": "Botella azul crucifijo vinilo post-irónico tostada de cuatro dólares taxidermia vegana. Gastropub indxgo jugo poutine.",
-    "descriptionRackPushback": "Botella azul crucifijo vinilo post-irónico tostada de cuatro dólares taxidermia vegana. Gastropub indxgo jugo poutine."
-  }
+  "moreProducts": "Más Productos",
+  "otherSolutions": "Otras Soluciones",
+  "products": [
+    {
+      "name": "Rack Selectivo",
+      "description": "Botella azul crucifijo vinilo post-irónico tostada de cuatro dólares taxidermia vegana. Gastropub indxgo jugo poutine.",
+      "image": "/assets/images/rack-selectivo-card.png"
+    },
+    {
+      "name": "Ángulo Ranurado",
+      "description": "Botella azul crucifijo vinilo post-irónico tostada de cuatro dólares taxidermia vegana. Gastropub indxgo jugo poutine.",
+      "image": "/assets/images/angulo-ranurado-card.png"
+    },
+    {
+      "name": "Rack Pushback",
+      "description": "Botella azul crucifijo vinilo post-irónico tostada de cuatro dólares taxidermia vegana. Gastropub indxgo jugo poutine.",
+      "image": "/assets/images/rack-pushback-card.png"
+    }
+  ]
+}
