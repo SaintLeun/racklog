@@ -5,6 +5,7 @@ interface Product {
   name: string;
   description: string;
   image?: string;
+  url: string;
 }
 
 export const useProductStore = defineStore('productStore', {
@@ -13,6 +14,7 @@ export const useProductStore = defineStore('productStore', {
       name: product.name,
       description: product.description,
       image: product.image || '/assets/images/default-image.png', // Default image if not provided
+      url: product.url,
     })),
   }),
 });
