@@ -15,7 +15,8 @@
           <svg class="rtl:rotate-180 block w-3 h-3 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
           </svg>
-          <a :href="breadcrumb.href" class="ms-1 text-sm font-medium">{{ breadcrumb.label }}</a>
+          <a v-if="breadcrumb.href" :href="breadcrumb.href" class="ms-1 text-sm font-medium">{{ breadcrumb.label }}</a>
+          <span v-else class="ms-1 text-sm font-medium">{{ breadcrumb.label }}</span>
         </div>
         <div v-else class="flex items-center">
           <svg class="rtl:rotate-180 w-3 h-3 mx-1 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
@@ -32,16 +33,14 @@
 <script lang="ts" setup>
 import { defineProps } from 'vue';
 
-const props = defineProps({
-  breadcrumbs: {
-    type: Array,
-    required: true,
-    default: () => [],
-    validator: (value: Array<{ label: string, href: string }>) => {
-      return value.every(item => 'label' in item && 'href' in item);
-    }
-  }
-});
+interface Breadcrumb {
+  label: string;
+  href?: string;
+}
+
+const props = defineProps<{
+  breadcrumbs: Breadcrumb[];
+}>();
 </script>
 
 <style scoped>
