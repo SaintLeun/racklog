@@ -3,7 +3,7 @@
     <section class="text-gray-600 body-font">
       <div class="container px-5 py-24 mx-auto">
         <div class="flex flex-col text-center w-full mb-12">
-          <h1 class="sm:text-3xl text-2xl font-medium title-font mb-4 text-gray-900">Atención de un ejecutivo</h1>
+          <h1 class="sm:text-3xl text-2xl font-medium title-font mb-4 text-gray-900">¿Necesitas atención personalizada?</h1>
           <p class="lg:w-2/3 mx-auto leading-relaxed text-base">Ingresa tus datos y un ejecutivo se pondrá en contacto contigo</p>
         </div>
         <div class="flex lg:w-2/3 w-full sm:flex-row flex-col mx-auto px-8 sm:space-x-4 sm:space-y-0 space-y-4 sm:px-0 items-end">

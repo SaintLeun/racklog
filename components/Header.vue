@@ -20,7 +20,7 @@
               Productos
             </button>
             <div class="absolute left-0 w-48 bg-white border border-gray-200 rounded shadow-lg hidden group-hover:block group-focus-within:block z-10" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1">
-              <a :href="product.path" v-for="product in products" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ product.name }}</a>
+              <a :href="product.url" v-for="product in products" class="block px-4 py-2 text-gray-700 hover:bg-gray-100">{{ product.name }}</a>
             </div>
           </div>
           <button class="text-white hover:text-gray-300 py-4">Contacto</button>
@@ -41,11 +41,9 @@
 </template>
 
 <script setup>
-const products = [
-  { name: 'Rack Selectivo', path: '/productos/rack-selectivo' },
-  { name: 'Ángulo Ranurado', path: '/productos/angulo-ranurado' },
-  { name: 'Rack Selectivo', path: '/productos/rack-selectivo' },
-]
+import { useProductStore } from '~/stores/productStore'
+
+const products = useProductStore().products;
 </script>
 
 <style scoped>
