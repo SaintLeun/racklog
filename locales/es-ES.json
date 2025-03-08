@@ -6,43 +6,43 @@
       "name": "Rack Selectivo",
       "description": "Sistema de estantería con acceso directo, alta rotación y versátil. Organización óptima para un almacén eficiente",
       "image": "/assets/images/rack-selectivo-card.png",
-      "url": "/products/rack-selectivo"
+      "url": "/productos/rack-selectivo"
     },
     "anguloRanurado": {
       "name": "Ángulo Ranurado",
       "description": "Almacenaje ligero, bandejas metálicas, montaje fácil, soporta hasta 250kg y gran versatilidad.",
       "image": "/assets/images/angulo-ranurado-card.png",
-      "url": "/products/angulo-ranurado"
+      "url": "/productos/angulo-ranurado"
     },
     "rackPushback": {
       "name": "Rack Pushback",
       "description": "Almacenaje LIFO en profundidad, optimiza espacio. Acceso directo paletas, a medida, carga y altura variable",
       "image": "/assets/images/rack-pushback-card.png",
-      "url": "/products/rack-pushback"
+      "url": "/productos/rack-pushback"
     },
     "rackDriveIn": {
       "name": "Rack Drive In",
       "description": "Almacenaje alta densidad, gran volumen paletas. Ideal baja rotación. Optimiza espacio y estabilidad bodega.",
       "image": "/assets/images/rack-dinamico-card.png",
-      "url": "/products/rack-dinamico"
+      "url": "/productos/rack-drive-in"
     },
     "rackDinamico": {
       "name": "Rack Dinámico",
       "description": "Almacenaje FIFO por gravedad, acceso posterior y salida frontal. Optimiza rotación, sin ingreso grúa.",
       "image": "/assets/images/rack-dinamico-card.png",
-      "url": "/products/rack-dinamico"
+      "url": "/productos/rack-dinamico"
     },
     "rackAutoportante": {
       "name": "Rack Autoportante",
       "description": "Estructura almacén, máximo espacio. Integración edificio, alta eficiencia. Almacenaje avanzado y seguro.",
       "image": "/assets/images/rack-cantilever-card.png",
-      "url": "/products/rack-cantilever"
+      "url": "/productos/rack-autoportante"
     },
     "miniRack": {
       "name": "Mini Rack",
       "description": "Almacenaje manual y palet. Picking eficiente, carga media. Acceso directo, equilibrio capacidad.",
       "image": "/assets/images/rack-cantilever-card.png",
-      "url": "/products/rack-cantilever"
+      "url": "/productos/mini-rack"
     }
   }
 }
