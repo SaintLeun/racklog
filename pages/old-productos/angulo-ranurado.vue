@@ -166,7 +166,13 @@
 </template>
 
 <script lang="ts" setup>
+import { useProductStore } from '@/stores/productStore';
 
+// Usage in a component
+onMounted(() => {
+  const productStore = useProductStore();
+  productStore.fetchKommoListAnguloRanurado();
+});
 </script>
 
 <style>

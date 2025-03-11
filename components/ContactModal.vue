@@ -1,5 +1,5 @@
 <template>
-  <div v-if="isVisible" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+  <div v-if="isVisible" class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
     <div class="bg-white rounded-lg p-6 w-full max-w-7xl transform transition-transform duration-300 ease-out scale-95 opacity-0" :class="{'scale-100 opacity-100': isVisible}">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-semibold">{{ title }}</h2>

@@ -1,0 +1,231 @@
+[
+  {
+    "name": "Rack Selectivo",
+    "slug": "rack-selectivo",
+    "type": "Almacenamiento Industrial",
+    "model": "https://sketchfab.com/models/1d90e83ff7704eaa9d7b0cc5f0f6a804/embed",
+    "images": {
+      "main": "/assets/images/rack-selectivo-main.png",
+      "card": "/assets/images/rack-selectivo-card.png",
+      "render": "/assets/images/rack_selectivo.jpg",
+      "gallery": [
+        "/assets/images/rack-selectivo-gallery-1.png",
+        "/assets/images/rack-selectivo-gallery-2.png",
+        "/assets/images/rack-selectivo-gallery-3.png"
+      ]
+    },
+    "attributes": {
+      "loadType": "Paletizado",
+      "capacity": "Hasta 3.000 kg por paleta",
+      "height": "Hasta 12 mts",
+      "depth": "Hasta 1.200 mm",
+      "width": "Hasta 3.500 mm"
+    },
+    "perks": [
+      "Acceso directo a cada paleta",
+      "Alta rotación de productos",
+      "Versatilidad en almacenamiento",
+      "Rápida construcción",
+      "Equilibrio entre precio-calidad"
+    ],
+    "description": {
+      "short": "Sistema de estantería con acceso directo, alta rotación y versátil. Organización óptima para un almacén eficiente",
+      "long": "Las estanterías Rack Selectivo es un producto que permite el almacenamiento de cargas paletizadas mediante grúa horquilla permitiendo el acceso directo a cada unidad de carga. Es uno de los productos más utilizados en el mercado logístico por su versatilidad, rápida construcción y equilibrio entre precio-calidad. Sus principales componentes son bastidores (marcos arriostrados) dispuestos de forma vertical y niveles de carga conformados por vigas horizontales."
+    },
+    "technicalSpecs": [
+      {
+        "title": "Vigas",
+        "description": "Todos nuestras vigas son apernadas y fabricadas en Acero ASTM A36 de 1,2 mts a 3,5 mts de largo, en diferentes altos y espesores dependiendo del peso de la Carga.",
+        "image": "https://qa.racklog.cl/images/productos/RS/especificaciones/150x150/vigas.png",
+        "perks": [
+          "VC7050: Viga 70 mm x 50 mm",
+          "VC7050: Viga 70 mm x 50 mm",
+          "VC7050: Viga 70 mm x 50 mm",
+          "VC715050: Viga 150 mm x 50 mm"
+        ]
+      },
+      {
+        "title": "Bastidores",
+        "description": "Todos nuestros bastidores son fabricados en Acero ASTM A36 de 1 mts a 9,5 mts en diferentes espesores y anchos.",
+        "image": "https://qa.racklog.cl/images/productos/RS/especificaciones/150x150/anclaje.png",
+        "perks": [
+          "PC8081: Pilar 80 mm x 81 mm",
+          "PC10081: Pilar 100 mm x 81 mm",
+          "PC100105: Pilar 100 mm x 105 mm",
+          "PC120105: Pilar 120 mm x 105 mm",
+          "PC140105: Pilar 140 mm x 105 mm",
+          "PC160105: Pilar 160 mm x 105 mm"
+        ]
+      },
+      {
+        "title": "Resistencias de Carga",
+        "description": "Nuestras estanterías industriales selectivas están meticulosamente diseñadas para soportar cargas pesadas y diversas, adaptándose a las exigencias de cualquier almacén moderno. Con una capacidad de carga que supera los 2.000 kg por plano de carga, garantizamos la seguridad y estabilidad de sus productos.",
+        "image": "https://qa.racklog.cl/images/productos/RS/especificaciones/150x150/radio.png",
+        "perks": []
+      }
+      
+    ],
+    "infoCards": [
+      {
+        "title": "¿Cómo funciona?",
+        "description": "Este producto está diseñado para operar principalmente con grúa horquilla. Su estructura es adaptable a la unidad de carga tanto en volumen como en peso. Los operadores de grúa pueden acceder de forma rápida a todos los niveles de la estantería disminuyendo los tiempos en la operación.",
+        "perks": []
+      },
+      {
+        "title": "Usos",
+        "description": "Este producto está diseñado para operar principalmente con grúa horquilla. Su estructura es adaptable a la unidad de carga tanto en volumen como en peso. Los operadores de grúa pueden acceder de forma rápida a todos los niveles de la estantería disminuyendo los tiempos en la operación.",
+        "perks": [
+          "Tableros de madera o metálicos",
+          "Rejillas metálicas",
+          "Travesaños para pallets",
+          "Tope para pallets (tope fin de carrera)",
+          "Protecciones de pilares (canilleras)",
+          "Planos de carga para picking en los niveles mas bajos"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Ángulo Ranurado",
+    "slug": "angulo-ranurado",
+    "type": "Optimizacion de Espacios",
+    "model": "https://sketchfab.com/models/1d90e83ff7704eaa9d7b0cc5f0f6a804/embed",
+    "images": {
+      "main": "/assets/images/angulo-ranurado-main.png",
+      "card": "/assets/images/angulo-ranurado-card.png",
+      "render": "/assets/images/anra_body.png",
+      "gallery": [
+        "/assets/images/angulo-ranurado-gallery-1.png",
+        "/assets/images/angulo-ranurado-gallery-2.png",
+        "/assets/images/angulo-ranurado-gallery-3.png"
+      ]
+    },
+    "attributes": {
+      "loadType": "Picking",
+      "capacity": "Hasta 250 kg por bandeja",
+      "height": "Hasta 3 mts",
+      "depth": "Hasta 1.200 mm",
+      "width": "Hasta 3.500 mm"
+
+    },
+    "perks": [
+      "Almacenaje ligero",
+      "Bandejas metálicas",
+      "Montaje fácil",
+      "Soporta hasta 250kg",
+      "Gran versatilidad"
+    ],
+    "description": {
+      "short": "Almacenaje ligero, bandejas metálicas, montaje fácil, soporta hasta 250kg y gran versatilidad.",
+      "long": "El Ángulo Ranurado es un sistema de almacenaje que permite el almacenamiento de productos ligeros y medianos en bandejas metálicas. Es un sistema de fácil montaje y desmontaje, que soporta hasta 250 kg por bandeja. Es un sistema muy versátil que se adapta a diferentes tipos de almacenamiento y que permite la optimización de espacios."
+    },
+    "technicalSpecs": [
+      {
+        "title": "Bandejas",
+        "description": "Bandejas metálicas de 1,2 mts a 3,5 mts de largo, en diferentes altos y espesores dependiendo del peso de la Carga.",
+        "image": "https://qa.racklog.cl/images/productos/AR/especificaciones/150x150/bandejas.png",
+        "perks": [
+          "BC7050: Bandeja 70 mm x 50 mm",
+          "BC7050: Bandeja 70 mm x 50 mm",
+          "BC7050: Bandeja 70 mm x 50 mm",
+          "BC715050: Bandeja 150 mm x 50 mm"
+        ]
+      },
+      {
+        "title": "Ángulos",
+        "description": "Ángulos ranurados de 1,2 mts a 3,5 mts de largo, en diferentes altos y espesores dependiendo del peso de la Carga.",
+        "image": "https://qa.racklog.cl/images/productos/AR/especificaciones/150x150/angulos.png",
+        "perks": [
+          "AC7050: Ángulo 70 mm x 50 mm",
+          "AC7050: Ángulo 70 mm x 50 mm",
+          "AC7050: Ángulo 70 mm x 50 mm",
+          "AC715050: Ángulo 150 mm x 50 mm"
+        ]
+      },
+      {
+        "title": "Bastidores",
+        "description": "Todos nuestros bastidores son fabricados en Acero ASTM A36 de 1 mts a 9,5 mts en diferentes espesores y anchos.",
+        "image": "https://qa.racklog.cl/images/productos/RS/especificaciones/150x150/anclaje.png",
+        "perks": [
+          "PC8081: Pilar 80 mm x 81 mm",
+          "PC10081: Pilar 100 mm x 81 mm",
+          "PC100105: Pilar 100 mm x 105 mm",
+          "PC120105: Pilar 120 mm x 105 mm",
+          "PC140105: Pilar 140 mm x 105 mm",
+          "PC160105: Pilar 160 mm x 105 mm"
+        ]
+      }
+    ],
+    "infoCards": [
+      {
+        "title": "¿Cómo funciona?",
+        "description": "Este producto está diseñado para operar principalmente con grúa horquilla. Su estructura es adaptable a la unidad de carga tanto en volumen como en peso. Los operadores de grúa pueden acceder de forma rápida a todos los niveles de la estantería disminuyendo los tiempos en la operación.",
+        "perks": []
+      },
+      {
+        "title": "Usos",
+        "description": "Este producto está diseñado para operar principalmente con grúa horquilla. Su estructura es adaptable a la unidad de carga tanto en volumen como en peso. Los operadores de grúa pueden acceder de forma rápida a todos los niveles de la estantería disminuyendo los tiempos en la operación.",
+        "perks": [
+          "Tableros de madera o metálicos",
+          "Rejillas metálicas",
+          "Travesaños para pallets",
+          "Tope para pallets (tope fin de carrera)",
+          "Protecciones de pilares (canilleras)",
+          "Planos de carga para picking en los niveles mas bajos"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Rack Pushback",
+    "slug": "rack-pushback",
+    "type": "Almacenamiento Industrial",
+    "model": "",
+    "images": {
+      "main": "/assets/images/rack-pushback-main.png",
+      "card": "/assets/images/rack-pushback-card.png",
+      "render": "/assets/images/anra_body.png",
+      "gallery": [
+        "/assets/images/rack-pushback-gallery-1.png",
+        "/assets/images/rack-pushback-gallery-2.png",
+        "/assets/images/rack-pushback-gallery-3.png"
+      ]
+    },
+    "attributes": {
+      "loadType": "Paletizado",
+      "capacity": "Hasta 1.500 kg por paleta",
+      "height": "Hasta 12 mts",
+      "depth": "Hasta 1.200 mm",
+      "width": "Hasta 3.500 mm"
+    },
+    "perks": [
+      "Almacenaje LIFO en profundidad",
+      "Optimiza espacio",
+      "Acceso directo a cada paleta"
+    ],
+    "description": {
+      "short": "Almacenaje LIFO en profundidad, optimiza espacio. Acceso directo paletas, a medida, carga y altura variable",
+      "long": "El Rack Pushback es un sistema de almacenaje que permite el almacenamiento de cargas paletizadas en profundidad. Es un sistema que permite el almacenamiento LIFO, es decir, el último palet en entrar es el primero en salir. Es un sistema que optimiza el espacio de almacenamiento y que permite el acceso directo a cada paleta."
+    },
+    "technicalSpecs": [],
+    "infoCards": [
+      {
+        "title": "¿Cómo funciona?",
+        "description": "Este producto está diseñado para operar principalmente con grúa horquilla. Su estructura es adaptable a la unidad de carga tanto en volumen como en peso. Los operadores de grúa pueden acceder de forma rápida a todos los niveles de la estantería disminuyendo los tiempos en la operación.",
+        "perks": []
+      },
+      {
+        "title": "Usos",
+        "description": "Este producto está diseñado para operar principalmente con grúa horquilla. Su estructura es adaptable a la unidad de carga tanto en volumen como en peso. Los operadores de grúa pueden acceder de forma rápida a todos los niveles de la estantería disminuyendo los tiempos en la operación.",
+        "perks": [
+          "Tableros de madera o metálicos",
+          "Rejillas metálicas",
+          "Travesaños para pallets",
+          "Tope para pallets (tope fin de carrera)",
+          "Protecciones de pilares (canilleras)",
+          "Planos de carga para picking en los niveles mas bajos"
+        ]
+      }
+    ]
+  }
+]
