@@ -139,7 +139,6 @@
   
   <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
-import * as d3 from 'd3';
 
 const selectedProduct = ref(null);
 const config = ref({
@@ -160,77 +159,5 @@ const sketchfabUrl = computed(() => {
     return `https://sketchfab.com/models/YOUR_RS_MODEL_UID/embed?ui_theme=dark`;
   }
   return '';
-});
-
-const addRack = () => {
-  const newRack = {
-    x: 0,
-    y: 0,
-    width: 50,
-    height: 30,
-    color: selectedProduct.value === 'AR' ? 'lightblue' : 'lightgreen',
-  };
-  racks.value.push(newRack);
-};
-
-// D3.js floor planner
-const initFloorPlanner = () => {
-  const svg = d3
-    .select('#floor-planner')
-    .append('svg')
-    .attr('width', plannerWidth.value)
-    .attr('height', plannerHeight.value);
-
-  const update = () => {
-    const rects = svg.selectAll('rect').data(racks.value);
-
-    rects
-      .enter()
-      .append('rect')
-      .attr('x', (d) => d.x)
-      .attr('y', (d) => d.y)
-      .attr('width', (d) => d.width)
-      .attr('height', (d) => d.height)
-      .attr('fill', (d) => d.color)
-      .call(
-        d3
-          .drag()
-          .on('start', dragstarted)
-          .on('drag', dragged)
-          .on('end', dragended),
-      );
-
-    rects.attr('x', (d) => d.x).attr('y', (d) => d.y);
-
-    rects.exit().remove();
-  };
-
-  update();
-
-  // Access racks.value here
-  racks.value.push({ x: 0, y: 0, width: 50, height: 30, color: 'red' });
-
-  update();
-
-  function dragstarted(event, d) {
-    d3.select(this).raise().attr('stroke', 'black');
-  }
-
-  function dragged(event, d) {
-    d.x = Math.max(0, Math.min(event.x, plannerWidth.value - d.width));
-    d.y = Math.max(0, Math.min(event.y, plannerHeight.value - d.height));
-    d3.select(this).attr('x', d.x).attr('y', d.y);
-  }
-
-  function dragended(event, d) {
-    d3.select(this).attr('stroke', null);
-  }
-};
-
-onMounted(() => {
-  nextTick(() => {
-    initFloorPlanner();
-    addRack();
-  });
 });
   </script>

@@ -10,8 +10,8 @@
               <h1 class="text-gray-900 text-3xl title-font font-medium mb-1">{{ product.name }}</h1>
               <p class="leading-relaxed">{{ product.description.short }}</p>
               <div class="mt-auto">
-                <button @click="openModal('Generar en 3D')" :class="buttonClass(product.buttonColor, '400', '500')" class="flex w-full text-white border-0 py-2 px-6 focus:outline-none rounded mt-4 transition-colors">Arma tu {{ product.name }}</button>
-                <button @click="openModal('Cotizar')" :class="buttonClass(product.buttonColor, '400', '500')" class="flex w-full text-white border-0 py-2 px-6 focus:outline-none rounded mt-4 transition-colors">Cotizar</button>
+                <button @click="openModal('quote')" :class="buttonClass(product.buttonColor, '400', '500')" class="flex w-full text-white border-0 py-2 px-6 focus:outline-none rounded mt-4 transition-colors">Arma tu {{ product.name }}</button>
+                <button @click="openModal('contact')" :class="buttonClass(product.buttonColor, '400', '500')" class="flex w-full text-white border-0 py-2 px-6 focus:outline-none rounded mt-4 transition-colors">Cotizar</button>
               </div>
             </div>
           </div>
@@ -21,15 +21,18 @@
     <div class="hidden">
       <div class="bg-orange-400 hover:bg-orange-500 bg-indigo-400 hover:bg-indigo-500"></div>
     </div>
-    <Modal :isVisible="isModalVisible" :title="modalTitle" @close="closeModal">
-    </Modal>
+    <ContactModal :isVisible="isContactModalVisible" :title="modalTitle" @close="closeModal('contact')">
+    </ContactModal>
+    <QuoteModal :isVisible="isQuoteModalVisible" :title="modalTitle" @close="closeModal('quote')">
+    </QuoteModal>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
 import { useProductStore } from '@/stores/productStore';
-import Modal from './ContactModal.vue';
+import ContactModal from './ContactModal.vue';
+import QuoteModal from './QuoteModal.vue';
 
 const productStore = useProductStore();
 
@@ -42,16 +45,25 @@ const filteredProducts = computed(() => {
     }));
 });
 
-const isModalVisible = ref(false);
+const isContactModalVisible = ref(false);
+const isQuoteModalVisible = ref(false);
 const modalTitle = ref('');
 
-function openModal(title: string) {
-  modalTitle.value = title;
-  isModalVisible.value = true;
+function openModal(modal: string) {
+  modalTitle.value = 'Modal';
+  if (modal === 'contact') {
+    isContactModalVisible.value = true;
+  } else {
+    isQuoteModalVisible.value = true;
+  }
 }
 
-function closeModal() {
-  isModalVisible.value = false;
+function closeModal(modal: string) {
+  if (modal === 'contact') {
+    isContactModalVisible.value = false;
+  } else {
+    isQuoteModalVisible.value = false;
+  }
 }
 
 function buttonClass(color: string, base: string, hover: string) {

@@ -38,11 +38,81 @@
         </div>
       </div>
     </section>
+    <section>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+        <div v-for="product in products" :key="product.id" class="bg-white rounded-lg shadow-md overflow-hidden">
+          <img :src="product.url" :alt="product.name" class="w-full h-48 object-cover" />
+          <div class="p-4">
+            <h3 class="text-lg font-semibold text-gray-900">{{ product.name }}</h3>
+            <p class="text-sm text-gray-500">SKU: {{ product.sku }}</p>
+            <p class="text-sm text-gray-500">Medidas: {{ product.medidas }}</p>
+            <p class="text-sm text-gray-500">Grupo: {{ product.grupo }}</p>
+            <p class="text-sm text-gray-500">Niveles: {{ product.niveles }}</p>
+            <p class="text-sm text-gray-500">Peso por Nivel: {{ product.pesoPorNivel }} kg</p>
+          </div>
+          <div class="px-6 py-4 bg-gray-50 text-right">
+            <a href="#" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+              Comprar ${{ product.precio }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { ref, onMounted } from 'vue';
 
+interface Product {
+  id: number;
+  name: string;
+  sku: string;
+  medidas: string;
+  grupo: string;
+  niveles: string;
+  pesoPorNivel: string;
+  precio: string;
+  type: string;
+  url: string;
+}
+
+const products = ref<Product[]>([]);
+
+onMounted(async () => {
+  try {
+    const response = await fetch('https://racklog.cl/api/angulo-ranurado-list'); // Replace with your API endpoint
+    const data = await response.json();
+    console.log(data._embedded.elements);
+
+    // Extract relevant fields from the JSON response
+    products.value = data._embedded.elements.map((item: any) => {
+      const precioField = item.custom_fields_values.find((field: any) => field.field_name === 'Precio');
+      const skuField = item.custom_fields_values.find((field: any) => field.field_name === 'SKU');
+      const medidasField = item.custom_fields_values.find((field: any) => field.field_name === 'Medidas');
+      const grupoField = item.custom_fields_values.find((field: any) => field.field_name === 'GRUPO');
+      const nivelesField = item.custom_fields_values.find((field: any) => field.field_name === 'N° Niveles');
+      const pesoPorNivelField = item.custom_fields_values.find((field: any) => field.field_name === 'Peso por nivel');
+
+
+      return {
+        id: item.id,
+        name: item.name,
+        sku: skuField?.values[0]?.value || 'N/A',
+        medidas: medidasField?.values[0]?.value || 'N/A',
+        grupo: grupoField?.values[0]?.value || 'N/A',
+        niveles: nivelesField?.values[0]?.value || 'N/A',
+        pesoPorNivel: pesoPorNivelField?.values[0]?.value || 'N/A',
+        precio: precioField?.values[0]?.value || 'N/A',
+        type: 'image', // Default type (you can adjust this based on your logic)
+        url: `/assets/images/${skuField?.values[0]?.value || 'default'}.png`, // Construct URL dynamically
+      };
+    })
+    .filter((product: any) => product.precio !== 'N/A'); // Filter out products without a price
+  } catch (error) {
+    console.error('Error fetching products:', error);
+  }
+});
 </script>
 
 <style scoped>
