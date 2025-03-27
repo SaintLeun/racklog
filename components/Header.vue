@@ -26,12 +26,12 @@
           <button class="text-white hover:text-gray-300 py-4">Contacto</button>
         </div>
         <div class="relative flex gap-2 hidden md:flex">
-          <button class="flex items-center text-white hover:text-gray-300">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h18M3 3v18m0-18l18 18"></path>
-            </svg>
+          <!-- Cotización Button -->
+          <button @click="goToCart" class="flex items-center text-white hover:text-gray-300">
             Cotización
-            <span class="ml-2 bg-red-500 text-white rounded-full px-2 py-1 text-xs">0</span>
+            <span v-if="cartCount > 0" class="ml-2 bg-red-500 text-white rounded-full px-2 py-1 text-xs">
+              {{ cartCount }}
+            </span>
           </button>
         </div>
         <button @click="toggleMenu" class="text-white md:hidden p-4">
@@ -60,14 +60,26 @@
 <script setup>
 import { ref } from 'vue';
 import { useProductStore } from '~/stores/productStore';
+import { useCartStore } from '~/stores/cartStore'; // Import the cart store
+import { useRouter } from 'vue-router'; // Import Vue Router
+import { storeToRefs } from 'pinia'; // Import storeToRefs
 
 const productStore = useProductStore();
 const products = productStore.products;
 
+const cartStore = useCartStore(); // Initialize the cart store
+const { cartCount } = storeToRefs(cartStore); // Use storeToRefs to preserve reactivity
+
 const isMenuOpen = ref(false);
+const router = useRouter(); // Initialize the router
 
 function toggleMenu() {
   isMenuOpen.value = !isMenuOpen.value;
+}
+
+// Navigate to the cart page
+function goToCart() {
+  router.push('/carrito'); // Navigate to the carrito page
 }
 </script>
 
