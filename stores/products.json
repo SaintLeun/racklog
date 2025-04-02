@@ -63,7 +63,6 @@
         "image": "https://qa.racklog.cl/images/productos/RS/especificaciones/150x150/radio.png",
         "perks": []
       }
-      
     ],
     "infoCards": [
       {
@@ -106,7 +105,6 @@
       "height": "Hasta 3 mts",
       "depth": "Hasta 1.200 mm",
       "width": "Hasta 3.500 mm"
-
     },
     "perks": [
       "Almacenaje ligero",
@@ -193,15 +191,12 @@
     },
     "attributes": {
       "loadType": "Paletizado",
-      "capacity": "Hasta 1.500 kg por paleta",
-      "height": "Hasta 12 mts",
-      "depth": "Hasta 1.200 mm",
-      "width": "Hasta 3.500 mm"
+      "capacity": "",
+      "height": "",
+      "depth": "",
+      "width": ""
     },
     "perks": [
-      "Almacenaje LIFO en profundidad",
-      "Optimiza espacio",
-      "Acceso directo a cada paleta"
     ],
     "description": {
       "short": "Almacenaje LIFO en profundidad, optimiza espacio. Acceso directo paletas, a medida, carga y altura variable",
@@ -216,7 +211,7 @@
       },
       {
         "title": "Usos",
-        "description": "Este producto está diseñado para operar principalmente con grúa horquilla. Su estructura es adaptable a la unidad de carga tanto en volumen como en peso. Los operadores de grúa pueden acceder de forma rápida a todos los niveles de la estantería disminuyendo los tiempos en la operación.",
+        "description": "Es un producto adaptable a toda la industria. Se le pueden incluir accesorios como:",
         "perks": [
           "Tableros de madera o metálicos",
           "Rejillas metálicas",
@@ -224,6 +219,217 @@
           "Tope para pallets (tope fin de carrera)",
           "Protecciones de pilares (canilleras)",
           "Planos de carga para picking en los niveles mas bajos"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Mini Rack",
+    "slug": "mini-rack",
+    "type": "Almacenamiento Industrial",
+    "model": "",
+    "images": {
+      "main": "/assets/images/rack-minirack-main.png",
+      "card": "/assets/images/rack-minirack-card.png",
+      "render": "/assets/images/anra_body.png",
+      "gallery": [
+        "/assets/images/rack-pushback-gallery-1.png",
+        "/assets/images/rack-pushback-gallery-2.png",
+        "/assets/images/rack-pushback-gallery-3.png"
+      ]
+    },
+    "attributes": {
+      "loadType": "Paletizado",
+      "capacity": "",
+      "height": "",
+      "depth": "",
+      "width": ""
+    },
+    "perks": [
+      "Picking Eficiente.",
+      "Soportan desde 250 kg hasta 1000 kg por nivel.",
+      "Configuración ajustable con planos de carga metálicos o de madera.",
+      "Optimización del Espacio.",
+      "Acceso directo a cada producto."
+
+    ],
+    "description": {
+      "short": "Almacenaje manual y palet. Picking eficiente, carga media. Acceso directo, equilibrio capacidad.",
+      "long": "Las estanterías Mini Rack de Racklog son la solución ideal para el almacenamiento de cargas medias, ubicándose entre las estanterías manuales y los racks para pallets. Este sistema optimiza las operaciones de picking, ofreciendo un equilibrio perfecto entre capacidad de carga y acceso directo. Diseñadas para una variedad de industrias, nuestras estanterías Mini Rack mejoran la eficiencia y organización de tu almacén."
+    },
+    "technicalSpecs": [],
+    "infoCards": [
+      {
+        "title": "¿Cómo funciona?",
+        "description": "Las estanterías Mini Rack están diseñadas para operaciones de picking eficientes. Su estructura permite un mayor espaciamiento entre pilares, aumentando el área de carga para productos voluminosos. Los operadores acceden manualmente a los niveles, eliminando la necesidad de maquinaria. Este sistema asegura un flujo de trabajo ágil y organizado.",
+        "perks": []
+      },
+      {
+        "title": "Usos",
+        "description": "Nuestras estanterías Mini Rack son ideales para:",
+        "perks": [
+          "Tiendas de ropa y calzado",
+          "Almacenes de productos farmacéuticos y repuestos",
+          "Centros de distribución de comercio electrónico",
+          "Empresas de minería y otros sectores industriales",
+          "Protecciones de pilares (canilleras)",
+          "Planos de carga para picking en los niveles mas bajos"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Rack Autoportante",
+    "slug": "rack-autoportante",
+    "type": "Almacenamiento Industrial",
+    "model": "",
+    "images": {
+      "main": "/assets/images/rack-autoportante-main.png",
+      "card": "/assets/images/rack-autoportante-card.png",
+      "render": "/assets/images/anra_body.png",
+      "gallery": [
+        "/assets/images/rack-pushback-gallery-1.png",
+        "/assets/images/rack-pushback-gallery-2.png",
+        "/assets/images/rack-pushback-gallery-3.png"
+      ]
+    },
+    "attributes": {
+      "loadType": "Paletizado",
+      "capacity": "",
+      "height": "",
+      "depth": "",
+      "width": ""
+    },
+    "perks": [
+      "Integración total con la estructura del edificio.",
+      "Versatilidad de Carga.",
+      "Solución integral en una sola fase, ahorrando tiempo y costos.",
+      "Menor costo de implementación al integrar estructura y almacenamiento."
+
+    ],
+    "description": {
+      "short": "Estructura almacén, máximo espacio. Integración edificio, alta eficiencia. Almacenaje avanzado y seguro.",
+      "long": "El <b>Rack Autoportante</b> de Racklog es una solución avanzada que integra el almacenamiento con la estructura de la bodega. Este sistema innovador sirve como <b>estantería industrial</b> y edificación, optimizando cada área del almacén. Diseñado para cargas convencionales y <b>almacenes automatizados</b>, el Rack Autoportante maximiza el espacio y reduce costos de construcción."
+    },
+    "technicalSpecs": [],
+    "infoCards": [
+      {
+        "title": "¿Cómo funciona?",
+        "description": "El Rack Autoportante funciona como un sistema estructural completo, donde las estanterías industriales soportan tanto la carga almacenada como los elementos estructurales del edificio. Elimina la necesidad de construir una estructura independiente, optimizando costos y tiempos de construcción.",
+        "perks": []
+      },
+      {
+        "title": "Usos",
+        "description": "El Rack Autoportante de Racklog es ideal para:",
+        "perks": [
+          "Almacenes de alta densidad.",
+          "Centros de distribución automatizados.",
+          "Bodegas con limitaciones de espacio",
+          "Proyectos que requieren construcción rápida y eficiente."
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Rack Dinámico",
+    "slug": "rack-dinamico",
+    "type": "Almacenamiento Industrial",
+    "model": "",
+    "images": {
+      "main": "/assets/images/rack-dinamico-main.png",
+      "card": "/assets/images/rack-dinamico-card.png",
+      "render": "/assets/images/anra_body.png",
+      "gallery": [
+        "/assets/images/rack-pushback-gallery-1.png",
+        "/assets/images/rack-pushback-gallery-2.png",
+        "/assets/images/rack-pushback-gallery-3.png"
+      ]
+    },
+    "attributes": {
+      "loadType": "Paletizado",
+      "capacity": "",
+      "height": "",
+      "depth": "",
+      "width": ""
+    },
+    "perks": [
+      "Integración total con la estructura del edificio.",
+      "Versatilidad de Carga.",
+      "Solución integral en una sola fase, ahorrando tiempo y costos.",
+      "Menor costo de implementación al integrar estructura y almacenamiento."
+
+    ],
+    "description": {
+      "short": "Almacenaje FIFO por gravedad, acceso posterior y salida frontal. Optimiza rotación, sin ingreso grúa.",
+      "long": "El Rack Dinámico de Racklog es una solución de almacenamiento avanzada para pallets, que opera bajo el principio FIFO (First In, First Out). Este sistema innovador permite la entrada de pallets por la parte posterior, desplazándose por gravedad mediante polines o ruedas, y su salida por la parte frontal. Optimiza la rotación y eficiencia del almacén."
+    },
+    "technicalSpecs": [],
+    "infoCards": [
+      {
+        "title": "¿Cómo funciona?",
+        "description": "Utiliza la gravedad para mover los pallets a lo largo de carriles con polines o ruedas. Los pallets se cargan por la parte posterior y se desplazan automáticamente hacia el frente, donde se retiran. Este sistema asegura que los productos más antiguos salgan primero, garantizando una gestión de inventario óptima.",
+        "perks": []
+      },
+      {
+        "title": "Usos",
+        "description": "El Rack Dinámico de Racklog es ideal para:",
+        "perks": [
+          "Almacenes de productos perecederos.",
+          "Centros de distribución de alta rotación.",
+          "Industrias con gestión de inventario FIFO.",
+          "Almacenes con espacio limitado que requieren alta densidad."
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Rack Drive In",
+    "slug": "rack-drive-in",
+    "type": "Almacenamiento Industrial",
+    "model": "",
+    "images": {
+      "main": "/assets/images/rack-dinamico-main.png",
+      "card": "/assets/images/rack-dinamico-card.png",
+      "render": "/assets/images/anra_body.png",
+      "gallery": [
+        "/assets/images/rack-pushback-gallery-1.png",
+        "/assets/images/rack-pushback-gallery-2.png",
+        "/assets/images/rack-pushback-gallery-3.png"
+      ]
+    },
+    "attributes": {
+      "loadType": "Paletizado",
+      "capacity": "",
+      "height": "",
+      "depth": "",
+      "width": ""
+    },
+    "perks": [
+      "Integración total con la estructura del edificio.",
+      "Versatilidad de Carga.",
+      "Solución integral en una sola fase, ahorrando tiempo y costos.",
+      "Menor costo de implementación al integrar estructura y almacenamiento."
+
+    ],
+    "description": {
+      "short": "Almacenaje FIFO por gravedad, acceso posterior y salida frontal. Optimiza rotación, sin ingreso grúa.",
+      "long": "El Rack Dinámico de Racklog es una solución de almacenamiento avanzada para pallets, que opera bajo el principio FIFO (First In, First Out). Este sistema innovador permite la entrada de pallets por la parte posterior, desplazándose por gravedad mediante polines o ruedas, y su salida por la parte frontal. Optimiza la rotación y eficiencia del almacén."
+    },
+    "technicalSpecs": [],
+    "infoCards": [
+      {
+        "title": "¿Cómo funciona?",
+        "description": "Utiliza la gravedad para mover los pallets a lo largo de carriles con polines o ruedas. Los pallets se cargan por la parte posterior y se desplazan automáticamente hacia el frente, donde se retiran. Este sistema asegura que los productos más antiguos salgan primero, garantizando una gestión de inventario óptima.",
+        "perks": []
+      },
+      {
+        "title": "Usos",
+        "description": "El Rack Dinámico de Racklog es ideal para:",
+        "perks": [
+          "Almacenes de productos perecederos.",
+          "Centros de distribución de alta rotación.",
+          "Industrias con gestión de inventario FIFO.",
+          "Almacenes con espacio limitado que requieren alta densidad."
         ]
       }
     ]
