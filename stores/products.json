@@ -85,7 +85,7 @@
     ]
   },
   {
-    "name": "Ángulo Ranurado",
+    "name": "Estanterías de Ángulo Ranurado",
     "slug": "angulo-ranurado",
     "type": "Optimizacion de Espacios",
     "model": "https://sketchfab.com/models/1d90e83ff7704eaa9d7b0cc5f0f6a804/embed",
@@ -430,6 +430,181 @@
           "Centros de distribución de alta rotación.",
           "Industrias con gestión de inventario FIFO.",
           "Almacenes con espacio limitado que requieren alta densidad."
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Cajas plásticas",
+    "slug": "cajas-plasticas",
+    "type": "Almacenamiento",
+    "model": "",
+    "images": {
+      "main": "/assets/images/cajas-plasticas-main.png",
+      "card": "/assets/images/cajas-plasticas-card.png",
+      "render": "/assets/images/anra_body.png",
+      "gallery": [
+        "/assets/images/rack-pushback-gallery-1.png",
+        "/assets/images/rack-pushback-gallery-2.png",
+        "/assets/images/rack-pushback-gallery-3.png"
+      ]
+    },
+    "attributes": {
+      "loadType": "",
+      "capacity": "",
+      "height": "",
+      "depth": "",
+      "width": ""
+    },
+    "perks": [
+      ""
+
+    ],
+    "description": {
+      "short":"Las cajas plásticas son un complemento generalmente utilizado para diferentes propósitos, tanto domésticos como industriales.Existen dos tipos de cajas en diferentes tamaños y usos: cajas con bisagras y cajas apilables",
+      "long": "Las cajas plásticas son un complemento generalmente utilizado para diferentes propósitos, tanto domésticos como industriales.Existen dos tipos de cajas en diferentes tamaños y usos: cajas con bisagras y cajas apilables"
+    },
+    "technicalSpecs": [],
+    "infoCards": [
+      {
+        "title": "Cajas con bisagras (o cajas bisagradas)",
+        "description": "Este tipo de cajas están diseñadas para almacenar productos de mayor envergadura.",
+        "perks": []
+      },
+      {
+        "title": "Cajas apilables",
+        "description": "Este tipo de cajas están diseñadas para almacenar productos livianos y de menor tamaño. Su composición permite que estas sean: ",
+        "perks": [
+          "Apilables",
+          "Optimizador del espacio utilizado",
+          "Facilitador en el proceso de picking"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Entreplantas",
+    "slug": "entreplantas",
+    "type": "Almacenamiento",
+    "model": "",
+    "images": {
+      "main": "/assets/images/entreplantas-main.png",
+      "card": "/assets/images/entreplantas-card.png",
+      "render": "/assets/images/anra_body.png",
+      "gallery": [
+        "/assets/images/rack-pushback-gallery-1.png",
+        "/assets/images/rack-pushback-gallery-2.png",
+        "/assets/images/rack-pushback-gallery-3.png"
+      ]
+    },
+    "attributes": {
+      "loadType": "",
+      "capacity": "",
+      "height": "",
+      "depth": "",
+      "width": ""
+    },
+    "perks": [
+      "El montaje de entreplantas es rápido y simple.",
+      "Adaptable al rubro del cliente"
+
+    ],
+    "description": {
+      "short":"Duplica o triplica el espacio de almacenamiento verticalmente. Ideal para optimizar áreas y usos diversos.",
+      "long": "Las entreplantas permiten duplicar o triplicar el espacio de almacenamiento de forma vertical. Este sistema no sólo permite almacenamiento, sino también la utilización del espacio para lo que se estime conveniente."
+    },
+    "technicalSpecs": [],
+    "infoCards": [
+    ]
+  },
+  {
+    "name": "Altillo de Angulo Ranurado",
+    "slug": "altillo-angulo-ranurado",
+    "type": "Almacenamiento Industrial",
+    "model": "",
+    "images": {
+      "main": "/assets/images/rack-dinamico-main.png",
+      "card": "/assets/images/rack-dinamico-card.png",
+      "render": "/assets/images/anra_body.png",
+      "gallery": [
+        "/assets/images/rack-pushback-gallery-1.png",
+        "/assets/images/rack-pushback-gallery-2.png",
+        "/assets/images/rack-pushback-gallery-3.png"
+      ]
+    },
+    "attributes": {
+      "loadType": "Paletizado",
+      "capacity": "",
+      "height": "",
+      "depth": "",
+      "width": ""
+    },
+    "perks": [
+    ],
+    "description": {
+      "short": "Sistema de picking manual con acceso directo a productos. Ideal para optimizar espacio y agilizar la preparación de pedidos.",
+      "long": "Este método de almacenamiento opera bajo el principio de picking (reposición y/o recolección manual), en el cual los trabajadores tienen acceso directo a los productos sin la necesidad de usar maquinaria. Los empleados pueden llegar a cada nivel directamente a través de escaleras de acceso y los anchos de los pasillos permiten el libre tránsito para uno o más operadores con carritos de picking o transpaletas, simplificando y agilizando la preparación de pedidos.</br>Se realiza la reposición o recolección de productos manualmente para la preparación de pedidos recorriendo los pasillos en 1, 2 o más niveles de altura accediendo por escaleras. Los anchos de pasillo permiten el libre tránsito para 1 o más operadores con carritos de picking o transpaletas."
+    },
+    "technicalSpecs": [],
+    "infoCards": [
+      {
+        "title": "¿Cómo funciona?",
+        "description": "Este método de almacenamiento opera bajo el principio de picking, en el cual los trabajadores tienen acceso directo a los productos sin la necesidad de usar maquinaria. Los empleados pueden llegar a cada nivel directamente a través de escaleras de acceso, lo que simplifica y agiliza la preparación de pedidos. Para mejorar aún más la eficiencia, el sistema puede ser complementado con elementos como transportadores en espiral (toboganes), entre otros.",
+        "perks": []
+      },
+      {
+        "title": "Usos",
+        "description": "El Altillo de angulo ranulado de Racklog es ideal para optimizar espacio en:",
+        "perks": [
+          "Tiendas de ropa y calzado",
+          "Productos farmaceuticos.",
+          "Repuestos, entre otros."
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Altillo de rack selectivo",
+    "slug": "altillo-rack-selectivo",
+    "type": "Almacenamiento Industrial",
+    "model": "",
+    "images": {
+      "main": "/assets/images/altillo-rack-selectivo-main.png",
+      "card": "/assets/images/altillo-rack-selectivo-card.png",
+      "render": "/assets/images/anra_body.png",
+      "gallery": [
+        "/assets/images/rack-pushback-gallery-1.png",
+        "/assets/images/rack-pushback-gallery-2.png",
+        "/assets/images/rack-pushback-gallery-3.png"
+      ]
+    },
+    "attributes": {
+      "loadType": "",
+      "capacity": "",
+      "height": "",
+      "depth": "",
+      "width": ""
+    },
+    "perks": [
+    ],
+    "description": {
+      "short": "Solución de almacenamiento manual para cargas ligeras y pesadas. Optimiza espacio vertical en bodegas y centros de distribución.",
+      "long": "El altillo de rack selectivo es una solución para el almacenamiento de forma manual, de cargas ligeras hasta productos de mayor peso y volumen. Permite optimizar verticalmente el espacio de las bodegas, talleres o centros de distribución.</br>Esta solución permite selectividad de los productos a almacenar, ya que con sus diseños de pilares multi-perforados podemos variar las distancias entre niveles de carga para los distintos volúmenes de productos."
+    },
+    "technicalSpecs": [],
+    "infoCards": [
+      {
+        "title": "¿Cómo funciona?",
+        "description": "El sistema opera bajo el principio de picking manual, permitiendo acceso directo a los productos sin maquinaria. Los operadores acceden a los niveles mediante escaleras, con pasillos amplios para tránsito seguro con carritos o transpaletas. Ideal para agilizar la preparación de pedidos.",
+        "perks": []
+      },
+      {
+        "title": "Usos",
+        "description": "El Altillo de Rack selectivo de Racklog es ideal para ser utilizado en:",
+        "perks": [
+          "Tiendas de ropa y calzado",
+          "Productos farmaceuticos.",
+          "Repuestos, entre otros."
         ]
       }
     ]
