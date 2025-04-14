@@ -1,33 +1,49 @@
 <template>
-  <!-- Breadcrumb -->
-  <nav class="flex" aria-label="Breadcrumb">
-    <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+  <nav aria-label="Breadcrumb" class="py-3">
+    <ol class="inline-flex flex-wrap items-center text-sm">
+      <!-- Home Link (Always visible) -->
       <li class="inline-flex items-center">
-        <a href="/" class="inline-flex items-center text-sm font-medium">
-          <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+        <router-link 
+          to="/" 
+          class="inline-flex items-center text-gray-700 hover:text-orange-500 transition-colors font-medium"
+        >
+          <svg class="w-3.5 h-3.5 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
             <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z"/>
           </svg>
-          Home
-        </a>
+          Inicio
+        </router-link>
       </li>
+
+      <!-- Dynamic Breadcrumbs -->
       <li v-for="(breadcrumb, index) in breadcrumbs" :key="index" class="inline-flex items-center">
-        <div v-if="index !== breadcrumbs.length - 1" class="flex items-center">
-          <svg class="rtl:rotate-180 block w-3 h-3 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
-          </svg>
-          <a v-if="breadcrumb.href" :href="breadcrumb.href" class="ms-1 text-sm font-medium">{{ breadcrumb.label }}</a>
-          <span v-else class="ms-1 text-sm font-medium">{{ breadcrumb.label }}</span>
-        </div>
-        <div v-else class="flex items-center">
-          <svg class="rtl:rotate-180 w-3 h-3 mx-1 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
-          </svg>
-          <span class="ms-1 text-sm font-medium">{{ breadcrumb.label }}</span>
-        </div>
+        <!-- Separator -->
+        <svg class="rtl:rotate-180 w-3 h-3 mx-2 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        
+        <!-- Link or Text -->
+        <template v-if="index !== breadcrumbs.length - 1">
+          <router-link 
+            v-if="breadcrumb.href" 
+            :to="formatHref(breadcrumb)" 
+            class="text-gray-700 hover:text-orange-500 transition-colors font-medium"
+          >
+            {{ breadcrumb.label }}
+          </router-link>
+          <span v-else class="text-gray-700">{{ breadcrumb.label }}</span>
+        </template>
+        
+        <!-- Current Page (Last Item) -->
+        <span 
+          v-else 
+          class="text-orange-500 font-semibold"
+          aria-current="page"
+        >
+          {{ breadcrumb.label }}
+        </span>
       </li>
     </ol>
   </nav>
-  <!-- Breadcrumb -->
 </template>
 
 <script lang="ts" setup>
@@ -36,13 +52,52 @@ import { defineProps } from 'vue';
 interface Breadcrumb {
   label: string;
   href?: string;
+  type?: 'product' | 'category' | 'page';
 }
 
 const props = defineProps<{
   breadcrumbs: Breadcrumb[];
 }>();
+
+/**
+ * Format href based on breadcrumb type
+ * Ensures product links include /productos/ path
+ */
+const formatHref = (breadcrumb: Breadcrumb): string => {
+  // If it's a product type and does not already include /productos/
+  if (breadcrumb.type === 'product' && breadcrumb.href && !breadcrumb.href.startsWith('/productos/')) {
+    return `/productos/${breadcrumb.href.replace(/^\//, '')}`;
+  }
+  
+  // If it's a category type
+  if (breadcrumb.type === 'category' && breadcrumb.href) {
+    return `/productos?categoria=${breadcrumb.href.replace(/^\//, '')}`;
+  }
+  
+  // Otherwise return the href as is
+  return breadcrumb.href || '';
+};
 </script>
 
 <style scoped>
-/* Add any additional styles if needed */
+
+/* Add smooth hover transition */
+a {
+  position: relative;
+}
+
+a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 1px;
+  bottom: -2px;
+  left: 0;
+  background-color: #f97316; /* orange-500 */
+  transition: width 0.3s ease;
+}
+
+a:hover::after {
+  width: 100%;
+}
 </style>

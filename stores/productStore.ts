@@ -9,6 +9,8 @@ import servicesData from './services.json';
 export const useProductStore = defineStore('productStore', {
   state: () => ({
     products: productsData,
+    accesories: accesoriesData,
+    services: servicesData,
     kommoListAnguloRanurado: [] as any[], // New state property for the fetched list
   }),
   actions: {
@@ -29,6 +31,8 @@ export const useProductStore = defineStore('productStore', {
   },
   getters: {
     getProducts: (state) => state.products,
+    getAccesories: (state) => state.accesories,
+    getServices: (state) => state.services,
     getKommoListAnguloRanurado: (state) => state.kommoListAnguloRanurado,
   },
 });

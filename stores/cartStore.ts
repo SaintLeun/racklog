@@ -6,6 +6,7 @@ export interface CartItem {
   quantity: number; // Quantity of the product
   price: number; // Price per unit
   total: number; // Total price (quantity * price)
+  quoteOnly: boolean; // Indicates if the product is for quotation only
   config: Record<string, any>; // Configuration details (e.g., niveles, cuerpos, etc.)
 }
 

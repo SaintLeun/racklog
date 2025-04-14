@@ -1,0 +1,47 @@
+# Enable URL rewriting
+RewriteEngine On
+RewriteBase /
+
+# Set proper headers for REST API
+<IfModule mod_headers.c>
+    # Enable CORS
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    
+    # Handle OPTIONS pre-flight requests
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule ^(.*)$ $1 [R=200,L]
+</IfModule>
+
+# Add security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Frame-Options "SAMEORIGIN"
+</IfModule>
+
+# Disable directory listing for security
+Options -Indexes +FollowSymLinks
+
+# Protect sensitive files
+<FilesMatch "(?i:^.*\.(env|log|config.php))$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Allow .json files as they may be needed for API responses
+<FilesMatch "\.json$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# Route API requests through PHP script
+# The key change: Make sure the path is correct and the target file exists
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/(.*)$ /index.php [QSA,L]
+
+# Force https (uncomment if needed)
+# RewriteCond %{HTTPS} !=on
+# RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]

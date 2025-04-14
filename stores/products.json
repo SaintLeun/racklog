@@ -88,6 +88,7 @@
     "name": "Estanterías de Ángulo Ranurado",
     "slug": "angulo-ranurado",
     "type": "Optimizacion de Espacios",
+    "category": "estanterias",
     "model": "https://sketchfab.com/models/1d90e83ff7704eaa9d7b0cc5f0f6a804/embed",
     "images": {
       "main": "/assets/images/angulo-ranurado-main.png",
@@ -178,6 +179,7 @@
     "name": "Rack Pushback",
     "slug": "rack-pushback",
     "type": "Almacenamiento Industrial",
+    "category": "racks",
     "model": "",
     "images": {
       "main": "/assets/images/rack-pushback-main.png",
@@ -227,6 +229,7 @@
     "name": "Mini Rack",
     "slug": "mini-rack",
     "type": "Almacenamiento Industrial",
+    "category": "racks",
     "model": "",
     "images": {
       "main": "/assets/images/rack-minirack-main.png",
@@ -282,6 +285,7 @@
     "name": "Rack Autoportante",
     "slug": "rack-autoportante",
     "type": "Almacenamiento Industrial",
+    "category": "racks",
     "model": "",
     "images": {
       "main": "/assets/images/rack-autoportante-main.png",
@@ -334,6 +338,7 @@
     "name": "Rack Dinámico",
     "slug": "rack-dinamico",
     "type": "Almacenamiento Industrial",
+    "category": "racks",
     "model": "",
     "images": {
       "main": "/assets/images/rack-dinamico-main.png",
@@ -386,10 +391,11 @@
     "name": "Rack Drive In",
     "slug": "rack-drive-in",
     "type": "Almacenamiento Industrial",
+    "category": "racks",
     "model": "",
     "images": {
-      "main": "/assets/images/rack-dinamico-main.png",
-      "card": "/assets/images/rack-dinamico-card.png",
+      "main": "/assets/images/rack-drivein-main.png",
+      "card": "/assets/images/rack-drivein-card.png",
       "render": "/assets/images/anra_body.png",
       "gallery": [
         "/assets/images/rack-pushback-gallery-1.png",
@@ -438,6 +444,7 @@
     "name": "Cajas plásticas",
     "slug": "cajas-plasticas",
     "type": "Almacenamiento",
+    "category": "accesorios",
     "model": "",
     "images": {
       "main": "/assets/images/cajas-plasticas-main.png",
@@ -450,7 +457,7 @@
       ]
     },
     "attributes": {
-      "loadType": "",
+      "loadType": "Picking",
       "capacity": "",
       "height": "",
       "depth": "",
@@ -486,6 +493,7 @@
     "name": "Entreplantas",
     "slug": "entreplantas",
     "type": "Almacenamiento",
+    "category": "mezzanines",
     "model": "",
     "images": {
       "main": "/assets/images/entreplantas-main.png",
@@ -498,7 +506,7 @@
       ]
     },
     "attributes": {
-      "loadType": "",
+      "loadType": "Paletizado y Picking" ,
       "capacity": "",
       "height": "",
       "depth": "",
@@ -521,16 +529,13 @@
     "name": "Altillo de Angulo Ranurado",
     "slug": "altillo-angulo-ranurado",
     "type": "Almacenamiento Industrial",
+    "category": "mezzanines",
     "model": "",
     "images": {
       "main": "/assets/images/rack-dinamico-main.png",
-      "card": "/assets/images/rack-dinamico-card.png",
+      "card": "/assets/images/altillo-angulo-ranurado-card.png",
       "render": "/assets/images/anra_body.png",
-      "gallery": [
-        "/assets/images/rack-pushback-gallery-1.png",
-        "/assets/images/rack-pushback-gallery-2.png",
-        "/assets/images/rack-pushback-gallery-3.png"
-      ]
+      "gallery": []
     },
     "attributes": {
       "loadType": "Paletizado",
@@ -564,9 +569,10 @@
     ]
   },
   {
-    "name": "Altillo de rack selectivo",
+    "name": "Altillo de Rack Selectivo",
     "slug": "altillo-rack-selectivo",
     "type": "Almacenamiento Industrial",
+    "category": "mezzanines",
     "model": "",
     "images": {
       "main": "/assets/images/altillo-rack-selectivo-main.png",
@@ -579,7 +585,7 @@
       ]
     },
     "attributes": {
-      "loadType": "",
+      "loadType": "Paletizado",
       "capacity": "",
       "height": "",
       "depth": "",

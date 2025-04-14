@@ -1,48 +1,162 @@
-{
-  "moreProducts": "Más Productos",
-  "otherSolutions": "Otras Soluciones",
-  "products": {
-    "rackSelectivo": {
-      "name": "Rack Selectivo",
-      "description": "Sistema de estantería con acceso directo, alta rotación y versátil. Organización óptima para un almacén eficiente",
-      "image": "/assets/images/rack-selectivo-card.png",
-      "url": "/productos/rack-selectivo"
-    },
-    "anguloRanurado": {
-      "name": "Ángulo Ranurado",
-      "description": "Almacenaje ligero, bandejas metálicas, montaje fácil, soporta hasta 250kg y gran versatilidad.",
-      "image": "/assets/images/rack-selectivo-card.png",
-      "url": "/productos/angulo-ranurado"
-    },
-    "rackPushback": {
-      "name": "Rack Pushback",
-      "description": "Almacenaje LIFO en profundidad, optimiza espacio. Acceso directo paletas, a medida, carga y altura variable",
-      "image": "/assets/images/rack-pushback-card.png",
-      "url": "/productos/rack-pushback"
-    },
-    "rackDriveIn": {
-      "name": "Rack Drive In",
-      "description": "Almacenaje alta densidad, gran volumen paletas. Ideal baja rotación. Optimiza espacio y estabilidad bodega.",
-      "image": "/assets/images/rack-drivein-card.png",
-      "url": "/productos/rack-drive-in"
-    },
-    "rackDinamico": {
-      "name": "Rack Dinámico",
-      "description": "Almacenaje FIFO por gravedad, acceso posterior y salida frontal. Optimiza rotación, sin ingreso grúa.",
-      "image": "/assets/images/rack-dinamico-card.png",
-      "url": "/productos/rack-dinamico"
-    },
-    "rackAutoportante": {
-      "name": "Rack Autoportante",
-      "description": "Estructura almacén, máximo espacio. Integración edificio, alta eficiencia. Almacenaje avanzado y seguro.",
-      "image": "/assets/images/rack-autoportante-card.png",
-      "url": "/productos/rack-autoportante"
-    },
-    "miniRack": {
-      "name": "Mini Rack",
-      "description": "Almacenaje manual y palet. Picking eficiente, carga media. Acceso directo, equilibrio capacidad.",
-      "image": "/assets/images/rack-minirack-card.png",
-      "url": "/productos/mini-rack"
-    }
+[
+  {
+    "id": "mantencion-racks",
+    "name": "Mantención de Racks de Bodegas",
+    "slug": "mantencion-racks-bodegas",
+    "shortDescription": "Prolonga la vida útil y la seguridad de tus sistemas de almacenaje.",
+    "longDescription": "En Racklog, entendemos que la inversión en sistemas de almacenaje es un activo importante para tu negocio. Por eso, ofrecemos un servicio de Mantención de Racks de Bodegas que te ayudará a proteger tu inversión, garantizar la seguridad de tus trabajadores y optimizar la eficiencia de tus operaciones. Los racks industriales están sometidos a un desgaste constante debido al peso de la carga, el movimiento de los equipos y las condiciones ambientales. Con el tiempo, esto puede provocar daños en la estructura, desajustes, deformaciones e incluso el colapso de los racks, lo que puede resultar en accidentes, pérdidas de mercancía y costosas reparaciones. Nuestro servicio de Mantención de Racks te ayuda a prevenir estos problemas mediante inspecciones regulares, ajustes y reparaciones, garantizando la integridad y funcionalidad de tus sistemas de almacenaje.",
+    "mainImage": "/assets/images/servicios/mantencion-racks-principal.jpg",
+    "galleryImages": [
+      "/assets/images/servicios/mantencion-racks-galeria1.jpg",
+      "/assets/images/servicios/mantencion-racks-galeria2.jpg"
+    ],
+    "highlights": [
+      "Inspecciones periódicas: Realizamos inspecciones visuales y técnicas para detectar posibles daños, desgastes o desajustes en los racks.",
+      "Ajustes y reparaciones: Corregimos cualquier problema que se detecte, como apriete de tornillos, alineación de vigas, sustitución de piezas dañadas, etc.",
+      "Limpieza y mantenimiento: Realizamos la limpieza de los racks y aplicamos tratamientos anticorrosivos para prolongar su vida útil.",
+      "Informe técnico: Elaboramos un informe detallado con los resultados de la inspección, las acciones realizadas y recomendaciones para futuras intervenciones."
+    ],
+    "serviceDetails": [
+      {
+        "title": "Inspección Detallada",
+        "description": "Nuestro equipo de expertos realiza una inspección exhaustiva de tus racks, revisando cada componente y detectando cualquier anomalía.",
+        "icon": "fa-search"  
+      },
+      {
+        "title": "Mantenimiento Preventivo",
+        "description": "Implementamos un plan de mantenimiento preventivo para evitar problemas futuros y prolongar la vida útil de tus racks.",
+        "icon": "fa-wrench" 
+      }
+    ],
+    "keywords": ["mantención racks", "mantenimiento bodegas", "inspección racks", "reparación racks", "seguridad almacén"]
+  },
+  {
+    "id": "instalacion-racks",
+    "name": "Instalación de Racks",
+    "slug": "instalacion-racks",
+    "shortDescription": "Instalación profesional y eficiente de tus sistemas de almacenaje.",
+    "longDescription": "Racklog ofrece un servicio de instalación de racks completo y profesional, garantizando que tus sistemas de almacenaje se monten de forma segura y eficiente. Nuestro equipo de instaladores tiene la experiencia y el conocimiento necesario para manejar todo tipo de racks, desde los más simples hasta los más complejos. Nos encargamos de todo el proceso, desde la planificación y la preparación del sitio hasta el montaje y la puesta en marcha del sistema.",
+    "mainImage": "/assets/images/servicios/instalacion-racks-principal.jpg",
+    "galleryImages": [
+      "/assets/images/servicios/instalacion-racks-galeria1.jpg"
+    ],
+    "highlights": [
+      "Planificación y diseño: Te asesoramos en la elección del sistema de racks más adecuado para tus necesidades y diseñamos la distribución óptima de tu almacén.",
+      "Preparación del sitio: Nos aseguramos de que el suelo esté nivelado y preparado para la instalación.",
+      "Montaje profesional: Realizamos el montaje de los racks siguiendo las especificaciones del fabricante y las normas de seguridad.",
+      "Puesta en marcha: Verificamos que el sistema funcione correctamente y te proporcionamos la formación necesaria para su uso."
+    ],
+    "serviceDetails": [
+      {
+        "title": "Asesoría Personalizada",
+        "description": "Nuestro equipo te brinda asesoría experta para elegir el sistema de racks ideal para tu negocio.",
+        "icon": "fa-users" 
+      },
+      {
+        "title": "Montaje Seguro y Eficiente",
+        "description": "Garantizamos un montaje rápido y seguro, minimizando las interrupciones en tu operación.",
+        "icon": "fa-truck" 
+      }
+    ],
+    "keywords": ["instalación racks", "montaje estanterías", "diseño almacén", "sistemas almacenaje", "instalación bodegas"]
+  },
+  {
+    "id": "ingenieria",
+    "name": "Ingeniería",
+    "slug": "ingenieria",
+    "shortDescription": "Soluciones de almacenaje a tu medida.",
+    "longDescription": "En Racklog, no solo vendemos estanterías, vamos más allá. Ofrecemos ingeniería, es decir, soluciones de almacenaje a tu medida que se acomodan a las necesidades integrales de tu proceso de negocio. ¿Qué abarca nuestro servicio de ingeniería? Desde la idea de ingeniería más innovadora hasta su materialización, nos involucramos de lleno para diseñar el sistema de almacenaje que optimice el espacio, disminuya los costos de operación y que cumpla con las normativas vigentes.",
+    "mainImage": "/assets/images/servicios/ingenieria-principal.jpg",
+    "galleryImages": [
+      "/assets/images/servicios/ingenieria-galeria1.jpg"
+    ],
+    "highlights": [
+      "Diseño de layouts: Ingenieros especialistas en la materia, hacen los levantamientos de los espacios para diseñar el sistema de almacenaje que mejor se acomode a tus operaciones.",
+      "Cálculos estructurales: Realizamos cálculos precisos para garantizar la resistencia y estabilidad de las estanterías, cumpliendo con las normativas vigentes.",
+      "Selección de materiales: Te asesoramos en la elección de materiales más adecuados para tu proyecto, considerando factores como el peso, el ambiente y el presupuesto.",
+      "Implementación: Coordinamos la ejecución de la obra, desde la entrega de los materiales hasta la puesta en marcha del sistema.",
+      "Ingeniería a medida: Integramos las necesidades de tu empresa, con la última tecnología de materiales y certificaciones de calidad."
+    ],
+    "serviceDetails": [
+      {
+        "title": "Experiencia y profesionalismo",
+        "description": "Contamos con un equipo de ingenieros con amplia experiencia en la implementación de proyectos de almacenaje a medida.",
+        "icon": "fa-briefcase"
+      },
+      {
+        "title": "Tecnología de vanguardia",
+        "description": "Utilizamos software de diseño de última generación, que permite simular el comportamiento de las estanterías en diferentes escenarios.",
+        "icon": "fa-cogs"
+      },
+      {
+        "title": "Compromiso con la calidad",
+        "description": "Nos aseguramos de que las estanterías cumplan con los más altos estándares de calidad.",
+        "icon": "fa-check-circle"
+      },
+      {
+        "title": "Acompañamiento integral",
+        "description": "Te acompañamos en todo el proceso, desde la concepción del proyecto hasta la puesta en marcha.",
+        "icon": "fa-handshake"
+      }
+    ],
+    "benefits": [
+      "Optimización del espacio: Aprovechamos al máximo el espacio disponible en tu bodega.",
+      "Mayor seguridad: Diseñamos sistemas de almacenaje seguros y resistentes al tiempo.",
+      "Reducción de costos: Optimizamos los recursos para reducir los costos de instalación.",
+      "Mayor eficiencia: Agilizamos los procesos de almacenaje y facilitamos el trabajo de tu personal.",
+      "Cumplimiento normativo: Cumplimos con todas las normativas vigentes en materia de seguridad y calidad."
+    ],
+    "keywords": ["ingeniería almacenaje", "diseño bodegas", "cálculo estructural racks", "optimización espacio", "soluciones almacenaje"]
+  },
+  {
+    "id": "montaje-desmontaje",
+    "name": "Montaje y Desmontaje de Estructuras",
+    "slug": "montaje-desmontaje-estructuras",
+    "shortDescription": "Expertos en instalación de sistemas de almacenaje.",
+    "longDescription": "En Racklog prestamos este servicio de montaje y desmontaje de estructuras, garantizando precisión, seguridad y eficiencia en cada una de las operaciones. Nos encargamos de todos los aspectos del trabajo, desde la planificación hasta la ejecución.",
+    "mainImage": "/assets/images/servicios/montaje-desmontaje-principal.jpg",
+    "galleryImages": [
+      "/assets/images/servicios/montaje-desmontaje-galeria1.jpg"
+    ],
+    "highlights": [
+      "Inversión de racks: Realizamos la instalación de racks nuevos de cualquier tipo, tanto para generar nuevas ubicaciones, como para densificar y mejorar la cantidad de almacenamiento por m2.",
+      "Desmontaje de estructuras: Indicamos el desmontaje de estructuras de almacenaje existentes de forma segura y eficiente.",
+      "Traslado de estanterías: Nos encargamos del traslado de estanterías de almacenaje existentes a otras ubicaciones.",
+      "Aumento de altura: Realizamos el aumento de altura de estanterías para generar nuevas ubicaciones sin necesidad de comprar una nueva estructura."
+    ],
+    "benefits": [
+      "Seguridad: Nuestro equipo aplica estrictas normas de montaje y desmontaje para asegurar la integridad tanto de la carga, el personal y la estabilidad de la estructura.",
+      "Eficiencia: Minimizamos los tiempos de inactividad y desarrollamos intervenciones sin interrumpir las operaciones en las operaciones.",
+      "Profesionalismo: Contamos con personal capacitado y con amplia experiencia en montaje y desmontaje de estructuras.",
+      "Flexibilidad: Nos adaptamos a tus necesidades y horarios para que puedas seguir usando tu bodega de la manera más rápida posible.",
+      "Versatilidad: Ofrecemos diferentes servicios para que puedas resolver con nosotros la mayor cantidad de tu operación."
+    ],
+    "serviceDetails": [
+      {
+        "title": "Tipos de estructura a montar y desmontar:",
+        "description": null,
+        "list": [
+          "Selectivo",
+          "Drive In",
+          "Push Back",
+          "Trilaterales",
+          "Transpaletas",
+          "Traslados",
+          "Otros"
+        ]
+      },
+      {
+        "title": "Nuestros compromisos:",
+        "description": null,
+        "list": [
+          "Cumplimiento de plazos de ejecución de la obra.",
+          "Correcta utilización de los elementos de seguridad.",
+          "Correcta manipulación de los materiales.",
+          "Correcta instalación del andamiaje."
+        ]
+      }
+    ],
+    "keywords": ["montaje racks", "desmontaje estanterías", "instalación almacenaje", "traslado racks", "aumento altura racks"]
   }
-}
+
+]
