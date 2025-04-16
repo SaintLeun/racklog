@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 
 export interface CartItem {
-  id: string; // Unique identifier for the product
   name: string; // Product name
   quantity: number; // Quantity of the product
   price: number; // Price per unit
@@ -19,7 +18,7 @@ export const useCartStore = defineStore('cartStore', {
     addToCart(product: Omit<CartItem, 'total'>) {
       const existingItem = this.cart.find(
         (item) =>
-          item.id === product.id &&
+          item.name === product.name &&
           JSON.stringify(item.config) === JSON.stringify(product.config)
       );
       if (existingItem) {
@@ -35,10 +34,10 @@ export const useCartStore = defineStore('cartStore', {
     },
 
     // Remove a product from the cart
-    removeFromCart(productId: string, config: Record<string, any>) {
+    removeFromCart(productName: string, config: Record<string, any>) {
       const index = this.cart.findIndex(
         (item) =>
-          item.id === productId &&
+          item.name === productName &&
           JSON.stringify(item.config) === JSON.stringify(config)
       );
       if (index !== -1) {
@@ -48,10 +47,10 @@ export const useCartStore = defineStore('cartStore', {
     },
 
     // Update the quantity of a product in the cart
-    updateQuantity(productId: string, config: Record<string, any>, quantity: number) {
+    updateQuantity(productName: string, config: Record<string, any>, quantity: number) {
       const item = this.cart.find(
         (item) =>
-          item.id === productId &&
+          item.name === productName &&
           JSON.stringify(item.config) === JSON.stringify(config)
       );
       if (item) {
@@ -59,7 +58,7 @@ export const useCartStore = defineStore('cartStore', {
           item.quantity = quantity;
           item.total = item.quantity * item.price;
         } else {
-          this.removeFromCart(productId, config); // Remove item if quantity is 0
+          this.removeFromCart(productName, config); // Remove item if quantity is 0
         }
         this.saveCart(); // Save cart to localStorage
       }

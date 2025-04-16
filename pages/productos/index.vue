@@ -188,7 +188,7 @@
   import { ref, computed, onMounted, watch } from 'vue';
   import { useProductStore } from '@/stores/productStore';
   import { useRoute, useRouter } from 'vue-router';
-  import QuoteModal from '@/components/QuoteModal.vue';
+  import QuoteModal from '@/components/QuoteModal/QuoteModal.vue';
   import ContactModal from '@/components/ContactModal.vue';
 
   // Router and route for query params

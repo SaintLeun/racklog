@@ -10,21 +10,28 @@
           </div>
           
           <!-- Content container with proper z-index -->
-          <div class="relative z-10 flex w-full max-w-6xl mx-auto items-center justify-between px-8">
-            <!-- Product image on the left side -->
-            <div class="w-1/2 flex justify-center items-center">
+          <div class="relative z-10 flex flex-col md:flex-row w-full max-w-6xl mx-auto items-center justify-between px-4 md:px-8">
+            <!-- Product image hidden on small screens using Tailwind's responsive classes -->
+            <div class="hidden md:flex md:w-1/2 justify-center items-center">
               <img :src="slide.overlay" :alt="slide.alt" class="object-contain max-h-[400px] transition-all duration-700" :class="{ 'opacity-100 translate-x-0': currentSlide === index, 'opacity-0 -translate-x-10': currentSlide !== index }">
             </div>
             
-            <!-- Text card on the right side -->
-            <div class="w-1/2 flex justify-end">
-              <div class="text-card p-6 bg-white rounded-lg shadow-lg max-w-lg bg-opacity-95 transition-all duration-700" :class="{ 'opacity-100 translate-x-0': currentSlide === index, 'opacity-0 translate-x-10': currentSlide !== index }">
-                <h2 class="text-3xl font-bold mb-3 text-gray-900">{{ slide.title }}</h2>
+            <!-- Text card takes full width on small screens -->
+            <div class="w-full md:w-1/2 flex justify-center md:justify-end">
+              <div class="text-card p-5 md:p-6 bg-white rounded-lg shadow-lg max-w-lg bg-opacity-95 transition-all duration-700 w-full" :class="{ 'opacity-100 translate-x-0': currentSlide === index, 'opacity-0 translate-x-10': currentSlide !== index }">
+                <h2 class="text-2xl md:text-3xl font-bold mb-3 text-gray-900">{{ slide.title }}</h2>
                 <div class="w-16 h-1 bg-orange-500 rounded mb-4"></div>
-                <p class="text-base text-gray-700 leading-relaxed">{{ slide.description }}</p>
+                <p class="text-sm md:text-base text-gray-700 leading-relaxed">{{ slide.description }}</p>
                 <div class="mt-4 relative z-20">
-                  <button @click="goToDetails(slide)" class="mt-2 px-5 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors shadow-md flex items-center pointer-events-auto">
+                  <!-- Button with hover effect and shadow -->
+                  <button v-if="slide.link" @click="goToDetails(slide)" class="w-full md:w-auto mt-2 px-5 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors shadow-md flex items-center justify-center pointer-events-auto">
                     Ver detalles
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                    </svg>
+                  </button>
+                  <button v-else @click="openContactModal()" class="w-full md:w-auto mt-2 px-5 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors shadow-md flex items-center justify-center pointer-events-auto">
+                    Contáctanos
                     <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                     </svg>
@@ -38,13 +45,13 @@
     </div>
     
     <!-- Improved navigation buttons with higher z-index -->
-    <button @click="prevSlide" class="absolute left-6 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 hover:bg-opacity-60 text-white w-10 h-10 rounded-full flex items-center justify-center transition-all z-20">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <button @click="prevSlide" class="absolute left-2 md:left-6 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 hover:bg-opacity-60 text-white w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all z-20">
+      <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
       </svg>
     </button>
-    <button @click="nextSlide" class="absolute right-6 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 hover:bg-opacity-60 text-white w-10 h-10 rounded-full flex items-center justify-center transition-all z-20">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <button @click="nextSlide" class="absolute right-2 md:right-6 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 hover:bg-opacity-60 text-white w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all z-20">
+      <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
       </svg>
     </button>
@@ -60,51 +67,42 @@
       ></button>
     </div>
   </div>
+  <!-- Contact Modal -->
+  <ContactModal 
+      :isVisible="isContactModalOpen" 
+      @close="closeContactModal"
+    />
 </template>
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
+import ContactModal from '~/components/ContactModal.vue';
 
 const router = useRouter();
 
 // State
 const currentSlide = ref(0);
 const autoSlideInterval = ref(null);
+const isContactModalOpen = ref(false);
 
 // Data
 const slides = ref([
   { 
     image: '/assets/images/slide-1.png', 
-    overlay: 'https://qa.racklog.cl/images/slider/silder_1/palletslider1.png', 
-    alt: 'Rack Selectivo', 
-    title: 'Rack Selectivo', 
-    description: 'La solución ideal para el almacenamiento de pallets con acceso directo a cada ubicación. Maximiza el aprovechamiento de espacio con la versatilidad que su negocio necesita.',
-    link: '/productos/rack-selectivo'
+    overlay: '/assets/images/carousel-overlay-1.png', 
+    alt: 'Agenda tu visita técnica gratuita', 
+    title: 'Visita Técnica Gratuita',
+    description: '¿Buscas optimizar tu espacio de almacenamiento? Solicita hoy mismo una visita técnica gratuita de Racklog en Santiago. Nuestros expertos analizarán tu situación y te mostrarán cómo nuestras soluciones de racks y estanterías pueden transformar tu espacio, haciéndolo más eficiente y funcional. ¡Contáctanos ahora para agendar tu visita!', 
+    link: '/servicios/visita-tecnica'
   },
   { 
-    image: '/assets/images/slide-2.png', 
-    overlay: 'https://qa.racklog.cl/images/slider/silder_1/palletslider1.png', 
-    alt: 'Ángulo Ranurado', 
-    title: 'Ángulo Ranurado', 
-    description: 'Sistema versátil para cargas livianas y medianas. Ideal para organizar inventarios, archivos y productos de diferentes dimensiones con fácil acceso y montaje sin herramientas especiales.',
-    link: '/productos/angulo-ranurado'
-  },
-  { 
-    image: '/assets/images/slide-1.png', 
-    overlay: 'https://qa.racklog.cl/images/slider/silder_1/palletslider1.png', 
-    alt: 'Rack Drive-In', 
-    title: 'Rack Drive-In', 
-    description: 'Maximice la capacidad de almacenamiento con nuestros sistemas Drive-In. Perfectos para almacenar grandes cantidades de productos homogéneos aprovechando al máximo el espacio disponible.',
-    link: '/productos/rack-drive-in'
-  },
-  { 
-    image: '/assets/images/slide-2.png', 
-    overlay: 'https://qa.racklog.cl/images/slider/silder_1/palletslider1.png', 
-    alt: 'Soluciones Industriales', 
-    title: 'Soluciones Industriales Personalizadas', 
-    description: 'Diseñamos e implementamos sistemas de almacenamiento a medida para satisfacer las necesidades específicas de su operación logística y maximizar la eficiencia de su espacio.',
-    link: '/productos'
+    image: '/assets/images/slide-4.png', 
+    overlay: '/assets/images/carousel-overlay-2.png', 
+    alt: 'Cotización en 24 horas', 
+    title: 'Cotización en 24 horas',
+    description: 'Configura tus racks y estanterías con nuestro cotizador online o solicita una cotización personalizada completando nuestro formulario. Recíbela en menos de 24 horas. ¡Contáctanos y optimiza tu espacio!', 
+    link: ''
   }
 ]);
 
@@ -136,6 +134,17 @@ const goToDetails = (slide) => {
   }
 };
 
+function openContactModal() {
+  isContactModalOpen.value = true;
+  if (isMenuOpen.value) {
+    isMenuOpen.value = false;
+  }
+}
+
+function closeContactModal() {
+  isContactModalOpen.value = false;
+}
+
 // Lifecycle hooks
 onMounted(() => {
   currentSlide.value = 0;
@@ -149,7 +158,13 @@ onBeforeUnmount(() => {
 
 <style scoped>
   .carousel {
-    min-height: 500px;
+    min-height: 300px; /* Reduced from 500px */
+  }
+  
+  @media (min-width: 768px) {
+    .carousel {
+      min-height: 500px;
+    }
   }
   
   .carousel-inner img {
@@ -157,7 +172,7 @@ onBeforeUnmount(() => {
   }
   
   .text-card {
-    max-height: 80%;
+    max-height: 90%;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
   }
   
@@ -180,12 +195,11 @@ onBeforeUnmount(() => {
   
   /* Responsive adjustments */
   @media (max-width: 768px) {
-    .content-container {
-      flex-direction: column;
-    }
     
     .text-card {
-      margin-top: 1rem;
+      width: 100%;
+      margin: 0 auto;
+      max-width: 90%;
     }
   }
 </style>

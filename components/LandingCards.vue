@@ -63,7 +63,7 @@
 import { ref, computed } from 'vue';
 import { useProductStore } from '@/stores/productStore';
 import ContactModal from './ContactModal.vue';
-import QuoteModal from './QuoteModal.vue';
+import QuoteModal from './QuoteModal/QuoteModal.vue';
 
 const productStore = useProductStore();
 
@@ -81,7 +81,7 @@ const isQuoteModalVisible = ref(false);
 const modalTitle = ref('');
 const selectedProduct = ref('');
 
-function openQuoteWithProduct(product) {
+function openQuoteWithProduct(product: { slug: string; name: string }) {
   // Set the selected product based on its name
   selectedProduct.value = product.slug === 'rack-selectivo' ? 'RS' : 'AR';
   // Set modal title based on the product

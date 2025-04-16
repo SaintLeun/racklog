@@ -5,11 +5,8 @@
     "slug": "mantencion-racks-bodegas",
     "shortDescription": "Prolonga la vida útil y la seguridad de tus sistemas de almacenaje.",
     "longDescription": "En Racklog, entendemos que la inversión en sistemas de almacenaje es un activo importante para tu negocio. Por eso, ofrecemos un servicio de Mantención de Racks de Bodegas que te ayudará a proteger tu inversión, garantizar la seguridad de tus trabajadores y optimizar la eficiencia de tus operaciones. Los racks industriales están sometidos a un desgaste constante debido al peso de la carga, el movimiento de los equipos y las condiciones ambientales. Con el tiempo, esto puede provocar daños en la estructura, desajustes, deformaciones e incluso el colapso de los racks, lo que puede resultar en accidentes, pérdidas de mercancía y costosas reparaciones. Nuestro servicio de Mantención de Racks te ayuda a prevenir estos problemas mediante inspecciones regulares, ajustes y reparaciones, garantizando la integridad y funcionalidad de tus sistemas de almacenaje.",
-    "mainImage": "/assets/images/servicios/mantencion-racks-principal.jpg",
-    "galleryImages": [
-      "/assets/images/servicios/mantencion-racks-galeria1.jpg",
-      "/assets/images/servicios/mantencion-racks-galeria2.jpg"
-    ],
+    "mainImage": "/assets/images/servicios/mantencion-racks.png",
+    "galleryImages": [],
     "highlights": [
       "Inspecciones periódicas: Realizamos inspecciones visuales y técnicas para detectar posibles daños, desgastes o desajustes en los racks.",
       "Ajustes y reparaciones: Corregimos cualquier problema que se detecte, como apriete de tornillos, alineación de vigas, sustitución de piezas dañadas, etc.",
@@ -36,10 +33,8 @@
     "slug": "instalacion-racks",
     "shortDescription": "Instalación profesional y eficiente de tus sistemas de almacenaje.",
     "longDescription": "Racklog ofrece un servicio de instalación de racks completo y profesional, garantizando que tus sistemas de almacenaje se monten de forma segura y eficiente. Nuestro equipo de instaladores tiene la experiencia y el conocimiento necesario para manejar todo tipo de racks, desde los más simples hasta los más complejos. Nos encargamos de todo el proceso, desde la planificación y la preparación del sitio hasta el montaje y la puesta en marcha del sistema.",
-    "mainImage": "/assets/images/servicios/instalacion-racks-principal.jpg",
-    "galleryImages": [
-      "/assets/images/servicios/instalacion-racks-galeria1.jpg"
-    ],
+    "mainImage": "/assets/images/servicios/instalacion-de-racks.png",
+    "galleryImages": [],
     "highlights": [
       "Planificación y diseño: Te asesoramos en la elección del sistema de racks más adecuado para tus necesidades y diseñamos la distribución óptima de tu almacén.",
       "Preparación del sitio: Nos aseguramos de que el suelo esté nivelado y preparado para la instalación.",
@@ -66,10 +61,8 @@
     "slug": "ingenieria",
     "shortDescription": "Soluciones de almacenaje a tu medida.",
     "longDescription": "En Racklog, no solo vendemos estanterías, vamos más allá. Ofrecemos ingeniería, es decir, soluciones de almacenaje a tu medida que se acomodan a las necesidades integrales de tu proceso de negocio. ¿Qué abarca nuestro servicio de ingeniería? Desde la idea de ingeniería más innovadora hasta su materialización, nos involucramos de lleno para diseñar el sistema de almacenaje que optimice el espacio, disminuya los costos de operación y que cumpla con las normativas vigentes.",
-    "mainImage": "/assets/images/servicios/ingenieria-principal.jpg",
-    "galleryImages": [
-      "/assets/images/servicios/ingenieria-galeria1.jpg"
-    ],
+    "mainImage": "/assets/images/servicios/ingenieria.png",
+    "galleryImages": [],
     "highlights": [
       "Diseño de layouts: Ingenieros especialistas en la materia, hacen los levantamientos de los espacios para diseñar el sistema de almacenaje que mejor se acomode a tus operaciones.",
       "Cálculos estructurales: Realizamos cálculos precisos para garantizar la resistencia y estabilidad de las estanterías, cumpliendo con las normativas vigentes.",
@@ -114,15 +107,35 @@
     "slug": "montaje-desmontaje-estructuras",
     "shortDescription": "Expertos en instalación de sistemas de almacenaje.",
     "longDescription": "En Racklog prestamos este servicio de montaje y desmontaje de estructuras, garantizando precisión, seguridad y eficiencia en cada una de las operaciones. Nos encargamos de todos los aspectos del trabajo, desde la planificación hasta la ejecución.",
-    "mainImage": "/assets/images/servicios/montaje-desmontaje-principal.jpg",
-    "galleryImages": [
-      "/assets/images/servicios/montaje-desmontaje-galeria1.jpg"
-    ],
+    "mainImage": "/assets/images/servicios/montaje-desmontaje-estructuras.png",
+    "galleryImages": [],
     "highlights": [
       "Inversión de racks: Realizamos la instalación de racks nuevos de cualquier tipo, tanto para generar nuevas ubicaciones, como para densificar y mejorar la cantidad de almacenamiento por m2.",
       "Desmontaje de estructuras: Indicamos el desmontaje de estructuras de almacenaje existentes de forma segura y eficiente.",
       "Traslado de estanterías: Nos encargamos del traslado de estanterías de almacenaje existentes a otras ubicaciones.",
       "Aumento de altura: Realizamos el aumento de altura de estanterías para generar nuevas ubicaciones sin necesidad de comprar una nueva estructura."
+    ],
+    "serviceDetails": [
+      {
+        "title": "Tipos de estructura",
+        "description": "Trabajamos con diversos tipos de estructuras como Selectivo, Drive In, Push Back, Trilaterales, Transpaletas y otros sistemas de almacenaje.",
+        "icon": "fa-cubes"
+      },
+      {
+        "title": "Montaje profesional",
+        "description": "Nuestro equipo especializado garantiza el montaje seguro y eficiente de todo tipo de racks industriales.",
+        "icon": "fa-tools"
+      },
+      {
+        "title": "Desmontaje seguro",
+        "description": "Realizamos desmontajes planificados asegurando la integridad de los materiales y la seguridad del entorno.",
+        "icon": "fa-unlink"
+      },
+      {
+        "title": "Compromiso de calidad",
+        "description": "Cumplimos rigurosamente con los plazos de ejecución y aplicamos las normativas de seguridad en cada proyecto.",
+        "icon": "fa-award"
+      }
     ],
     "benefits": [
       "Seguridad: Nuestro equipo aplica estrictas normas de montaje y desmontaje para asegurar la integridad tanto de la carga, el personal y la estabilidad de la estructura.",
@@ -131,32 +144,35 @@
       "Flexibilidad: Nos adaptamos a tus necesidades y horarios para que puedas seguir usando tu bodega de la manera más rápida posible.",
       "Versatilidad: Ofrecemos diferentes servicios para que puedas resolver con nosotros la mayor cantidad de tu operación."
     ],
+    "keywords": ["montaje racks", "desmontaje estanterías", "instalación almacenaje", "traslado racks", "aumento altura racks"]
+  },
+  {
+    "id": "visita-tecnica",
+    "name": "Visita Técnica",
+    "slug": "visita-tecnica",
+    "shortDescription": "Solicita una visita técnica gratuita en Santiago para tu proyecto de optimización de espacios con estanterías.",
+    "longDescription": "¿Buscas optimizar el espacio de almacenamiento de tu bodega? En Racklog te ofrecemos una visita técnica completamente gratuita (sólo Santiago) para ayudarte a levantar tu proyecto de ingeniería. Nuestros expertos visitarán tus instalaciones para analizar en detalle tus necesidades y el espacio disponible, con el objetivo de desarrollar un proyecto de ingeniería a medida utilizando nuestras soluciones de estanterías. Descubre cómo podemos maximizar tu capacidad de almacenamiento y mejorar la eficiencia de tu bodega. ¡Contáctanos ahora para agendar tu visita técnica! (Visitas técnicas disponibles en todo Chile, gratuitas solo en Santiago).",
+    "mainImage": "/assets/images/servicios/visita-tecnica.png",
+    "galleryImages": [],
+    "highlights": [
+      "Visita técnica **gratuita solo en Santiago**.",
+      "Análisis de bodega para levantamiento de proyecto de ingeniería.",
+      "Asesoramiento en optimización de espacios con estanterías.",
+      "Mejora de la eficiencia y capacidad de almacenamiento."
+    ],
     "serviceDetails": [
       {
-        "title": "Tipos de estructura a montar y desmontar:",
-        "description": null,
-        "list": [
-          "Selectivo",
-          "Drive In",
-          "Push Back",
-          "Trilaterales",
-          "Transpaletas",
-          "Traslados",
-          "Otros"
-        ]
+        "title": "Análisis de Espacio y Necesidades",
+        "description": "Nuestros expertos visitarán tu bodega en Santiago para analizar el espacio disponible y comprender tus necesidades de almacenamiento para el proyecto de ingeniería.",
+        "icon": "fa-search"
       },
       {
-        "title": "Nuestros compromisos:",
-        "description": null,
-        "list": [
-          "Cumplimiento de plazos de ejecución de la obra.",
-          "Correcta utilización de los elementos de seguridad.",
-          "Correcta manipulación de los materiales.",
-          "Correcta instalación del andamiaje."
-        ]
+        "title": "Levantamiento de Proyecto de Ingeniería",
+        "description": "La visita técnica está enfocada en recopilar la información necesaria para desarrollar un proyecto de ingeniería para la optimización de tu espacio con nuestras estanterías.",
+        "icon": "fa-wrench"
       }
     ],
-    "keywords": ["montaje racks", "desmontaje estanterías", "instalación almacenaje", "traslado racks", "aumento altura racks"]
+    "keywords": ["visita técnica gratuita Santiago", "optimización bodegas Santiago", "proyecto ingeniería estanterías", "almacenamiento eficiente Santiago"]
   }
 
 ]

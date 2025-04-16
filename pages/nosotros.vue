@@ -85,11 +85,17 @@
             <div class="relative">
               <div class="absolute -bottom-6 -left-6 w-32 h-32 bg-orange-500/10 rounded-lg"></div>
               <div class="absolute -top-6 -right-6 w-32 h-32 bg-orange-500/10 rounded-lg"></div>
-              <img 
-                src="https://qa.racklog.cl/images/warehouse-workers.jpg" 
-                alt="Equipo Racklog" 
-                class="rounded-lg shadow-lg w-full h-auto relative z-10"
-              />
+              
+              <div class="rounded-lg shadow-lg overflow-hidden relative z-10">
+                <video 
+                  class="w-full h-auto"
+                  controls
+                >
+                  <source src="/assets/videos/nosotros.mp4" type="video/mp4">
+                  Su navegador no soporta la reproducción de videos.
+                </video>
+                
+              </div>
             </div>
           </div>
         </div>
@@ -226,7 +232,7 @@
           <div class="flex flex-col items-center p-6 bg-neutral-800 rounded-xl transition-transform hover:-translate-y-1">
             <div class="w-16 h-16 bg-orange-500/20 rounded-full flex items-center justify-center mb-4">
               <svg class="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
               </svg>
             </div>
             <h3 class="text-xl font-bold mb-3 text-center">Soluciones Personalizadas</h3>

@@ -219,8 +219,6 @@ const service = ref(null);
 const isContactModalVisible = ref(false);
 const modalTitle = ref('');
 
-debugger
-
 // Computed property to access services from the store
 const services = computed(() => productStore.services);
 

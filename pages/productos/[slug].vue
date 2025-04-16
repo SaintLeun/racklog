@@ -195,27 +195,28 @@
     <transition name="toast">
       <div 
         v-if="showCartNotification" 
-        class="fixed top-4 right-4 bg-white rounded-lg shadow-lg p-4 flex items-center z-50 max-w-md"
-        style="width: auto; max-width: 400px;"
+        class="fixed z-50 toast-notification"
       >
-        <div class="bg-green-100 rounded-full p-2 mr-3 flex-shrink-0">
-          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-          </svg>
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="font-medium text-gray-800 truncate">Producto añadido a la cotización</p>
-          <p class="text-sm text-gray-600 truncate">{{ lastAddedProduct }}</p>
-        </div>
-        <div class="flex items-center ml-4 flex-shrink-0">
-          <button @click="goToCart" class="px-3 py-1 bg-orange-500 text-white rounded-md text-sm hover:bg-orange-600 mr-2">
-            Ver cotización
-          </button>
-          <button @click="closeNotification" class="text-gray-400 hover:text-gray-600 flex-shrink-0">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        <div class="bg-white rounded-lg shadow-lg p-3 sm:p-4 flex items-center border border-gray-100">
+          <div class="bg-green-100 rounded-full p-1.5 sm:p-2 mr-2 sm:mr-3 flex-shrink-0">
+            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-          </button>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-gray-800 truncate text-sm sm:text-base">Producto añadido a la cotización</p>
+            <p class="text-xs sm:text-sm text-gray-600 truncate">{{ lastAddedProduct }}</p>
+          </div>
+          <div class="flex items-center ml-2 sm:ml-4 flex-shrink-0">
+            <button @click="goToCart" class="px-2 sm:px-3 py-1 bg-orange-500 text-white rounded-md text-xs sm:text-sm hover:bg-orange-600 mr-1 sm:mr-2 whitespace-nowrap">
+              Ver cotización
+            </button>
+            <button @click="closeNotification" class="text-gray-400 hover:text-gray-600 flex-shrink-0 p-1">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </transition>
@@ -252,7 +253,7 @@
   import { useRoute, useRouter } from 'vue-router';
   import { useProductStore } from '~/stores/productStore';
   import { useCartStore } from '~/stores/cartStore';
-  import QuoteModal from '~/components/QuoteModal.vue';
+  import QuoteModal from '~/components/QuoteModal/QuoteModal.vue';
   import ContactModal from '~/components/ContactModal.vue';
 
   const productStore = useProductStore();
@@ -310,11 +311,10 @@
   function addToCart(product) {
     // Create a simplified item for quotation-only products
     const cartItem = {
-      id: product.id,
       name: product.name,
       price: 0, // Price will be determined by sales
       quantity: 1,
-      config: { type: 'quotation-only' }, // Flag to identify it's not configurable
+      config: {}, // Flag to identify it's not configurable
       quoteOnly: true,
       image: product.images?.card || product.images?.render || '',
       description: product.description?.short || ''
@@ -397,5 +397,22 @@ iframe {
 .toast-leave-to {
   opacity: 0;
   transform: translateX(20px);
+}
+
+/* Toast notification responsive styles */
+.toast-notification {
+  top: 1rem;
+  right: 1rem;
+  left: 1rem;
+  max-width: 100%;
+  width: auto;
+}
+
+@media (min-width: 640px) {
+  .toast-notification {
+    left: auto;
+    max-width: 400px;
+    width: auto;
+  }
 }
 </style>

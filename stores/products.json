@@ -3,6 +3,7 @@
     "name": "Rack Selectivo",
     "slug": "rack-selectivo",
     "type": "Almacenamiento Industrial",
+    "category": "racks",
     "model": "https://sketchfab.com/models/1d90e83ff7704eaa9d7b0cc5f0f6a804/embed",
     "images": {
       "main": "/assets/images/rack-selectivo-main.png",
@@ -36,7 +37,7 @@
       {
         "title": "Vigas",
         "description": "Todos nuestras vigas son apernadas y fabricadas en Acero ASTM A36 de 1,2 mts a 3,5 mts de largo, en diferentes altos y espesores dependiendo del peso de la Carga.",
-        "image": "https://qa.racklog.cl/images/productos/RS/especificaciones/150x150/vigas.png",
+        "image": "/assets/images/rack-selectivo-details-1.png",
         "perks": [
           "VC7050: Viga 70 mm x 50 mm",
           "VC7050: Viga 70 mm x 50 mm",
@@ -47,7 +48,7 @@
       {
         "title": "Bastidores",
         "description": "Todos nuestros bastidores son fabricados en Acero ASTM A36 de 1 mts a 9,5 mts en diferentes espesores y anchos.",
-        "image": "https://qa.racklog.cl/images/productos/RS/especificaciones/150x150/anclaje.png",
+        "image": "/assets/images/rack-selectivo-details-2.png",
         "perks": [
           "PC8081: Pilar 80 mm x 81 mm",
           "PC10081: Pilar 100 mm x 81 mm",
@@ -60,7 +61,7 @@
       {
         "title": "Resistencias de Carga",
         "description": "Nuestras estanterías industriales selectivas están meticulosamente diseñadas para soportar cargas pesadas y diversas, adaptándose a las exigencias de cualquier almacén moderno. Con una capacidad de carga que supera los 2.000 kg por plano de carga, garantizamos la seguridad y estabilidad de sus productos.",
-        "image": "https://qa.racklog.cl/images/productos/RS/especificaciones/150x150/radio.png",
+        "image": "/assets/images/rack-selectivo-details-3.png",
         "perks": []
       }
     ],
@@ -72,7 +73,7 @@
       },
       {
         "title": "Usos",
-        "description": "Este producto está diseñado para operar principalmente con grúa horquilla. Su estructura es adaptable a la unidad de carga tanto en volumen como en peso. Los operadores de grúa pueden acceder de forma rápida a todos los niveles de la estantería disminuyendo los tiempos en la operación.",
+        "description": "Es un producto adaptable a toda la industria. Se le pueden incluir accesorios como:",
         "perks": [
           "Tableros de madera o metálicos",
           "Rejillas metálicas",
@@ -85,11 +86,11 @@
     ]
   },
   {
-    "name": "Estanterías de Ángulo Ranurado",
+    "name": "Ángulo Ranurado",
     "slug": "angulo-ranurado",
     "type": "Optimizacion de Espacios",
     "category": "estanterias",
-    "model": "https://sketchfab.com/models/1d90e83ff7704eaa9d7b0cc5f0f6a804/embed",
+    "model": "https://sketchfab.com/models/4587a2df7cd44193804ea88fa98bd025/embed",
     "images": {
       "main": "/assets/images/angulo-ranurado-main.png",
       "card": "/assets/images/angulo-ranurado-card.png",
@@ -120,57 +121,53 @@
     },
     "technicalSpecs": [
       {
-        "title": "Bandejas",
-        "description": "Bandejas metálicas de 1,2 mts a 3,5 mts de largo, en diferentes altos y espesores dependiendo del peso de la Carga.",
-        "image": "https://qa.racklog.cl/images/productos/AR/especificaciones/150x150/bandejas.png",
+        "title": "Tipos de Bandejas",
+        "description": "Todas nuestras bandejas son fabricadas de acero galvanizado o pintado en 0,8 mm de espesor. Nuestras medidas estándar son:",
+        "image": "/assets/images/angulo-ranurado-detail-1.png",
         "perks": [
-          "BC7050: Bandeja 70 mm x 50 mm",
-          "BC7050: Bandeja 70 mm x 50 mm",
-          "BC7050: Bandeja 70 mm x 50 mm",
-          "BC715050: Bandeja 150 mm x 50 mm"
+          "BG300: Frente: 92 cm ; Fondo: 30 cm",
+          "BG400: Frente: 92 cm ; Fondo: 40 cm",
+          "BG460: Frente: 92 cm ; Fondo: 46 cm",
+          "BG600: Frente: 92 cm ; Fondo: 60 cm"
         ]
       },
       {
-        "title": "Ángulos",
-        "description": "Ángulos ranurados de 1,2 mts a 3,5 mts de largo, en diferentes altos y espesores dependiendo del peso de la Carga.",
-        "image": "https://qa.racklog.cl/images/productos/AR/especificaciones/150x150/angulos.png",
+        "title": "Ángulos Ranurados",
+        "description": "Todos nuestros ángulos son fabricados en acero pintado en 2 mm de espesor en dos tipos de perfiles: 38 x 38 mm y de 38 x 58 mm. Nuestras alturas estándar son:",
+        "image": "/assets/images/angulo-ranurado-detail-2.png",
         "perks": [
-          "AC7050: Ángulo 70 mm x 50 mm",
-          "AC7050: Ángulo 70 mm x 50 mm",
-          "AC7050: Ángulo 70 mm x 50 mm",
-          "AC715050: Ángulo 150 mm x 50 mm"
+          "AR 2000: 2,0 mt",
+          "AR 2500: 2,5 mt",
+          "AR 3000: 3,0 mt",
+          "AR 3500: 3,5 mt"
         ]
       },
       {
-        "title": "Bastidores",
-        "description": "Todos nuestros bastidores son fabricados en Acero ASTM A36 de 1 mts a 9,5 mts en diferentes espesores y anchos.",
-        "image": "https://qa.racklog.cl/images/productos/RS/especificaciones/150x150/anclaje.png",
+        "title": "Resistencias de Carga",
+        "description": "Todas nuestras estanterías son diseñadas para soportar cargas en diferentes escalas de peso. Nuestras resistencias estándar son:",
+        "image": "/assets/images/angulo-ranurado-detail-3.png",
         "perks": [
-          "PC8081: Pilar 80 mm x 81 mm",
-          "PC10081: Pilar 100 mm x 81 mm",
-          "PC100105: Pilar 100 mm x 105 mm",
-          "PC120105: Pilar 120 mm x 105 mm",
-          "PC140105: Pilar 140 mm x 105 mm",
-          "PC160105: Pilar 160 mm x 105 mm"
+          "R60: Hasta 60 kg por bandeja",
+          "R90: Hasta 90 kg por bandeja",
+          "R150: Hasta 150 kg por bandeja",
+          "R250: Hasta 250 kg por bandeja"
         ]
       }
     ],
     "infoCards": [
       {
         "title": "¿Cómo funciona?",
-        "description": "Este producto está diseñado para operar principalmente con grúa horquilla. Su estructura es adaptable a la unidad de carga tanto en volumen como en peso. Los operadores de grúa pueden acceder de forma rápida a todos los niveles de la estantería disminuyendo los tiempos en la operación.",
+        "description": "Este sistema está diseñado para operar con un sistema de picking. Su estructura permite que los trabajadores accedan manualmente y de forma rápida a todos los niveles de la estantería, eliminando la necesidad de utilizar maquinaria para la manipulación de productos.",
         "perks": []
       },
       {
         "title": "Usos",
-        "description": "Este producto está diseñado para operar principalmente con grúa horquilla. Su estructura es adaptable a la unidad de carga tanto en volumen como en peso. Los operadores de grúa pueden acceder de forma rápida a todos los niveles de la estantería disminuyendo los tiempos en la operación.",
+        "description": "Utilizado principalmente en bodegas para almacenar repuestos, prendas de vestir, medicamentos, archivos, etc. Este sistema es ideal para optimizar el espacio de almacenamiento y mejorar la eficiencia en la preparación de pedidos.",
         "perks": [
-          "Tableros de madera o metálicos",
-          "Rejillas metálicas",
-          "Travesaños para pallets",
-          "Tope para pallets (tope fin de carrera)",
-          "Protecciones de pilares (canilleras)",
-          "Planos de carga para picking en los niveles mas bajos"
+          "Tiendas de ropa y calzado",
+          "Almacenes de productos farmacéuticos y repuestos",
+          "Centros de distribución de comercio electrónico",
+          "Empresas de minería y otros sectores industriales"
         ]
       }
     ]

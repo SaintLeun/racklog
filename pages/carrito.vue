@@ -44,7 +44,7 @@
         <div class="grid sm:grid-cols-1 lg:grid-cols-1 gap-6">
           <div
             v-for="product in cart"
-            :key="product.id + JSON.stringify(product.config)"
+            :key="product.name + JSON.stringify(product.config)"
             class="flex flex-col md:flex-row p-6 bg-white shadow-md rounded-lg border border-gray-100 hover:shadow-lg transition-shadow duration-300"
           >
             <!-- Product info -->
@@ -57,15 +57,26 @@
               </div>
               
               <div class="mt-3 grid sm:grid-cols-2 gap-x-8 gap-y-2">
-                <div class="text-gray-600">
-                  <p class="font-medium mb-2">Configuración:</p>
-                  <ul class="list-disc pl-5 text-sm space-y-1">
+                <div v-if="product.config" class="text-gray-600">
+                  
+                  <p v-if="Object.keys(product.config).length === 0" class="font-light mb-2">Sin configuración específica</p>
+
+                  <ul v-else class="list-disc pl-5 text-sm space-y-1">
                     <li v-if="product.config.tipo">Tipo: <span class="font-medium">{{ formatConfigValue('tipo', product.config.tipo) }}</span></li>
                     <li v-if="product.config.niveles">Niveles: <span class="font-medium">{{ product.config.niveles }}</span></li>
                     <li v-if="product.config.cuerpos">Cuerpos: <span class="font-medium">{{ product.config.cuerpos }}</span></li>
-                    <li v-if="product.config.carga">Capacidad de carga: <span class="font-medium">{{ product.config.carga }}</span></li>
+                    
+                    <!-- Propiedades de Ángulo Ranurado -->
                     <li v-if="product.config.pintado">Acabado: <span class="font-medium">{{ formatConfigValue('pintado', product.config.pintado) }}</span></li>
                     <li v-if="product.config.bandeja">Ancho de bandeja: <span class="font-medium">{{ product.config.bandeja }}</span></li>
+                    
+                    <!-- Propiedades de Rack Selectivo -->
+                    <li v-if="product.config.frentePallet">Frente: <span class="font-medium">{{ product.config.frentePallet }}</span></li>
+                    <li v-if="product.config.fondoPallet">Fondo: <span class="font-medium">{{ product.config.fondoPallet }}</span></li>
+                    <li v-if="product.config.altoPallet">Alto: <span class="font-medium">{{ product.config.altoPallet }}</span></li>
+                    
+                    <!-- Capacidad de carga (común a ambos productos pero con distintos valores) -->
+                    <li v-if="product.config.carga">Capacidad de carga: <span class="font-medium">{{ product.config.carga }}</span></li>
                   </ul>
                 </div>
                 <div>
@@ -76,7 +87,7 @@
                     <p class="text-sm text-gray-500">Precio sujeto a evaluación</p>
                   </div>
                   <div v-else>
-                    <p class="text-2xl font-bold text-orange-600">${{ product.price.toLocaleString('es-CL') }}</p>
+                    <p class="text-2xl font-bold text-orange-600">${{ product.price?.toLocaleString('es-CL') }}</p>
                     <p class="text-sm text-gray-500">Precio unitario</p>
                   </div>
                   
@@ -84,7 +95,7 @@
                     <p class="text-gray-700 mr-4 font-medium">Cantidad:</p>
                     <div class="flex items-center border border-gray-300 rounded-md">
                       <button
-                        @click="updateQuantity(product.id, product.config, product.quantity - 1)"
+                        @click="updateQuantity(product.name, product.config, product.quantity - 1)"
                         class="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-l-md transition-colors"
                         :disabled="product.quantity <= 1"
                       >
@@ -94,7 +105,7 @@
                       </button>
                       <span class="px-4 py-1 border-x border-gray-300">{{ product.quantity }}</span>
                       <button
-                        @click="updateQuantity(product.id, product.config, product.quantity + 1)"
+                        @click="updateQuantity(product.name, product.config, product.quantity + 1)"
                         class="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-r-md transition-colors"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -115,7 +126,7 @@
                   Subtotal: <span class="text-xl font-bold text-blue-600">A cotizar</span>
                 </p>
                 <button
-                  @click="removeFromCart(product.id, product.config)"
+                  @click="removeFromCart(product.name, product.config)"
                   class="inline-flex items-center px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100 transition-colors"
                 >
                   <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

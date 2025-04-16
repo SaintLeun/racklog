@@ -9,7 +9,7 @@
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
             </svg>
-            <a href="tel:+56978632154" class="text-sm font-medium hover:underline">+56 9 7863 2154</a>
+            <a href="tel:+56228400424" class="text-sm font-medium hover:underline">(+56) 2 2840 0424</a>
           </div>
           <div class="hidden sm:flex items-center text-gray-600 hover:text-orange-500 transition-colors">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -58,7 +58,7 @@
     <div class="border-b border-gray-200 py-3">
       <div class="container mx-auto flex justify-between items-center px-4">
         <a href="/" class="flex items-center">
-          <img src="https://qa.racklog.cl/images/logorack.png" alt="racklog" class="h-12 w-auto" />
+          <img src="/assets/images/logo.png" alt="racklog" class="h-12 w-auto" />
         </a>
         
         <!-- Business Hours and Location - Desktop only -->
@@ -86,7 +86,7 @@
             </div>
             <div>
               <p class="text-sm font-semibold text-gray-800">Ubicación</p>
-              <p class="text-xs text-gray-600">Av. Las Condes 12523, Santiago</p>
+              <p class="text-xs text-gray-600">El Juncal 161-C, Quilicura, Santiago - Chile.</p>
             </div>
           </div>
         </div>
@@ -108,8 +108,8 @@
     <nav class="bg-neutral-800 sticky top-0 z-50">
       <div class="container mx-auto flex justify-between items-center">
         <div class="flex space-x-6 hidden md:flex">
-          <a href="/" class="text-white hover:text-orange-400 py-4 transition-colors">Inicio</a>
-          <a href="/nosotros" class="text-white hover:text-orange-400 py-4 transition-colors">Nosotros</a>
+          <a href="/" @click="closeAllMenus" class="text-white hover:text-orange-400 py-4 transition-colors">Inicio</a>
+          <a href="/nosotros" @click="closeAllMenus" class="text-white hover:text-orange-400 py-4 transition-colors">Nosotros</a>
           
           <!-- Menú de Productos Mejorado -->
           <div class="relative dropdown-container">
@@ -141,6 +141,7 @@
                       v-for="product in featuredProducts"
                       :key="product.id"
                       :to="'/productos/' + product.slug"
+                      @click="closeAllMenus"
                       class="flex items-start p-2 rounded-lg transition-colors hover:bg-orange-50"
                     >
                       <div class="flex-shrink-0 h-10 w-10 rounded-md overflow-hidden bg-gray-100 border border-gray-200">
@@ -161,6 +162,7 @@
                     <li v-for="category in productCategories" :key="category.id">
                       <router-link 
                         :to="'/productos?categoria=' + category.id" 
+                        @click="closeAllMenus"
                         class="flex items-center py-1.5 px-2 text-sm text-gray-700 rounded-md hover:bg-orange-100 hover:text-orange-700 transition-colors"
                       >
                         <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -174,6 +176,7 @@
                   <div class="mt-4 pt-3 border-t border-gray-200">
                     <router-link 
                       to="/productos" 
+                      @click="closeAllMenus"
                       class="flex items-center justify-between py-2 px-3 text-sm font-medium text-orange-500 hover:text-orange-600 rounded-md hover:bg-orange-50 transition-colors"
                     >
                       Ver todos los productos
@@ -214,6 +217,7 @@
                     v-for="service in services"
                     :key="service.id"
                     :to="'/servicios/' + service.slug"
+                    @click="closeAllMenus"
                     class="flex items-center p-2 rounded-md transition-colors hover:bg-orange-50"
                   >
                     <div class="p-1.5 bg-orange-100 rounded-md mr-3">
@@ -258,8 +262,8 @@
         class="md:hidden transition-all duration-300 ease-in-out"
       >
         <div class="container mx-auto px-4 space-y-3">
-          <a href="/" class="block text-white hover:text-orange-400 py-2 transition-colors">Inicio</a>
-          <a href="/nosotros" class="block text-white hover:text-orange-400 py-2 transition-colors">Nosotros</a>
+          <a href="/" @click="closeAllMenus" class="block text-white hover:text-orange-400 py-2 transition-colors">Inicio</a>
+          <a href="/nosotros" @click="closeAllMenus" class="block text-white hover:text-orange-400 py-2 transition-colors">Nosotros</a>
           
           <!-- Acordeón para productos en móvil -->
           <div>
@@ -285,6 +289,7 @@
                 v-for="category in productCategories" 
                 :key="category.id"
                 :to="'/productos?categoria=' + category.id"
+                @click="closeAllMenus"
                 class="block text-gray-300 hover:text-orange-400 py-1.5 transition-colors"
               >
                 {{ category.name }}
@@ -292,6 +297,7 @@
               
               <router-link 
                 to="/productos"
+                @click="closeAllMenus"
                 class="block text-orange-400 font-medium py-1.5 transition-colors"
               >
                 Ver todos los productos →
@@ -323,6 +329,7 @@
                 v-for="service in services" 
                 :key="service.id"
                 :to="'/servicios/' + service.slug"
+                @click="closeAllMenus"
                 class="block text-gray-300 hover:text-orange-400 py-1.5 transition-colors"
               >
                 {{ service.name }}
@@ -330,11 +337,12 @@
             </div>
           </div>
           
-          <a href="/contacto" class="block text-white hover:text-orange-400 py-2 transition-colors">Contacto</a>
+          <a href="/contacto" @click="closeAllMenus" class="block text-white hover:text-orange-400 py-2 transition-colors">Contacto</a>
           
           <!-- Botón de cotización en móvil -->
           <router-link 
             to="/carrito"
+            @click="closeAllMenus"
             class="flex items-center justify-between mt-3 bg-orange-500 hover:bg-orange-600 text-white py-2.5 px-4 rounded-lg transition-colors"
           >
             <div class="flex items-center">
@@ -360,7 +368,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useProductStore } from '~/stores/productStore';
 import { useCartStore } from '~/stores/cartStore'; 
 import { useRouter } from 'vue-router'; 
@@ -414,49 +422,39 @@ function toggleMobileSubmenu(menuName) {
   openMobileSubmenu.value = openMobileSubmenu.value === menuName ? null : menuName;
 }
 
+// Función para cerrar todos los menús al hacer clic en un enlace
+function closeAllMenus() {
+  isMenuOpen.value = false;
+  openMobileSubmenu.value = null;
+}
+
 function goToCart() {
   router.push('/carrito');
-  if (isMenuOpen.value) {
-    isMenuOpen.value = false;
-  }
+  closeAllMenus();
 }
 
 function openContactModal() {
   isContactModalOpen.value = true;
-  if (isMenuOpen.value) {
-    isMenuOpen.value = false;
-  }
+  closeAllMenus();
 }
 
 function closeContactModal() {
   isContactModalOpen.value = false;
 }
+
+// Cerrar los menús cuando la ruta cambia
+watch(
+  () => router.currentRoute.value.path,
+  () => {
+    closeAllMenus();
+  }
+);
 </script>
 
 <style scoped>
 /* Ensure no parent elements interfere with sticky positioning */
 html, body {
   overflow: visible;
-}
-
-/* Add a subtle indicator for the contact button */
-button {
-  position: relative;
-}
-
-button:after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 2px;
-  bottom: 0;
-  left: 0;
-  background-color: #f97316; /* Tailwind's orange-500 */
-  transition: width 0.3s ease;
-}
-
-button:hover:after {
-  width: 100%;
 }
 
 /* Add ripple effect for mobile */

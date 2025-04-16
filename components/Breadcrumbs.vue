@@ -81,23 +81,4 @@ const formatHref = (breadcrumb: Breadcrumb): string => {
 
 <style scoped>
 
-/* Add smooth hover transition */
-a {
-  position: relative;
-}
-
-a::after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 1px;
-  bottom: -2px;
-  left: 0;
-  background-color: #f97316; /* orange-500 */
-  transition: width 0.3s ease;
-}
-
-a:hover::after {
-  width: 100%;
-}
 </style>
