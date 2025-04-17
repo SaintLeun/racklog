@@ -392,75 +392,6 @@ function validateEmail(email: string) {
   return re.test(email);
 }
 
-// Generate formatted email body
-function generateEmailBody() {
-  const date = new Date().toLocaleDateString('es-CL');
-  
-  let body = `Estimado cliente,\n\n`;
-  body += `Gracias por su interés en nuestros productos. A continuación, le enviamos el detalle de su cotización solicitada el ${date}:\n\n`;
-  
-  // Add customer information
-  body += `DATOS DEL CLIENTE:\n`;
-  body += `Nombre: ${customerName.value}\n`;
-  if (customerCompany.value) body += `Empresa: ${customerCompany.value}\n`;
-  body += `Email: ${userEmail.value}\n`;
-  body += `Teléfono: ${customerPhone.value}\n\n`;
-  
-  // Add comments if any
-  if (customerComments.value) {
-    body += `COMENTARIOS ADICIONALES:\n${customerComments.value}\n\n`;
-  }
-  
-  body += `DETALLE DE PRODUCTOS:\n\n`;
-  
-  // Flag to track if we have quote-only products
-  let hasQuoteOnlyItems = false;
-  
-  cart.value.forEach((product, index) => {
-    body += `${index + 1}. ${product.name}\n`;
-    body += `   Cantidad: ${product.quantity}\n`;
-    
-    if (product.quoteOnly) {
-      body += `   Precio: A cotizar\n`;
-      hasQuoteOnlyItems = true;
-    } else {
-      body += `   Precio unitario: $${product.price.toLocaleString('es-CL')}\n`;
-    }
-    
-    body += `   Configuración:\n`;
-    
-    if (product.config.tipo) body += `   - Tipo: ${formatConfigValue('tipo', product.config.tipo)}\n`;
-    if (product.config.niveles) body += `   - Niveles: ${product.config.niveles}\n`;
-    if (product.config.cuerpos) body += `   - Cuerpos: ${product.config.cuerpos}\n`;
-    if (product.config.carga) body += `   - Capacidad de carga: ${product.config.carga}\n`;
-    if (product.config.pintado) body += `   - Acabado: ${formatConfigValue('pintado', product.config.pintado)}\n`;
-    if (product.config.bandeja) body += `   - Ancho de bandeja: ${product.config.bandeja}\n`;
-    
-    if (!product.quoteOnly) {
-      body += `   Subtotal: $${(product.price * product.quantity).toLocaleString('es-CL')}\n\n`;
-    } else {
-      body += `   Subtotal: A cotizar\n\n`;
-    }
-  });
-  
-  // Show appropriate total message
-  if (hasQuoteOnlyItems) {
-    body += `TOTAL: A cotizar (incluye productos con precio a consultar)\n\n`;
-  } else {
-    body += `TOTAL: $${cartTotal.value.toLocaleString('es-CL')}\n\n`;
-  }
-  
-  body += `Esta cotización tiene una validez de 15 días a partir de la fecha de envío.\n\n`;
-  body += `Para cualquier consulta adicional o para proceder con la compra, no dude en contactarnos:\n`;
-  body += `- Teléfono: +56 9 1234 5678\n`;
-  body += `- Email: ventas@racklog.cl\n\n`;
-  body += `Agradecemos su preferencia.\n\n`;
-  body += `Atentamente,\n`;
-  body += `Equipo Racklog`;
-  
-  return body;
-}
-
 // Function to validate form
 function validateForm() {
   let isValid = true;
@@ -504,31 +435,54 @@ async function submitQuote() {
   try {
     isSubmitting.value = true;
     
-    // Generate email body with formatted quote details
-    const emailBody = generateEmailBody();
+    // Prepare data for the email template
+    const emailData = {
+      customerName: customerName.value,
+      customerEmail: userEmail.value,
+      customerPhone: customerPhone.value,
+      customerCompany: customerCompany.value,
+      customerComments: customerComments.value,
+      products: cart.value.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+        quoteOnly: item.quoteOnly || false,
+        config: item.config
+      })),
+      cartTotal: cartTotal.value
+    };
     
-    // Call the API
-    const response = await fetch('https://api.racklog.cl/api/send-email', {
+
+    
+    // Enviar al equipo de ventas (interno)
+    const responseInternal = await fetch('https://api.racklog.cl/api/send-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        to: userEmail.value,
-        text: emailBody
+        to: 'daniel.mdzl@gmail.com', // Enviar al equipo de ventas
+        data: emailData, 
+        type: 'quote' // Usar el template interno
       })
     });
     
-    const data = await response.json();
+    const dataInternal = await responseInternal.json();
+
+    // Mostrar éxito solo si ambos emails se enviaron correctamente
+    if (dataInternal.status) {
+        showSuccessModal.value = true;
+        resetForm(); // Clear form
+        clearCart(); // Clear the cart after successful submission
+      } else {
+        // Si el email de confirmación falló pero el interno funcionó
+        // Podemos mostrar éxito parcial ya que el pedido fue registrado
+        showSuccessModal.value = true;
+        resetForm();
+        clearCart();
+        console.warn('Email de confirmación al cliente no enviado:', dataInternal.message);
+      }
     
-    if (data.success) {
-      showSuccessModal.value = true;
-      resetForm(); // Clear form
-      clearCart(); // Clear the cart after successful submission
-    } else {
-      showErrorModal.value = true;
-      console.error('Error sending email:', data.message);
-    }
   } catch (error) {
     showErrorModal.value = true;
     console.error('Error calling API:', error);

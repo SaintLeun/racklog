@@ -85,6 +85,7 @@
     
 
     <!-- Dimensiones del Pallet en una fila -->
+    <p class="text-center font-semibold">Dimensiones del pallet</p>
     <div class="grid grid-cols-2 gap-4">
       <!-- Frente del Pallet -->
       <OptionCard title="Frente (mm)" icon="ruler-horizontal" compact>

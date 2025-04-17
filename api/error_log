@@ -1,0 +1,61 @@
+[28-Mar-2025 00:43:05 America/Santiago] PHP Parse error:  syntax error, unexpected token "else", expecting "case" or "default" or "}" in /home/racklog/public_html/api.racklog.cl/index.php on line 58
+[28-Mar-2025 00:43:56 America/Santiago] PHP Parse error:  syntax error, unexpected token "else", expecting "case" or "default" or "}" in /home/racklog/public_html/api.racklog.cl/index.php on line 58
+[16-Apr-2025 21:07:21 America/Santiago] PHP Fatal error:  Uncaught TypeError: strpos(): Argument #1 ($haystack) must be of type string, array given in /home/racklog/public_html/api.racklog.cl/index.php:644
+Stack trace:
+#0 /home/racklog/public_html/api.racklog.cl/index.php(644): strpos()
+#1 /home/racklog/public_html/api.racklog.cl/index.php(809): sendEmail()
+#2 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/index.php on line 644
+[16-Apr-2025 21:07:35 America/Santiago] PHP Fatal error:  Uncaught TypeError: strpos(): Argument #1 ($haystack) must be of type string, array given in /home/racklog/public_html/api.racklog.cl/index.php:644
+Stack trace:
+#0 /home/racklog/public_html/api.racklog.cl/index.php(644): strpos()
+#1 /home/racklog/public_html/api.racklog.cl/index.php(809): sendEmail()
+#2 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/index.php on line 644
+[16-Apr-2025 21:41:34 America/Santiago] PHP Warning:  require_once(/home/racklog/public_html/api.racklog.cl/endpoints/angulo.php): Failed to open stream: No such file or directory in /home/racklog/public_html/api.racklog.cl/index.php on line 13
+[16-Apr-2025 21:41:34 America/Santiago] PHP Fatal error:  Uncaught Error: Failed opening required '/home/racklog/public_html/api.racklog.cl/endpoints/angulo.php' (include_path='.:/opt/alt/php80/usr/share/pear:/opt/alt/php80/usr/share/php:/usr/share/pear:/usr/share/php') in /home/racklog/public_html/api.racklog.cl/index.php:13
+Stack trace:
+#0 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/index.php on line 13
+[16-Apr-2025 21:42:07 America/Santiago] PHP Fatal error:  Uncaught TypeError: str_contains(): Argument #1 ($haystack) must be of type string, array given in /home/racklog/public_html/api.racklog.cl/utils/mailer.php:32
+Stack trace:
+#0 /home/racklog/public_html/api.racklog.cl/utils/mailer.php(32): str_contains()
+#1 /home/racklog/public_html/api.racklog.cl/endpoints/send_email.php(24): sendEmail()
+#2 /home/racklog/public_html/api.racklog.cl/index.php(49): handleSendEmail()
+#3 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/utils/mailer.php on line 32
+[16-Apr-2025 23:28:20 America/Santiago] PHP Warning:  require_once(/home/racklog/public_html/api.racklog.cl/utils/config/token.php): Failed to open stream: No such file or directory in /home/racklog/public_html/api.racklog.cl/utils/kommo.php on line 3
+[16-Apr-2025 23:28:20 America/Santiago] PHP Fatal error:  Uncaught Error: Failed opening required '/home/racklog/public_html/api.racklog.cl/utils/config/token.php' (include_path='.:/opt/alt/php80/usr/share/pear:/opt/alt/php80/usr/share/php:/usr/share/pear:/usr/share/php') in /home/racklog/public_html/api.racklog.cl/utils/kommo.php:3
+Stack trace:
+#0 /home/racklog/public_html/api.racklog.cl/utils/templates.php(8): require_once()
+#1 /home/racklog/public_html/api.racklog.cl/utils/mailer.php(3): require_once('/home/racklog/p...')
+#2 /home/racklog/public_html/api.racklog.cl/index.php(8): require_once('/home/racklog/p...')
+#3 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/utils/kommo.php on line 3
+[16-Apr-2025 23:29:24 America/Santiago] PHP Warning:  require_once(/home/racklog/public_html/api.racklog.cl/endpoints/../kommo.php): Failed to open stream: No such file or directory in /home/racklog/public_html/api.racklog.cl/endpoints/kommo.php on line 3
+[16-Apr-2025 23:29:24 America/Santiago] PHP Fatal error:  Uncaught Error: Failed opening required '/home/racklog/public_html/api.racklog.cl/endpoints/../kommo.php' (include_path='.:/opt/alt/php80/usr/share/pear:/opt/alt/php80/usr/share/php:/usr/share/pear:/usr/share/php') in /home/racklog/public_html/api.racklog.cl/endpoints/kommo.php:3
+Stack trace:
+#0 /home/racklog/public_html/api.racklog.cl/index.php(12): require_once()
+#1 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/endpoints/kommo.php on line 3
+[16-Apr-2025 23:30:44 America/Santiago] PHP Warning:  require_once(/home/racklog/public_html/api.racklog.cl/utils/../templates.php): Failed to open stream: No such file or directory in /home/racklog/public_html/api.racklog.cl/utils/mailer.php on line 3
+[16-Apr-2025 23:30:44 America/Santiago] PHP Fatal error:  Uncaught Error: Failed opening required '/home/racklog/public_html/api.racklog.cl/utils/../templates.php' (include_path='.:/opt/alt/php80/usr/share/pear:/opt/alt/php80/usr/share/php:/usr/share/pear:/usr/share/php') in /home/racklog/public_html/api.racklog.cl/utils/mailer.php:3
+Stack trace:
+#0 /home/racklog/public_html/api.racklog.cl/index.php(8): require_once()
+#1 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/utils/mailer.php on line 3
+[16-Apr-2025 23:31:59 America/Santiago] PHP Warning:  require_once(/home/racklog/public_html/api.racklog.cl/utilstemplates.php): Failed to open stream: No such file or directory in /home/racklog/public_html/api.racklog.cl/utils/mailer.php on line 3
+[16-Apr-2025 23:31:59 America/Santiago] PHP Fatal error:  Uncaught Error: Failed opening required '/home/racklog/public_html/api.racklog.cl/utilstemplates.php' (include_path='.:/opt/alt/php80/usr/share/pear:/opt/alt/php80/usr/share/php:/usr/share/pear:/usr/share/php') in /home/racklog/public_html/api.racklog.cl/utils/mailer.php:3
+Stack trace:
+#0 /home/racklog/public_html/api.racklog.cl/index.php(8): require_once()
+#1 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/utils/mailer.php on line 3
+[16-Apr-2025 23:32:21 America/Santiago] PHP Fatal error:  Uncaught Error: Undefined constant "KOMMO_BEARER_TOKEN" in /home/racklog/public_html/api.racklog.cl/utils/kommo.php:7
+Stack trace:
+#0 /home/racklog/public_html/api.racklog.cl/utils/templates.php(15): createLead()
+#1 /home/racklog/public_html/api.racklog.cl/utils/mailer.php(52): generateEmailTemplate()
+#2 /home/racklog/public_html/api.racklog.cl/endpoints/send_email.php(24): sendEmail()
+#3 /home/racklog/public_html/api.racklog.cl/index.php(36): handleSendEmail()
+#4 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/utils/kommo.php on line 7
+[16-Apr-2025 23:33:33 America/Santiago] PHP Warning:  Undefined variable $BEARER_TOKEN in /home/racklog/public_html/api.racklog.cl/utils/kommo.php on line 7

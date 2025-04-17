@@ -363,8 +363,8 @@ watch(() => props.isVisible, (newVal) => {
       });
       
       // Clear errors and status
-      Object.keys(errors).forEach(key => {
-        errors[key] = '';
+      (Object.keys(errors) as Array<'name' | 'email' | 'subject' | 'message' | 'privacy'>).forEach((key) => {
+          errors[key] = '';
       });
       
       formStatus.success = false;
@@ -381,8 +381,8 @@ function validateForm() {
   let isValid = true;
   
   // Reset all errors
-  Object.keys(errors).forEach(key => {
-    errors[key] = '';
+  (Object.keys(errors) as Array<keyof typeof errors>).forEach(key => {
+      errors[key] = '';
   });
   
   // Validate name
@@ -431,7 +431,7 @@ function validateForm() {
   return isValid;
 }
 
-function showToast(message, type = 'success') {
+function showToast(message: string, type: 'success' | 'error' = 'success') {
   toast.message = message;
   toast.type = type;
   toast.visible = true;
@@ -442,6 +442,7 @@ function showToast(message, type = 'success') {
   }, 4000);
 }
 
+// Submit form function in ContactModal.vue
 async function submitForm() {
   // Validate form
   if (!validateForm()) {
@@ -455,71 +456,68 @@ async function submitForm() {
   formStatus.message = '';
   
   try {
-    // Simulate API call (Replace with actual API call)
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Prepare data for API
-    const formData = {
+    // Prepare data for the contact email
+    const contactData = {
       name: form.name,
       email: form.email,
-      phone: form.phone || 'No proporcionado',
+      phone: form.phone,
       subject: form.subject,
       message: form.message,
-      serviceInfo: props.serviceInfo || 'Consulta general'
+      serviceInfo: props.serviceInfo
     };
     
-    // API call to send email
-    /*
-    const response = await fetch('/api/send-email', {
+    // Send to admin
+    const response = await fetch('https://api.racklog.cl/api/send-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(formData)
+      body: JSON.stringify({
+        to: 'daniel.mdzl@gmail.com', // Recipient email address
+        data: contactData,
+        subject: `Contacto Web: ${form.subject}`,
+        type: 'contact'
+      })
     });
     
-    const data = await response.json();
-    
-    // For testing - simulate a successful response
-    const response = { ok: true };
-    const data = { message: 'Email sent successfully' };
-    */
-    
-    // Show success message
-    formStatus.success = true;
-    formStatus.message = '¡Gracias! Tu mensaje ha sido enviado correctamente. Nos pondremos en contacto contigo pronto.';
-    
-    // Show toast notification
-    showToast('Mensaje enviado con éxito', 'success');
-    
-    // Reset form except serviceInfo-related subject
-    const tempSubject = hasServiceInfo.value ? form.subject : '';
-    Object.assign(form, {
-      name: '',
-      phone: '',
-      email: '',
-      subject: tempSubject,
-      message: '',
-      privacy: false
-    });
-    
-    // Auto-close after delay
-    setTimeout(() => {
-      if (formStatus.success) {
-        closeModal();
+    // Process the response
+    if (response.ok) {
+      const data = await response.json();
+      
+      if (data.status) {
+        // Show success message
+        formStatus.success = true;
+        formStatus.message = '¡Gracias! Tu mensaje ha sido enviado correctamente. Nos pondremos en contacto contigo pronto.';
+        
+        // Reset the form except for service-related subject
+        const tempSubject = props.serviceInfo ? form.subject : '';
+        Object.assign(form, {
+          name: '',
+          phone: '',
+          email: '',
+          subject: tempSubject,
+          message: '',
+          privacy: false
+        });
+        
+        // Auto-close after delay
+        setTimeout(() => {
+          if (formStatus.success) {
+            emit('close');
+          }
+        }, 3000);
+      } else {
+        throw new Error(data.message || 'Error al enviar el mensaje');
       }
-    }, 3000);
+    } else {
+      throw new Error('Error en la solicitud a la API');
+    }
     
   } catch (error) {
-    // Handle error
     console.error('Error sending form:', error);
     formStatus.success = false;
     formStatus.message = 'Ha ocurrido un error al enviar el mensaje. Por favor, inténtalo de nuevo más tarde.';
-    
-    // Show error toast
-    showToast('Error al enviar el mensaje', 'error');
   } finally {
-    // End loading state
     isSubmitting.value = false;
   }
 }
@@ -529,10 +527,6 @@ async function submitForm() {
 /* Base styles */
 :deep(input), :deep(textarea) {
   transition: all 0.3s ease;
-}
-
-:deep(input:focus), :deep(textarea:focus) {
-  @apply ring-2 ring-offset-1;
 }
 
 /* Modal transitions */
