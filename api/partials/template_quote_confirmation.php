@@ -71,7 +71,7 @@ function generateQuoteConfirmation(array $data, string $quoteRef): string {
         <p>Para solicitar precios o más información sobre estos productos, no dude en contactarnos:</p>
         <div style='margin:10px 0;'>
             <span style='display:inline-block; width:20px; text-align:center; margin-right:8px;'>📞</span> 
-            <strong>(+56) 2 2840 0424</strong>
+            <strong>+56 9 3240 3819</strong>
         </div>
         <div style='margin:10px 0;'>
             <span style='display:inline-block; width:20px; text-align:center; margin-right:8px;'>✉️</span> 

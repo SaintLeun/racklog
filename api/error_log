@@ -59,3 +59,105 @@ Stack trace:
 #4 {main}
   thrown in /home/racklog/public_html/api.racklog.cl/utils/kommo.php on line 7
 [16-Apr-2025 23:33:33 America/Santiago] PHP Warning:  Undefined variable $BEARER_TOKEN in /home/racklog/public_html/api.racklog.cl/utils/kommo.php on line 7
+[17-Apr-2025 03:55:02 America/Santiago] handleSendEmail: tipo recibido: contact
+[17-Apr-2025 03:55:02 America/Santiago] Procesando contacto con ref: CT-20250417-2a3c
+[17-Apr-2025 03:55:02 America/Santiago] sendEmail: type=contact, subject=[Contacto] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[17-Apr-2025 03:55:03 America/Santiago] sendEmail: type=contact_confirmation, subject=Hemos recibido tu mensaje - Racklog, to=daniel.mdzl@gmail.com
+[17-Apr-2025 03:55:20 America/Santiago] handleSendEmail: tipo recibido: quote
+[17-Apr-2025 03:55:20 America/Santiago] Procesando cotización con ref: QT-20250417-259e
+[17-Apr-2025 03:55:20 America/Santiago] sendEmail: type=quote, subject=[Cotización] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[17-Apr-2025 03:55:20 America/Santiago] sendEmail: type=quote_confirmation, subject=Cotización de Productos - Racklog, to=daniel.mdzl@gmail.com
+[17-Apr-2025 13:08:44 America/Santiago] handleSendEmail: tipo recibido: quote
+[17-Apr-2025 13:08:44 America/Santiago] Procesando cotización con ref: QT-20250417-1915
+[17-Apr-2025 13:08:44 America/Santiago] sendEmail: type=quote, subject=[Cotización] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[17-Apr-2025 13:08:44 America/Santiago] sendEmail: type=quote_confirmation, subject=Cotización de Productos - Racklog, to=daniel.mdzl@gmail.com
+[17-Apr-2025 14:23:11 America/Santiago] handleSendEmail: tipo recibido: quote
+[17-Apr-2025 14:23:11 America/Santiago] Procesando cotización con ref: QT-20250417-32ba
+[17-Apr-2025 14:23:11 America/Santiago] sendEmail: type=quote, subject=[Cotización] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[17-Apr-2025 14:23:11 America/Santiago] PHP Fatal error:  Uncaught TypeError: generateEmailTemplate(): Argument #1 ($data) must be of type array, null given, called in /home/racklog/public_html/api.racklog.cl/utils/mailer.php on line 53 and defined in /home/racklog/public_html/api.racklog.cl/utils/templates.php:11
+Stack trace:
+#0 /home/racklog/public_html/api.racklog.cl/utils/mailer.php(53): generateEmailTemplate()
+#1 /home/racklog/public_html/api.racklog.cl/endpoints/send_email.php(41): sendEmail()
+#2 /home/racklog/public_html/api.racklog.cl/index.php(36): handleSendEmail()
+#3 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/utils/templates.php on line 11
+[17-Apr-2025 14:23:19 America/Santiago] handleSendEmail: tipo recibido: quote
+[17-Apr-2025 14:23:19 America/Santiago] Procesando cotización con ref: QT-20250417-9964
+[17-Apr-2025 14:23:19 America/Santiago] sendEmail: type=quote, subject=[Cotización] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[17-Apr-2025 14:23:19 America/Santiago] PHP Fatal error:  Uncaught TypeError: generateEmailTemplate(): Argument #1 ($data) must be of type array, null given, called in /home/racklog/public_html/api.racklog.cl/utils/mailer.php on line 53 and defined in /home/racklog/public_html/api.racklog.cl/utils/templates.php:11
+Stack trace:
+#0 /home/racklog/public_html/api.racklog.cl/utils/mailer.php(53): generateEmailTemplate()
+#1 /home/racklog/public_html/api.racklog.cl/endpoints/send_email.php(41): sendEmail()
+#2 /home/racklog/public_html/api.racklog.cl/index.php(36): handleSendEmail()
+#3 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/utils/templates.php on line 11
+[17-Apr-2025 14:23:55 America/Santiago] handleSendEmail: tipo recibido: quote
+[17-Apr-2025 14:23:55 America/Santiago] Procesando cotización con ref: QT-20250417-2449
+[17-Apr-2025 14:23:55 America/Santiago] sendEmail: type=quote, subject=[Cotización] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[17-Apr-2025 14:23:55 America/Santiago] PHP Fatal error:  Uncaught TypeError: generateEmailTemplate(): Argument #1 ($data) must be of type array, null given, called in /home/racklog/public_html/api.racklog.cl/utils/mailer.php on line 53 and defined in /home/racklog/public_html/api.racklog.cl/utils/templates.php:11
+Stack trace:
+#0 /home/racklog/public_html/api.racklog.cl/utils/mailer.php(53): generateEmailTemplate()
+#1 /home/racklog/public_html/api.racklog.cl/endpoints/send_email.php(41): sendEmail()
+#2 /home/racklog/public_html/api.racklog.cl/index.php(36): handleSendEmail()
+#3 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/utils/templates.php on line 11
+[17-Apr-2025 14:25:05 America/Santiago] handleSendEmail: tipo recibido: quote
+[17-Apr-2025 14:25:05 America/Santiago] Procesando cotización con ref: QT-20250417-8fcd
+[17-Apr-2025 14:25:05 America/Santiago] sendEmail: type=quote, subject=[Cotización] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[17-Apr-2025 14:25:06 America/Santiago] sendEmail: type=quote_confirmation, subject=Cotización de Productos - Racklog, to=daniel.mdzl@gmail.com
+[17-Apr-2025 14:50:10 America/Santiago] handleSendEmail: tipo recibido: quote
+[17-Apr-2025 14:50:10 America/Santiago] Procesando cotización con ref: QT-20250417-931b
+[17-Apr-2025 14:50:10 America/Santiago] sendEmail: type=quote, subject=[Cotización] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[17-Apr-2025 14:50:10 America/Santiago] PHP Fatal error:  Uncaught TypeError: generateEmailTemplate(): Argument #1 ($data) must be of type array, null given, called in /home/racklog/public_html/api.racklog.cl/utils/mailer.php on line 53 and defined in /home/racklog/public_html/api.racklog.cl/utils/templates.php:11
+Stack trace:
+#0 /home/racklog/public_html/api.racklog.cl/utils/mailer.php(53): generateEmailTemplate()
+#1 /home/racklog/public_html/api.racklog.cl/endpoints/send_email.php(41): sendEmail()
+#2 /home/racklog/public_html/api.racklog.cl/index.php(36): handleSendEmail()
+#3 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/utils/templates.php on line 11
+[17-Apr-2025 14:50:48 America/Santiago] handleSendEmail: tipo recibido: quote
+[17-Apr-2025 14:50:48 America/Santiago] Procesando cotización con ref: QT-20250417-e298
+[17-Apr-2025 14:50:48 America/Santiago] sendEmail: type=quote, subject=[Cotización] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[17-Apr-2025 14:50:48 America/Santiago] PHP Fatal error:  Uncaught TypeError: generateEmailTemplate(): Argument #1 ($data) must be of type array, null given, called in /home/racklog/public_html/api.racklog.cl/utils/mailer.php on line 53 and defined in /home/racklog/public_html/api.racklog.cl/utils/templates.php:11
+Stack trace:
+#0 /home/racklog/public_html/api.racklog.cl/utils/mailer.php(53): generateEmailTemplate()
+#1 /home/racklog/public_html/api.racklog.cl/endpoints/send_email.php(41): sendEmail()
+#2 /home/racklog/public_html/api.racklog.cl/index.php(36): handleSendEmail()
+#3 {main}
+  thrown in /home/racklog/public_html/api.racklog.cl/utils/templates.php on line 11
+[17-Apr-2025 16:40:03 America/Santiago] handleSendEmail: tipo recibido: contact
+[17-Apr-2025 16:40:03 America/Santiago] Procesando contacto con ref: CT-20250417-4284
+[17-Apr-2025 16:40:03 America/Santiago] sendEmail: type=contact, subject=[Contacto] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[17-Apr-2025 16:40:03 America/Santiago] sendEmail: type=contact_confirmation, subject=Hemos recibido tu mensaje - Racklog, to=daniel.mdzl@gmail.com
+[19-Apr-2025 05:25:17 America/Santiago] handleSendEmail: tipo recibido: quote
+[19-Apr-2025 05:25:17 America/Santiago] Procesando cotización con ref: QT-20250419-add5
+[19-Apr-2025 05:25:17 America/Santiago] sendEmail: type=quote, subject=[Cotización] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[19-Apr-2025 05:25:17 America/Santiago] sendEmail: type=quote_confirmation, subject=Cotización de Productos - Racklog, to=fernandochacon1998@gmail.com
+[19-Apr-2025 05:25:47 America/Santiago] handleSendEmail: tipo recibido: contact
+[19-Apr-2025 05:25:47 America/Santiago] Procesando contacto con ref: CT-20250419-0d03
+[19-Apr-2025 05:25:47 America/Santiago] sendEmail: type=contact, subject=[Contacto] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[19-Apr-2025 05:25:47 America/Santiago] sendEmail: type=contact_confirmation, subject=Hemos recibido tu mensaje - Racklog, to=fernandochacon1998@gmail.com
+[21-Apr-2025 09:34:07 America/Santiago] handleSendEmail: tipo recibido: contact
+[21-Apr-2025 09:34:07 America/Santiago] Procesando contacto con ref: CT-20250421-12ca
+[21-Apr-2025 09:34:07 America/Santiago] sendEmail: type=contact, subject=[Contacto] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[21-Apr-2025 09:34:07 America/Santiago] sendEmail: type=contact_confirmation, subject=Hemos recibido tu mensaje - Racklog, to=fernandochacon1998@gmail.com
+[22-Apr-2025 18:16:38 America/Santiago] handleSendEmail: tipo recibido: quote
+[22-Apr-2025 18:16:38 America/Santiago] Procesando cotización con ref: QT-20250422-8519
+[22-Apr-2025 18:16:38 America/Santiago] sendEmail: type=quote, subject=[Cotización] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[22-Apr-2025 18:16:38 America/Santiago] sendEmail: type=quote_confirmation, subject=Cotización de Productos - Racklog, to=rvaldes@scaf.cl
+[24-Apr-2025 12:43:57 America/Santiago] handleSendEmail: tipo recibido: quote
+[24-Apr-2025 12:43:57 America/Santiago] Procesando cotización con ref: QT-20250424-67c2
+[24-Apr-2025 12:43:57 America/Santiago] sendEmail: type=quote, subject=[Cotización] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[24-Apr-2025 12:43:57 America/Santiago] sendEmail: type=quote_confirmation, subject=Cotización de Productos - Racklog, to=comercial@racklog.cl
+[24-Apr-2025 23:10:38 America/Santiago] handleSendEmail: tipo recibido: contact
+[24-Apr-2025 23:10:38 America/Santiago] Procesando contacto con ref: CT-20250424-d04f
+[24-Apr-2025 23:10:38 America/Santiago] sendEmail: type=contact, subject=[Contacto] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[24-Apr-2025 23:10:38 America/Santiago] sendEmail: type=contact_confirmation, subject=Hemos recibido tu mensaje - Racklog, to=daniel.mdzl@gmail.com
+[24-Apr-2025 23:11:03 America/Santiago] handleSendEmail: tipo recibido: contact
+[24-Apr-2025 23:11:03 America/Santiago] Procesando contacto con ref: CT-20250424-ff4c
+[24-Apr-2025 23:11:03 America/Santiago] sendEmail: type=contact, subject=[Contacto] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[24-Apr-2025 23:11:03 America/Santiago] sendEmail: type=contact_confirmation, subject=Hemos recibido tu mensaje - Racklog, to=daniel.mdzl@gmail.com
+[24-Apr-2025 23:11:29 America/Santiago] handleSendEmail: tipo recibido: quote
+[24-Apr-2025 23:11:29 America/Santiago] Procesando cotización con ref: QT-20250424-a5fb
+[24-Apr-2025 23:11:29 America/Santiago] sendEmail: type=quote, subject=[Cotización] desde Sitio Web - Racklog, to=daniel@racklog.cl
+[24-Apr-2025 23:11:29 America/Santiago] sendEmail: type=quote_confirmation, subject=Cotización de Productos - Racklog, to=daniel.mdzl@gmail.com

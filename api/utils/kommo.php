@@ -20,7 +20,7 @@ function createLead(array $data, string $tipo, string $referencia): array {
             'created_by' => 0,
             'custom_fields_values' => [
                 [
-                    'field_id' => 760596,
+                    'field_id' => 760802,
                     'values' => [[ 'value' => $detalleTexto ]]
                 ],
                 [
@@ -67,10 +67,10 @@ function determineLeadName(array $data, string $tipo): string {
 
     if ($tipo === 'contacto' || $tipo === 'contact') {
         // Estructura de contacto
-        return $data['data']['name'] ?? 'Contacto sin nombre';
+        return $data['name'] ?? 'Contacto sin nombre';
     } else {
         // Estructura de cotización - puede tener data anidada
-        return $data['data']['customerName'] ?? 'Contacto sin nombre';
+        return $data['customerName'] ?? 'Contacto sin nombre';
     }
 }
 

@@ -37,7 +37,7 @@
                   </div>
                   <div class="ml-4">
                     <p class="text-sm font-medium text-white/80">Teléfono</p>
-                    <p class="text-base">+56 9 7863 2154</p>
+                    <p class="text-base">(+56) 2 2840 0424</p>
                   </div>
                 </div>
                 
@@ -62,7 +62,7 @@
                   </div>
                   <div class="ml-4">
                     <p class="text-sm font-medium text-white/80">Dirección</p>
-                    <p class="text-base">Av. Las Condes 12.523, Santiago</p>
+                    <p class="text-base">El Juncal 161-C, Quilicura, Santiago - Chile</p>
                   </div>
                 </div>
               </div>
@@ -473,7 +473,7 @@ async function submitForm() {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        to: 'daniel.mdzl@gmail.com', // Recipient email address
+        to: form.email, // Recipient email address
         data: contactData,
         subject: `Contacto Web: ${form.subject}`,
         type: 'contact'

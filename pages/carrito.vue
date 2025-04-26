@@ -461,7 +461,7 @@ async function submitQuote() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        to: 'daniel.mdzl@gmail.com', // Enviar al equipo de ventas
+        to: userEmail.value, // Enviar al equipo de ventas
         data: emailData, 
         type: 'quote' // Usar el template interno
       })

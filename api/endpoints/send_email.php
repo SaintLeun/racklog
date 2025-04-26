@@ -25,7 +25,7 @@ function handleSendEmail(string $method): void {
     // Registrar para depuración
     error_log("handleSendEmail: tipo recibido: {$type}");
 
-    // Email interno (cambia esto a daniel@racklog.cl si es donde quieres recibir)
+    // Email interno
     $internalEmail = 'contacto@racklog.cl';
     $ref = null;
     $internalResult = null;

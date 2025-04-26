@@ -130,9 +130,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 
-// Define internal employee email to receive inquiries
-const INTERNAL_EMAIL = 'ventas@racklog.cl';
-
 // Form data state
 const formData = ref({
   name: '',
@@ -155,35 +152,32 @@ async function submitForm() {
   showErrorMessage.value = false;
   
   try {
-    // Format email content
-    const emailBody = `
-      Nueva solicitud de contacto:
-      
-      Nombre: ${formData.value.name}
-      Empresa: ${formData.value.business || 'No especificada'}
-      Teléfono: ${formData.value.phone}
-      Correo: ${formData.value.email}
-      
-      Favor contactar al cliente lo antes posible.
-      
-      Fecha de solicitud: ${new Date().toLocaleString('es-CL')}
-    `;
+    // Preparar los datos para el correo en el formato estándar
+    const contactData = {
+      name: formData.value.name,
+      email: formData.value.email,
+      phone: formData.value.phone,
+      subject: 'Solicitud de información desde formulario CTA',
+      message: `Cliente solicitando contacto desde formulario principal de la página.`,
+      serviceInfo: 'Formulario principal'
+    };
     
-    // Send email using the API
+    // Enviar usando el endpoint estándar con type=contact
     const response = await fetch('https://api.racklog.cl/api/send-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        to: INTERNAL_EMAIL,
-        text: emailBody
+        to: formData.value.email,
+        data: contactData,
+        type: 'contact' // Usar el mismo tipo que usa ContactModal.vue
       })
     });
     
     const result = await response.json();
     
-    if (result.success) {
+    if (result.success || result.status === 'success') {
       // Show success message and reset form
       showSuccessMessage.value = true;
       resetForm();
