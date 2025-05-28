@@ -276,7 +276,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, watch, computed } from 'vue';
+import { ref, reactive, watch, computed, inject } from 'vue';
+import { useNuxtApp } from '#imports';
 
 const props = defineProps({
   isVisible: Boolean,
@@ -450,11 +451,22 @@ async function submitForm() {
     formStatus.message = 'Por favor, corrija los errores en el formulario.';
     return;
   }
-  
+
   // Start loading state
   isSubmitting.value = true;
   formStatus.message = '';
-  
+
+  // Google Analytics event (now GTM)
+  const nuxtApp = useNuxtApp();
+  const $gtmEvent = nuxtApp.$gtmEvent || null;
+  if ($gtmEvent) {
+    $gtmEvent('begin_checkout', {
+      event_category: 'Funnel',
+      event_label: 'Contact Form Opened',
+      funnel_step: 'form_opened',
+    });
+  }
+
   try {
     // Prepare data for the contact email
     const contactData = {
@@ -489,6 +501,15 @@ async function submitForm() {
         formStatus.success = true;
         formStatus.message = '¡Gracias! Tu mensaje ha sido enviado correctamente. Nos pondremos en contacto contigo pronto.';
         
+        // Google Analytics conversion event (now GTM)
+        if ($gtmEvent) {
+          $gtmEvent('conversion', {
+            event_category: 'Funnel',
+            event_label: 'Contact Form Sent',
+            funnel_step: 'form_sent',
+          });
+        }
+
         // Reset the form except for service-related subject
         const tempSubject = props.serviceInfo ? form.subject : '';
         Object.assign(form, {
@@ -512,7 +533,6 @@ async function submitForm() {
     } else {
       throw new Error('Error en la solicitud a la API');
     }
-    
   } catch (error) {
     console.error('Error sending form:', error);
     formStatus.success = false;

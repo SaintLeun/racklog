@@ -154,13 +154,14 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, computed, onBeforeUnmount, onMounted } from 'vue'
+import { ref, watch, computed, onBeforeUnmount, onMounted, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '~/stores/cartStore'
 import AnguloRanuradoPanel from '~/components/QuoteModal/AnguloRanuradoPanel.vue'
 import RackSelectivoPanel from '~/components/QuoteModal/RackSelectivoPanel.vue'
 import type { ProductType, ProductConfig, AnguloRanuradoConfig, RackSelectivoConfig } from '~/components/QuoteModal/ProductConfig'
 import axios from 'axios'
+import { useNuxtApp } from '#app'
 
 
 
@@ -334,6 +335,19 @@ onBeforeUnmount(() => {
 
 async function addToCart() {
   if (!selectedProduct.value || !isConfigurationComplete.value) return
+
+  // GTM event: funnel step - product added to quote
+  const nuxtApp = useNuxtApp();
+  const $gtmEvent = nuxtApp.$gtmEvent || null;
+  if ($gtmEvent) {
+    $gtmEvent('add_to_cart', {
+      event_category: 'Funnel',
+      event_label: 'Quote Product Added',
+      funnel_step: 'quote_product_added',
+      product: selectedProduct.value,
+      config: { ...config.value }
+    });
+  }
 
   isAddingToCart.value = true
 

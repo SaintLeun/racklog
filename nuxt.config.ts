@@ -59,5 +59,6 @@ export default defineNuxtConfig({
   
   plugins: [
     '~/plugins/pinia.ts',
+    '~/plugins/gtag.client.ts',
   ],
 });

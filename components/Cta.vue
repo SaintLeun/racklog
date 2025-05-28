@@ -128,7 +128,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { useNuxtApp } from '#app';
 
 // Form data state
 const formData = ref({
@@ -146,11 +147,25 @@ const showErrorMessage = ref(false);
 // Function to submit the form
 async function submitForm() {
   if (isSubmitting.value) return;
-  
+
   isSubmitting.value = true;
   showSuccessMessage.value = false;
   showErrorMessage.value = false;
-  
+
+  // GTM event: CTA form opened/submitted
+  const nuxtApp = useNuxtApp();
+  const $gtmEvent = nuxtApp.$gtmEvent || null;
+  if ($gtmEvent) {
+    console.log('[GTM] CTA form submit event fired');
+    $gtmEvent('begin_checkout', {
+      event_category: 'Funnel',
+      event_label: 'CTA Form Submitted',
+      funnel_step: 'cta_form_submitted',
+    });
+  } else {
+    console.log('[GTM] $gtmEvent not available on CTA form submit');
+  }
+
   try {
     // Preparar los datos para el correo en el formato estándar
     const contactData = {
@@ -161,7 +176,7 @@ async function submitForm() {
       message: `Cliente solicitando contacto desde formulario principal de la página.`,
       serviceInfo: 'Formulario principal'
     };
-    
+
     // Enviar usando el endpoint estándar con type=contact
     const response = await fetch('https://api.racklog.cl/api/send-email', {
       method: 'POST',
@@ -174,14 +189,24 @@ async function submitForm() {
         type: 'contact' // Usar el mismo tipo que usa ContactModal.vue
       })
     });
-    
+
     const result = await response.json();
-    
+
     if (result.success || result.status === 'success') {
       // Show success message and reset form
       showSuccessMessage.value = true;
       resetForm();
-      
+
+      // GTM event: CTA form conversion
+      if ($gtmEvent) {
+        console.log('[GTM] CTA form conversion event fired');
+        $gtmEvent('conversion', {
+          event_category: 'Funnel',
+          event_label: 'CTA Form Sent',
+          funnel_step: 'cta_form_sent',
+        });
+      }
+
       // Auto-hide success message after 5 seconds
       setTimeout(() => {
         showSuccessMessage.value = false;
@@ -209,6 +234,13 @@ function resetForm() {
     email: ''
   };
 }
+
+// Log gtag on component mount
+onMounted(() => {
+  const nuxtApp = useNuxtApp();
+  const gtag = nuxtApp.$gtag || nuxtApp.gtag || null;
+  console.log('[gtag] onMounted CTA, nuxtApp.$gtag:', gtag);
+});
 </script>
 
 <style scoped>
