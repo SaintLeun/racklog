@@ -112,7 +112,7 @@
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                 </svg>
-                Arma tu {{ product.name }}
+                Cotiza tu {{ product.name }}
               </button>
               
               <!-- Regular "Add to Quote" button for non-configurable products -->
@@ -130,6 +130,23 @@
             </div>
           </div>
         </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Product Gallery Section -->
+    <section v-if="product.images && product.images.gallery && product.images.gallery.length" class="py-10 bg-white">
+      <div class="container mx-auto px-5">
+        <div class="flex flex-col text-center w-full mb-8">
+          <h2 class="text-xs text-orange-500 tracking-widest font-medium title-font mb-1">GALERÍA DE IMÁGENES</h2>
+          <h1 class="sm:text-3xl text-2xl font-bold title-font text-gray-900 mb-2">Galería del Producto</h1>
+          <div class="h-1 w-20 bg-orange-500 rounded mx-auto mb-4"></div>
+          <p class="lg:w-2/3 mx-auto leading-relaxed text-base">Explora imágenes reales y renders del producto en diferentes aplicaciones y ambientes.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div v-for="(img, idx) in product.images.gallery" :key="idx" class="rounded-lg overflow-hidden shadow-md bg-gray-50">
+            <img :src="img" :alt="`Imagen ${idx + 1} de ${product.name}`" class="w-full h-64 object-cover object-center transition-transform duration-300 hover:scale-105">
+          </div>
         </div>
       </div>
     </section>

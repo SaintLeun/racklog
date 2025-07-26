@@ -109,7 +109,7 @@
             </svg>
             <div>
               <p class="font-bold">Error al enviar</p>
-              <p>Por favor intenta nuevamente o contáctanos directamente al <b>(+56) 2 2840 0424</b></p>
+              <p>Por favor intenta nuevamente o contáctanos directamente al <b>(+56) 9 6369 9510</b></p>
             </div>
             <button @click="showErrorMessage = false" class="ml-auto text-red-700">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

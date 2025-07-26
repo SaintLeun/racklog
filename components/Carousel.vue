@@ -25,7 +25,7 @@
                 <div class="mt-4 relative z-20">
                   <!-- Button with hover effect and shadow -->
                   <button v-if="slide.link" @click="goToDetails(slide)" class="w-full md:w-auto mt-2 px-5 py-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors shadow-md flex items-center justify-center pointer-events-auto">
-                    Ver detalles
+                    Agenda tu visita técnica
                     <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                     </svg>

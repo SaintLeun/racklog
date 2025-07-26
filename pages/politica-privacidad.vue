@@ -106,7 +106,7 @@
           <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
             <p class="font-semibold text-gray-800">Racklog SpA</p>
             <p class="text-gray-700">Email: contacto@racklog.cl</p>
-            <p class="text-gray-700">Teléfono: (+56) 2 2840 0424</p>
+            <p class="text-gray-700">Teléfono: (+56) 9 6369 9510</p>
             <p class="text-gray-700">Dirección: El Juncal 161-C, Quilicura, Santiago - Chile</p>
           </div>
           <p class="text-sm text-gray-600 mt-6">

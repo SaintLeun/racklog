@@ -95,9 +95,8 @@ const productStore = useProductStore();
 const isVisible = ref(false);
 
 const filteredProducts = computed(() => {
-  return Object.values(productStore.products).filter(product => 
-    product.slug !== 'rack-selectivo' && product.slug !== 'angulo-ranurado'
-  ).slice(0, 6); // Limit to 6 products for better display
+  return Object.values(productStore.products)
+    .slice(0, 6); // Limit to 6 products for better display
 });
 
 // Improved scroll animation using Intersection Observer
@@ -117,7 +116,7 @@ const setupIntersectionObserver = () => {
   return observer;
 };
 
-let observer;
+let observer: IntersectionObserver | undefined;
 
 onMounted(() => {
   observer = setupIntersectionObserver();
@@ -180,6 +179,7 @@ onBeforeUnmount(() => {
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;  
   overflow: hidden;
 }

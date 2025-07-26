@@ -10,9 +10,9 @@
       "card": "/assets/images/rack-selectivo-card.png",
       "render": "/assets/images/rack_selectivo.jpg",
       "gallery": [
-        "/assets/images/rack-selectivo-gallery-1.png",
-        "/assets/images/rack-selectivo-gallery-2.png",
-        "/assets/images/rack-selectivo-gallery-3.png"
+        "/assets/images/gallery-rack-selectivo-1.jpg",
+        "/assets/images/gallery-rack-selectivo-2.jpg",
+        "/assets/images/gallery-rack-selectivo-3.jpg"
       ]
     },
     "attributes": {
@@ -96,9 +96,9 @@
       "card": "/assets/images/angulo-ranurado-card.png",
       "render": "/assets/images/anra_body.png",
       "gallery": [
-        "/assets/images/angulo-ranurado-gallery-1.png",
-        "/assets/images/angulo-ranurado-gallery-2.png",
-        "/assets/images/angulo-ranurado-gallery-3.png"
+        "/assets/images/gallery-angulo-ranurado-1.jpg",
+        "/assets/images/gallery-angulo-ranurado-2.jpg",
+        "/assets/images/gallery-angulo-ranurado-3.jpg"
       ]
     },
     "attributes": {
@@ -173,56 +173,6 @@
     ]
   },
   {
-    "name": "Rack Pushback",
-    "slug": "rack-pushback",
-    "type": "Almacenamiento Industrial",
-    "category": "racks",
-    "model": "",
-    "images": {
-      "main": "/assets/images/rack-pushback-main.png",
-      "card": "/assets/images/rack-pushback-card.png",
-      "render": "/assets/images/anra_body.png",
-      "gallery": [
-        "/assets/images/rack-pushback-gallery-1.png",
-        "/assets/images/rack-pushback-gallery-2.png",
-        "/assets/images/rack-pushback-gallery-3.png"
-      ]
-    },
-    "attributes": {
-      "loadType": "Paletizado",
-      "capacity": "",
-      "height": "",
-      "depth": "",
-      "width": ""
-    },
-    "perks": [
-    ],
-    "description": {
-      "short": "Almacenaje LIFO en profundidad, optimiza espacio. Acceso directo paletas, a medida, carga y altura variable",
-      "long": "El Rack Pushback es un sistema de almacenaje que permite el almacenamiento de cargas paletizadas en profundidad. Es un sistema que permite el almacenamiento LIFO, es decir, el último palet en entrar es el primero en salir. Es un sistema que optimiza el espacio de almacenamiento y que permite el acceso directo a cada paleta."
-    },
-    "technicalSpecs": [],
-    "infoCards": [
-      {
-        "title": "¿Cómo funciona?",
-        "description": "Este producto está diseñado para operar principalmente con grúa horquilla. Su estructura es adaptable a la unidad de carga tanto en volumen como en peso. Los operadores de grúa pueden acceder de forma rápida a todos los niveles de la estantería disminuyendo los tiempos en la operación.",
-        "perks": []
-      },
-      {
-        "title": "Usos",
-        "description": "Es un producto adaptable a toda la industria. Se le pueden incluir accesorios como:",
-        "perks": [
-          "Tableros de madera o metálicos",
-          "Rejillas metálicas",
-          "Travesaños para pallets",
-          "Tope para pallets (tope fin de carrera)",
-          "Protecciones de pilares (canilleras)",
-          "Planos de carga para picking en los niveles mas bajos"
-        ]
-      }
-    ]
-  },
-  {
     "name": "Mini Rack",
     "slug": "mini-rack",
     "type": "Almacenamiento Industrial",
@@ -233,9 +183,9 @@
       "card": "/assets/images/rack-minirack-card.png",
       "render": "/assets/images/anra_body.png",
       "gallery": [
-        "/assets/images/rack-pushback-gallery-1.png",
-        "/assets/images/rack-pushback-gallery-2.png",
-        "/assets/images/rack-pushback-gallery-3.png"
+        "/assets/images/gallery-mini-rack-1.jpg",
+        "/assets/images/gallery-mini-rack-2.jpg",
+        "/assets/images/gallery-mini-rack-3.jpg"
       ]
     },
     "attributes": {
@@ -279,72 +229,19 @@
     ]
   },
   {
-    "name": "Rack Autoportante",
-    "slug": "rack-autoportante",
+    "name": "Rack Drive In",
+    "slug": "rack-drive-in",
     "type": "Almacenamiento Industrial",
     "category": "racks",
     "model": "",
     "images": {
-      "main": "/assets/images/rack-autoportante-main.png",
-      "card": "/assets/images/rack-autoportante-card.png",
+      "main": "/assets/images/rack-drivein-main.png",
+      "card": "/assets/images/rack-drivein-card.png",
       "render": "/assets/images/anra_body.png",
       "gallery": [
-        "/assets/images/rack-pushback-gallery-1.png",
-        "/assets/images/rack-pushback-gallery-2.png",
-        "/assets/images/rack-pushback-gallery-3.png"
-      ]
-    },
-    "attributes": {
-      "loadType": "Paletizado",
-      "capacity": "",
-      "height": "",
-      "depth": "",
-      "width": ""
-    },
-    "perks": [
-      "Integración total con la estructura del edificio.",
-      "Versatilidad de Carga.",
-      "Solución integral en una sola fase, ahorrando tiempo y costos.",
-      "Menor costo de implementación al integrar estructura y almacenamiento."
-
-    ],
-    "description": {
-      "short": "Estructura almacén, máximo espacio. Integración edificio, alta eficiencia. Almacenaje avanzado y seguro.",
-      "long": "El <b>Rack Autoportante</b> de Racklog es una solución avanzada que integra el almacenamiento con la estructura de la bodega. Este sistema innovador sirve como <b>estantería industrial</b> y edificación, optimizando cada área del almacén. Diseñado para cargas convencionales y <b>almacenes automatizados</b>, el Rack Autoportante maximiza el espacio y reduce costos de construcción."
-    },
-    "technicalSpecs": [],
-    "infoCards": [
-      {
-        "title": "¿Cómo funciona?",
-        "description": "El Rack Autoportante funciona como un sistema estructural completo, donde las estanterías industriales soportan tanto la carga almacenada como los elementos estructurales del edificio. Elimina la necesidad de construir una estructura independiente, optimizando costos y tiempos de construcción.",
-        "perks": []
-      },
-      {
-        "title": "Usos",
-        "description": "El Rack Autoportante de Racklog es ideal para:",
-        "perks": [
-          "Almacenes de alta densidad.",
-          "Centros de distribución automatizados.",
-          "Bodegas con limitaciones de espacio",
-          "Proyectos que requieren construcción rápida y eficiente."
-        ]
-      }
-    ]
-  },
-  {
-    "name": "Rack Dinámico",
-    "slug": "rack-dinamico",
-    "type": "Almacenamiento Industrial",
-    "category": "racks",
-    "model": "",
-    "images": {
-      "main": "/assets/images/rack-dinamico-main.png",
-      "card": "/assets/images/rack-dinamico-card.png",
-      "render": "/assets/images/anra_body.png",
-      "gallery": [
-        "/assets/images/rack-pushback-gallery-1.png",
-        "/assets/images/rack-pushback-gallery-2.png",
-        "/assets/images/rack-pushback-gallery-3.png"
+        "/assets/images/gallery-drive-in-1.jpg",
+        "/assets/images/gallery-drive-in-2.jpg",
+        "/assets/images/gallery-drive-in-3.jpg"
       ]
     },
     "attributes": {
@@ -385,19 +282,163 @@
     ]
   },
   {
-    "name": "Rack Drive In",
-    "slug": "rack-drive-in",
+    "name": "Rack Autoportante",
+    "slug": "rack-autoportante",
     "type": "Almacenamiento Industrial",
     "category": "racks",
     "model": "",
     "images": {
-      "main": "/assets/images/rack-drivein-main.png",
-      "card": "/assets/images/rack-drivein-card.png",
+      "main": "/assets/images/rack-autoportante-main.png",
+      "card": "/assets/images/rack-autoportante-card.png",
       "render": "/assets/images/anra_body.png",
       "gallery": [
-        "/assets/images/rack-pushback-gallery-1.png",
-        "/assets/images/rack-pushback-gallery-2.png",
-        "/assets/images/rack-pushback-gallery-3.png"
+        "/assets/images/gallery-auto-portante-1.jpg",
+        "/assets/images/gallery-auto-portante-2.jpg",
+        "/assets/images/gallery-auto-portante-3.jpg"
+      ]
+    },
+    "attributes": {
+      "loadType": "Paletizado",
+      "capacity": "",
+      "height": "",
+      "depth": "",
+      "width": ""
+    },
+    "perks": [
+      "Integración total con la estructura del edificio.",
+      "Versatilidad de Carga.",
+      "Solución integral en una sola fase, ahorrando tiempo y costos.",
+      "Menor costo de implementación al integrar estructura y almacenamiento."
+
+    ],
+    "description": {
+      "short": "Estructura almacén, máximo espacio. Integración edificio, alta eficiencia. Almacenaje avanzado y seguro.",
+      "long": "El <b>Rack Autoportante</b> de Racklog es una solución avanzada que integra el almacenamiento con la estructura de la bodega. Este sistema innovador sirve como <b>estantería industrial</b> y edificación, optimizando cada área del almacén. Diseñado para cargas convencionales y <b>almacenes automatizados</b>, el Rack Autoportante maximiza el espacio y reduce costos de construcción."
+    },
+    "technicalSpecs": [],
+    "infoCards": [
+      {
+        "title": "¿Cómo funciona?",
+        "description": "El Rack Autoportante funciona como un sistema estructural completo, donde las estanterías industriales soportan tanto la carga almacenada como los elementos estructurales del edificio. Elimina la necesidad de construir una estructura independiente, optimizando costos y tiempos de construcción.",
+        "perks": []
+      },
+      {
+        "title": "Usos",
+        "description": "El Rack Autoportante de Racklog es ideal para:",
+        "perks": [
+          "Almacenes de alta densidad.",
+          "Centros de distribución automatizados.",
+          "Bodegas con limitaciones de espacio",
+          "Proyectos que requieren construcción rápida y eficiente."
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Altillo de Angulo Ranurado",
+    "slug": "altillo-angulo-ranurado",
+    "type": "Almacenamiento Industrial",
+    "category": "mezzanines",
+    "model": "",
+    "images": {
+      "main": "/assets/images/rack-dinamico-main.png",
+      "card": "/assets/images/altillo-angulo-ranurado-card.png",
+      "render": "/assets/images/anra_body.png",
+      "gallery": [
+        "/assets/images/gallery-altillo-ar-1.jpg",
+        "/assets/images/gallery-altillo-ar-2.jpg",
+        "/assets/images/gallery-altillo-ar-3.jpg"
+      ]
+    },
+    "attributes": {
+      "loadType": "Paletizado",
+      "capacity": "",
+      "height": "",
+      "depth": "",
+      "width": ""
+    },
+    "perks": [
+    ],
+    "description": {
+      "short": "Sistema de picking manual con acceso directo a productos. Ideal para optimizar espacio y agilizar la preparación de pedidos.",
+      "long": "Este método de almacenamiento opera bajo el principio de picking (reposición y/o recolección manual), en el cual los trabajadores tienen acceso directo a los productos sin la necesidad de usar maquinaria. Los empleados pueden llegar a cada nivel directamente a través de escaleras de acceso y los anchos de los pasillos permiten el libre tránsito para uno o más operadores con carritos de picking o transpaletas, simplificando y agilizando la preparación de pedidos.</br>Se realiza la reposición o recolección de productos manualmente para la preparación de pedidos recorriendo los pasillos en 1, 2 o más niveles de altura accediendo por escaleras. Los anchos de pasillo permiten el libre tránsito para 1 o más operadores con carritos de picking o transpaletas."
+    },
+    "technicalSpecs": [],
+    "infoCards": [
+      {
+        "title": "¿Cómo funciona?",
+        "description": "Este método de almacenamiento opera bajo el principio de picking, en el cual los trabajadores tienen acceso directo a los productos sin la necesidad de usar maquinaria. Los empleados pueden llegar a cada nivel directamente a través de escaleras de acceso, lo que simplifica y agiliza la preparación de pedidos. Para mejorar aún más la eficiencia, el sistema puede ser complementado con elementos como transportadores en espiral (toboganes), entre otros.",
+        "perks": []
+      },
+      {
+        "title": "Usos",
+        "description": "El Altillo de angulo ranulado de Racklog es ideal para optimizar espacio en:",
+        "perks": [
+          "Tiendas de ropa y calzado",
+          "Productos farmaceuticos.",
+          "Repuestos, entre otros."
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Rack Pushback",
+    "slug": "rack-pushback",
+    "type": "Almacenamiento Industrial",
+    "category": "racks",
+    "model": "",
+    "images": {
+      "main": "/assets/images/rack-pushback-main.png",
+      "card": "/assets/images/rack-pushback-card.png",
+      "render": "/assets/images/anra_body.png",
+      "gallery": [
+      ]
+    },
+    "attributes": {
+      "loadType": "Paletizado",
+      "capacity": "",
+      "height": "",
+      "depth": "",
+      "width": ""
+    },
+    "perks": [
+    ],
+    "description": {
+      "short": "Almacenaje LIFO en profundidad, optimiza espacio. Acceso directo paletas, a medida, carga y altura variable",
+      "long": "El Rack Pushback es un sistema de almacenaje que permite el almacenamiento de cargas paletizadas en profundidad. Es un sistema que permite el almacenamiento LIFO, es decir, el último palet en entrar es el primero en salir. Es un sistema que optimiza el espacio de almacenamiento y que permite el acceso directo a cada paleta."
+    },
+    "technicalSpecs": [],
+    "infoCards": [
+      {
+        "title": "¿Cómo funciona?",
+        "description": "Este producto está diseñado para operar principalmente con grúa horquilla. Su estructura es adaptable a la unidad de carga tanto en volumen como en peso. Los operadores de grúa pueden acceder de forma rápida a todos los niveles de la estantería disminuyendo los tiempos en la operación.",
+        "perks": []
+      },
+      {
+        "title": "Usos",
+        "description": "Es un producto adaptable a toda la industria. Se le pueden incluir accesorios como:",
+        "perks": [
+          "Tableros de madera o metálicos",
+          "Rejillas metálicas",
+          "Travesaños para pallets",
+          "Tope para pallets (tope fin de carrera)",
+          "Protecciones de pilares (canilleras)",
+          "Planos de carga para picking en los niveles mas bajos"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Rack Dinámico",
+    "slug": "rack-dinamico",
+    "type": "Almacenamiento Industrial",
+    "category": "racks",
+    "model": "",
+    "images": {
+      "main": "/assets/images/rack-dinamico-main.png",
+      "card": "/assets/images/rack-dinamico-card.png",
+      "render": "/assets/images/anra_body.png",
+      "gallery": [
       ]
     },
     "attributes": {
@@ -448,9 +489,6 @@
       "card": "/assets/images/cajas-plasticas-card.png",
       "render": "/assets/images/anra_body.png",
       "gallery": [
-        "/assets/images/rack-pushback-gallery-1.png",
-        "/assets/images/rack-pushback-gallery-2.png",
-        "/assets/images/rack-pushback-gallery-3.png"
       ]
     },
     "attributes": {
@@ -497,9 +535,6 @@
       "card": "/assets/images/entreplantas-card.png",
       "render": "/assets/images/anra_body.png",
       "gallery": [
-        "/assets/images/rack-pushback-gallery-1.png",
-        "/assets/images/rack-pushback-gallery-2.png",
-        "/assets/images/rack-pushback-gallery-3.png"
       ]
     },
     "attributes": {
@@ -523,49 +558,6 @@
     ]
   },
   {
-    "name": "Altillo de Angulo Ranurado",
-    "slug": "altillo-angulo-ranurado",
-    "type": "Almacenamiento Industrial",
-    "category": "mezzanines",
-    "model": "",
-    "images": {
-      "main": "/assets/images/rack-dinamico-main.png",
-      "card": "/assets/images/altillo-angulo-ranurado-card.png",
-      "render": "/assets/images/anra_body.png",
-      "gallery": []
-    },
-    "attributes": {
-      "loadType": "Paletizado",
-      "capacity": "",
-      "height": "",
-      "depth": "",
-      "width": ""
-    },
-    "perks": [
-    ],
-    "description": {
-      "short": "Sistema de picking manual con acceso directo a productos. Ideal para optimizar espacio y agilizar la preparación de pedidos.",
-      "long": "Este método de almacenamiento opera bajo el principio de picking (reposición y/o recolección manual), en el cual los trabajadores tienen acceso directo a los productos sin la necesidad de usar maquinaria. Los empleados pueden llegar a cada nivel directamente a través de escaleras de acceso y los anchos de los pasillos permiten el libre tránsito para uno o más operadores con carritos de picking o transpaletas, simplificando y agilizando la preparación de pedidos.</br>Se realiza la reposición o recolección de productos manualmente para la preparación de pedidos recorriendo los pasillos en 1, 2 o más niveles de altura accediendo por escaleras. Los anchos de pasillo permiten el libre tránsito para 1 o más operadores con carritos de picking o transpaletas."
-    },
-    "technicalSpecs": [],
-    "infoCards": [
-      {
-        "title": "¿Cómo funciona?",
-        "description": "Este método de almacenamiento opera bajo el principio de picking, en el cual los trabajadores tienen acceso directo a los productos sin la necesidad de usar maquinaria. Los empleados pueden llegar a cada nivel directamente a través de escaleras de acceso, lo que simplifica y agiliza la preparación de pedidos. Para mejorar aún más la eficiencia, el sistema puede ser complementado con elementos como transportadores en espiral (toboganes), entre otros.",
-        "perks": []
-      },
-      {
-        "title": "Usos",
-        "description": "El Altillo de angulo ranulado de Racklog es ideal para optimizar espacio en:",
-        "perks": [
-          "Tiendas de ropa y calzado",
-          "Productos farmaceuticos.",
-          "Repuestos, entre otros."
-        ]
-      }
-    ]
-  },
-  {
     "name": "Altillo de Rack Selectivo",
     "slug": "altillo-rack-selectivo",
     "type": "Almacenamiento Industrial",
@@ -576,9 +568,6 @@
       "card": "/assets/images/altillo-rack-selectivo-card.png",
       "render": "/assets/images/anra_body.png",
       "gallery": [
-        "/assets/images/rack-pushback-gallery-1.png",
-        "/assets/images/rack-pushback-gallery-2.png",
-        "/assets/images/rack-pushback-gallery-3.png"
       ]
     },
     "attributes": {

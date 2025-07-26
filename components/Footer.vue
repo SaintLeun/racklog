@@ -118,7 +118,7 @@
               <svg class="w-5 h-5 mr-3 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
               </svg>
-              <a href="tel:+56228400424" class="text-sm text-gray-300 hover:text-orange-500 transition-colors">(+56) 2 2840 0424</a>
+              <a href="tel:+56963699510" class="text-sm text-gray-300 hover:text-orange-500 transition-colors">(+56) 9 6369 9510</a>
             </li>
             <li class="flex items-center">
               <svg class="w-5 h-5 mr-3 text-orange-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
