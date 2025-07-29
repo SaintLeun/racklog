@@ -93,12 +93,12 @@
     "model": "https://sketchfab.com/models/4587a2df7cd44193804ea88fa98bd025/embed",
     "images": {
       "main": "/assets/images/angulo-ranurado-main.png",
-      "card": "/assets/images/gallery-angulo-ranurado-1.jpg",
+      "card": "/assets/images/gallery-angulo-ranurado-1.JPG",
       "render": "/assets/images/anra_body.png",
       "gallery": [
-        "/assets/images/gallery-angulo-ranurado-1.jpg",
-        "/assets/images/gallery-angulo-ranurado-2.jpg",
-        "/assets/images/gallery-angulo-ranurado-3.jpg"
+        "/assets/images/gallery-angulo-ranurado-1.JPG",
+        "/assets/images/gallery-angulo-ranurado-2.JPG",
+        "/assets/images/gallery-angulo-ranurado-3.JPG"
       ]
     },
     "attributes": {
