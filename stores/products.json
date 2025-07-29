@@ -7,7 +7,7 @@
     "model": "https://sketchfab.com/models/1d90e83ff7704eaa9d7b0cc5f0f6a804/embed",
     "images": {
       "main": "/assets/images/rack-selectivo-main.png",
-      "card": "/assets/images/rack-selectivo-card.png",
+      "card": "/assets/images/gallery-rack-selectivo-1.jpg",
       "render": "/assets/images/rack_selectivo.jpg",
       "gallery": [
         "/assets/images/gallery-rack-selectivo-1.jpg",
@@ -93,7 +93,7 @@
     "model": "https://sketchfab.com/models/4587a2df7cd44193804ea88fa98bd025/embed",
     "images": {
       "main": "/assets/images/angulo-ranurado-main.png",
-      "card": "/assets/images/angulo-ranurado-card.png",
+      "card": "/assets/images/gallery-angulo-ranurado-1.jpg",
       "render": "/assets/images/anra_body.png",
       "gallery": [
         "/assets/images/gallery-angulo-ranurado-1.jpg",
@@ -180,7 +180,7 @@
     "model": "",
     "images": {
       "main": "/assets/images/rack-minirack-main.png",
-      "card": "/assets/images/rack-minirack-card.png",
+      "card": "/assets/images/gallery-mini-rack-1.jpg",
       "render": "/assets/images/anra_body.png",
       "gallery": [
         "/assets/images/gallery-mini-rack-1.jpg",
@@ -236,7 +236,7 @@
     "model": "",
     "images": {
       "main": "/assets/images/rack-drivein-main.png",
-      "card": "/assets/images/rack-drivein-card.png",
+      "card": "/assets/images/gallery-drive-in-1.jpg",
       "render": "/assets/images/anra_body.png",
       "gallery": [
         "/assets/images/gallery-drive-in-1.jpg",
@@ -289,7 +289,7 @@
     "model": "",
     "images": {
       "main": "/assets/images/rack-autoportante-main.png",
-      "card": "/assets/images/rack-autoportante-card.png",
+      "card": "/assets/images/gallery-auto-portante-1.jpg",
       "render": "/assets/images/anra_body.png",
       "gallery": [
         "/assets/images/gallery-auto-portante-1.jpg",
@@ -342,7 +342,7 @@
     "model": "",
     "images": {
       "main": "/assets/images/rack-dinamico-main.png",
-      "card": "/assets/images/altillo-angulo-ranurado-card.png",
+      "card": "/assets/images/gallery-altillo-ar-1.jpg",
       "render": "/assets/images/anra_body.png",
       "gallery": [
         "/assets/images/gallery-altillo-ar-1.jpg",

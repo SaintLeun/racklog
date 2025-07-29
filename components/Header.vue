@@ -110,6 +110,7 @@
         <div class="flex space-x-6 hidden md:flex">
           <a href="/" @click="closeAllMenus" class="text-white hover:text-orange-400 py-4 transition-colors">Inicio</a>
           <a href="/nosotros" @click="closeAllMenus" class="text-white hover:text-orange-400 py-4 transition-colors">Nosotros</a>
+          <a href="/blog" @click="closeAllMenus" class="text-white hover:text-orange-400 py-4 transition-colors">Proyectos recientes</a>
           
           <!-- Menú de Productos Mejorado -->
           <div class="relative dropdown-container">
@@ -264,6 +265,7 @@
         <div class="container mx-auto px-4 space-y-3">
           <a href="/" @click="closeAllMenus" class="block text-white hover:text-orange-400 py-2 transition-colors">Inicio</a>
           <a href="/nosotros" @click="closeAllMenus" class="block text-white hover:text-orange-400 py-2 transition-colors">Nosotros</a>
+          <a href="/blog" @click="closeAllMenus" class="block text-white hover:text-orange-400 py-2 transition-colors">Proyectos recientes</a>
           
           <!-- Acordeón para productos en móvil -->
           <div>
