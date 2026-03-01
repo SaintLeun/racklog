@@ -73,3 +73,12 @@ bun run preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+## Project handover docs
+
+- docs/HANDOVER_CLIENT.md
+- docs/HANDOVER_TECHNICAL.md
+- docs/DEPLOYMENT.md
+- docs/API.md
+- docs/ENVIRONMENT.md
+- docs/MAINTENANCE.md
