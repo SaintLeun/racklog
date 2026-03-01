@@ -109,7 +109,7 @@
             </svg>
             <div>
               <p class="font-bold">Error al enviar</p>
-              <p>Por favor intenta nuevamente o contáctanos directamente al <b>(+56) 9 6369 9510</b></p>
+              <p>Por favor intenta nuevamente o contáctanos directamente al <b>(+56) 9 3240 3819</b></p>
             </div>
             <button @click="showErrorMessage = false" class="ml-auto text-red-700">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -129,7 +129,6 @@
 
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
-import { useNuxtApp } from '#app';
 
 // Form data state
 const formData = ref({
@@ -152,19 +151,15 @@ async function submitForm() {
   showSuccessMessage.value = false;
   showErrorMessage.value = false;
 
-  // GTM event: CTA form opened/submitted
-  const nuxtApp = useNuxtApp();
-  const $gtmEvent = nuxtApp.$gtmEvent || null;
-  if ($gtmEvent) {
-    console.log('[GTM] CTA form submit event fired');
-    $gtmEvent('begin_checkout', {
-      event_category: 'Funnel',
-      event_label: 'CTA Form Submitted',
-      funnel_step: 'cta_form_submitted',
-    });
-  } else {
-    console.log('[GTM] $gtmEvent not available on CTA form submit');
-  }
+  // GTM event: CTA form submitted
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: 'begin_checkout',
+    event_category: 'Funnel',
+    event_label: 'CTA Form Submitted',
+    funnel_step: 'cta_form_submitted'
+  });
+  console.log('[GTM] CTA form submit event sent to dataLayer');
 
   try {
     // Preparar los datos para el correo en el formato estándar
@@ -197,15 +192,17 @@ async function submitForm() {
       showSuccessMessage.value = true;
       resetForm();
 
-      // GTM event: CTA form conversion
-      if ($gtmEvent) {
-        console.log('[GTM] CTA form conversion event fired');
-        $gtmEvent('conversion', {
-          event_category: 'Funnel',
-          event_label: 'CTA Form Sent',
-          funnel_step: 'cta_form_sent',
-        });
-      }
+      // Send conversion event to dataLayer for GTM (Google Analytics & Google Ads)
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'purchase', // Standard GA4 purchase event
+        event_category: 'Conversion',
+        event_label: 'CTA Form Sent',
+        funnel_step: 'cta_form_sent',
+        currency: 'CLP',
+        value: 0
+      });
+      console.log('[GTM] CTA form conversion event sent to dataLayer');
 
       // Auto-hide success message after 5 seconds
       setTimeout(() => {
@@ -235,11 +232,9 @@ function resetForm() {
   };
 }
 
-// Log gtag on component mount
+// Log initialization on component mount
 onMounted(() => {
-  const nuxtApp = useNuxtApp();
-  const gtag = nuxtApp.$gtag || nuxtApp.gtag || null;
-  console.log('[gtag] onMounted CTA, nuxtApp.$gtag:', gtag);
+  console.log('[CTA] Component mounted and ready');
 });
 </script>
 

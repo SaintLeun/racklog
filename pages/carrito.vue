@@ -474,6 +474,19 @@ async function submitQuote() {
         showSuccessModal.value = true;
         resetForm(); // Clear form
         clearCart(); // Clear the cart after successful submission
+        
+        // Send conversion event to dataLayer for GTM (Google Analytics & Google Ads)
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({
+          event: 'purchase', // Standard GA4 purchase event
+          event_category: 'Conversion',
+          event_label: 'Quote Form Sent',
+          funnel_step: 'quote_form_sent',
+          cart_total: cartTotal.value,
+          currency: 'CLP',
+          value: cartTotal.value || 0
+        });
+        console.log('[GTM] Quote submission conversion event sent to dataLayer');
       } else {
         // Si el email de confirmación falló pero el interno funcionó
         // Podemos mostrar éxito parcial ya que el pedido fue registrado

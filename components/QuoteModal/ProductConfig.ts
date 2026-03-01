@@ -17,6 +17,7 @@ export interface RackSelectivoConfig  {
     fondoPallet: string;
     altoPallet: string;
     carga: string;
+    palletsPerBeam: number; // 2 or 3 pallets per beam level
 }
 
 export type ProductConfig = AnguloRanuradoConfig | RackSelectivoConfig;

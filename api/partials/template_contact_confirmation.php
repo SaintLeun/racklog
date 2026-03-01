@@ -55,7 +55,7 @@ function generateContactConfirmation(array $data, string $contactRef): string {
                     
                     <div style='margin:10px 0;'>
                         <span style='display:inline-block; width:20px; text-align:center; margin-right:8px;'>📞</span> 
-                        Teléfono: <strong>+56 9 3240 3819</strong>
+                        Teléfono: <strong>+56 9 3240 3819 - +56 9 6369 9510</strong>
                     </div>
                     
                     <div style='margin:10px 0;'>

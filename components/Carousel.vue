@@ -139,6 +139,16 @@ function openContactModal() {
   if (isMenuOpen.value) {
     isMenuOpen.value = false;
   }
+  
+  // Track A/B test conversion event
+  if (typeof window !== 'undefined' && window.dataLayer) {
+    window.dataLayer.push({
+      event: 'ab_test_conversion',
+      ab_test_name: 'hero_variant',
+      ab_test_variant: 'original_carousel',
+      conversion_type: 'contact_modal_open'
+    });
+  }
 }
 
 function closeContactModal() {
@@ -149,6 +159,15 @@ function closeContactModal() {
 onMounted(() => {
   currentSlide.value = 0;
   startAutoSlide();
+  
+  // Track hero view
+  if (typeof window !== 'undefined' && window.dataLayer) {
+    window.dataLayer.push({
+      event: 'ab_test_view',
+      ab_test_name: 'hero_variant',
+      ab_test_variant: 'original_carousel'
+    });
+  }
 });
 
 onBeforeUnmount(() => {

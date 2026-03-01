@@ -39,9 +39,32 @@ export default defineNuxtPlugin((nuxtApp) => {
       window.dataLayer.push({ event, ...params });
       console.log('[GTM] Event pushed:', event, params);
     });
+
+    // Helper function for conversion tracking
+    nuxtApp.provide('trackConversion', (eventLabel: string, value?: number, additionalParams?: Record<string, any>) => {
+      window.dataLayer = window.dataLayer || [];
+      const conversionData = {
+        event: 'purchase', // Standard GA4 purchase event
+        event_category: 'Conversion',
+        event_label: eventLabel,
+        currency: 'CLP',
+        value: value || 0,
+        ...additionalParams
+      };
+      window.dataLayer.push(conversionData);
+      console.log('[GTM] Conversion event pushed:', conversionData);
+    });
+
     console.log('[GTM] GTM plugin initialized');
   }
 });
+
+// TypeScript: declare dataLayer on window for type safety
+declare global {
+  interface Window {
+    dataLayer?: any[];
+  }
+}
 
 // TypeScript: declare dataLayer on window for type safety
 declare global {

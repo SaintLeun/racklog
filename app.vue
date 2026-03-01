@@ -4,7 +4,7 @@
   </NuxtLayout>
 </template>
 
-<script setup>
+<script>
 // No changes needed here, gtag is injected in plugins and used in components
 </script>
 

@@ -9,6 +9,9 @@
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
             </svg>
+            <a href="tel:+56932403819" class="text-sm font-medium hover:underline">(+56) 9 3240 3819</a>
+          </div>
+          <div class="flex items-center text-gray-600 hover:text-orange-500 transition-colors">
             <a href="tel:+56963699510" class="text-sm font-medium hover:underline">(+56) 9 6369 9510</a>
           </div>
           <div class="hidden sm:flex items-center text-gray-600 hover:text-orange-500 transition-colors">
@@ -376,6 +379,16 @@ import { useCartStore } from '~/stores/cartStore';
 import { useRouter } from 'vue-router'; 
 import { storeToRefs } from 'pinia'; 
 import ContactModal from '~/components/ContactModal.vue';
+
+// Check if modal has been shown in this session
+const hasShownModal = sessionStorage.getItem('contactModalShown');
+
+if (!hasShownModal) {
+  setTimeout(() => {
+    openContactModal();
+    sessionStorage.setItem('contactModalShown', 'true');
+  }, 5000);
+}
 
 const productStore = useProductStore();
 const products = productStore.products;
