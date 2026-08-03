@@ -9,7 +9,7 @@
     
     <!-- Botón flotante de WhatsApp -->
     <a 
-      href="https://wa.me/56963699510" 
+      href="https://wa.me/56932403819" 
       target="_blank"
       rel="noopener noreferrer"
       class="whatsapp-button fixed z-40 right-4 sm:right-6 bg-gradient-to-tr from-green-500 to-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group flex items-center justify-center"
@@ -110,8 +110,8 @@ html, body {
 
 /* Estilos para el botón de WhatsApp */
 .whatsapp-button {
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
