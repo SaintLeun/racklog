@@ -110,8 +110,8 @@
 
   /* Estilos para el botón de WhatsApp */
   .whatsapp-button {
-    width: 64px;
-    height: 64px;
+    width: 84px;
+    height: 84px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
 
@@ -134,7 +134,7 @@
   }
 
   .whatsapp-button {
-    animation: whatsapp-pulse 2s ease-out 8s infinite;
+    animation: whatsapp-pulse 4s ease-out 8s infinite;
   }
 
   /* Sombra interior sutil al hacer hover */
