@@ -12,7 +12,7 @@
             <a href="tel:+56932403819" class="text-sm font-medium hover:underline">(+56) 9 3240 3819</a>
           </div>
           <div class="flex items-center text-gray-600 hover:text-orange-500 transition-colors">
-            <a href="tel:+56963699510" class="text-sm font-medium hover:underline">(+56) 9 6369 9510</a>
+            <a href="tel:+56977077194" class="text-sm font-medium hover:underline">(+56) 9 7707 7194</a>
           </div>
           <div class="hidden sm:flex items-center text-gray-600 hover:text-orange-500 transition-colors">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
