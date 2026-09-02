@@ -9,7 +9,7 @@
       
       <!-- Botón flotante de WhatsApp -->
       <a 
-        href="https://wa.me/56977077194" 
+        href="https://wa.me/56932403819" 
         target="_blank"
         rel="noopener noreferrer"
         class="whatsapp-button fixed z-40 right-4 sm:right-6 bg-gradient-to-tr from-green-500 to-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 group flex items-center justify-center"
