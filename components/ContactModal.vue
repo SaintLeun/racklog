@@ -285,7 +285,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, watch, computed, inject } from 'vue';
+import { ref, reactive, watch, computed } from 'vue';
 
 const props = defineProps({
   isVisible: Boolean,
