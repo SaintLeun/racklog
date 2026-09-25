@@ -26,3 +26,10 @@ logs
 # .gitignore
 .env
 production.env
+
+# Secretos de la API (solo deben existir en el servidor)
+api/config/token.php
+
+# Logs de PHP (no siguen el patrón *.log)
+api/error_log
+api/utils/mail_debug.log

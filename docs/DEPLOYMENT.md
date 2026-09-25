@@ -23,6 +23,12 @@ npm run generate
 1) Upload the `api/` folder to the server (example: `api.racklog.cl`).
 2) Ensure PHP is enabled and `mail()` is configured on the host.
 3) Confirm CORS settings in [api/config/cors.php](api/config/cors.php).
+4) `api/config/token.php` is **not** in the repo (it's gitignored on purpose,
+   it holds the Kommo secret). On the server it must already exist with the
+   real token. If it's ever missing, copy
+   [api/config/token.example.php](api/config/token.example.php) to
+   `api/config/token.php` and fill in the current token from Kommo — never
+   commit that file.
 
 ## DNS and routing
 - Frontend domain: `https://www.example.com/` (or root domain).
