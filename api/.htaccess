@@ -7,9 +7,12 @@ RewriteBase /
 
 # Add security headers
 <IfModule mod_headers.c>
-    Header set X-Content-Type-Options "nosniff"
-    Header set X-XSS-Protection "1; mode=block"
-    Header set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "no-referrer"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    # La API solo devuelve JSON: no debe cargar ni ejecutar nada
+    Header always set Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
 </IfModule>
 
 # Disable directory listing for security

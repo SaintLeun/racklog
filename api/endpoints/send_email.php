@@ -96,7 +96,15 @@ function handleSendEmail(string $method): void {
 
     // Asegurarnos de que el contenido pasado a createLead es un array
     $leadData = is_array($content) ? $content : $input;
-    createLead($leadData, $type, $ref);
+    $leadResult = createLead($leadData, $type, $ref);
+    $leadOk = ($leadResult['error'] ?? null) === null
+        && ($leadResult['status'] ?? 0) >= 200 && ($leadResult['status'] ?? 0) < 300;
+    if (!$leadOk) {
+        // El correo ya salio; dejamos rastro para no perder el lead sin aviso
+        error_log("createLead fallo ref={$ref} status=" . ($leadResult['status'] ?? 'n/a')
+            . " error=" . ($leadResult['error'] ?? 'none')
+            . " response=" . json_encode($leadResult['response'] ?? null));
+    }
 
     // Incluir más información en la respuesta para ayudar a la depuración
     http_response_code(200);
@@ -105,6 +113,7 @@ function handleSendEmail(string $method): void {
         'message' => 'Email sent successfully',
         'reference' => $ref,
         'type' => $type,
+        'lead_created' => $leadOk,
         'internal_result' => json_decode($internalResult, true),
         'client_result' => json_decode($clientResult, true)
     ]);

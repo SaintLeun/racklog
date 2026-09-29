@@ -27,7 +27,7 @@ function createLead(array $data, string $tipo, string $referencia): array {
                 ],
                 [
                     'field_id' => 760600,
-                    'values' => [[ 'value' => $tipo === 'quote'? 'Cotizacion' : 'Contacto' ]]
+                    'values' => [[ 'value' => $tipoNormalizado === 'quote' ? 'Cotizacion' : 'Contacto' ]]
                 ],
                 [
                     'field_id' => 760598,
