@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../utils/mailer.php';
+require_once __DIR__ . '/../utils/rate_limit.php';
 
 function handleSendEmail(string $method): void {
     if ($method !== 'POST') {
@@ -19,6 +20,39 @@ function handleSendEmail(string $method): void {
     if (empty($to) || empty($content)) {
         http_response_code(400);
         echo json_encode(['error' => 'Missing required parameters (to, data/text)']);
+        return;
+    }
+
+    // Honeypot: los bots suelen rellenar campos ocultos que un usuario real no ve
+    if (!empty($input['website'] ?? $input['honeypot'] ?? '')) {
+        http_response_code(200);
+        echo json_encode(['status' => 'success', 'message' => 'Email sent successfully']);
+        return;
+    }
+
+    // Validar destinatario y tamano del contenido
+    if (!is_string($to) || strlen($to) > 254 || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid email address']);
+        return;
+    }
+
+    if (strlen(is_string($content) ? $content : json_encode($content)) > 20000) {
+        http_response_code(413);
+        echo json_encode(['error' => 'Payload too large']);
+        return;
+    }
+
+    // Limites de uso: por IP, por destinatario y global
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    if (
+        !checkRateLimit('ip', $ip, 5, 600) ||
+        !checkRateLimit('to', strtolower($to), 3, 3600) ||
+        !checkRateLimit('global', 'all', 200, 3600)
+    ) {
+        http_response_code(429);
+        header('Retry-After: 600');
+        echo json_encode(['error' => 'Too many requests']);
         return;
     }
 

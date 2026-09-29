@@ -28,10 +28,6 @@ $endpoint = implode('/', $path_parts);
 
 // Ruteo por endpoint
 switch ($endpoint) {
-    case 'create-lead':
-        handleCreateLead($method);
-        break;
-
     case 'send-email':
         handleSendEmail($method);
         break;
