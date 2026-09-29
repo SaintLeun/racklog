@@ -23,8 +23,6 @@ logs
 .env.*
 !.env.example
 
-# .gitignore
-.env
 production.env
 
 # Secretos de la API (solo deben existir en el servidor)

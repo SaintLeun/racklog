@@ -1,24 +1,15 @@
 # Environment and Secrets
 
-This project currently stores several tokens in code. For production, rotate and store them securely.
+## Kommo (servidor)
+- El bearer token de Kommo vive solo en `api/config/token.php`, que **no** está en git (ver `api/config/token.example.php`).
+- El frontend ya no usa ningún token de Kommo ni variables `VITE_*`.
+- Los tokens anteriores estuvieron en el historial de git y fueron revocados/rotados.
 
-## Frontend (Nuxt)
-- `VITE_KOMMO_API_TOKEN`
-  - Used in [stores/productStore.ts](stores/productStore.ts) for Kommo catalog fetch.
-  - Set via `.env` at build time.
+## Valores públicos en el frontend (no son secretos, pero quedan visibles en el bundle)
+- Sketchfab API token: [components/QuoteModal/QuoteModal.vue](components/QuoteModal/QuoteModal.vue) (búsqueda de modelos, solo lectura). Conviene rotarlo si se sospecha abuso.
+- Google Tag Manager ID: [plugins/gtag.client.ts](plugins/gtag.client.ts)
+- Microsoft Clarity tag ID: [nuxt.config.ts](nuxt.config.ts)
 
-## Hardcoded tokens (should be rotated)
-- Kommo bearer token
-  - [api/config/token.php](api/config/token.php)
-  - [api/utils/kommo.php](api/utils/kommo.php)
-- Sketchfab API token
-  - [components/QuoteModal/QuoteModal.vue](components/QuoteModal/QuoteModal.vue)
-- Google Tag Manager ID
-  - [plugins/gtag.client.ts](plugins/gtag.client.ts)
-- Microsoft Clarity tag ID
-  - [nuxt.config.ts](nuxt.config.ts)
-
-## Suggested improvements
-- Move all tokens to environment variables.
-- Add `.env.example` with placeholders.
-- Rotate keys after handover.
+## Recomendaciones
+- Rotar cualquier token si se comparte el repositorio con terceros.
+- Nunca commitear `api/config/token.php` ni archivos `.env`.
