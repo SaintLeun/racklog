@@ -23,6 +23,8 @@
           <p class="lg:w-2/3 mx-auto leading-relaxed text-base">Ingresa tus datos y un ejecutivo se pondrá en contacto contigo</p>
         </div>
         <form @submit.prevent="submitForm" class="flex lg:w-2/3 w-full sm:flex-row flex-col mx-auto px-8 sm:space-x-4 sm:space-y-0 space-y-4 sm:px-0 items-end">
+          <!-- Honeypot anti-bots: oculto para personas -->
+          <input v-model="formData.website" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" />
           <div class="relative flex-grow w-full">
             <label for="full-name" class="leading-7 text-sm text-gray-600">Nombre</label>
             <input 
@@ -132,6 +134,7 @@ import { ref, onMounted } from 'vue';
 
 // Form data state
 const formData = ref({
+  website: '', // honeypot
   name: '',
   business: '',
   phone: '',
@@ -181,7 +184,8 @@ async function submitForm() {
       body: JSON.stringify({
         to: formData.value.email,
         data: contactData,
-        type: 'contact' // Usar el mismo tipo que usa ContactModal.vue
+        type: 'contact', // Usar el mismo tipo que usa ContactModal.vue
+        website: formData.value.website
       })
     });
 

@@ -126,6 +126,8 @@
               
               <!-- Contact form -->
               <form @submit.prevent="submitForm" class="space-y-5">
+                <!-- Honeypot anti-bots: oculto para personas -->
+                <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" />
                 <!-- Name and Email row -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
@@ -303,6 +305,7 @@ const emit = defineEmits(['close']);
 
 // Form state
 const form = reactive({
+  website: '', // honeypot
   name: '',
   phone: '',
   email: '',
@@ -494,7 +497,8 @@ async function submitForm() {
         to: form.email, // Recipient email address
         data: contactData,
         subject: `Contacto Web: ${form.subject}`,
-        type: 'contact'
+        type: 'contact',
+        website: form.website
       })
     });
     

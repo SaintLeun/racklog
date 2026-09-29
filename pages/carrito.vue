@@ -159,6 +159,8 @@
             </div>
             
             <!-- Email Input -->
+            <!-- Honeypot anti-bots: oculto para personas -->
+            <input v-model="honeypot" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" />
             <div>
               <label for="emailInput" class="block text-sm font-medium text-gray-700 mb-2">Correo electrónico</label>
               <input 
@@ -359,6 +361,7 @@ const isHighValueQuote = computed(() => {
 
 // Form fields
 const userEmail = ref('');
+const honeypot = ref(''); // honeypot anti-bots
 const customerName = ref('');
 const customerCompany = ref('');
 const customerPhone = ref('');
@@ -463,7 +466,8 @@ async function submitQuote() {
       body: JSON.stringify({
         to: userEmail.value, // Enviar al equipo de ventas
         data: emailData, 
-        type: 'quote' // Usar el template interno
+        type: 'quote', // Usar el template interno
+        website: honeypot.value
       })
     });
     
