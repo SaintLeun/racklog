@@ -17,10 +17,10 @@ function generateQuoteConfirmation(array $data, string $quoteRef): string {
     foreach ($products as $i => $product) {
         $productsHtml .= "<div style='padding:15px; margin-bottom:15px; border-left:4px solid #ff9800; background-color:#f9f9f9; border-radius:4px;'>";
         $productsHtml .= "<div style='font-size:16px; font-weight:600; color:#333; margin-bottom:8px; padding-bottom:5px; border-bottom:1px dashed #ddd;'>" 
-            . ($i + 1) . ". " . htmlspecialchars($product['name']) . "</div>";
+            . ($i + 1) . ". " . esc($product['name']) . "</div>";
         
         $productsHtml .= "<div style='display:flex; justify-content:space-between; margin-bottom:10px;'>";
-        $productsHtml .= "<span>Cantidad: <strong>" . htmlspecialchars($product['quantity']) . "</strong></span>";
+        $productsHtml .= "<span>Cantidad: <strong>" . esc($product['quantity']) . "</strong></span>";
         // Eliminamos la visualización de precios unitarios
         $productsHtml .= "</div>";
 
@@ -50,11 +50,11 @@ function generateQuoteConfirmation(array $data, string $quoteRef): string {
                 $displayValue = match ($key) {
                     'tipo' => $value === 'simple' ? 'Simple' : 'Doble',
                     'pintado' => $value === 'si' ? 'Sí, con pintura electrostática' : 'No',
-                    default => htmlspecialchars($value)
+                    default => esc($value)
                 };
                 
                 $productsHtml .= "<div style='font-size:13px; color:#555; margin-bottom:5px;'>";
-                $productsHtml .= "<span style='color:#ff9800; margin-right:5px;'>•</span> <strong>{$label}:</strong> {$displayValue}";
+                $productsHtml .= "<span style='color:#ff9800; margin-right:5px;'>•</span> <strong>" . esc($label) . ":</strong> {$displayValue}";
                 $productsHtml .= "</div>";
             }
             
@@ -90,25 +90,25 @@ function generateQuoteConfirmation(array $data, string $quoteRef): string {
             <table style='width:100%;'>
                 <tr>
                     <td style='padding:5px 15px 5px 0; font-weight:bold; width:120px;'>Nombre:</td>
-                    <td style='padding:5px 0;'>" . htmlspecialchars($customerName) . "</td>
+                    <td style='padding:5px 0;'>" . esc($customerName) . "</td>
                 </tr>";
                 
         if (!empty($customerCompany)) {
             $customerInfoHtml .= "
                 <tr>
                     <td style='padding:5px 15px 5px 0; font-weight:bold;'>Empresa:</td>
-                    <td style='padding:5px 0;'>" . htmlspecialchars($customerCompany) . "</td>
+                    <td style='padding:5px 0;'>" . esc($customerCompany) . "</td>
                 </tr>";
         }
                 
         $customerInfoHtml .= "
                 <tr>
                     <td style='padding:5px 15px 5px 0; font-weight:bold;'>Email:</td>
-                    <td style='padding:5px 0;'>" . htmlspecialchars($customerEmail) . "</td>
+                    <td style='padding:5px 0;'>" . esc($customerEmail) . "</td>
                 </tr>
                 <tr>
                     <td style='padding:5px 15px 5px 0; font-weight:bold;'>Teléfono:</td>
-                    <td style='padding:5px 0;'>" . htmlspecialchars($customerPhone) . "</td>
+                    <td style='padding:5px 0;'>" . esc($customerPhone) . "</td>
                 </tr>
             </table>
         </div>";
@@ -123,7 +123,7 @@ function generateQuoteConfirmation(array $data, string $quoteRef): string {
                 COMENTARIOS ADICIONALES
             </div>
             <div style='background-color:#fff8e1; border-left:4px solid #ffc107; padding:15px; border-radius:4px;'>
-                " . nl2br(htmlspecialchars($customerComments)) . "
+                " . nl2br(esc($customerComments)) . "
             </div>
         </div>";
     }
@@ -157,7 +157,7 @@ function generateQuoteConfirmation(array $data, string $quoteRef): string {
                 <p>Fecha: {$today} | Ref: {$quoteRef}</p>
             </div>
             <div class='content'>
-                <p style='font-size:17px; margin-bottom:20px;'>Estimado/a <strong>{$customerName}</strong>,</p>
+                <p style='font-size:17px; margin-bottom:20px;'>Estimado/a <strong>" . esc($customerName) . "</strong>,</p>
                 
                 <p>Gracias por su interés en nuestros productos de almacenamiento industrial. Hemos recibido su solicitud de cotización y a continuación le presentamos un detalle de los productos configurados. Un asesor comercial se pondrá en contacto con usted para proporcionarle los precios específicos y resolver cualquier consulta adicional.</p>
                 

@@ -30,15 +30,15 @@ function generateQuote(array $data, string $quoteRef): string {
     foreach ($products as $i => $product) {
         $productsHtml .= "<div style='padding:15px; margin-bottom:15px; border-left:4px solid #3f51b5; background-color:#f9f9f9; border-radius:4px;'>";
         $productsHtml .= "<div style='font-size:16px; font-weight:600; color:#333; margin-bottom:8px; padding-bottom:5px; border-bottom:1px dashed #ddd;'>" 
-            . ($i + 1) . ". " . htmlspecialchars($product['name']) . "</div>";
+            . ($i + 1) . ". " . esc($product['name']) . "</div>";
         
         $productsHtml .= "<div style='display:flex; justify-content:space-between; margin-bottom:10px;'>";
-        $productsHtml .= "<span>Cantidad: <strong>" . htmlspecialchars($product['quantity']) . "</strong></span>";
+        $productsHtml .= "<span>Cantidad: <strong>" . esc($product['quantity']) . "</strong></span>";
         
         // Para uso interno, sí mostramos precios si están disponibles
         if (isset($product['price']) && (!isset($product['quoteOnly']) || !$product['quoteOnly'])) {
-            $price = number_format($product['price'], 0, ',', '.');
-            $subtotal = number_format($product['price'] * $product['quantity'], 0, ',', '.');
+            $price = number_format((float) $product["price"], 0, ',', '.');
+            $subtotal = number_format((float) $product["price"] * (float) $product["quantity"], 0, ',', '.');
             $productsHtml .= "<br><span>Precio: <strong>$" . $price . "</strong> | Subtotal: <strong>$" . $subtotal . "</strong></span>";
         } else {
             $productsHtml .= "<br><span style='color:#e91e63; font-weight:600;'>Requiere cotización manual</span>";
@@ -72,11 +72,11 @@ function generateQuote(array $data, string $quoteRef): string {
                 $displayValue = match ($key) {
                     'tipo' => $value === 'simple' ? 'Simple' : 'Doble',
                     'pintado' => $value === 'galvanizado' ? 'galvanizado' : 'Pintado',
-                    default => htmlspecialchars($value)
+                    default => esc($value)
                 };
                 
                 $productsHtml .= "<div style='font-size:13px; color:#555; margin-bottom:5px;'>";
-                $productsHtml .= "<span style='color:#3f51b5; margin-right:5px;'>•</span> <strong>{$label}:</strong> {$displayValue}";
+                $productsHtml .= "<span style='color:#3f51b5; margin-right:5px;'>•</span> <strong>" . esc($label) . ":</strong> {$displayValue}";
                 $productsHtml .= "</div>";
             }
             
@@ -97,25 +97,25 @@ function generateQuote(array $data, string $quoteRef): string {
             <table style='width:100%; border-collapse:collapse;'>
                 <tr>
                     <td style='width:30%; padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Nombre:</td>
-                    <td style='padding:8px 12px;'><strong>" . htmlspecialchars($customerName) . "</strong></td>
+                    <td style='padding:8px 12px;'><strong>" . esc($customerName) . "</strong></td>
                 </tr>";
                 
         if (!empty($customerCompany)) {
             $customerInfoHtml .= "
                 <tr>
                     <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Empresa:</td>
-                    <td style='padding:8px 12px;'>" . htmlspecialchars($customerCompany) . "</td>
+                    <td style='padding:8px 12px;'>" . esc($customerCompany) . "</td>
                 </tr>";
         }
                 
         $customerInfoHtml .= "
                 <tr>
                     <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Email:</td>
-                    <td style='padding:8px 12px;'><a href='mailto:" . htmlspecialchars($customerEmail) . "' style='color:#3f51b5; text-decoration:none;'>" . htmlspecialchars($customerEmail) . "</a></td>
+                    <td style='padding:8px 12px;'><a href='mailto:" . esc($customerEmail) . "' style='color:#3f51b5; text-decoration:none;'>" . esc($customerEmail) . "</a></td>
                 </tr>
                 <tr>
                     <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Teléfono:</td>
-                    <td style='padding:8px 12px;'><a href='tel:" . htmlspecialchars($customerPhone) . "' style='color:#3f51b5; text-decoration:none;'>" . htmlspecialchars($customerPhone) . "</a></td>
+                    <td style='padding:8px 12px;'><a href='tel:" . esc($customerPhone) . "' style='color:#3f51b5; text-decoration:none;'>" . esc($customerPhone) . "</a></td>
                 </tr>
                 <tr>
                     <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Fecha solicitud:</td>
@@ -142,7 +142,7 @@ function generateQuote(array $data, string $quoteRef): string {
                 COMENTARIOS DEL CLIENTE
             </div>
             <div style='background-color:#fff8e1; border-left:4px solid #ffc107; padding:15px; border-radius:4px;'>
-                " . nl2br(htmlspecialchars($customerComments)) . "
+                " . nl2br(esc($customerComments)) . "
             </div>
         </div>";
     }
@@ -156,7 +156,7 @@ function generateQuote(array $data, string $quoteRef): string {
     // Total para el equipo de ventas
     $totalSection = '';
     if (isset($data['cartTotal']) && $data['cartTotal'] > 0) {
-        $totalFormatted = number_format($data['cartTotal'], 0, ',', '.');
+        $totalFormatted = number_format((float) $data["cartTotal"], 0, ',', '.');
         $totalSection = "
         <div style='background-color:#f5f5f5; padding:15px; border-radius:4px; margin:20px 0; text-align:right;'>
             <div style='font-size:14px; color:#666; margin-bottom:5px;'>Total calculado automáticamente:</div>

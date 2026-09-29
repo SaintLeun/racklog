@@ -16,7 +16,7 @@
 
 ## Monitoring and logs
 - PHP `error_log` for API errors.
-- Mailer debug log (if enabled): `api/utils/mail_debug.log`.
+- El log de depuración del mailer (`mail_debug.log`) fue eliminado; los errores de PHP quedan en el log del servidor.
 
 ## Token hygiene
 - Rotate API tokens every 6-12 months or after staff changes.

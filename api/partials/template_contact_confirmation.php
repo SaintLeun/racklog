@@ -29,7 +29,7 @@ function generateContactConfirmation(array $data, string $contactRef): string {
             </div>
             
             <div class='content' style='padding:30px 25px;'>
-                <p style='font-size:17px; margin-bottom:20px;'>Estimado/a <strong>" . htmlspecialchars($name) . "</strong>,</p>
+                <p style='font-size:17px; margin-bottom:20px;'>Estimado/a <strong>" . esc($name) . "</strong>,</p>
                 
                 <p style='line-height:1.7;'>Queremos confirmarte que hemos recibido tu mensaje correctamente. Gracias por tomarte el tiempo de contactarnos.</p>
                 
@@ -41,7 +41,7 @@ function generateContactConfirmation(array $data, string $contactRef): string {
                     
                     <div>
                         <p style='margin:0 0 5px 0; font-size:14px; color:#777;'>Asunto:</p>
-                        <p style='margin:0; font-weight:500;'>" . htmlspecialchars($subject) . "</p>
+                        <p style='margin:0; font-weight:500;'>" . esc($subject) . "</p>
                     </div>
                 </div>
                 

@@ -23,19 +23,19 @@ function generateContact(array $data, string $contactRef): string {
         <table style='width:100%; border-collapse:collapse;'>
             <tr>
                 <td style='width:30%; padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Nombre:</td>
-                <td style='padding:8px 12px;'><strong>" . htmlspecialchars($name) . "</strong></td>
+                <td style='padding:8px 12px;'><strong>" . esc($name) . "</strong></td>
             </tr>
             <tr>
                 <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Email:</td>
-                <td style='padding:8px 12px;'><a href='mailto:" . htmlspecialchars($email) . "' style='color:#ff9800; text-decoration:none;'>" . htmlspecialchars($email) . "</a></td>
+                <td style='padding:8px 12px;'><a href='mailto:" . esc($email) . "' style='color:#ff9800; text-decoration:none;'>" . esc($email) . "</a></td>
             </tr>
             <tr>
                 <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Teléfono:</td>
-                <td style='padding:8px 12px;'>" . htmlspecialchars($phone) . "</td>
+                <td style='padding:8px 12px;'>" . esc($phone) . "</td>
             </tr>
             <tr>
                 <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Asunto:</td>
-                <td style='padding:8px 12px;'>" . htmlspecialchars($subject) . "</td>
+                <td style='padding:8px 12px;'>" . esc($subject) . "</td>
             </tr>";
     
     // Agregar información de servicio si existe
@@ -43,7 +43,7 @@ function generateContact(array $data, string $contactRef): string {
         $contactInfoTable .= "
             <tr>
                 <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Servicio:</td>
-                <td style='padding:8px 12px;'>" . htmlspecialchars($serviceInfo) . "</td>
+                <td style='padding:8px 12px;'>" . esc($serviceInfo) . "</td>
             </tr>";
     }
     
@@ -58,7 +58,7 @@ function generateContact(array $data, string $contactRef): string {
             MENSAJE
         </div>
         <div style='background-color:#f9f9f9; border-left:4px solid #ff9800; padding:20px; margin:15px 0; border-radius:4px; line-height:1.7;'>
-            " . nl2br(htmlspecialchars($message)) . "
+            " . nl2br(esc($message)) . "
         </div>
     </div>";
     

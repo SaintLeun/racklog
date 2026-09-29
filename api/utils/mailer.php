@@ -3,13 +3,6 @@
 require_once __DIR__ . '/templates.php';
 
 function sendEmail(string $to, $content, string $type, string $referenceId): string {
-    // Función especial de depuración - sólo agrégala temporalmente
-    file_put_contents(
-        __DIR__ . '/mail_debug.log', 
-        date('Y-m-d H:i:s') . " - To: $to, Type: $type\n" . print_r($content, true) . "\n\n", 
-        FILE_APPEND
-    );
-
     $sender = 'contacto@racklog.cl';
     
     // Normalizar el tipo y verificar su valor preciso
