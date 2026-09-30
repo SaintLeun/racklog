@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Dependencias sin vulnerabilidades altas
+        run: npm audit --omit=dev --audit-level=high
+      - name: Generar sitio estatico (falla si alguna pagina da error)
+        run: npm run generate
+      - name: Verificar paginas clave
+        run: |
+          for f in index.html 404.html sitemap.xml robots.txt .htaccess productos/rack-selectivo/index.html terminos/index.html; do
+            test -s ".output/public/$f" || { echo "Falta $f"; exit 1; }
+          done
+          test "$(grep -c '<h1' .output/public/index.html)" = "1" || { echo "El home debe tener un solo H1"; exit 1; }
+
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+      - name: Sintaxis PHP
+        run: find api -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Pruebas basicas de la API (sin Kommo ni correo reales)
+        run: |
+          cp api/config/token.example.php api/config/token.php
+          mkdir -p /tmp/kommo && echo '<?php echo "[]";' > /tmp/kommo/index.php
+          php -S 127.0.0.1:8091 -t /tmp/kommo >/dev/null 2>&1 &
+          KOMMO_API_URL=http://127.0.0.1:8091/ KOMMO_BEARER_TOKEN=ci_fake_token_12345678901234567890 \
+            php -d sendmail_path=/bin/true -S 127.0.0.1:8090 -t api api/index.php >/dev/null 2>&1 &
+          sleep 1
+          A=http://127.0.0.1:8090/api/send-email
+          check() { code=$(curl -s -o /dev/null -w '%{http_code}' "${@:2}"); [ "$code" = "$1" ] || { echo "Esperado $1, recibido $code: ${*:2}"; exit 1; }; }
+          check 200 http://127.0.0.1:8090/api/health
+          check 405 $A
+          check 415 -X POST -d 'type=contact' $A
+          check 422 -X POST -H 'Content-Type: application/json' -d '{"type":"contact","data":{"name":"A","email":"malo"}}' $A
+          check 422 -X POST -H 'Content-Type: application/json' -d '{"type":"quote","data":{"customerName":"A","customerEmail":"a@b.cl","products":[{"name":"R","price":"abc"}]}}' $A
+          check 200 -X POST -H 'Content-Type: application/json' -d '{"type":"contact","data":{"name":"Ana","email":"ana@example.com"}}' $A

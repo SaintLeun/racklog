@@ -90,6 +90,9 @@
                 <video 
                   class="w-full h-auto"
                   controls
+                  preload="metadata"
+                  playsinline
+                  aria-label="Video institucional de Racklog"
                 >
                   <source src="/assets/videos/nosotros.mp4" type="video/mp4">
                   Su navegador no soporta la reproducción de videos.
