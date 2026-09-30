@@ -79,16 +79,16 @@
             <div class="space-y-4 text-center">
               <button
                 @click="openContactModal()"
-                class="group relative inline-flex items-center px-8 py-4 bg-white text-black rounded-xl font-bold text-lg shadow-2xl hover:shadow-orange-500/25 hover:scale-101 transition-all duration-300 overflow-hidden"
+                class="group relative inline-flex items-center max-w-full px-5 sm:px-8 py-4 bg-white text-black rounded-xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-orange-500/25 hover:scale-101 transition-all duration-300 overflow-hidden"
               >
                 <div
                   class="absolute inset-0 bg-gradient-to-r from-orange-400 to-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                 ></div>
 
-                <div class="relative z-10 flex items-center space-x-3">
+                <div class="relative z-10 flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
                   <div class="flex items-center space-x-2">
                     <div
-                      class="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center"
+                      class="w-8 h-8 flex-shrink-0 bg-orange-500 rounded-full flex items-center justify-center"
                     >
                       <svg
                         class="w-4 h-4 text-white"
@@ -109,7 +109,7 @@
                     >
                   </div>
 
-                  <div class="h-6 w-px bg-gray-300 group-hover:bg-white/50"></div>
+                  <div class="hidden sm:block h-6 w-px bg-gray-300 group-hover:bg-white/50"></div>
 
                   <div class="flex items-center space-x-1">
                     <span

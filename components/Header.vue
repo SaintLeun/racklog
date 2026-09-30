@@ -116,7 +116,7 @@
           <a href="/blog" @click="closeAllMenus" class="text-white hover:text-orange-400 py-4 transition-colors">Proyectos recientes</a>
           
           <!-- Menú de Productos Mejorado -->
-          <div class="relative dropdown-container">
+          <div class="lg:relative dropdown-container">
             <button 
               class="flex items-center text-white hover:text-orange-400 py-4 focus:outline-none transition-colors" 
               aria-expanded="true" 
