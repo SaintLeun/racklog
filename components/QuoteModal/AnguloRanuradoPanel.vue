@@ -10,11 +10,13 @@
         Configuración básica
       </h3>
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-2">Tipo</label>
-        <div class="grid grid-cols-2 gap-2">
+        <span :id="`${uid}-f1`" class="block text-xs font-medium text-gray-600 mb-2">Tipo</span>
+        <div role="group" :aria-labelledby="`${uid}-f1`" class="grid grid-cols-2 gap-2">
           <button
             v-for="option in ['simple', 'doble']" 
             :key="option"
+            type="button"
+            :aria-pressed="localConfig.tipo === option"
             @click="localConfig.tipo = option"
             :class="[
               'px-3 py-2 rounded-lg transition-all duration-200 border flex items-center justify-center',
@@ -40,9 +42,11 @@
       <div class="grid grid-cols-2 gap-3">
         <!-- Ancho (Cuerpos) -->
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-2">Ancho (Cuerpos)</label>
-          <div class="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+          <span :id="`${uid}-f2`" class="block text-xs font-medium text-gray-600 mb-2">Ancho (Cuerpos)</span>
+          <div role="group" :aria-labelledby="`${uid}-f2`" class="flex items-center justify-between bg-gray-50 rounded-lg p-2">
             <button
+              type="button"
+              aria-label="Quitar un cuerpo"
               @click="localConfig.cuerpos = Math.max(1, localConfig.cuerpos - 1)"
               class="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:border-orange-400 hover:bg-orange-50 transition-colors flex items-center justify-center"
             >
@@ -52,6 +56,8 @@
               {{ localConfig.cuerpos }}
             </span>
             <button
+              type="button"
+              aria-label="Agregar un cuerpo"
               @click="localConfig.cuerpos = Math.min(10, localConfig.cuerpos + 1)"
               class="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:border-orange-400 hover:bg-orange-50 transition-colors flex items-center justify-center"
             >
@@ -62,9 +68,11 @@
 
         <!-- Altura (Niveles) -->
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-2">Altura (Niveles)</label>
-          <div class="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+          <span :id="`${uid}-f3`" class="block text-xs font-medium text-gray-600 mb-2">Altura (Niveles)</span>
+          <div role="group" :aria-labelledby="`${uid}-f3`" class="flex items-center justify-between bg-gray-50 rounded-lg p-2">
             <button
+              type="button"
+              aria-label="Quitar un nivel"
               @click="localConfig.niveles = Math.max(2, localConfig.niveles - 1)"
               class="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:border-orange-400 hover:bg-orange-50 transition-colors flex items-center justify-center"
             >
@@ -74,6 +82,8 @@
               {{ localConfig.niveles }}
             </span>
             <button
+              type="button"
+              aria-label="Agregar un nivel"
               @click="localConfig.niveles = Math.min(10, localConfig.niveles + 1)"
               class="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:border-orange-400 hover:bg-orange-50 transition-colors flex items-center justify-center"
             >
@@ -94,15 +104,15 @@
       </h3>
       <div class="space-y-3">
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-2">Acabado</label>
+          <span :id="`${uid}-f4`" class="block text-xs font-medium text-gray-600 mb-2">Acabado</span>
           <OptionToggle :options="['galvanizado', 'pintado']" v-model="localConfig.pintado" />
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div role="group" :aria-labelledby="`${uid}-f4`" class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-2">Carga (kg)</label>
+            <label :for="`${uid}-f5`" class="block text-xs font-medium text-gray-600 mb-2">Carga (kg)</label>
             <div class="relative">
-              <select 
+              <select :id="`${uid}-f5`" 
                 v-model="localConfig.carga"
                 class="w-full py-2 px-3 rounded-lg border border-gray-200 shadow-sm focus:border-orange-300 focus:ring focus:ring-orange-200 focus:ring-opacity-50"
               >
@@ -114,9 +124,9 @@
           </div>
 
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-2">Fondo (mm)</label>
+            <label :for="`${uid}-f6`" class="block text-xs font-medium text-gray-600 mb-2">Fondo (mm)</label>
             <div class="relative">
-              <select 
+              <select :id="`${uid}-f6`" 
                 v-model="localConfig.bandeja"
                 class="w-full py-2 px-3 rounded-lg border border-gray-200 shadow-sm focus:border-orange-300 focus:ring focus:ring-orange-200 focus:ring-opacity-50"
               >
@@ -134,6 +144,7 @@
 </template>
 
 <script lang="ts" setup>
+const uid = useId();
 import { reactive, watch } from 'vue'
 import OptionToggle from '~/components/QuoteModal/OptionToggle.vue'
 import type { AnguloRanuradoConfig } from '~/components/QuoteModal/ProductConfig'

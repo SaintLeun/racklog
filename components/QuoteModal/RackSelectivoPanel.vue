@@ -13,11 +13,13 @@
       <div class="grid grid-cols-2 gap-3">
         <!-- Tipo -->
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-2">Tipo</label>
-          <div class="grid grid-cols-2 gap-2">
+          <span :id="`${uid}-f1`" class="block text-xs font-medium text-gray-600 mb-2">Tipo</span>
+          <div role="group" :aria-labelledby="`${uid}-f1`" class="grid grid-cols-2 gap-2">
             <button
               v-for="option in ['simple', 'doble']" 
               :key="option"
+              type="button"
+              :aria-pressed="localConfig.tipo === option"
               @click="localConfig.tipo = option"
               :class="[
                 'px-3 py-2 rounded-lg transition-all duration-200 border flex items-center justify-center',
@@ -33,8 +35,8 @@
 
         <!-- Pallets por Nivel -->
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-2">Pallets por nivel</label>
-          <div class="grid grid-cols-2 gap-2">
+          <span :id="`${uid}-f2`" class="block text-xs font-medium text-gray-600 mb-2">Pallets por nivel</span>
+          <div role="group" :aria-labelledby="`${uid}-f2`" class="grid grid-cols-2 gap-2">
             <button
               v-for="option in [2, 3]" 
               :key="option"
@@ -82,9 +84,11 @@
 
       <!-- Cantidad de cuerpos (Número de módulos) -->
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-2">Cantidad de cuerpos</label>
-        <div class="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+        <span :id="`${uid}-f3`" class="block text-xs font-medium text-gray-600 mb-2">Cantidad de cuerpos</span>
+        <div role="group" :aria-labelledby="`${uid}-f3`" class="flex items-center justify-between bg-gray-50 rounded-lg p-2">
           <button
+            type="button"
+            aria-label="Quitar un cuerpo"
             @click="localConfig.cuerpos = Math.max(1, localConfig.cuerpos - 1)"
             class="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:border-orange-400 hover:bg-orange-50 transition-colors flex items-center justify-center"
           >
@@ -94,6 +98,8 @@
             {{ localConfig.cuerpos }}
           </span>
           <button
+            type="button"
+            aria-label="Agregar un cuerpo"
             @click="localConfig.cuerpos = Math.min(10, localConfig.cuerpos + 1)"
             class="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:border-orange-400 hover:bg-orange-50 transition-colors flex items-center justify-center"
           >
@@ -104,9 +110,11 @@
 
       <!-- Niveles de viga -->
       <div>
-        <label class="block text-xs font-medium text-gray-600 mb-2">Niveles de viga</label>
-        <div class="flex items-center justify-between bg-gray-50 rounded-lg p-2">
+        <span :id="`${uid}-f4`" class="block text-xs font-medium text-gray-600 mb-2">Niveles de viga</span>
+        <div role="group" :aria-labelledby="`${uid}-f4`" class="flex items-center justify-between bg-gray-50 rounded-lg p-2">
           <button
+            type="button"
+            aria-label="Quitar un nivel"
             @click="localConfig.niveles = Math.max(2, localConfig.niveles - 1)"
             class="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:border-orange-400 hover:bg-orange-50 transition-colors flex items-center justify-center"
           >
@@ -116,6 +124,8 @@
             {{ localConfig.niveles }}
           </span>
           <button
+            type="button"
+            aria-label="Agregar un nivel"
             @click="localConfig.niveles = Math.min(10, localConfig.niveles + 1)"
             class="w-8 h-8 rounded-lg bg-white border border-gray-200 hover:border-orange-400 hover:bg-orange-50 transition-colors flex items-center justify-center"
           >
@@ -137,11 +147,13 @@
       <div class="grid grid-cols-2 gap-3">
         <!-- Frente del Pallet -->
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-2">Frente (mm)</label>
-        <div class="grid grid-cols-3 gap-2">
+          <span :id="`${uid}-f5`" class="block text-xs font-medium text-gray-600 mb-2">Frente (mm)</span>
+        <div role="group" :aria-labelledby="`${uid}-f5`" class="grid grid-cols-3 gap-2">
           <button
             v-for="option in ['800mm', '1000mm', '1200mm']" 
             :key="option"
+            type="button"
+            :aria-pressed="localConfig.frentePallet === option"
             @click="localConfig.frentePallet = option"
             :class="[
               'py-2 rounded-lg transition-all duration-200 border flex items-center justify-center',
@@ -157,11 +169,13 @@
 
         <!-- Fondo del Pallet -->
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-2">Fondo (mm)</label>
-        <div class="flex justify-between gap-2">
+          <span :id="`${uid}-f6`" class="block text-xs font-medium text-gray-600 mb-2">Fondo (mm)</span>
+        <div role="group" :aria-labelledby="`${uid}-f6`" class="flex justify-between gap-2">
           <button
             v-for="option in ['1000mm', '1200mm']" 
             :key="option"
+            type="button"
+            :aria-pressed="localConfig.fondoPallet === option"
             @click="localConfig.fondoPallet = option"
             :class="[
               'flex-1 py-2 rounded-lg transition-all duration-200 border flex items-center justify-center',
@@ -188,9 +202,9 @@
       <div class="grid grid-cols-2 gap-3">
         <!-- Alto del Pallet -->
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-2">Altura (mm)</label>
+          <label :for="`${uid}-f7`" class="block text-xs font-medium text-gray-600 mb-2">Altura (mm)</label>
         <div class="relative">
-          <select 
+          <select :id="`${uid}-f7`" 
             v-model="localConfig.altoPallet"
             class="w-full py-2 px-3 rounded-lg border border-gray-200 shadow-sm focus:border-orange-300 focus:ring focus:ring-orange-200 focus:ring-opacity-50"
           >
@@ -203,9 +217,9 @@
 
         <!-- Carga por Nivel -->
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-2">Carga por nivel</label>
+          <label :for="`${uid}-f8`" class="block text-xs font-medium text-gray-600 mb-2">Carga por nivel</label>
         <div class="relative">
-          <select 
+          <select :id="`${uid}-f8`" 
             v-model="localConfig.carga"
             class="w-full py-2 px-3 rounded-lg border border-gray-200 shadow-sm focus:border-orange-300 focus:ring focus:ring-orange-200 focus:ring-opacity-50"
           >
@@ -221,6 +235,7 @@
 </template>
 
 <script lang="ts" setup>
+const uid = useId();
 import { reactive, watch, computed } from 'vue'
 import type { RackSelectivoConfig } from '~/components/QuoteModal/ProductConfig'
 

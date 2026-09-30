@@ -3,14 +3,21 @@
     <!-- Contenedor exterior con scroll propio que evita el scroll del body -->
     <div class="min-h-screen flex items-start justify-center w-full overflow-y-auto" @click.self="closeModal">
       <!-- Modal con altura máxima y scroll interno -->
-      <div class="bg-white rounded-2xl overflow-hidden w-full max-w-7xl my-8 mx-4 shadow-2xl transform transition-all duration-300 ease-out">
+      <div
+        ref="dialogRef"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="`${uid}-title`"
+        tabindex="-1"
+        class="bg-white rounded-2xl overflow-hidden w-full max-w-7xl my-8 mx-4 shadow-2xl transform transition-all duration-300 ease-out focus:outline-none"
+      >
         <div class="h-1.5 bg-gradient-to-r from-orange-500 to-orange-400"></div>
 
         <!-- Scrollable content container -->
         <div class="p-6 bg-gray-50 max-h-[calc(100vh-6rem)] overflow-y-auto">
           <div class="flex justify-between items-center mb-4">
             <div class="flex items-center flex-wrap gap-2">
-              <h2 class="text-xl sm:text-2xl font-bold text-gray-800">
+              <h2 :id="`${uid}-title`" class="text-xl sm:text-2xl font-bold text-gray-800">
                 {{ title || 'Configurador de Producto' }}
               </h2>
               <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
@@ -25,7 +32,7 @@
                 <span class="hidden sm:inline">Mi Cotización</span>
                 <span class="sm:hidden">Cotización</span>
               </button>
-              <button @click="closeModal" class="p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100 transition-colors">
+              <button type="button" aria-label="Cerrar configurador" @click="closeModal" class="p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100 transition-colors">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -45,11 +52,11 @@
                 </h3>
                 <div class="grid grid-cols-2 gap-3">
                   <button @click="selectProduct('AR')" :class="productButtonClass('AR')">
-                    <img src="/assets/images/anra_body.webp" class="h-16 sm:h-20 w-auto mx-auto mb-2" />
+                    <img loading="lazy" decoding="async" src="/assets/images/anra_body.webp" alt="" width="650" height="700" class="h-16 sm:h-20 w-auto mx-auto mb-2" />
                     <span class="text-xs sm:text-sm font-medium text-center block">Ángulo Ranurado</span>
                   </button>
                   <button @click="selectProduct('RS')" :class="productButtonClass('RS')">
-                    <img src="/assets/images/rack_selectivo.webp" class="h-16 sm:h-20 w-auto mx-auto mb-2" />
+                    <img loading="lazy" decoding="async" src="/assets/images/rack_selectivo.webp" alt="" width="650" height="700" class="h-16 sm:h-20 w-auto mx-auto mb-2" />
                     <span class="text-xs sm:text-sm font-medium text-center block">Rack Selectivo</span>
                   </button>
                 </div>
@@ -113,7 +120,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                     </svg>
                     <p class="text-gray-500 font-medium">Configura tu producto</p>
-                    <p class="text-gray-400 text-sm mt-1">El modelo 3D aparecerá aquí</p>
+                    <p class="text-gray-600 text-sm mt-1">El modelo 3D aparecerá aquí</p>
                   </div>
                   
                   <!-- Model Loaded -->
@@ -305,7 +312,7 @@
             <p class="font-medium text-gray-800 truncate">Producto añadido a la cotización</p>
             <p class="text-sm text-gray-600 truncate">{{ lastAddedProduct }}</p>
           </div>
-          <button @click="showCartNotification = false" class="text-gray-400 hover:text-gray-600 ml-4">
+          <button type="button" aria-label="Cerrar aviso" @click="showCartNotification = false" class="text-gray-500 hover:text-gray-700 ml-4">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -323,7 +330,6 @@ import { useCartStore } from '~/stores/cartStore'
 import AnguloRanuradoPanel from '~/components/QuoteModal/AnguloRanuradoPanel.vue'
 import RackSelectivoPanel from '~/components/QuoteModal/RackSelectivoPanel.vue'
 import type { ProductType, ProductConfig, AnguloRanuradoConfig, RackSelectivoConfig } from '~/components/QuoteModal/ProductConfig'
-import axios from 'axios'
 
 
 
@@ -335,16 +341,21 @@ let notificationTimeout: number | null = null
 
 const props = defineProps<{ isVisible: boolean; title?: string }>()
 const emit = defineEmits(['close'])
+
+const uid = useId()
+const dialogRef = ref<HTMLElement | null>(null)
 const selectedProduct = ref<ProductType | ''>('')
 const config = ref<ProductConfig>(getDefaultConfig('AR'))
 const model = ref('')
 const loading = ref(false)
 
-const token = 'eaaffe4a07a4587dc4fc7be6a145e65f'
-const user = 'racklog.cl'
+// Cuenta de Sketchfab con los modelos 3D publicos (la busqueda publica no requiere token)
+const SKETCHFAB_USER = 'racklog.cl'
 
 const router = useRouter()
 const cartStore = useCartStore()
+
+useModalA11y(computed(() => props.isVisible), dialogRef, () => closeModal())
 
 function closeModal() {
   emit('close')
@@ -597,11 +608,11 @@ async function fetchModelUUID(modelo: string) {
   try {
     loading.value = true
     modelNotFound.value = false
-    const response = await axios.get('https://api.sketchfab.com/v3/search', {
-      headers: { Authorization: `Token ${token}` },
-      params: { type: 'models', q: modelo, user }
-    })
-    const uuid = response.data.results[0]?.uid
+    const params = new URLSearchParams({ type: 'models', q: modelo, user: SKETCHFAB_USER })
+    const response = await fetch(`https://api.sketchfab.com/v3/search?${params}`)
+    if (!response.ok) throw new Error(`Sketchfab HTTP ${response.status}`)
+    const data = await response.json()
+    const uuid = data.results?.[0]?.uid
     if (uuid) {
       model.value = `https://sketchfab.com/models/${uuid}/embed?ui_theme=dark`
       modelNotFound.value = false
@@ -609,10 +620,9 @@ async function fetchModelUUID(modelo: string) {
       model.value = ''
       modelNotFound.value = true
     }
-  } catch (e) {
+  } catch {
     model.value = ''
     modelNotFound.value = true
-    console.error('Error fetching model UUID:', e)
   } finally {
     loading.value = false
   }
@@ -656,7 +666,6 @@ async function addToCart() {
     currency: 'CLP',
     value: 0
   });
-  console.log('[GTM] Quote product add to cart event sent to dataLayer');
 
   isAddingToCart.value = true
 

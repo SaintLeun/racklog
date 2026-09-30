@@ -1,8 +1,15 @@
 <template>
   <transition name="fade">
-    <div v-if="isVisible" class="fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4 overflow-y-auto">
+    <div v-if="isVisible" class="fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4 overflow-y-auto" @click.self="closeModal">
       <transition name="slide-up">
-        <div class="bg-white rounded-xl w-full max-w-5xl shadow-xl overflow-hidden relative">
+        <div
+          ref="dialogRef"
+          role="dialog"
+          aria-modal="true"
+          :aria-labelledby="`${uid}-title`"
+          tabindex="-1"
+          class="bg-white rounded-xl w-full max-w-5xl shadow-xl overflow-hidden relative focus:outline-none"
+        >
           <!-- Close button (floating) -->
           <button 
             @click="closeModal" 
@@ -100,13 +107,13 @@
             <div class="md:w-3/5 p-8 lg:p-10">
               <!-- Form header -->
               <div class="mb-6">
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">Solicita tu cotización con descuento</h3>
+                <h3 :id="`${uid}-title`" class="text-xl font-semibold text-gray-800 mb-2">Solicita tu cotización con descuento</h3>
                 <p class="text-gray-600 text-sm">Completa el formulario y obtén hasta 15% de descuento en tu proyecto</p>
               </div>
               
               <!-- Status message (success/error) -->
               <transition name="fade">
-                <div v-if="formStatus.message" 
+                <div v-if="formStatus.message" role="status" aria-live="polite" 
                      :class="`mb-6 p-4 rounded-lg text-sm ${formStatus.success ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`">
                   <div class="flex">
                     <div class="flex-shrink-0">
@@ -131,11 +138,11 @@
                 <!-- Name and Email row -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                    <label :for="`${uid}-name`" class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
                     <input 
-                      v-model="form.name" 
+                      v-model="form.name" :aria-invalid="errors.name ? 'true' : 'false'" :aria-describedby="errors.name ? `${uid}-name-error` : undefined" 
                       type="text" 
-                      id="name" 
+                      :id="`${uid}-name`" 
                       name="name" 
                       :class="[
                         'block w-full px-4 py-3 rounded-lg border bg-gray-50 focus:bg-white focus:outline-none transition-all',
@@ -144,15 +151,15 @@
                       placeholder="John Doe"
                       required
                     >
-                    <p v-if="errors.name" class="mt-1 text-sm text-red-600">{{ errors.name }}</p>
+                    <p v-if="errors.name" :id="`${uid}-name-error`" class="mt-1 text-sm text-red-600" role="alert">{{ errors.name }}</p>
                   </div>
                   
                   <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                    <label :for="`${uid}-email`" class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                     <input 
-                      v-model="form.email" 
+                      v-model="form.email" :aria-invalid="errors.email ? 'true' : 'false'" :aria-describedby="errors.email ? `${uid}-email-error` : undefined" 
                       type="email" 
-                      id="email" 
+                      :id="`${uid}-email`" 
                       name="email" 
                       :class="[
                         'block w-full px-4 py-3 rounded-lg border bg-gray-50 focus:bg-white focus:outline-none transition-all',
@@ -161,18 +168,18 @@
                       placeholder="ejemplo@empresa.com"
                       required
                     >
-                    <p v-if="errors.email" class="mt-1 text-sm text-red-600">{{ errors.email }}</p>
+                    <p v-if="errors.email" :id="`${uid}-email-error`" class="mt-1 text-sm text-red-600" role="alert">{{ errors.email }}</p>
                   </div>
                 </div>
                 
                 <!-- Phone and Subject -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div>
-                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                    <label :for="`${uid}-phone`" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
                     <input 
                       v-model="form.phone" 
                       type="tel" 
-                      id="phone" 
+                      :id="`${uid}-phone`" 
                       name="phone" 
                       class="block w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:border-orange-500 focus:outline-none focus:ring-orange-500 transition-all"
                       placeholder="+56 9 1234 5678"
@@ -180,11 +187,11 @@
                   </div>
                   
                   <div>
-                    <label for="subject" class="block text-sm font-medium text-gray-700 mb-1">Asunto *</label>
+                    <label :for="`${uid}-subject`" class="block text-sm font-medium text-gray-700 mb-1">Asunto *</label>
                     <input 
-                      v-model="form.subject" 
+                      v-model="form.subject" :aria-invalid="errors.subject ? 'true' : 'false'" :aria-describedby="errors.subject ? `${uid}-subject-error` : undefined" 
                       type="text" 
-                      id="subject" 
+                      :id="`${uid}-subject`" 
                       name="subject" 
                       :class="[
                         'block w-full px-4 py-3 rounded-lg border bg-gray-50 focus:bg-white focus:outline-none transition-all',
@@ -193,16 +200,16 @@
                       placeholder="¿En qué podemos ayudarte?"
                       required
                     >
-                    <p v-if="errors.subject" class="mt-1 text-sm text-red-600">{{ errors.subject }}</p>
+                    <p v-if="errors.subject" :id="`${uid}-subject-error`" class="mt-1 text-sm text-red-600" role="alert">{{ errors.subject }}</p>
                   </div>
                 </div>
                 
                 <!-- Message -->
                 <div>
-                  <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Mensaje *</label>
+                  <label :for="`${uid}-message`" class="block text-sm font-medium text-gray-700 mb-1">Mensaje *</label>
                   <textarea 
-                    v-model="form.message" 
-                    id="message" 
+                    v-model="form.message" :aria-invalid="errors.message ? 'true' : 'false'" :aria-describedby="errors.message ? `${uid}-message-error` : undefined" 
+                    :id="`${uid}-message`" 
                     name="message" 
                     rows="4" 
                     :class="[
@@ -212,7 +219,7 @@
                     placeholder="Escribe tu mensaje aquí..."
                     required
                   ></textarea>
-                  <p v-if="errors.message" class="mt-1 text-sm text-red-600">{{ errors.message }}</p>
+                  <p v-if="errors.message" :id="`${uid}-message-error`" class="mt-1 text-sm text-red-600" role="alert">{{ errors.message }}</p>
                 </div>
                 
                 <!-- Privacy policy checkbox -->
@@ -220,8 +227,8 @@
                   <div class="flex items-start">
                     <div class="flex items-center h-5">
                       <input 
-                        v-model="form.privacy" 
-                        id="privacy" 
+                        v-model="form.privacy" :aria-invalid="errors.privacy ? 'true' : 'false'" :aria-describedby="errors.privacy ? `${uid}-privacy-error` : undefined" 
+                        :id="`${uid}-privacy`" 
                         name="privacy" 
                         type="checkbox" 
                         :class="[
@@ -232,10 +239,10 @@
                       >
                     </div>
                     <div class="ml-3 text-sm">
-                      <label for="privacy" :class="errors.privacy ? 'text-red-600' : 'text-gray-600'">
-                        Acepto la <a href="/politica-privacidad" class="text-orange-600 hover:underline">política de privacidad</a> y el uso de mis datos.
+                      <label :for="`${uid}-privacy`" :class="errors.privacy ? 'text-red-600' : 'text-gray-600'">
+                        Acepto la <NuxtLink to="/politica-privacidad" class="text-orange-600 hover:underline">política de privacidad</NuxtLink> y el uso de mis datos.
                       </label>
-                      <p v-if="errors.privacy" class="mt-1 text-sm text-red-600">{{ errors.privacy }}</p>
+                      <p v-if="errors.privacy" :id="`${uid}-privacy-error`" class="mt-1 text-sm text-red-600" role="alert">{{ errors.privacy }}</p>
                     </div>
                   </div>
                 </div>
@@ -303,6 +310,10 @@ const props = defineProps({
 
 const emit = defineEmits(['close']);
 
+// Ids unicos: el modal se monta en varios lugares de la misma pagina
+const uid = useId();
+const dialogRef = ref<HTMLElement | null>(null);
+
 // Form state
 const form = reactive({
   website: '', // honeypot
@@ -351,7 +362,16 @@ watch(() => props.serviceInfo, (newVal) => {
 watch(() => props.isVisible, (newVal) => {
   if (newVal) {
     document.body.style.overflow = 'hidden';
-    
+
+    // Inicio del embudo: el usuario abrio el formulario
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'form_open',
+      event_category: 'Funnel',
+      event_label: 'Contact Form Opened',
+      funnel_step: 'form_opened'
+    });
+
     // Pre-fill subject if serviceInfo is provided
     if (props.serviceInfo && !form.subject) {
       form.subject = `Información sobre ${props.serviceInfo}`;
@@ -384,6 +404,8 @@ watch(() => props.isVisible, (newVal) => {
     }, 300);
   }
 });
+
+useModalA11y(computed(() => !!props.isVisible), dialogRef, () => closeModal());
 
 function closeModal() {
   emit('close');
@@ -467,17 +489,7 @@ async function submitForm() {
   isSubmitting.value = true;
   formStatus.message = '';
 
-  // Google Analytics event for form interaction (GTM)
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({
-    event: 'begin_checkout',
-    event_category: 'Funnel',
-    event_label: 'Contact Form Opened',
-    funnel_step: 'form_opened'
-  });
-
   try {
-    // Prepare data for the contact email
     const contactData = {
       name: form.name,
       email: form.email,
@@ -486,70 +498,62 @@ async function submitForm() {
       message: form.message,
       serviceInfo: props.serviceInfo
     };
-    
-    // Send to admin
+
     const response = await fetch('https://api.racklog.cl/api/send-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        to: form.email, // Recipient email address
         data: contactData,
-        subject: `Contacto Web: ${form.subject}`,
         type: 'contact',
         website: form.website
       })
     });
-    
-    // Process the response
-    if (response.ok) {
-      const data = await response.json();
-      
-      if (data.status) {
-        // Show success message
-        formStatus.success = true;
-        formStatus.message = '¡Gracias! Tu mensaje ha sido enviado correctamente. Nos pondremos en contacto contigo pronto.';
-        
-        // Send conversion event to dataLayer for GTM (Google Analytics & Google Ads)
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({
-          event: 'purchase', // Standard GA4 purchase event
-          event_category: 'Conversion',
-          event_label: 'Contact Form Sent',
-          funnel_step: 'contact_form_sent',
-          currency: 'CLP',
-          value: 0
-        });
-        console.log('[GTM] Contact form conversion event sent to dataLayer');
 
-        // Reset the form except for service-related subject
-        const tempSubject = props.serviceInfo ? form.subject : '';
-        Object.assign(form, {
-          name: '',
-          phone: '',
-          email: '',
-          subject: tempSubject,
-          message: '',
-          privacy: false
-        });
-        
-        // Auto-close after delay
-        setTimeout(() => {
-          if (formStatus.success) {
-            emit('close');
-          }
-        }, 3000);
-      } else {
-        throw new Error(data.message || 'Error al enviar el mensaje');
-      }
-    } else {
-      throw new Error('Error en la solicitud a la API');
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.status !== 'success') {
+      throw new Error(response.status === 429 ? 'rate_limit' : (data.error || 'api_error'));
     }
+
+    formStatus.success = true;
+    formStatus.message = '¡Gracias! Tu mensaje ha sido enviado correctamente. Nos pondremos en contacto contigo pronto.';
+
+    // Conversion para GTM (GA4 y Google Ads): un lead, no una compra
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'generate_lead',
+      event_category: 'Conversion',
+      event_label: 'Contact Form Sent',
+      funnel_step: 'contact_form_sent',
+      lead_type: 'contact',
+      lead_reference: data.reference,
+      currency: 'CLP',
+      value: 0
+    });
+
+    // Reset the form except for service-related subject
+    const tempSubject = props.serviceInfo ? form.subject : '';
+    Object.assign(form, {
+      name: '',
+      phone: '',
+      email: '',
+      subject: tempSubject,
+      message: '',
+      privacy: false
+    });
+
+    // Auto-close after delay
+    setTimeout(() => {
+      if (formStatus.success) {
+        emit('close');
+      }
+    }, 3000);
   } catch (error) {
-    console.error('Error sending form:', error);
     formStatus.success = false;
-    formStatus.message = 'Ha ocurrido un error al enviar el mensaje. Por favor, inténtalo de nuevo más tarde.';
+    formStatus.message = error instanceof Error && error.message === 'rate_limit'
+      ? 'Has enviado varios mensajes seguidos. Espera unos minutos e inténtalo de nuevo.'
+      : 'Ha ocurrido un error al enviar el mensaje. Por favor, inténtalo de nuevo más tarde o escríbenos a contacto@racklog.cl.';
   } finally {
     isSubmitting.value = false;
   }

@@ -95,6 +95,8 @@
                     <p class="text-gray-700 mr-4 font-medium">Cantidad:</p>
                     <div class="flex items-center border border-gray-300 rounded-md">
                       <button
+                        type="button"
+                        :aria-label="`Quitar una unidad de ${product.name}`"
                         @click="updateQuantity(product.name, product.config, product.quantity - 1)"
                         class="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-l-md transition-colors"
                         :disabled="product.quantity <= 1"
@@ -103,8 +105,10 @@
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
                         </svg>
                       </button>
-                      <span class="px-4 py-1 border-x border-gray-300">{{ product.quantity }}</span>
+                      <span class="px-4 py-1 border-x border-gray-300" aria-live="polite">{{ product.quantity }}</span>
                       <button
+                        type="button"
+                        :aria-label="`Agregar una unidad de ${product.name}`"
                         @click="updateQuantity(product.name, product.config, product.quantity + 1)"
                         class="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-r-md transition-colors"
                       >
@@ -213,6 +217,24 @@
             ></textarea>
           </div>
 
+          <!-- Consentimiento de privacidad (opt-in explicito, no premarcado) -->
+          <div class="mb-6 flex items-start gap-3">
+            <input
+              id="privacyInput"
+              v-model="privacyAccepted"
+              type="checkbox"
+              class="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
+              :aria-invalid="privacyError ? 'true' : 'false'"
+              :aria-describedby="privacyError ? 'privacyError' : undefined"
+            />
+            <div class="text-sm">
+              <label for="privacyInput" :class="privacyError ? 'text-red-600' : 'text-gray-600'">
+                Acepto la <NuxtLink to="/politica-privacidad" class="text-orange-600 hover:underline">política de privacidad</NuxtLink> y el uso de mis datos para responder a esta cotización.
+              </label>
+              <p v-if="privacyError" id="privacyError" class="mt-1 text-red-600">{{ privacyError }}</p>
+            </div>
+          </div>
+
           <!-- Summary Section -->
           <div class="mt-6 pt-6 border-t border-gray-200">
             <div class="flex justify-between items-center mb-4">
@@ -278,12 +300,12 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
         </svg>
         <p class="text-gray-600 mb-4">No hay productos en tu cotización actualmente.</p>
-        <a href="/" class="inline-flex items-center px-6 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors shadow-md">
+        <NuxtLink to="/" class="inline-flex items-center px-6 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors shadow-md">
           <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
           </svg>
           Explorar Productos
-        </a>
+        </NuxtLink>
       </div>
     </div>
     
@@ -366,11 +388,13 @@ const customerName = ref('');
 const customerCompany = ref('');
 const customerPhone = ref('');
 const customerComments = ref('');
+const privacyAccepted = ref(false);
 
 // Form validation errors
 const emailError = ref('');
 const nameError = ref('');
 const phoneError = ref('');
+const privacyError = ref('');
 
 const isSubmitting = ref(false);
 
@@ -403,6 +427,7 @@ function validateForm() {
   nameError.value = '';
   emailError.value = '';
   phoneError.value = '';
+  privacyError.value = '';
   
   // Validate name
   if (!customerName.value.trim()) {
@@ -422,6 +447,12 @@ function validateForm() {
   // Validate phone
   if (!customerPhone.value.trim()) {
     phoneError.value = 'Por favor ingrese su teléfono';
+    isValid = false;
+  }
+
+  // Validate privacy consent
+  if (!privacyAccepted.value) {
+    privacyError.value = 'Debe aceptar la política de privacidad para enviar la cotización';
     isValid = false;
   }
   
@@ -457,52 +488,45 @@ async function submitQuote() {
     
 
     
-    // Enviar al equipo de ventas (interno)
-    const responseInternal = await fetch('https://api.racklog.cl/api/send-email', {
+    const response = await fetch('https://api.racklog.cl/api/send-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        to: userEmail.value, // Enviar al equipo de ventas
-        data: emailData, 
-        type: 'quote', // Usar el template interno
+        data: emailData,
+        type: 'quote',
         website: honeypot.value
       })
     });
-    
-    const dataInternal = await responseInternal.json();
 
-    // Mostrar éxito solo si ambos emails se enviaron correctamente
-    if (dataInternal.status) {
-        showSuccessModal.value = true;
-        resetForm(); // Clear form
-        clearCart(); // Clear the cart after successful submission
-        
-        // Send conversion event to dataLayer for GTM (Google Analytics & Google Ads)
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({
-          event: 'purchase', // Standard GA4 purchase event
-          event_category: 'Conversion',
-          event_label: 'Quote Form Sent',
-          funnel_step: 'quote_form_sent',
-          cart_total: cartTotal.value,
-          currency: 'CLP',
-          value: cartTotal.value || 0
-        });
-        console.log('[GTM] Quote submission conversion event sent to dataLayer');
-      } else {
-        // Si el email de confirmación falló pero el interno funcionó
-        // Podemos mostrar éxito parcial ya que el pedido fue registrado
-        showSuccessModal.value = true;
-        resetForm();
-        clearCart();
-        console.warn('Email de confirmación al cliente no enviado:', dataInternal.message);
-      }
-    
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.status !== 'success') {
+      throw new Error(data.error || `HTTP ${response.status}`);
+    }
+
+    // Leer el total antes de vaciar el carrito
+    const quoteValue = calculatedCartTotal.value;
+
+    // Conversion para GTM (GA4 y Google Ads): un lead, no una compra
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'generate_lead',
+      event_category: 'Conversion',
+      event_label: 'Quote Form Sent',
+      funnel_step: 'quote_form_sent',
+      lead_type: 'quote',
+      lead_reference: data.reference,
+      has_quote_only_products: hasQuoteOnlyProducts.value,
+      currency: 'CLP',
+      value: quoteValue
+    });
+
+    showSuccessModal.value = true;
+    resetForm();
+    clearCart();
   } catch (error) {
     showErrorModal.value = true;
-    console.error('Error calling API:', error);
   } finally {
     isSubmitting.value = false;
   }
@@ -515,8 +539,10 @@ function resetForm() {
   customerCompany.value = '';
   customerPhone.value = '';
   customerComments.value = '';
+  privacyAccepted.value = false;
   
   emailError.value = '';
+  privacyError.value = '';
   nameError.value = '';
   phoneError.value = '';
 }
@@ -529,6 +555,12 @@ function closeSuccessModal() {
 function closeErrorModal() {
   showErrorModal.value = false;
 }
+
+usePageSeo({
+  title: 'Tu cotización',
+  description: 'Revisa los productos de tu cotización y envíanos tus datos para recibir una propuesta de Racklog.',
+  noindex: true,
+});
 </script>
 
 <style scoped>
