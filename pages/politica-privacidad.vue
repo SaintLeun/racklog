@@ -1,149 +1,132 @@
 <template>
-  <div class="policy-container">
-    <!-- Hero section -->
-    <section class="bg-gradient-to-r from-orange-500 to-orange-700 py-16">
-      <div class="container mx-auto px-4">
-        <h1 class="text-white text-4xl md:text-5xl font-bold mb-4 text-center">
-          Política de Privacidad
-        </h1>
-        <p class="text-white text-xl text-center max-w-3xl mx-auto">
-          En Racklog valoramos su privacidad y nos comprometemos a proteger sus datos personales
-        </p>
-      </div>
-    </section>
+  <LegalPage
+    title="Política de Privacidad"
+    subtitle="Cómo tratamos y protegemos tus datos personales"
+    updated="30 de septiembre de 2026"
+  >
+    <h2>1. Responsable del tratamiento</h2>
+    <p>
+      El responsable de los datos personales recogidos en este sitio es <strong>Racklog SpA</strong>,
+      RUT [RUT], con domicilio en El Juncal 161-C, Quilicura, Santiago, Chile
+      (en adelante, "Racklog").
+    </p>
+    <p>
+      Esta política se rige por la Ley N° 19.628 sobre Protección de la Vida Privada y por la
+      Ley N° 21.719, que la modifica, en lo que resulte aplicable.
+    </p>
 
-    <!-- Content section -->
-    <section class="bg-white py-12">
-      <div class="container mx-auto px-4 max-w-4xl">
-        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-8">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 border-orange-200">Introducción</h2>
-          <p class="mb-4 text-gray-700">
-            Racklog SpA ("nosotros", "nuestro", "la empresa") respeta la privacidad de los usuarios que visitan nuestro sitio web y utilizan nuestros servicios. Esta Política de Privacidad explica cómo recopilamos, utilizamos, divulgamos y protegemos su información cuando visita nuestro sitio web o utiliza nuestros formularios de contacto y cotización.
-          </p>
-          <p class="mb-4 text-gray-700">
-            Al utilizar nuestro sitio web y completar cualquiera de nuestros formularios, usted acepta las prácticas descritas en esta política.
-          </p>
-        </div>
+    <h2>2. Qué datos recopilamos</h2>
+    <h3>Datos que tú nos entregas</h3>
+    <p>Al completar los formularios de contacto o de cotización:</p>
+    <ul>
+      <li>Nombre, correo electrónico y teléfono.</li>
+      <li>Empresa (opcional).</li>
+      <li>Productos, configuraciones y comentarios de tu solicitud.</li>
+    </ul>
+    <h3>Datos que se recogen al navegar</h3>
+    <ul>
+      <li>Dirección IP y navegador, registrados al enviar un formulario para prevenir abusos y spam.</li>
+      <li>
+        Solo si aceptas las cookies de analítica: páginas visitadas, tiempo de permanencia, dispositivo
+        e interacciones, mediante Google Analytics y Microsoft Clarity. Ver la
+        <NuxtLink to="/politica-cookies">Política de Cookies</NuxtLink>.
+      </li>
+    </ul>
 
-        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-8">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 border-orange-200">Información que recopilamos</h2>
-          <p class="mb-4 text-gray-700">
-            Podemos recopilar la siguiente información personal cuando usted completa nuestros formularios:
-          </p>
-          <ul class="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-            <li>Nombre y apellido</li>
-            <li>Dirección de correo electrónico</li>
-            <li>Número de teléfono</li>
-            <li>Nombre de la empresa que representa</li>
-            <li>Detalles de productos o servicios que le interesan</li>
-            <li>Cualquier otra información que usted proporcione voluntariamente en nuestros formularios</li>
-          </ul>
-          <p class="mb-4 text-gray-700">
-            También recopilamos automáticamente cierta información cuando visita nuestro sitio web, como:
-          </p>
-          <ul class="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-            <li>Dirección IP</li>
-            <li>Tipo de navegador</li>
-            <li>Páginas visitadas y tiempo de permanencia</li>
-            <li>Dispositivo utilizado para acceder al sitio</li>
-          </ul>
-        </div>
+    <h2>3. Para qué usamos tus datos</h2>
+    <ul>
+      <li>Responder tus consultas y preparar las cotizaciones que solicitas.</li>
+      <li>Hacer seguimiento comercial de tu solicitud a través de nuestro CRM.</li>
+      <li>Medir y mejorar el sitio, solo si aceptaste las cookies de analítica.</li>
+      <li>Prevenir el uso abusivo de los formularios.</li>
+      <li>Cumplir obligaciones legales.</li>
+    </ul>
+    <p>
+      La base del tratamiento es tu consentimiento, que entregas al marcar la casilla de aceptación en
+      cada formulario, y la ejecución de las gestiones previas a un contrato que tú solicitas
+      (cotización). No enviamos publicidad sin tu consentimiento expreso.
+    </p>
 
-        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-8">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 border-orange-200">Cómo utilizamos su información</h2>
-          <p class="mb-4 text-gray-700">
-            Utilizamos la información que recopilamos de las siguientes maneras:
-          </p>
-          <ul class="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-            <li>Para responder a sus consultas y solicitudes de información o cotizaciones</li>
-            <li>Para procesar y gestionar sus pedidos de productos y servicios</li>
-            <li>Para enviarle información relevante sobre nuestros productos y servicios</li>
-            <li>Para mejorar nuestro sitio web y la experiencia del usuario</li>
-            <li>Para cumplir con obligaciones legales y regulatorias</li>
-            <li>Para proteger nuestros derechos, propiedad o seguridad, así como los de nuestros usuarios</li>
-          </ul>
-        </div>
+    <h2>4. Con quién compartimos tus datos</h2>
+    <p>No vendemos ni arrendamos tus datos. Los compartimos solo con proveedores que los tratan por encargo nuestro:</p>
+    <table>
+      <thead>
+        <tr><th>Proveedor</th><th>Finalidad</th><th>Ubicación</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Kommo</td><td>CRM: gestión de contactos y cotizaciones</td><td>Estados Unidos / otros</td></tr>
+        <tr><td>Google (Analytics y Tag Manager)</td><td>Analítica web, solo con tu consentimiento</td><td>Estados Unidos</td></tr>
+        <tr><td>Microsoft (Clarity)</td><td>Analítica de uso, solo con tu consentimiento</td><td>Estados Unidos</td></tr>
+        <tr><td>[PROVEEDOR DE HOSTING Y CORREO]</td><td>Alojamiento del sitio y envío de correos</td><td>[PAÍS]</td></tr>
+      </tbody>
+    </table>
+    <p>
+      Algunos proveedores están fuera de Chile, por lo que puede haber transferencia internacional de
+      datos. Solo trabajamos con proveedores que ofrecen garantías adecuadas de protección.
+      También podemos entregar datos cuando lo exija la ley o una autoridad competente.
+    </p>
 
-        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-8">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 border-orange-200">Compartición de información</h2>
-          <p class="mb-4 text-gray-700">
-            No vendemos ni alquilamos su información personal a terceros. Sin embargo, podemos compartir su información en las siguientes circunstancias:
-          </p>
-          <ul class="list-disc pl-6 mb-4 text-gray-700 space-y-2">
-            <li>Con proveedores de servicios que nos ayudan a operar nuestro negocio (como servicios de CRM, procesamiento de pagos, etc.)</li>
-            <li>Cuando sea requerido por la ley o en respuesta a procesos legales válidos</li>
-            <li>Para proteger nuestros derechos o propiedad, o la seguridad de nuestros usuarios</li>
-            <li>En caso de una fusión, adquisición o venta de activos, donde los datos de los usuarios podrían ser transferidos como parte de los activos comerciales</li>
-          </ul>
-        </div>
+    <h2>5. Cuánto tiempo los conservamos</h2>
+    <ul>
+      <li>Solicitudes de contacto y cotización: [24 meses] desde el último contacto, salvo que exista una relación comercial que requiera conservarlos más tiempo.</li>
+      <li>Datos de analítica: según la configuración de cada proveedor (Google Analytics: [14 meses]).</li>
+      <li>Registros técnicos del servidor: [90 días].</li>
+    </ul>
 
-        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-8">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 border-orange-200">Seguridad de datos</h2>
-          <p class="mb-4 text-gray-700">
-            Implementamos medidas de seguridad técnicas y organizativas diseñadas para proteger su información personal contra acceso no autorizado, pérdida, mal uso o alteración. Sin embargo, ninguna transmisión de datos por Internet o sistema de almacenamiento puede garantizarse como 100% seguro.
-          </p>
-        </div>
+    <h2>6. Tus derechos</h2>
+    <p>Puedes ejercer en cualquier momento tus derechos de:</p>
+    <ul>
+      <li><strong>Acceso:</strong> saber qué datos tuyos tenemos y cómo los usamos.</li>
+      <li><strong>Rectificación:</strong> corregir datos inexactos o incompletos.</li>
+      <li><strong>Supresión (cancelación):</strong> pedir que eliminemos tus datos.</li>
+      <li><strong>Oposición:</strong> oponerte a un tratamiento determinado.</li>
+      <li><strong>Portabilidad y bloqueo:</strong> en los términos que establece la ley.</li>
+      <li><strong>Retirar tu consentimiento</strong>, sin que esto afecte el tratamiento previo.</li>
+    </ul>
+    <h3>Cómo ejercerlos</h3>
+    <p>
+      Escríbenos a <a href="mailto:contacto@racklog.cl?subject=Derechos%20sobre%20datos%20personales">contacto@racklog.cl</a>
+      con el asunto "Derechos sobre datos personales", indicando tu nombre, el derecho que quieres
+      ejercer y un medio para verificar tu identidad. Responderemos dentro de los plazos legales, y en
+      todo caso en un máximo de 30 días corridos. El ejercicio de estos derechos es gratuito.
+    </p>
+    <p>
+      Para retirar el consentimiento de cookies de analítica, usa el botón "Configurar cookies" al pie
+      de cada página.
+    </p>
+    <p>
+      Si consideras que no hemos atendido correctamente tu solicitud, puedes recurrir a la autoridad de
+      protección de datos personales competente.
+    </p>
 
-        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-8">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 border-orange-200">Cookies y tecnologías similares</h2>
-          <p class="mb-4 text-gray-700">
-            Nuestro sitio web utiliza cookies y tecnologías similares para mejorar su experiencia de navegación, analizar el uso del sitio y personalizar el contenido. Puede configurar su navegador para rechazar todas las cookies o para indicar cuándo se está enviando una cookie. Sin embargo, algunas funciones del sitio pueden no funcionar correctamente sin cookies.
-          </p>
-        </div>
+    <h2>7. Seguridad</h2>
+    <p>
+      Aplicamos medidas técnicas y organizativas para proteger tus datos: conexión cifrada (HTTPS),
+      acceso restringido a los sistemas y registros sin datos personales completos. Ningún sistema es
+      infalible; si detectamos una vulneración que afecte tus datos, te informaremos según exige la ley.
+    </p>
 
-        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8 mb-8">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 border-orange-200">Cambios a esta política</h2>
-          <p class="mb-4 text-gray-700">
-            Podemos actualizar esta Política de Privacidad periódicamente para reflejar cambios en nuestras prácticas o por otros motivos operativos, legales o regulatorios. Le recomendamos revisar esta política regularmente. La fecha de la última actualización se indicará al principio de la política.
-          </p>
-        </div>
+    <h2>8. Menores de edad</h2>
+    <p>Este sitio está dirigido a empresas y personas mayores de 18 años. No recopilamos datos de menores de forma intencional.</p>
 
-        <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
-          <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b pb-2 border-orange-200">Contacto</h2>
-          <p class="mb-4 text-gray-700">
-            Si tiene preguntas o inquietudes sobre esta Política de Privacidad o sobre cómo manejamos su información personal, por favor contáctenos a:
-          </p>
-          <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
-            <p class="font-semibold text-gray-800">Racklog SpA</p>
-            <p class="text-gray-700">Email: contacto@racklog.cl</p>
-            <p class="text-gray-700">Teléfono: (+56) 9 3240 3819</p>
-            <p class="text-gray-700">Dirección: El Juncal 161-C, Quilicura, Santiago - Chile</p>
-          </div>
-          <p class="text-sm text-gray-600 mt-6">
-            Última actualización: Abril 2025
-          </p>
-        </div>
-      </div>
-    </section>
-  </div>
+    <h2>9. Cambios a esta política</h2>
+    <p>
+      Podemos actualizar esta política para reflejar cambios legales o en nuestros servicios. La fecha
+      de la última actualización aparece al inicio de esta página.
+    </p>
+
+    <h2>10. Contacto</h2>
+    <p>
+      Racklog SpA · El Juncal 161-C, Quilicura, Santiago, Chile ·
+      <a href="mailto:contacto@racklog.cl">contacto@racklog.cl</a> ·
+      <a href="tel:+56932403819">(+56) 9 3240 3819</a>
+    </p>
+  </LegalPage>
 </template>
 
-<script setup>
-// Metadatos para SEO
-useHead({
-  title: 'Política de Privacidad - Racklog',
-  meta: [
-    { name: 'description', content: 'Política de privacidad de Racklog SpA. Conoce cómo protegemos tus datos personales cuando utilizas nuestros formularios y servicios.' }
-  ]
-})
+<script setup lang="ts">
+useSeoMeta({
+  title: 'Política de Privacidad',
+  description: 'Política de privacidad de Racklog SpA: qué datos recopilamos, para qué los usamos, con quién los compartimos y cómo ejercer tus derechos.',
+});
 </script>
-
-<style scoped>
-h1 {
-  color: #fff;
-}
-
-.container {
-  max-width: 1200px;
-}
-
-/* Animación simple para tarjetas */
-.bg-white {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.bg-white:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-</style>
