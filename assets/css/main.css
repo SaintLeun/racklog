@@ -7,6 +7,11 @@
   outline-offset: 2px;
 }
 
+/* Un dialogo recibe el foco al abrirse solo para anunciarlo; sin anillo */
+[role="dialog"][tabindex="-1"]:focus-visible {
+  outline: none !important;
+}
+
 /* Respetar a quienes prefieren menos movimiento */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

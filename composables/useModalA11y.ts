@@ -27,7 +27,7 @@ export function useModalA11y(isOpen: Ref<boolean>, container: Ref<HTMLElement | 
     if (items.length === 0) return;
     const first = items[0];
     const last = items[items.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === container.value)) {
       event.preventDefault();
       last.focus();
     } else if (!event.shiftKey && document.activeElement === last) {
@@ -44,7 +44,9 @@ export function useModalA11y(isOpen: Ref<boolean>, container: Ref<HTMLElement | 
       await nextTick();
       // Esperar a que termine la transicion de entrada
       requestAnimationFrame(() => {
-        const target = container.value?.querySelector<HTMLElement>('[autofocus]') || focusables()[0] || container.value;
+        // El dialogo mismo recibe el foco (tabindex=-1): el lector de pantalla
+        // anuncia su titulo y no aparece un anillo de foco sobre el boton cerrar
+        const target = container.value?.querySelector<HTMLElement>('[autofocus]') || container.value || focusables()[0];
         target?.focus();
       });
     } else {

@@ -1,296 +1,254 @@
 <template>
-  <transition name="fade">
-    <div v-if="isVisible" class="fixed inset-0 flex items-center justify-center bg-black/40 z-50 p-4 overflow-y-auto" @click.self="closeModal">
-      <transition name="slide-up">
+  <transition name="backdrop">
+    <div
+      v-if="isVisible"
+      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-neutral-950/60 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto"
+      @click.self="closeModal"
+    >
+      <transition name="dialog" appear>
         <div
           ref="dialogRef"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="`${uid}-title`"
+          :aria-describedby="`${uid}-desc`"
           tabindex="-1"
-          class="bg-white rounded-xl w-full max-w-2xl shadow-xl overflow-hidden relative focus:outline-none"
+          class="relative w-full sm:max-w-xl max-h-[100dvh] sm:max-h-[calc(100dvh-2rem)] overflow-y-auto bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl ring-1 ring-black/5 focus:outline-none"
         >
-          <!-- Close button (floating) -->
-          <button 
-            @click="closeModal" 
-            class="absolute top-4 right-4 z-10 rounded-full p-2 bg-white/80 backdrop-blur-sm hover:bg-gray-100 shadow-md transition-all duration-300 transform hover:rotate-90"
-            aria-label="Cerrar ventana"
-          >
-            <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
-          
-          <div class="flex flex-col md:flex-row">
-            <!-- Left Section (Special Offer) -->
-            <div class="hidden sm:static md:w-2/5 bg-gradient-to-br from-orange-500 to-orange-600 text-white p-8 lg:p-10 relative overflow-hidden">
-              <!-- Background decorative elements -->
-              <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
-              <div class="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-12 -translate-x-12"></div>
-              
-              <!-- Special offer badge -->
-              <div class="inline-flex items-center px-3 py-1 rounded-full bg-yellow-400 text-yellow-900 text-sm font-bold mb-6 animate-pulse">
-                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+          <!-- Encabezado -->
+          <div class="relative px-6 sm:px-8 pt-7 pb-6 bg-gradient-to-b from-orange-50 to-white border-b border-neutral-100">
+            <button
+              type="button"
+              class="absolute top-4 right-4 inline-flex h-10 w-10 items-center justify-center rounded-full text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors"
+              aria-label="Cerrar ventana"
+              @click="closeModal"
+            >
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div class="flex items-start gap-4 pr-10">
+              <span class="hidden sm:inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-orange-600 text-white shadow-lg shadow-orange-600/25" aria-hidden="true">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                OFERTA ESPECIAL
-              </div>
-              
-              <!-- Main offer content -->
-              <h2 class="text-3xl font-bold mb-4 leading-tight">
-                ¡Hasta 15% de descuento!
-              </h2>
-              
-              <div class="hidden sm:static bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-6 border border-white/20">
-                <h3 class="text-xl font-semibold mb-3">Cotiza a través de nuestra web</h3>
-                <p class="text-white/90 mb-4">
-                  Obtén hasta <span class="font-bold text-yellow-300">15% de descuento</span> en tu cotización cuando la realizas directamente desde nuestro sitio web.
+              </span>
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-wider text-orange-700">Cotización sin compromiso</p>
+                <h2 :id="`${uid}-title`" class="mt-1 text-2xl font-bold tracking-tight text-neutral-900">
+                  Solicita tu cotización con descuento
+                </h2>
+                <p :id="`${uid}-desc`" class="mt-1.5 text-sm text-neutral-600">
+                  Completa el formulario y obtén hasta 15% de descuento en tu proyecto.
                 </p>
-              </div>
-              
-              <!-- Benefits list -->
-              <div class="hidden sm:static space-y-3 mb-8">
-                <div class="flex items-start">
-                  <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-400 flex items-center justify-center mt-0.5">
-                    <svg class="w-3 h-3 text-green-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                  </div>
-                  <p class="ml-3 text-sm text-white/90">Respuesta inmediata por email</p>
-                </div>
-                
-                <div class="flex items-start">
-                  <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-400 flex items-center justify-center mt-0.5">
-                    <svg class="w-3 h-3 text-green-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                  </div>
-                  <p class="ml-3 text-sm text-white/90">Cotización detallada y personalizada</p>
-                </div>
-                
-                <div class="flex items-start">
-                  <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-400 flex items-center justify-center mt-0.5">
-                    <svg class="w-3 h-3 text-green-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                  </div>
-                  <p class="ml-3 text-sm text-white/90">Asesoría técnica especializada</p>
-                </div>
-                
-                <div class="flex items-start">
-                  <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-400 flex items-center justify-center mt-0.5">
-                    <svg class="w-3 h-3 text-green-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                  </div>
-                  <p class="ml-3 text-sm text-white/90">Sin compromiso de compra</p>
-                </div>
-              </div>
-              
-              <!-- CTA Section -->
-              <div class="bg-white/15 backdrop-blur-sm rounded-lg p-4 border border-white/30">
-                <p class="text-center text-sm text-white/90 mb-2">
-                  ¿Necesitas asesoría inmediata?
-                </p>
-                <div class="flex items-center justify-center space-x-4 text-sm">
-                  <div class="flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                    </svg>
-                    <span>(+56) 9 3240 3819</span>
-                  </div>
-                </div>
               </div>
             </div>
-            
-            <!-- Right Section (Form) -->
-            <div class="w-full p-8 lg:p-10">
-              <!-- Form header (pr-10: espacio para el boton de cerrar) -->
-              <div class="mb-6 pr-10">
-                <h3 :id="`${uid}-title`" class="text-xl font-semibold text-gray-800 mb-2">Solicita tu cotización con descuento</h3>
-                <p class="text-gray-600 text-sm">Completa el formulario y obtén hasta 15% de descuento en tu proyecto</p>
-              </div>
-              
-              <!-- Status message (success/error) -->
-              <transition name="fade">
-                <div v-if="formStatus.message" role="status" aria-live="polite" 
-                     :class="`mb-6 p-4 rounded-lg text-sm ${formStatus.success ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`">
-                  <div class="flex">
-                    <div class="flex-shrink-0">
-                      <svg v-if="formStatus.success" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <svg v-else class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <div class="ml-3">
-                      <p>{{ formStatus.message }}</p>
-                    </div>
-                  </div>
-                </div>
-              </transition>
-              
-              <!-- Contact form -->
-              <form @submit.prevent="submitForm" class="space-y-5">
-                <!-- Honeypot anti-bots: oculto para personas -->
-                <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" />
-                <!-- Name and Email row -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label :for="`${uid}-name`" class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
-                    <input 
-                      v-model="form.name" :aria-invalid="errors.name ? 'true' : 'false'" :aria-describedby="errors.name ? `${uid}-name-error` : undefined" 
-                      type="text" 
-                      :id="`${uid}-name`" 
-                      name="name" 
-                      :class="[
-                        'block w-full px-4 py-3 rounded-lg border bg-gray-50 focus:bg-white focus:outline-none transition-all',
-                        errors.name ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-orange-500 focus:ring-orange-500'
-                      ]"
-                      placeholder="John Doe"
-                      required
-                    >
-                    <p v-if="errors.name" :id="`${uid}-name-error`" class="mt-1 text-sm text-red-600" role="alert">{{ errors.name }}</p>
-                  </div>
-                  
-                  <div>
-                    <label :for="`${uid}-email`" class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                    <input 
-                      v-model="form.email" :aria-invalid="errors.email ? 'true' : 'false'" :aria-describedby="errors.email ? `${uid}-email-error` : undefined" 
-                      type="email" 
-                      :id="`${uid}-email`" 
-                      name="email" 
-                      :class="[
-                        'block w-full px-4 py-3 rounded-lg border bg-gray-50 focus:bg-white focus:outline-none transition-all',
-                        errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-orange-500 focus:ring-orange-500'
-                      ]"
-                      placeholder="ejemplo@empresa.com"
-                      required
-                    >
-                    <p v-if="errors.email" :id="`${uid}-email-error`" class="mt-1 text-sm text-red-600" role="alert">{{ errors.email }}</p>
-                  </div>
-                </div>
-                
-                <!-- Phone and Subject -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  <div>
-                    <label :for="`${uid}-phone`" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                    <input 
-                      v-model="form.phone" 
-                      type="tel" 
-                      :id="`${uid}-phone`" 
-                      name="phone" 
-                      class="block w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-50 focus:bg-white focus:border-orange-500 focus:outline-none focus:ring-orange-500 transition-all"
-                      placeholder="+56 9 1234 5678"
-                    >
-                  </div>
-                  
-                  <div>
-                    <label :for="`${uid}-subject`" class="block text-sm font-medium text-gray-700 mb-1">Asunto *</label>
-                    <input 
-                      v-model="form.subject" :aria-invalid="errors.subject ? 'true' : 'false'" :aria-describedby="errors.subject ? `${uid}-subject-error` : undefined" 
-                      type="text" 
-                      :id="`${uid}-subject`" 
-                      name="subject" 
-                      :class="[
-                        'block w-full px-4 py-3 rounded-lg border bg-gray-50 focus:bg-white focus:outline-none transition-all',
-                        errors.subject ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-orange-500 focus:ring-orange-500'
-                      ]"
-                      placeholder="¿En qué podemos ayudarte?"
-                      required
-                    >
-                    <p v-if="errors.subject" :id="`${uid}-subject-error`" class="mt-1 text-sm text-red-600" role="alert">{{ errors.subject }}</p>
-                  </div>
-                </div>
-                
-                <!-- Message -->
-                <div>
-                  <label :for="`${uid}-message`" class="block text-sm font-medium text-gray-700 mb-1">Mensaje *</label>
-                  <textarea 
-                    v-model="form.message" :aria-invalid="errors.message ? 'true' : 'false'" :aria-describedby="errors.message ? `${uid}-message-error` : undefined" 
-                    :id="`${uid}-message`" 
-                    name="message" 
-                    rows="4" 
-                    :class="[
-                      'block w-full px-4 py-3 rounded-lg border bg-gray-50 focus:bg-white focus:outline-none transition-all resize-none',
-                      errors.message ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 focus:border-orange-500 focus:ring-orange-500'
-                    ]"
-                    placeholder="Escribe tu mensaje aquí..."
+          </div>
+
+          <!-- Enviado con exito -->
+          <div v-if="formStatus.success" class="px-6 sm:px-8 py-12 text-center" role="status" aria-live="polite">
+            <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-700" aria-hidden="true">
+              <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+              </svg>
+            </span>
+            <p class="mt-5 text-xl font-semibold text-neutral-900">¡Mensaje enviado!</p>
+            <p class="mt-2 text-neutral-600">{{ formStatus.message }}</p>
+            <button
+              type="button"
+              class="mt-8 inline-flex h-11 items-center justify-center rounded-xl border border-neutral-300 px-6 font-semibold text-neutral-800 hover:bg-neutral-50 transition-colors"
+              @click="closeModal"
+            >
+              Cerrar
+            </button>
+          </div>
+
+          <!-- Formulario -->
+          <form v-else novalidate class="px-6 sm:px-8 py-6 space-y-5" @submit.prevent="submitForm">
+            <!-- Honeypot anti-bots: oculto para personas -->
+            <input v-model="form.website" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" />
+
+            <!-- Error general -->
+            <div
+              v-if="formStatus.message"
+              role="alert"
+              class="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+            >
+              <svg class="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p>{{ formStatus.message }}</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <!-- Nombre -->
+              <div>
+                <label :for="`${uid}-name`" class="field-label">Nombre <span class="text-orange-700" aria-hidden="true">*</span></label>
+                <div class="field-wrap">
+                  <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <input
+                    :id="`${uid}-name`"
+                    v-model="form.name"
+                    type="text"
+                    name="name"
+                    autocomplete="name"
+                    placeholder="Tu nombre"
                     required
-                  ></textarea>
-                  <p v-if="errors.message" :id="`${uid}-message-error`" class="mt-1 text-sm text-red-600" role="alert">{{ errors.message }}</p>
-                </div>
-                
-                <!-- Privacy policy checkbox -->
-                <div>
-                  <div class="flex items-start">
-                    <div class="flex items-center h-5">
-                      <input 
-                        v-model="form.privacy" :aria-invalid="errors.privacy ? 'true' : 'false'" :aria-describedby="errors.privacy ? `${uid}-privacy-error` : undefined" 
-                        :id="`${uid}-privacy`" 
-                        name="privacy" 
-                        type="checkbox" 
-                        :class="[
-                          'h-4 w-4 rounded border-gray-300 focus:ring-2 focus:ring-offset-2',
-                          errors.privacy ? 'text-red-600 focus:ring-red-500' : 'text-orange-600 focus:ring-orange-500'
-                        ]"
-                        required
-                      >
-                    </div>
-                    <div class="ml-3 text-sm">
-                      <label :for="`${uid}-privacy`" :class="errors.privacy ? 'text-red-600' : 'text-gray-600'">
-                        Acepto la <NuxtLink to="/politica-privacidad" class="text-orange-600 hover:underline">política de privacidad</NuxtLink> y el uso de mis datos.
-                      </label>
-                      <p v-if="errors.privacy" :id="`${uid}-privacy-error`" class="mt-1 text-sm text-red-600" role="alert">{{ errors.privacy }}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Submit button -->
-                <div>
-                  <button 
-                    type="submit" 
-                    class="w-full flex items-center justify-center px-6 py-3.5 bg-orange-500 text-white font-medium rounded-lg shadow-md hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-300 transition-all duration-300 ease-in-out transform hover:-translate-y-1 disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-                    :disabled="isSubmitting"
+                    :aria-invalid="errors.name ? 'true' : 'false'"
+                    :aria-describedby="errors.name ? `${uid}-name-error` : undefined"
+                    :class="['field-input', { 'field-input--error': errors.name }]"
                   >
-                    <div class="relative">
-                      <span :class="{ 'opacity-0': isSubmitting }">Enviar mensaje</span>
-                      <div v-if="isSubmitting" class="absolute inset-0 flex items-center justify-center">
-                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                      </div>
-                    </div>
-                  </button>
                 </div>
-              </form>
+                <p v-if="errors.name" :id="`${uid}-name-error`" class="field-error">{{ errors.name }}</p>
+              </div>
+
+              <!-- Email -->
+              <div>
+                <label :for="`${uid}-email`" class="field-label">Email <span class="text-orange-700" aria-hidden="true">*</span></label>
+                <div class="field-wrap">
+                  <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <input
+                    :id="`${uid}-email`"
+                    v-model="form.email"
+                    type="email"
+                    name="email"
+                    autocomplete="email"
+                    inputmode="email"
+                    placeholder="nombre@empresa.cl"
+                    required
+                    :aria-invalid="errors.email ? 'true' : 'false'"
+                    :aria-describedby="errors.email ? `${uid}-email-error` : undefined"
+                    :class="['field-input', { 'field-input--error': errors.email }]"
+                  >
+                </div>
+                <p v-if="errors.email" :id="`${uid}-email-error`" class="field-error">{{ errors.email }}</p>
+              </div>
+
+              <!-- Telefono -->
+              <div>
+                <label :for="`${uid}-phone`" class="field-label">Teléfono <span class="font-normal text-neutral-500">(opcional)</span></label>
+                <div class="field-wrap">
+                  <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <input
+                    :id="`${uid}-phone`"
+                    v-model="form.phone"
+                    type="tel"
+                    name="phone"
+                    autocomplete="tel"
+                    inputmode="tel"
+                    placeholder="+56 9 1234 5678"
+                    class="field-input"
+                  >
+                </div>
+              </div>
+
+              <!-- Asunto -->
+              <div>
+                <label :for="`${uid}-subject`" class="field-label">Asunto <span class="text-orange-700" aria-hidden="true">*</span></label>
+                <div class="field-wrap">
+                  <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 7h.01M7 3h5a1.99 1.99 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  <input
+                    :id="`${uid}-subject`"
+                    v-model="form.subject"
+                    type="text"
+                    name="subject"
+                    placeholder="Ej: Rack selectivo"
+                    required
+                    :aria-invalid="errors.subject ? 'true' : 'false'"
+                    :aria-describedby="errors.subject ? `${uid}-subject-error` : undefined"
+                    :class="['field-input', { 'field-input--error': errors.subject }]"
+                  >
+                </div>
+                <p v-if="errors.subject" :id="`${uid}-subject-error`" class="field-error">{{ errors.subject }}</p>
+              </div>
             </div>
+
+            <!-- Mensaje -->
+            <div>
+              <label :for="`${uid}-message`" class="field-label">Mensaje <span class="text-orange-700" aria-hidden="true">*</span></label>
+              <textarea
+                :id="`${uid}-message`"
+                v-model="form.message"
+                name="message"
+                rows="4"
+                maxlength="2000"
+                placeholder="Cuéntanos sobre tu proyecto: medidas, carga, plazos…"
+                required
+                :aria-invalid="errors.message ? 'true' : 'false'"
+                :aria-describedby="errors.message ? `${uid}-message-error` : undefined"
+                :class="['field-input field-input--textarea', { 'field-input--error': errors.message }]"
+              ></textarea>
+              <p v-if="errors.message" :id="`${uid}-message-error`" class="field-error">{{ errors.message }}</p>
+            </div>
+
+            <!-- Privacidad -->
+            <div>
+              <div class="flex items-start gap-3">
+                <input
+                  :id="`${uid}-privacy`"
+                  v-model="form.privacy"
+                  name="privacy"
+                  type="checkbox"
+                  required
+                  :aria-invalid="errors.privacy ? 'true' : 'false'"
+                  :aria-describedby="errors.privacy ? `${uid}-privacy-error` : undefined"
+                  class="mt-0.5 h-5 w-5 flex-shrink-0 rounded-md border-neutral-300 accent-orange-600 cursor-pointer"
+                >
+                <label :for="`${uid}-privacy`" class="text-sm leading-relaxed" :class="errors.privacy ? 'text-red-700' : 'text-neutral-600'">
+                  Acepto la <NuxtLink to="/politica-privacidad" class="font-medium text-orange-700 underline underline-offset-2 hover:text-orange-800">política de privacidad</NuxtLink> y el uso de mis datos para responder esta solicitud.
+                </label>
+              </div>
+              <p v-if="errors.privacy" :id="`${uid}-privacy-error`" class="field-error pl-8">{{ errors.privacy }}</p>
+            </div>
+
+            <!-- Enviar -->
+            <button
+              type="submit"
+              :disabled="isSubmitting"
+              class="group relative flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-6 text-base font-semibold text-white shadow-lg shadow-orange-600/20 hover:bg-orange-700 active:scale-[0.99] transition-all disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              <svg v-if="isSubmitting" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span>{{ isSubmitting ? 'Enviando…' : 'Enviar solicitud' }}</span>
+              <svg v-if="!isSubmitting" class="h-5 w-5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </button>
+          </form>
+
+          <!-- Contacto directo -->
+          <div class="flex flex-wrap items-center justify-center sm:justify-between gap-x-4 gap-y-2 border-t border-neutral-100 bg-neutral-50 px-6 sm:px-8 py-4 text-sm text-neutral-600">
+            <span class="flex items-center gap-2 whitespace-nowrap">
+              <svg class="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              Sin compromiso
+            </span>
+            <span class="flex items-center gap-4 whitespace-nowrap">
+              <a href="tel:+56932403819" class="font-medium text-neutral-800 hover:text-orange-700">(+56) 9 3240 3819</a>
+              <a href="https://wa.me/56932403819" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-medium text-green-700 hover:text-green-800">
+                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                </svg>
+                WhatsApp
+              </a>
+            </span>
           </div>
         </div>
       </transition>
     </div>
   </transition>
-  
-  <!-- Toast Notification -->
-  <Teleport to="body">
-    <transition name="toast">
-      <div 
-        v-if="toast.visible" 
-        class="fixed bottom-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center"
-        :class="toast.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'"
-      >
-        <svg v-if="toast.type === 'success'" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <svg v-else class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>{{ toast.message }}</span>
-      </div>
-    </transition>
-  </Teleport>
 </template>
 
 <script lang="ts" setup>
@@ -341,12 +299,6 @@ const formStatus = reactive({
   message: ''
 });
 
-// Toast notification state
-const toast = reactive({
-  visible: false,
-  message: '',
-  type: 'success' // 'success' or 'error'
-});
 
 // Initialize form with service info if available
 const hasServiceInfo = computed(() => Boolean(props.serviceInfo));
@@ -465,16 +417,6 @@ function validateForm() {
   return isValid;
 }
 
-function showToast(message: string, type: 'success' | 'error' = 'success') {
-  toast.message = message;
-  toast.type = type;
-  toast.visible = true;
-  
-  // Auto-hide the toast after 4 seconds
-  setTimeout(() => {
-    toast.visible = false;
-  }, 4000);
-}
 
 // Submit form function in ContactModal.vue
 async function submitForm() {
@@ -561,47 +503,99 @@ async function submitForm() {
 </script>
 
 <style scoped>
-/* Base styles */
-:deep(input), :deep(textarea) {
-  transition: all 0.3s ease;
+.field-label {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #262626;
 }
 
-/* Modal transitions */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
+.field-icon {
+  position: absolute;
+  left: 0.875rem;
+  top: 50%;
+  width: 1.25rem;
+  height: 1.25rem;
+  transform: translateY(-50%);
+  color: #a3a3a3;
+  pointer-events: none;
 }
-.fade-enter-from, .fade-leave-to {
+
+.field-input {
+  display: block;
+  width: 100%;
+  height: 3rem;
+  padding: 0 1rem 0 2.75rem;
+  border: 1px solid #e5e5e5;
+  border-radius: 0.75rem;
+  background: #fff;
+  color: #171717;
+  font-size: 1rem;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.field-input::placeholder {
+  color: #a3a3a3;
+}
+.field-input:hover {
+  border-color: #d4d4d4;
+}
+.field-input:focus {
+  outline: none;
+  border-color: #ea580c;
+  box-shadow: 0 0 0 4px rgb(234 88 12 / 0.15);
+}
+.field-wrap {
+  position: relative;
+}
+.field-wrap:focus-within .field-icon {
+  color: #ea580c;
+}
+
+.field-input--textarea {
+  height: auto;
+  min-height: 7rem;
+  padding: 0.75rem 1rem;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.field-input--error,
+.field-input--error:hover {
+  border-color: #f87171;
+  background: #fef2f2;
+}
+.field-input--error:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 4px rgb(220 38 38 / 0.15);
+}
+
+.field-error {
+  margin-top: 0.375rem;
+  font-size: 0.875rem;
+  color: #b91c1c;
+}
+
+/* Animaciones */
+.backdrop-enter-active,
+.backdrop-leave-active {
+  transition: opacity 0.25s ease;
+}
+.backdrop-enter-from,
+.backdrop-leave-to {
   opacity: 0;
 }
 
-.slide-up-enter-active, .slide-up-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+.dialog-enter-active {
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.slide-up-enter-from, .slide-up-leave-to {
+.dialog-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.dialog-enter-from,
+.dialog-leave-to {
   opacity: 0;
-  transform: translateY(20px);
-}
-
-/* Toast transitions */
-.toast-enter-active, .toast-leave-active {
-  transition: opacity 0.3s, transform 0.3s;
-}
-.toast-enter-from, .toast-leave-to {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-/* Button transitions */
-button {
-  transition: all 0.3s ease;
-}
-
-button:not(:disabled):hover {
-  box-shadow: 0 6px 15px rgba(249, 115, 22, 0.4);
-}
-
-button:disabled {
-  transform: none !important;
-  box-shadow: none !important;
+  transform: translateY(24px) scale(0.98);
 }
 </style>
