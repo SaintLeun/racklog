@@ -390,17 +390,39 @@ import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia'; 
 import ContactModal from '~/components/ContactModal.vue';
 
-// Abrir el formulario de contacto una vez por sesion (solo en el navegador)
+// Abrir el formulario de contacto una vez por sesion, 3 s despues de que el
+// usuario responda el banner de cookies (o de cargar, si ya lo respondio antes),
+// para que no se encimen
+const AUTO_OPEN_DELAY_MS = 3000;
+const { analytics: cookieConsent } = useConsent();
+
 onMounted(() => {
   try {
-    if (!sessionStorage.getItem('contactModalShown')) {
-      setTimeout(() => {
-        openContactModal();
-        sessionStorage.setItem('contactModalShown', 'true');
-      }, 5000);
-    }
+    if (sessionStorage.getItem('contactModalShown')) return;
   } catch {
-    // Sin sessionStorage no se abre automaticamente
+    return; // Sin sessionStorage no se abre automaticamente
+  }
+
+  const schedule = () => {
+    setTimeout(() => {
+      openContactModal();
+      try {
+        sessionStorage.setItem('contactModalShown', 'true');
+      } catch {
+        // Ignorar: sin sessionStorage solo se pierde el "una vez por sesion"
+      }
+    }, AUTO_OPEN_DELAY_MS);
+  };
+
+  if (cookieConsent.value !== 'unset') {
+    schedule();
+  } else {
+    const stop = watch(cookieConsent, (state) => {
+      if (state !== 'unset') {
+        stop();
+        schedule();
+      }
+    });
   }
 });
 
