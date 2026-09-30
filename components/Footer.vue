@@ -6,8 +6,8 @@
         <div class="flex flex-col gap-6 rounded-3xl bg-white/[0.04] p-6 ring-1 ring-white/10 sm:p-8 lg:flex-row lg:items-center lg:justify-between lg:p-10">
           <div class="max-w-xl">
             <p class="text-sm font-semibold uppercase tracking-wider text-brand-400">Cotización sin compromiso</p>
-            <p class="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">Solicita tu cotización con descuento</p>
-            <p class="mt-2 text-neutral-400">Completa el formulario y obtén hasta 15% de descuento en tu proyecto.</p>
+            <p class="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">Solicita tu cotización</p>
+            <p class="mt-2 text-neutral-400">Te respondemos en menos de 24 horas con una propuesta a medida.</p>
           </div>
           <div class="flex flex-col gap-3 sm:flex-row">
             <button type="button" class="btn btn-primary btn-lg" @click="openContactModal">

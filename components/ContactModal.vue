@@ -37,10 +37,10 @@
               <div>
                 <p class="text-xs font-semibold uppercase tracking-wider text-orange-700">Cotización sin compromiso</p>
                 <h2 :id="`${uid}-title`" class="mt-1 text-2xl font-bold tracking-tight text-neutral-900">
-                  Solicita tu cotización con descuento
+                  Solicita tu cotización
                 </h2>
                 <p :id="`${uid}-desc`" class="mt-1.5 text-sm text-neutral-600">
-                  Completa el formulario y obtén hasta 15% de descuento en tu proyecto.
+                  Te respondemos en menos de 24 horas con una propuesta a medida.
                 </p>
               </div>
             </div>
