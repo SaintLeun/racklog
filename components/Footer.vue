@@ -5,7 +5,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
         <!-- Company Info -->
         <div class="space-y-6">
-          <img src="/assets/images/logo-white.png" alt="Racklog" class="h-12 w-auto" />
+          <img src="/assets/images/logo-white.webp" alt="Racklog" class="h-12 w-auto" />
           <p class="text-sm text-gray-300 leading-relaxed">
             Desde 2008 ofreciendo soluciones de almacenamiento industrial de alta calidad, diseñadas para optimizar espacios y mejorar la eficiencia logística de nuestros clientes.
           </p>

@@ -248,12 +248,12 @@ import ContactModal from '~/components/ContactModal.vue';
 
 const isContactModalOpen = ref(false);
 const clientLogos = ref([
-  { name: 'Coca-Cola', logo: '/assets/images/clients/cocacola.png' },
-  { name: 'Correos de Chile', logo: '/assets/images/clients/correosdechile.png' },
-  { name: 'H&M', logo: '/assets/images/clients/hym.png' },
-  { name: 'Guess', logo: '/assets/images/clients/guess.png' },
-  { name: 'Pichara', logo: '/assets/images/clients/pichara.png' },
-  { name: 'Skechers', logo: '/assets/images/clients/skechers.png' }
+  { name: 'Coca-Cola', logo: '/assets/images/clients/cocacola.webp' },
+  { name: 'Correos de Chile', logo: '/assets/images/clients/correosdechile.webp' },
+  { name: 'H&M', logo: '/assets/images/clients/hym.webp' },
+  { name: 'Guess', logo: '/assets/images/clients/guess.webp' },
+  { name: 'Pichara', logo: '/assets/images/clients/pichara.webp' },
+  { name: 'Skechers', logo: '/assets/images/clients/skechers.webp' }
 ]);
 
 const playerSrc = ref('');

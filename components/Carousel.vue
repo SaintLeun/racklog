@@ -89,16 +89,16 @@ const isContactModalOpen = ref(false);
 // Data
 const slides = ref([
   { 
-    image: '/assets/images/slide-1.png', 
-    overlay: '/assets/images/carousel-overlay-1.png', 
+    image: '/assets/images/slide-1.webp', 
+    overlay: '/assets/images/carousel-overlay-1.webp', 
     alt: 'Agenda tu visita técnica gratuita', 
     title: 'Visita Técnica Gratuita',
     description: '¿Buscas optimizar tu espacio de almacenamiento? Solicita hoy mismo una visita técnica gratuita de Racklog en Santiago. Nuestros expertos analizarán tu situación y te mostrarán cómo nuestras soluciones de racks y estanterías pueden transformar tu espacio, haciéndolo más eficiente y funcional. ¡Contáctanos ahora para agendar tu visita!', 
     link: '/servicios/visita-tecnica'
   },
   { 
-    image: '/assets/images/slide-4.png', 
-    overlay: '/assets/images/carousel-overlay-2.png', 
+    image: '/assets/images/slide-4.webp', 
+    overlay: '/assets/images/carousel-overlay-2.webp', 
     alt: 'Cotización en 24 horas', 
     title: 'Cotización en 24 horas',
     description: 'Configura tus racks y estanterías con nuestro cotizador online o solicita una cotización personalizada completando nuestro formulario. Recíbela en menos de 24 horas. ¡Contáctanos y optimiza tu espacio!', 

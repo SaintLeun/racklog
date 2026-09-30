@@ -45,11 +45,11 @@
                 </h3>
                 <div class="grid grid-cols-2 gap-3">
                   <button @click="selectProduct('AR')" :class="productButtonClass('AR')">
-                    <img src="/assets/images/anra_body.png" class="h-16 sm:h-20 w-auto mx-auto mb-2" />
+                    <img src="/assets/images/anra_body.webp" class="h-16 sm:h-20 w-auto mx-auto mb-2" />
                     <span class="text-xs sm:text-sm font-medium text-center block">Ángulo Ranurado</span>
                   </button>
                   <button @click="selectProduct('RS')" :class="productButtonClass('RS')">
-                    <img src="/assets/images/rack_selectivo.jpg" class="h-16 sm:h-20 w-auto mx-auto mb-2" />
+                    <img src="/assets/images/rack_selectivo.webp" class="h-16 sm:h-20 w-auto mx-auto mb-2" />
                     <span class="text-xs sm:text-sm font-medium text-center block">Rack Selectivo</span>
                   </button>
                 </div>

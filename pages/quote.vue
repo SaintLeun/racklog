@@ -12,7 +12,7 @@
             class="p-2 border rounded shadow-md hover:shadow-lg transition-shadow w-full md:w-1/2"
           >
             <img
-              src="/assets/images/rack_selectivo.jpg"
+              src="/assets/images/rack_selectivo.webp"
               alt="Ángulo Ranurado"
               class="mx-auto h-24 w-auto object-contain"
             />
@@ -25,7 +25,7 @@
             class="p-2 border rounded shadow-md hover:shadow-lg transition-shadow w-full md:w-1/2"
           >
             <img
-              src="/assets/images/rack_selectivo.jpg"
+              src="/assets/images/rack_selectivo.webp"
               alt="Rack Selectivo"
               class="mx-auto h-24 w-auto object-contain"
             />

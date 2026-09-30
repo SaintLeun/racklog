@@ -6,13 +6,13 @@
     "category": "racks",
     "model": "https://sketchfab.com/models/1d90e83ff7704eaa9d7b0cc5f0f6a804/embed",
     "images": {
-      "main": "/assets/images/rack-selectivo-main.png",
-      "card": "/assets/images/gallery-rack-selectivo-1.jpg",
-      "render": "/assets/images/rack_selectivo.jpg",
+      "main": "/assets/images/rack-selectivo-main.webp",
+      "card": "/assets/images/gallery-rack-selectivo-1.webp",
+      "render": "/assets/images/rack_selectivo.webp",
       "gallery": [
-        "/assets/images/gallery-rack-selectivo-1.jpg",
-        "/assets/images/gallery-rack-selectivo-2.jpg",
-        "/assets/images/gallery-rack-selectivo-3.jpg"
+        "/assets/images/gallery-rack-selectivo-1.webp",
+        "/assets/images/gallery-rack-selectivo-2.webp",
+        "/assets/images/gallery-rack-selectivo-3.webp"
       ]
     },
     "attributes": {
@@ -37,7 +37,7 @@
       {
         "title": "Vigas",
         "description": "Todos nuestras vigas son apernadas y fabricadas en Acero ASTM A36 de 1,2 mts a 3,5 mts de largo, en diferentes altos y espesores dependiendo del peso de la Carga.",
-        "image": "/assets/images/rack-selectivo-details-1.png",
+        "image": "/assets/images/rack-selectivo-details-1.webp",
         "perks": [
           "VC7050: Viga 70 mm x 50 mm",
           "VC7050: Viga 70 mm x 50 mm",
@@ -48,7 +48,7 @@
       {
         "title": "Bastidores",
         "description": "Todos nuestros bastidores son fabricados en Acero ASTM A36 de 1 mts a 9,5 mts en diferentes espesores y anchos.",
-        "image": "/assets/images/rack-selectivo-details-2.png",
+        "image": "/assets/images/rack-selectivo-details-2.webp",
         "perks": [
           "PC8081: Pilar 80 mm x 81 mm",
           "PC10081: Pilar 100 mm x 81 mm",
@@ -61,7 +61,7 @@
       {
         "title": "Resistencias de Carga",
         "description": "Nuestras estanterías industriales selectivas están meticulosamente diseñadas para soportar cargas pesadas y diversas, adaptándose a las exigencias de cualquier almacén moderno. Con una capacidad de carga que supera los 2.000 kg por plano de carga, garantizamos la seguridad y estabilidad de sus productos.",
-        "image": "/assets/images/rack-selectivo-details-3.png",
+        "image": "/assets/images/rack-selectivo-details-3.webp",
         "perks": []
       }
     ],
@@ -92,13 +92,13 @@
     "category": "estanterias",
     "model": "https://sketchfab.com/models/4587a2df7cd44193804ea88fa98bd025/embed",
     "images": {
-      "main": "/assets/images/angulo-ranurado-main.png",
-      "card": "/assets/images/gallery-angulo-ranurado-1.JPG",
-      "render": "/assets/images/anra_body.png",
+      "main": "/assets/images/angulo-ranurado-main.webp",
+      "card": "/assets/images/gallery-angulo-ranurado-1.webp",
+      "render": "/assets/images/anra_body.webp",
       "gallery": [
-        "/assets/images/gallery-angulo-ranurado-1.JPG",
-        "/assets/images/gallery-angulo-ranurado-2.JPG",
-        "/assets/images/gallery-angulo-ranurado-3.JPG"
+        "/assets/images/gallery-angulo-ranurado-1.webp",
+        "/assets/images/gallery-angulo-ranurado-2.webp",
+        "/assets/images/gallery-angulo-ranurado-3.webp"
       ]
     },
     "attributes": {
@@ -123,7 +123,7 @@
       {
         "title": "Tipos de Bandejas",
         "description": "Todas nuestras bandejas son fabricadas de acero galvanizado o pintado en 0,8 mm de espesor. Nuestras medidas estándar son:",
-        "image": "/assets/images/angulo-ranurado-detail-1.png",
+        "image": "/assets/images/angulo-ranurado-detail-1.webp",
         "perks": [
           "BG300: Frente: 92 cm ; Fondo: 30 cm",
           "BG400: Frente: 92 cm ; Fondo: 40 cm",
@@ -134,7 +134,7 @@
       {
         "title": "Ángulos Ranurados",
         "description": "Todos nuestros ángulos son fabricados en acero pintado en 2 mm de espesor en dos tipos de perfiles: 38 x 38 mm y de 38 x 58 mm. Nuestras alturas estándar son:",
-        "image": "/assets/images/angulo-ranurado-detail-2.png",
+        "image": "/assets/images/angulo-ranurado-detail-2.webp",
         "perks": [
           "AR 2000: 2,0 mt",
           "AR 2500: 2,5 mt",
@@ -145,7 +145,7 @@
       {
         "title": "Resistencias de Carga",
         "description": "Todas nuestras estanterías son diseñadas para soportar cargas en diferentes escalas de peso. Nuestras resistencias estándar son:",
-        "image": "/assets/images/angulo-ranurado-detail-3.png",
+        "image": "/assets/images/angulo-ranurado-detail-3.webp",
         "perks": [
           "R60: Hasta 60 kg por bandeja",
           "R90: Hasta 90 kg por bandeja",
@@ -179,13 +179,13 @@
     "category": "racks",
     "model": "",
     "images": {
-      "main": "/assets/images/rack-minirack-main.png",
-      "card": "/assets/images/gallery-mini-rack-1.jpg",
-      "render": "/assets/images/anra_body.png",
+      "main": "/assets/images/rack-minirack-main.webp",
+      "card": "/assets/images/gallery-mini-rack-1.webp",
+      "render": "/assets/images/anra_body.webp",
       "gallery": [
-        "/assets/images/gallery-mini-rack-1.jpg",
-        "/assets/images/gallery-mini-rack-2.jpg",
-        "/assets/images/gallery-mini-rack-3.jpg"
+        "/assets/images/gallery-mini-rack-1.webp",
+        "/assets/images/gallery-mini-rack-2.webp",
+        "/assets/images/gallery-mini-rack-3.webp"
       ]
     },
     "attributes": {
@@ -235,13 +235,13 @@
     "category": "racks",
     "model": "",
     "images": {
-      "main": "/assets/images/rack-drivein-main.png",
-      "card": "/assets/images/gallery-drive-in-1.jpg",
-      "render": "/assets/images/anra_body.png",
+      "main": "/assets/images/rack-drivein-main.webp",
+      "card": "/assets/images/gallery-drive-in-1.webp",
+      "render": "/assets/images/anra_body.webp",
       "gallery": [
-        "/assets/images/gallery-drive-in-1.jpg",
-        "/assets/images/gallery-drive-in-2.jpg",
-        "/assets/images/gallery-drive-in-3.jpg"
+        "/assets/images/gallery-drive-in-1.webp",
+        "/assets/images/gallery-drive-in-2.webp",
+        "/assets/images/gallery-drive-in-3.webp"
       ]
     },
     "attributes": {
@@ -288,13 +288,13 @@
     "category": "racks",
     "model": "",
     "images": {
-      "main": "/assets/images/rack-autoportante-main.png",
-      "card": "/assets/images/gallery-auto-portante-1.jpg",
-      "render": "/assets/images/anra_body.png",
+      "main": "/assets/images/rack-autoportante-main.webp",
+      "card": "/assets/images/gallery-auto-portante-1.webp",
+      "render": "/assets/images/anra_body.webp",
       "gallery": [
-        "/assets/images/gallery-auto-portante-1.jpg",
-        "/assets/images/gallery-auto-portante-2.jpg",
-        "/assets/images/gallery-auto-portante-3.jpg"
+        "/assets/images/gallery-auto-portante-1.webp",
+        "/assets/images/gallery-auto-portante-2.webp",
+        "/assets/images/gallery-auto-portante-3.webp"
       ]
     },
     "attributes": {
@@ -341,13 +341,13 @@
     "category": "mezzanines",
     "model": "",
     "images": {
-      "main": "/assets/images/rack-dinamico-main.png",
-      "card": "/assets/images/gallery-altillo-ar-1.jpg",
-      "render": "/assets/images/anra_body.png",
+      "main": "/assets/images/rack-dinamico-main.webp",
+      "card": "/assets/images/gallery-altillo-ar-1.webp",
+      "render": "/assets/images/anra_body.webp",
       "gallery": [
-        "/assets/images/gallery-altillo-ar-1.jpg",
-        "/assets/images/gallery-altillo-ar-2.jpg",
-        "/assets/images/gallery-altillo-ar-3.jpg"
+        "/assets/images/gallery-altillo-ar-1.webp",
+        "/assets/images/gallery-altillo-ar-2.webp",
+        "/assets/images/gallery-altillo-ar-3.webp"
       ]
     },
     "attributes": {
@@ -388,9 +388,9 @@
     "category": "racks",
     "model": "",
     "images": {
-      "main": "/assets/images/rack-pushback-main.png",
-      "card": "/assets/images/rack-pushback-card.png",
-      "render": "/assets/images/anra_body.png",
+      "main": "/assets/images/rack-pushback-main.webp",
+      "card": "/assets/images/rack-pushback-card.webp",
+      "render": "/assets/images/anra_body.webp",
       "gallery": [
       ]
     },
@@ -435,9 +435,9 @@
     "category": "racks",
     "model": "",
     "images": {
-      "main": "/assets/images/rack-dinamico-main.png",
-      "card": "/assets/images/rack-dinamico-card.png",
-      "render": "/assets/images/anra_body.png",
+      "main": "/assets/images/rack-dinamico-main.webp",
+      "card": "/assets/images/rack-dinamico-card.webp",
+      "render": "/assets/images/anra_body.webp",
       "gallery": [
       ]
     },
@@ -485,9 +485,9 @@
     "category": "accesorios",
     "model": "",
     "images": {
-      "main": "/assets/images/cajas-plasticas-main.png",
-      "card": "/assets/images/cajas-plasticas-card.png",
-      "render": "/assets/images/anra_body.png",
+      "main": "/assets/images/cajas-plasticas-main.webp",
+      "card": "/assets/images/cajas-plasticas-card.webp",
+      "render": "/assets/images/anra_body.webp",
       "gallery": [
       ]
     },
@@ -531,9 +531,9 @@
     "category": "mezzanines",
     "model": "",
     "images": {
-      "main": "/assets/images/entreplantas-main.png",
-      "card": "/assets/images/entreplantas-card.png",
-      "render": "/assets/images/anra_body.png",
+      "main": "/assets/images/entreplantas-main.webp",
+      "card": "/assets/images/entreplantas-card.webp",
+      "render": "/assets/images/anra_body.webp",
       "gallery": [
       ]
     },
@@ -564,9 +564,9 @@
     "category": "mezzanines",
     "model": "",
     "images": {
-      "main": "/assets/images/altillo-rack-selectivo-main.png",
-      "card": "/assets/images/altillo-rack-selectivo-card.png",
-      "render": "/assets/images/anra_body.png",
+      "main": "/assets/images/altillo-rack-selectivo-main.webp",
+      "card": "/assets/images/altillo-rack-selectivo-card.webp",
+      "render": "/assets/images/anra_body.webp",
       "gallery": [
       ]
     },

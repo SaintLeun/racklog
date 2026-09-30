@@ -61,7 +61,7 @@
     <div class="border-b border-gray-200 py-3">
       <div class="container mx-auto flex justify-between items-center px-4">
         <a href="/" class="flex items-center">
-          <img src="/assets/images/logo.png" alt="racklog" class="h-12 w-auto" />
+          <img src="/assets/images/logo.webp" alt="racklog" class="h-12 w-auto" />
         </a>
         
         <!-- Business Hours and Location - Desktop only -->

@@ -5,10 +5,10 @@
     "slug": "proteccion-bastidor",
     "shortDescription": "Protege tu inversión en sistemas de almacenamiento con nuestras protecciones de bastidor de alta calidad.",
     "longDescription": "En Racklog, entendemos la importancia de proteger tu inversión en sistemas de almacenamiento. Por eso, te ofrecemos protecciones de bastidor de alta calidad, diseñadas para resguardar tus racks industriales de posibles daños, impactos y desgaste. Los racks industriales son estructuras robustas, pero no son inmunes a los impactos. Golpes accidentales con montacargas, transpaletas o incluso el movimiento constante de mercancías pueden causar daños que comprometan la integridad del rack, la seguridad de tu personal y la estabilidad de la carga almacenada. Las protecciones de bastidor actúan como un escudo protector, absorbiendo y disipando la energía de los impactos, minimizando los daños y previniendo costosos accidentes.",
-    "mainImage": "/assets/images/accesorios/proteccion-bastidor-principal.jpg",
+    "mainImage": "/assets/images/accesorios/proteccion-bastidor-principal.webp",
     "galleryImages": [
-      "/assets/images/accesorios/proteccion-bastidor-galeria1.jpg",
-      "/assets/images/accesorios/proteccion-bastidor-galeria2.jpg"
+      "/assets/images/accesorios/proteccion-bastidor-galeria1.webp",
+      "/assets/images/accesorios/proteccion-bastidor-galeria2.webp"
     ],
     "benefits": [
       "Mayor seguridad en tu bodega: Reduce el riesgo de accidentes y lesiones.",
@@ -31,9 +31,9 @@
     "slug": "separadores-verticales",
     "shortDescription": "Organiza tus productos y maximiza el espacio en tus racks con nuestros separadores verticales.",
     "longDescription": "Los separadores verticales permiten la separación de diferentes tipos de productos dentro de un mismo nivel de rack, evitando el deslizamiento y facilitando la organización. Son ideales para el picking y para el almacenamiento de productos frágiles o de diferentes dimensiones.",
-    "mainImage": "/assets/images/accesorios/separadores-verticales-principal.jpg",
+    "mainImage": "/assets/images/accesorios/separadores-verticales-principal.webp",
     "galleryImages": [
-      "/assets/images/accesorios/separadores-verticales-galeria1.jpg"
+      "/assets/images/accesorios/separadores-verticales-galeria1.webp"
     ],
     "benefits": [
       "Optimización del espacio: Permiten un mejor aprovechamiento del espacio en los niveles de los racks.",
