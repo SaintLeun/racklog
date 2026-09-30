@@ -60,7 +60,7 @@
     <p>
       <button
         type="button"
-        class="min-h-[44px] px-5 py-2.5 rounded-lg bg-orange-600 text-white font-semibold hover:bg-orange-700"
+        class="min-h-[44px] px-5 py-2.5 rounded-lg bg-brand-700 text-white font-semibold hover:bg-brand-800"
         @click="openSettings"
       >
         Configurar cookies

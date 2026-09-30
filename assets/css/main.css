@@ -10,7 +10,7 @@
 @theme {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  /* Naranjo de marca (brand-600 es el principal: botones, enlaces, acentos) */
+  /* Naranjo de marca (brand-700 lleva texto blanco (5.2:1, AA); brand-600 solo para iconos y acentos) */
   --color-brand-50: #fff7ed;
   --color-brand-100: #ffedd5;
   --color-brand-200: #fed7aa;
@@ -116,7 +116,7 @@
     @apply min-h-9 rounded-lg px-3.5 py-1.5 text-sm;
   }
   .btn-primary {
-    @apply bg-brand-600 text-white shadow-lg shadow-brand-600/20 hover:bg-brand-700 active:scale-[0.98];
+    @apply bg-brand-700 text-white shadow-lg shadow-brand-700/20 hover:bg-brand-800 active:scale-[0.98];
   }
   .btn-secondary {
     @apply bg-white text-neutral-900 ring-1 ring-neutral-300 ring-inset hover:bg-neutral-50 hover:ring-neutral-400;

@@ -96,7 +96,7 @@
                 height="600"
               />
               <div class="absolute left-3 top-3 flex flex-wrap gap-2">
-                <span v-if="product.badge" class="badge !bg-brand-600 !text-white !ring-0">
+                <span v-if="product.badge" class="badge !bg-brand-700 !text-white !ring-0">
                   {{ product.badge }}
                 </span>
                 <span class="badge">

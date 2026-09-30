@@ -214,7 +214,7 @@
             <button
               type="submit"
               :disabled="isSubmitting"
-              class="group relative flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-600 px-6 text-base font-semibold text-white shadow-lg shadow-orange-600/20 hover:bg-orange-700 active:scale-[0.99] transition-all disabled:cursor-not-allowed disabled:opacity-70"
+              class="group relative flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-brand-700 px-6 text-base font-semibold text-white shadow-lg shadow-brand-700/20 hover:bg-brand-800 active:scale-[0.99] transition-all disabled:cursor-not-allowed disabled:opacity-70"
             >
               <svg v-if="isSubmitting" class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />

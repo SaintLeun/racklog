@@ -188,7 +188,7 @@
           <span class="sr-only xl:not-sr-only">Cotización</span>
           <span
             v-if="cartCount > 0"
-            class="absolute right-0.5 top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1 text-[11px] font-bold text-white ring-2 ring-white xl:static xl:ring-0"
+            class="absolute right-0.5 top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-700 px-1 text-[11px] font-bold text-white ring-2 ring-white xl:static xl:ring-0"
           >
             {{ cartCount }}
           </span>
@@ -307,7 +307,7 @@
               </svg>
               Mi Cotización
             </span>
-            <span v-if="cartCount > 0" class="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-brand-600 px-1.5 text-xs font-bold text-white">
+            <span v-if="cartCount > 0" class="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-brand-700 px-1.5 text-xs font-bold text-white">
               {{ cartCount }}
             </span>
           </router-link>
