@@ -8,7 +8,7 @@
           aria-modal="true"
           :aria-labelledby="`${uid}-title`"
           tabindex="-1"
-          class="bg-white rounded-xl w-full max-w-5xl shadow-xl overflow-hidden relative focus:outline-none"
+          class="bg-white rounded-xl w-full max-w-2xl shadow-xl overflow-hidden relative focus:outline-none"
         >
           <!-- Close button (floating) -->
           <button 
@@ -104,9 +104,9 @@
             </div>
             
             <!-- Right Section (Form) -->
-            <div class="md:w-3/5 p-8 lg:p-10">
-              <!-- Form header -->
-              <div class="mb-6">
+            <div class="w-full p-8 lg:p-10">
+              <!-- Form header (pr-10: espacio para el boton de cerrar) -->
+              <div class="mb-6 pr-10">
                 <h3 :id="`${uid}-title`" class="text-xl font-semibold text-gray-800 mb-2">Solicita tu cotización con descuento</h3>
                 <p class="text-gray-600 text-sm">Completa el formulario y obtén hasta 15% de descuento en tu proyecto</p>
               </div>
