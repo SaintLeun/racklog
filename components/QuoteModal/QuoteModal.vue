@@ -1,78 +1,77 @@
 <template>
-  <div v-if="isVisible" class="fixed inset-0 flex items-start justify-center bg-black/60 z-50 overflow-y-auto py-4">
-    <!-- Contenedor exterior con scroll propio que evita el scroll del body -->
-    <div class="min-h-screen flex items-start justify-center w-full overflow-y-auto" @click.self="closeModal">
-      <!-- Modal con altura máxima y scroll interno -->
+  <div v-if="isVisible" class="fixed inset-0 z-50 overflow-y-auto bg-neutral-950/60 backdrop-blur-sm">
+    <!-- Contenedor exterior: clic fuera del dialogo lo cierra -->
+    <div class="flex min-h-full items-end justify-center sm:items-center sm:p-4 lg:p-6" @click.self="closeModal">
       <div
         ref="dialogRef"
         role="dialog"
         aria-modal="true"
         :aria-labelledby="`${uid}-title`"
         tabindex="-1"
-        class="bg-white rounded-2xl overflow-hidden w-full max-w-7xl my-8 mx-4 shadow-2xl transform transition-all duration-300 ease-out focus:outline-none"
+        class="relative flex max-h-[100dvh] w-full max-w-7xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl ring-1 ring-black/5 focus:outline-none sm:max-h-[calc(100dvh-2rem)] sm:rounded-2xl"
       >
-        <div class="h-1.5 bg-gradient-to-r from-orange-500 to-orange-400"></div>
-
-        <!-- Scrollable content container -->
-        <div class="p-6 bg-gray-50 max-h-[calc(100vh-6rem)] overflow-y-auto">
-          <div class="flex justify-between items-center mb-4">
-            <div class="flex items-center flex-wrap gap-2">
-              <h2 :id="`${uid}-title`" class="text-xl sm:text-2xl font-bold text-gray-800">
+        <!-- Encabezado -->
+        <div class="flex flex-shrink-0 items-center justify-between gap-3 border-b border-neutral-100 bg-gradient-to-b from-brand-50 to-white px-5 py-4 sm:px-8 sm:py-5">
+          <div class="flex min-w-0 items-center gap-4">
+            <span class="hidden h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-lg shadow-brand-600/25 sm:inline-flex" aria-hidden="true">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </span>
+            <div class="min-w-0">
+              <p class="text-xs font-semibold uppercase tracking-wider text-brand-700">Personalizable</p>
+              <h2 :id="`${uid}-title`" class="mt-0.5 text-lg font-bold leading-tight tracking-tight text-neutral-900 sm:text-2xl">
                 {{ title || 'Configurador de Producto' }}
               </h2>
-              <span class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                Personalizable
-              </span>
-            </div>
-            <div class="flex items-center space-x-3">
-              <button
-                @click="goToCart"
-                class="flex items-center text-gray-700 hover:text-orange-600 bg-white py-2 px-4 rounded-lg border border-gray-200 shadow-sm hover:shadow transition-all"
-              >
-                <span class="hidden sm:inline">Mi Cotización</span>
-                <span class="sm:hidden">Cotización</span>
-              </button>
-              <button type="button" aria-label="Cerrar configurador" @click="closeModal" class="p-2 text-gray-500 hover:text-gray-800 rounded-full hover:bg-gray-100 transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
           </div>
+          <div class="flex flex-shrink-0 items-center gap-2">
+            <button
+              type="button"
+              @click="goToCart"
+              class="btn btn-secondary !px-4 text-sm"
+            >
+              <svg class="h-5 w-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+              <span class="hidden sm:inline">Mi Cotización</span>
+              <span class="sm:hidden">Cotización</span>
+            </button>
+            <button type="button" aria-label="Cerrar configurador" @click="closeModal" class="inline-flex h-11 w-11 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
 
-          <div class="container mx-auto flex flex-col lg:flex-row gap-6">
-            <div class="w-full lg:w-1/3 space-y-4">
-              <!-- Product Selection Cards -->
-              <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-                <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                  <svg class="w-4 h-4 mr-2 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
-                  </svg>
+        <!-- Contenido con scroll -->
+        <div class="flex-1 overflow-y-auto bg-neutral-50 p-4 sm:p-6 lg:p-8">
+          <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)]">
+            <div class="space-y-6">
+              <!-- Seleccion de producto -->
+              <div class="card p-5">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-neutral-600">
                   Selecciona tu Producto
                 </h3>
-                <div class="grid grid-cols-2 gap-3">
-                  <button @click="selectProduct('AR')" :class="productButtonClass('AR')">
-                    <img loading="lazy" decoding="async" src="/assets/images/anra_body.webp" alt="" width="650" height="700" class="h-16 sm:h-20 w-auto mx-auto mb-2" />
-                    <span class="text-xs sm:text-sm font-medium text-center block">Ángulo Ranurado</span>
+                <div class="mt-4 grid grid-cols-2 gap-3">
+                  <button type="button" :aria-pressed="selectedProduct === 'AR'" @click="selectProduct('AR')" :class="productButtonClass('AR')">
+                    <img loading="lazy" decoding="async" src="/assets/images/anra_body.webp" alt="" width="650" height="700" class="mx-auto h-16 w-auto sm:h-20" />
+                    <span class="mt-2 block text-center text-sm font-semibold">Ángulo Ranurado</span>
                   </button>
-                  <button @click="selectProduct('RS')" :class="productButtonClass('RS')">
-                    <img loading="lazy" decoding="async" src="/assets/images/rack_selectivo.webp" alt="" width="650" height="700" class="h-16 sm:h-20 w-auto mx-auto mb-2" />
-                    <span class="text-xs sm:text-sm font-medium text-center block">Rack Selectivo</span>
+                  <button type="button" :aria-pressed="selectedProduct === 'RS'" @click="selectProduct('RS')" :class="productButtonClass('RS')">
+                    <img loading="lazy" decoding="async" src="/assets/images/rack_selectivo.webp" alt="" width="650" height="700" class="mx-auto h-16 w-auto sm:h-20" />
+                    <span class="mt-2 block text-center text-sm font-semibold">Rack Selectivo</span>
                   </button>
                 </div>
               </div>
 
-              <!-- Configuration Panel -->
-              <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="bg-gradient-to-r from-orange-50 to-orange-100 px-4 py-3 border-b border-orange-200">
-                  <h3 class="text-sm font-semibold text-gray-800 flex items-center">
-                    <svg class="w-4 h-4 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                    </svg>
-                    Configuración
-                  </h3>
+              <!-- Panel de configuracion -->
+              <div class="card">
+                <div class="border-b border-neutral-100 px-5 py-4">
+                  <h3 class="text-base font-semibold text-neutral-900">Configuración</h3>
                 </div>
-                <div class="p-4">
+                <div class="p-5">
                   <AnguloRanuradoPanel
                     v-if="selectedProduct === 'AR'"
                     v-model="config as AnguloRanuradoConfig"
@@ -81,212 +80,206 @@
                     v-else-if="selectedProduct === 'RS'"
                     v-model="config as RackSelectivoConfig"
                   />
-                  <div v-else class="text-center py-8 text-gray-500">
-                    <svg class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                    </svg>
-                    <p class="text-sm">Selecciona un producto para configurar</p>
+                  <div v-else class="flex flex-col items-center py-8 text-center">
+                    <span class="icon-tile" aria-hidden="true">
+                      <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                      </svg>
+                    </span>
+                    <p class="mt-3 text-sm text-neutral-600">Selecciona un producto para configurar</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div class="w-full lg:w-2/3">
-              <!-- 3D Model Viewer -->
-              <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-4 py-3 border-b border-blue-200">
-                  <h3 class="text-sm font-semibold text-gray-800 flex items-center">
-                    <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                    </svg>
-                    Vista Previa 3D
-                  </h3>
+            <div class="min-w-0 space-y-6">
+              <!-- Visor 3D -->
+              <div class="card">
+                <div class="flex items-center gap-2 border-b border-neutral-100 px-5 py-4">
+                  <svg class="h-5 w-5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                  </svg>
+                  <h3 class="text-base font-semibold text-neutral-900">Vista Previa 3D</h3>
                 </div>
-                <div class="relative h-[300px] sm:h-[400px] lg:h-[460px] bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-                  <!-- Model Not Found State -->
-                  <div v-if="modelNotFound && !loading" class="text-center px-4">
-                    <svg class="w-16 h-16 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <div class="relative flex h-[300px] items-center justify-center bg-neutral-100 sm:h-[400px] lg:h-[460px]">
+                  <!-- Modelo no encontrado -->
+                  <div v-if="modelNotFound && !loading" class="max-w-sm px-6 text-center">
+                    <svg class="mx-auto h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <p class="text-gray-600 font-medium mb-1">Modelo 3D no disponible</p>
-                    <p class="text-gray-500 text-sm">
+                    <p class="mt-3 font-semibold text-neutral-800">Modelo 3D no disponible</p>
+                    <p class="mt-1 text-sm text-neutral-600">
                       No pudimos cargar el modelo 3D para esta configuración. Los detalles técnicos están disponibles a continuación.
                     </p>
                   </div>
                   
-                  <!-- Initial State - No Configuration Yet -->
-                  <div v-else-if="!model && !loading" class="text-center px-4">
-                    <svg class="w-16 h-16 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                  <!-- Estado inicial -->
+                  <div v-else-if="!model && !loading" class="px-6 text-center">
+                    <svg class="mx-auto h-12 w-12 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                     </svg>
-                    <p class="text-gray-500 font-medium">Configura tu producto</p>
-                    <p class="text-gray-600 text-sm mt-1">El modelo 3D aparecerá aquí</p>
+                    <p class="mt-3 font-semibold text-neutral-800">Configura tu producto</p>
+                    <p class="mt-1 text-sm text-neutral-600">El modelo 3D aparecerá aquí</p>
                   </div>
                   
-                  <!-- Model Loaded -->
-                  <iframe v-else-if="model && !loading" class="w-full h-full" :src="model" frameborder="0" allowfullscreen></iframe>
+                  <!-- Modelo cargado -->
+                  <iframe v-else-if="model && !loading" class="h-full w-full" :src="model" frameborder="0" allowfullscreen></iframe>
 
-                  <!-- Loading State -->
-                  <div v-if="loading" class="absolute inset-0 flex flex-col justify-center items-center bg-white/90 backdrop-blur-sm z-10">
-                    <svg class="animate-spin h-10 w-10 text-orange-500 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <!-- Cargando -->
+                  <div v-if="loading" class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm" role="status" aria-live="polite">
+                    <svg class="h-10 w-10 animate-spin text-brand-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    <p class="text-gray-700 font-semibold">Cargando modelo 3D...</p>
-                    <p class="text-gray-500 text-sm mt-1">Por favor espera</p>
+                    <p class="mt-3 font-semibold text-neutral-800">Cargando modelo 3D...</p>
+                    <p class="mt-1 text-sm text-neutral-600">Por favor espera</p>
                   </div>
                 </div>
               </div>
 
-              <!-- Unified Specifications & Configuration Summary -->
-              <div v-if="selectedProduct && isConfigurationComplete" class="mt-4 space-y-4">
-                <!-- Product Summary Card -->
-                <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
-                  <div class="flex items-start justify-between mb-3">
-                    <div class="flex items-center">
-                      <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center mr-3">
-                        <svg class="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+              <!-- Resumen de configuracion y especificaciones -->
+              <div v-if="selectedProduct && isConfigurationComplete" class="space-y-4">
+                <!-- Resumen del producto -->
+                <div class="card p-5">
+                  <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                      <span class="icon-tile !h-11 !w-11" aria-hidden="true">
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                         </svg>
-                      </div>
+                      </span>
                       <div>
-                        <h4 class="font-semibold text-gray-900">
+                        <h4 class="font-semibold text-neutral-900">
                           {{ selectedProduct === 'AR' ? 'Ángulo Ranurado' : 'Rack Selectivo' }}
                         </h4>
-                        <p class="text-xs text-gray-500">{{ config.tipo === 'simple' ? 'Simple' : 'Doble' }} • {{ config.cuerpos }} {{ config.cuerpos === 1 ? 'módulo' : 'módulos' }} • {{ config.niveles }} {{ config.niveles === 1 ? 'nivel' : 'niveles' }}</p>
+                        <p class="text-sm text-neutral-600">{{ config.tipo === 'simple' ? 'Simple' : 'Doble' }} • {{ config.cuerpos }} {{ config.cuerpos === 1 ? 'módulo' : 'módulos' }} • {{ config.niveles }} {{ config.niveles === 1 ? 'nivel' : 'niveles' }}</p>
                       </div>
                     </div>
-                    <div class="text-right">
-                      <p class="text-xs text-gray-500">Código</p>
-                      <p class="font-mono font-bold text-sm text-gray-900">{{ productCode }}</p>
+                    <div class="rounded-lg bg-neutral-100 px-3 py-1.5 text-right">
+                      <p class="text-[0.6875rem] font-semibold uppercase tracking-wider text-neutral-600">Código</p>
+                      <p class="font-mono text-sm font-bold text-neutral-900">{{ productCode }}</p>
                     </div>
                   </div>
-                  <div class="pt-3 border-t border-gray-100 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                    <div class="flex justify-between">
-                      <span class="text-gray-600">Capacidad:</span>
-                      <span class="font-medium text-gray-900">{{ config.carga }}</span>
+                  <dl class="mt-4 grid grid-cols-1 gap-x-6 gap-y-2 border-t border-neutral-100 pt-4 text-sm sm:grid-cols-2">
+                    <div class="flex justify-between gap-2">
+                      <dt class="text-neutral-600">Capacidad</dt>
+                      <dd class="font-semibold text-neutral-900">{{ config.carga }}</dd>
                     </div>
-                    <div v-if="selectedProduct === 'RS'" class="flex justify-between">
-                      <span class="text-gray-600">Frente pallet:</span>
-                      <span class="font-medium text-gray-900">{{ (config as RackSelectivoConfig).frentePallet }}</span>
+                    <div v-if="selectedProduct === 'RS'" class="flex justify-between gap-2">
+                      <dt class="text-neutral-600">Frente pallet</dt>
+                      <dd class="font-semibold text-neutral-900">{{ (config as RackSelectivoConfig).frentePallet }}</dd>
                     </div>
-                    <div v-if="selectedProduct === 'RS'" class="flex justify-between">
-                      <span class="text-gray-600">Fondo pallet:</span>
-                      <span class="font-medium text-gray-900">{{ (config as RackSelectivoConfig).fondoPallet }}</span>
+                    <div v-if="selectedProduct === 'RS'" class="flex justify-between gap-2">
+                      <dt class="text-neutral-600">Fondo pallet</dt>
+                      <dd class="font-semibold text-neutral-900">{{ (config as RackSelectivoConfig).fondoPallet }}</dd>
                     </div>
-                    <div v-if="selectedProduct === 'RS'" class="flex justify-between">
-                      <span class="text-gray-600">Alto pallet:</span>
-                      <span class="font-medium text-gray-900">{{ (config as RackSelectivoConfig).altoPallet }}</span>
+                    <div v-if="selectedProduct === 'RS'" class="flex justify-between gap-2">
+                      <dt class="text-neutral-600">Alto pallet</dt>
+                      <dd class="font-semibold text-neutral-900">{{ (config as RackSelectivoConfig).altoPallet }}</dd>
                     </div>
-                    <div v-if="selectedProduct === 'AR'" class="flex justify-between">
-                      <span class="text-gray-600">Bandeja:</span>
-                      <span class="font-medium text-gray-900">{{ (config as AnguloRanuradoConfig).bandeja }}</span>
+                    <div v-if="selectedProduct === 'AR'" class="flex justify-between gap-2">
+                      <dt class="text-neutral-600">Bandeja</dt>
+                      <dd class="font-semibold text-neutral-900">{{ (config as AnguloRanuradoConfig).bandeja }}</dd>
                     </div>
-                    <div v-if="selectedProduct === 'AR'" class="flex justify-between">
-                      <span class="text-gray-600">Acabado:</span>
-                      <span class="font-medium text-gray-900">{{ (config as AnguloRanuradoConfig).pintado === 'galvanizado' ? 'Galvanizado' : 'Pintado' }}</span>
+                    <div v-if="selectedProduct === 'AR'" class="flex justify-between gap-2">
+                      <dt class="text-neutral-600">Acabado</dt>
+                      <dd class="font-semibold text-neutral-900">{{ (config as AnguloRanuradoConfig).pintado === 'galvanizado' ? 'Galvanizado' : 'Pintado' }}</dd>
                     </div>
-                  </div>
+                  </dl>
                 </div>
 
-                <!-- Technical Dimensions - Only for Rack Selectivo -->
-                <div v-if="selectedProduct === 'RS'" class="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                  <!-- Rack Dimensions -->
-                  <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                    <div class="flex items-center mb-2">
-                      <svg class="w-4 h-4 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Dimensiones tecnicas: solo Rack Selectivo -->
+                <div v-if="selectedProduct === 'RS'" class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div class="card p-4">
+                    <h5 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-600">
+                      <svg class="h-4 w-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4a1 1 0 011-1h4m12 0h-4a1 1 0 011 1v4m0 8v4a1 1 0 01-1 1h-4m-12 0h4a1 1 0 01-1-1v-4"></path>
                       </svg>
-                      <h5 class="text-sm font-semibold text-gray-800">Marco del Rack</h5>
-                    </div>
-                    <div class="space-y-1">
-                      <div class="flex justify-between text-xs">
-                        <span class="text-gray-600">Altura:</span>
-                        <span class="font-medium text-gray-900">{{ rackDimensions.height }}mm</span>
+                      Marco del Rack
+                    </h5>
+                    <dl class="mt-3 space-y-1.5 text-sm">
+                      <div class="flex justify-between gap-2">
+                        <dt class="text-neutral-600">Altura</dt>
+                        <dd class="font-semibold tabular-nums text-neutral-900">{{ rackDimensions.height }}mm</dd>
                       </div>
-                      <div class="flex justify-between text-xs">
-                        <span class="text-gray-600">Largo:</span>
-                        <span class="font-medium text-gray-900">{{ rackDimensions.width }}mm</span>
+                      <div class="flex justify-between gap-2">
+                        <dt class="text-neutral-600">Largo</dt>
+                        <dd class="font-semibold tabular-nums text-neutral-900">{{ rackDimensions.width }}mm</dd>
                       </div>
-                      <div class="flex justify-between text-xs">
-                        <span class="text-gray-600">Ancho:</span>
-                        <span class="font-medium text-gray-900">{{ rackDimensions.depth }}mm</span>
+                      <div class="flex justify-between gap-2">
+                        <dt class="text-neutral-600">Ancho</dt>
+                        <dd class="font-semibold tabular-nums text-neutral-900">{{ rackDimensions.depth }}mm</dd>
                       </div>
-                    </div>
+                    </dl>
                   </div>
 
-                  <!-- Beam Dimensions -->
-                  <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                    <div class="flex items-center mb-2">
-                      <svg class="w-4 h-4 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="card p-4">
+                    <h5 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-600">
+                      <svg class="h-4 w-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 12h16M4 12l4-4m-4 4l4 4m8-8l4 4m-4-4l4-4"></path>
                       </svg>
-                      <h5 class="text-sm font-semibold text-gray-800">Viga</h5>
-                    </div>
-                    <div class="space-y-1">
-                      <div class="flex justify-between text-xs">
-                        <span class="text-gray-600">Largo de viga:</span>
-                        <span class="font-medium text-gray-900">{{ beamDimensions.length }}mm</span>
+                      Viga
+                    </h5>
+                    <dl class="mt-3 space-y-1.5 text-sm">
+                      <div class="flex justify-between gap-2">
+                        <dt class="text-neutral-600">Largo de viga</dt>
+                        <dd class="font-semibold tabular-nums text-neutral-900">{{ beamDimensions.length }}mm</dd>
                       </div>
-                    </div>
+                    </dl>
                   </div>
 
-                  <!-- Pallet Positions -->
-                  <div class="bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                    <div class="flex items-center mb-2">
-                      <svg class="w-4 h-4 text-purple-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="card p-4">
+                    <h5 class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-neutral-600">
+                      <svg class="h-4 w-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
                       </svg>
-                      <h5 class="text-sm font-semibold text-gray-800">Posiciones</h5>
-                    </div>
-                    <div class="space-y-1">
-                      <div class="flex justify-between text-xs">
-                        <span class="text-gray-600">Por nivel:</span>
-                        <span class="font-medium text-gray-900">{{ palletPositions.perLevel }}</span>
+                      Posiciones
+                    </h5>
+                    <dl class="mt-3 space-y-1.5 text-sm">
+                      <div class="flex justify-between gap-2">
+                        <dt class="text-neutral-600">Por nivel</dt>
+                        <dd class="font-semibold tabular-nums text-neutral-900">{{ palletPositions.perLevel }}</dd>
                       </div>
-                      <div class="flex justify-between text-xs">
-                        <span class="text-gray-600">En piso:</span>
-                        <span class="font-medium text-gray-900">{{ palletPositions.onFloor }}</span>
+                      <div class="flex justify-between gap-2">
+                        <dt class="text-neutral-600">En piso</dt>
+                        <dd class="font-semibold tabular-nums text-neutral-900">{{ palletPositions.onFloor }}</dd>
                       </div>
-                      <div class="flex justify-between text-xs pt-1 border-t border-gray-200">
-                        <span class="text-gray-600 font-medium">Total:</span>
-                        <span class="font-bold text-gray-900">{{ palletPositions.total }}</span>
+                      <div class="flex justify-between gap-2 border-t border-neutral-100 pt-1.5">
+                        <dt class="font-semibold text-neutral-800">Total</dt>
+                        <dd class="font-bold tabular-nums text-brand-700">{{ palletPositions.total }}</dd>
                       </div>
-                    </div>
+                    </dl>
                   </div>
                 </div>
 
-                <!-- Add to Quote Button -->
+                <!-- Añadir a cotizacion -->
                 <button
+                  type="button"
                   @click="addToCart"
-                  class="w-full px-6 py-3 rounded-lg font-semibold transition-all shadow-sm hover:shadow-md"
-                  :class="{
-                    'bg-orange-500 text-white hover:bg-orange-600': isConfigurationComplete,
-                    'bg-gray-200 text-gray-400 cursor-not-allowed': !isConfigurationComplete
-                  }"
+                  class="btn btn-primary btn-lg w-full"
                   :disabled="!isConfigurationComplete || isAddingToCart"
                 >
-                  <span v-if="!isAddingToCart && !showSuccessOverlay" class="flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span v-if="!isAddingToCart && !showSuccessOverlay" class="flex items-center justify-center gap-2">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                     Añadir a cotización
                   </span>
-                  <span v-else-if="isAddingToCart" class="flex items-center justify-center">
-                    <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <span v-else-if="isAddingToCart" class="flex items-center justify-center gap-2">
+                    <svg class="h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                       <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
                     Añadiendo...
                   </span>
-                  <span v-else-if="showSuccessOverlay" class="flex items-center justify-center">
-                    <svg class="w-5 h-5 mr-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span v-else-if="showSuccessOverlay" class="flex items-center justify-center gap-2">
+                    <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                     ¡Añadido!
                   </span>
                 </button>
-                <p v-if="!isConfigurationComplete" class="text-xs text-center text-gray-500 -mt-2">
+                <p v-if="!isConfigurationComplete" class="text-center text-sm text-neutral-600">
                   Completa todos los campos
                 </p>
               </div>
@@ -296,24 +289,24 @@
       </div>
     </div>
 
-    <!-- Toast Notification for Added to Cart -->
+    <!-- Aviso: producto agregado -->
     <Teleport to="body">
       <transition name="toast">
         <div
           v-if="showCartNotification"
-          class="fixed top-4 right-4 bg-white rounded-xl shadow-xl p-4 flex items-center z-50 max-w-md border border-gray-100"
+          class="fixed left-4 right-4 top-4 z-[60] flex items-center gap-3 rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-black/5 sm:left-auto sm:max-w-md"
         >
-          <div class="bg-green-100 rounded-lg p-2 mr-4 flex-shrink-0">
-            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700" aria-hidden="true">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
             </svg>
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="truncate font-semibold text-neutral-900">Producto añadido a la cotización</p>
+            <p class="truncate text-sm text-neutral-600">{{ lastAddedProduct }}</p>
           </div>
-          <div class="flex-1 min-w-0">
-            <p class="font-medium text-gray-800 truncate">Producto añadido a la cotización</p>
-            <p class="text-sm text-gray-600 truncate">{{ lastAddedProduct }}</p>
-          </div>
-          <button type="button" aria-label="Cerrar aviso" @click="showCartNotification = false" class="text-gray-500 hover:text-gray-700 ml-4">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button type="button" aria-label="Cerrar aviso" @click="showCartNotification = false" class="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -414,10 +407,10 @@ function selectProduct(type: ProductType) {
 
 function productButtonClass(type: ProductType) {
   return [
-    'rounded-lg border px-3 py-3 transition-all text-center flex flex-col items-center justify-center hover:shadow-md transform hover:-translate-y-0.5',
+    'flex flex-col items-center justify-center rounded-xl px-3 py-4 text-center transition-all duration-200',
     selectedProduct.value === type 
-      ? 'border-orange-500 bg-gradient-to-br from-orange-50 to-orange-100 shadow-md ring-2 ring-orange-200' 
-      : 'border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50/50'
+      ? 'bg-brand-50 text-brand-800 ring-2 ring-brand-600 shadow-sm' 
+      : 'bg-white text-neutral-700 ring-1 ring-neutral-200 hover:ring-neutral-300 hover:bg-neutral-50'
   ]
 }
 

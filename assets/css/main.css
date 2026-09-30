@@ -1,4 +1,201 @@
+@import "@fontsource-variable/inter";
 @import "tailwindcss";
+
+/* =========================================================================
+   Sistema de diseno Racklog
+   Base: Inter, neutros calidos, naranjo de marca como acento.
+   Usar estas clases en todos los componentes para mantener coherencia.
+   ========================================================================= */
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Naranjo de marca (brand-600 es el principal: botones, enlaces, acentos) */
+  --color-brand-50: #fff7ed;
+  --color-brand-100: #ffedd5;
+  --color-brand-200: #fed7aa;
+  --color-brand-300: #fdba74;
+  --color-brand-400: #fb923c;
+  --color-brand-500: #f97316;
+  --color-brand-600: #ea580c;
+  --color-brand-700: #c2410c;
+  --color-brand-800: #9a3412;
+  --color-brand-900: #7c2d12;
+
+  /* Superficie oscura (header de marca, footer, secciones destacadas) */
+  --color-ink-950: #0c0a09;
+  --color-ink-900: #1c1917;
+  --color-ink-800: #292524;
+
+  --radius-card: 1.25rem;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-white font-sans text-neutral-800;
+    font-feature-settings: "cv11", "ss01";
+  }
+  h1, h2, h3, h4 {
+    @apply text-neutral-900;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  ::selection {
+    @apply bg-brand-200 text-brand-900;
+  }
+}
+
+@layer components {
+  /* ---- Layout ---- */
+  .container-page {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  .section {
+    @apply py-16 sm:py-20 lg:py-24;
+  }
+  .section-muted {
+    @apply bg-neutral-50;
+  }
+  .section-dark {
+    @apply bg-ink-950 text-neutral-300;
+  }
+  .section-dark h1, .section-dark h2, .section-dark h3 {
+    @apply text-white;
+  }
+
+  /* ---- Encabezado de seccion ---- */
+  .section-header {
+    @apply mx-auto mb-12 max-w-2xl text-center sm:mb-16;
+  }
+  .section-header--left {
+    @apply mx-0 text-left;
+  }
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-brand-700 ring-1 ring-brand-600/15 ring-inset;
+  }
+  .section-dark .eyebrow {
+    @apply bg-white/5 text-brand-300 ring-white/10;
+  }
+  .section-title {
+    @apply mt-4 text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl;
+  }
+  .section-lead {
+    @apply mt-4 text-lg leading-relaxed text-neutral-600;
+  }
+  .section-dark .section-lead {
+    @apply text-neutral-400;
+  }
+
+  /* ---- Encabezado de pagina interior ---- */
+  .page-hero {
+    @apply relative overflow-hidden bg-ink-950 py-20 sm:py-24;
+  }
+  .page-hero__title {
+    @apply text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl;
+  }
+  .page-hero__lead {
+    @apply mt-5 max-w-2xl text-lg leading-relaxed text-neutral-300;
+  }
+
+  /* ---- Botones ---- */
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-base font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-lg {
+    @apply min-h-13 px-7 py-3.5 text-lg;
+  }
+  .btn-sm {
+    @apply min-h-9 rounded-lg px-3.5 py-1.5 text-sm;
+  }
+  .btn-primary {
+    @apply bg-brand-600 text-white shadow-lg shadow-brand-600/20 hover:bg-brand-700 active:scale-[0.98];
+  }
+  .btn-secondary {
+    @apply bg-white text-neutral-900 ring-1 ring-neutral-300 ring-inset hover:bg-neutral-50 hover:ring-neutral-400;
+  }
+  .btn-dark {
+    @apply bg-neutral-900 text-white hover:bg-neutral-800;
+  }
+  .btn-ghost-light {
+    @apply bg-white/10 text-white ring-1 ring-white/20 ring-inset backdrop-blur hover:bg-white/15;
+  }
+  .link-arrow {
+    @apply inline-flex items-center gap-1.5 font-semibold text-brand-700 hover:text-brand-800;
+  }
+
+  /* ---- Tarjetas ---- */
+  .card {
+    @apply overflow-hidden rounded-(--radius-card) bg-white ring-1 ring-neutral-200/80 shadow-sm;
+  }
+  .card-hover {
+    @apply transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-neutral-900/5 hover:ring-neutral-300;
+  }
+  .card-media {
+    @apply relative aspect-[4/3] w-full overflow-hidden bg-neutral-100;
+  }
+  .card-media > img {
+    @apply h-full w-full object-cover transition duration-500;
+  }
+  .group:hover .card-media > img {
+    @apply scale-105;
+  }
+  .card-body {
+    @apply p-6;
+  }
+  .card-title {
+    @apply text-lg font-semibold tracking-tight text-neutral-900;
+  }
+  .card-text {
+    @apply mt-2 text-sm leading-relaxed text-neutral-600;
+  }
+
+  /* ---- Etiquetas e iconos ---- */
+  .badge {
+    @apply inline-flex items-center rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-neutral-800 shadow-sm ring-1 ring-black/5 backdrop-blur;
+  }
+  .icon-tile {
+    @apply inline-flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700 ring-1 ring-brand-600/10;
+  }
+  .section-dark .icon-tile {
+    @apply bg-white/5 text-brand-400 ring-white/10;
+  }
+
+  /* ---- Formularios ---- */
+  .form-label {
+    @apply mb-1.5 block text-sm font-semibold text-neutral-800;
+  }
+  .form-input {
+    @apply block h-12 w-full rounded-xl border border-neutral-200 bg-white px-4 text-base text-neutral-900 shadow-xs transition placeholder:text-neutral-400 hover:border-neutral-300 focus:border-brand-600 focus:ring-4 focus:ring-brand-600/15 focus:outline-none;
+  }
+  textarea.form-input {
+    @apply h-auto min-h-28 py-3 leading-relaxed;
+  }
+  select.form-input {
+    @apply pr-10;
+  }
+  .form-input[aria-invalid="true"] {
+    @apply border-red-400 bg-red-50 focus:border-red-600 focus:ring-red-600/15;
+  }
+  .form-error {
+    @apply mt-1.5 text-sm text-red-700;
+  }
+
+  /* ---- Contenido largo (blog, legales) ---- */
+  .prose-page {
+    @apply text-base leading-relaxed text-neutral-700 sm:text-lg;
+  }
+  .prose-page p + p {
+    @apply mt-5;
+  }
+}
 
 /* Foco visible siempre al navegar con teclado (WCAG 2.4.7), aunque un
    componente use focus:outline-none */

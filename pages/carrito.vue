@@ -1,347 +1,346 @@
 <template>
-  <div class="relative overflow-hidden py-25">
-    <div class="absolute inset-0 -z-10 overflow-hidden">
-      <!-- Top wave -->
-      <svg class="absolute top-0 left-0 w-full transform translate-y-[-30%]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
-        <path fill="#ff9800" fill-opacity="0.05" d="M0,64L48,96C96,128,192,192,288,186.7C384,181,480,107,576,80C672,53,768,75,864,112C960,149,1056,203,1152,213.3C1248,224,1344,192,1392,176L1440,160L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
-      </svg>
-      
-      <!-- Bottom wave -->
-      <svg class="absolute bottom-0 left-0 w-full transform translate-y-[40%]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
-        <path fill="#333333" fill-opacity="0.03" d="M0,256L48,229.3C96,203,192,149,288,138.7C384,128,480,160,576,181.3C672,203,768,213,864,202.7C960,192,1056,160,1152,165.3C1248,171,1344,213,1392,234.7L1440,256L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-      </svg>
-      
-      <!-- Circular blob in top right -->
-      <div class="absolute top-[-10%] right-[-5%] w-[40%] h-[40%] rounded-full bg-orange-100 opacity-[0.15] blur-[70px]"></div>
-      
-      <!-- Circular blob in bottom left -->
-      <div class="absolute bottom-[-15%] left-[-10%] w-[50%] h-[50%] rounded-full bg-gray-800 opacity-[0.05] blur-[100px]"></div>
-      
-      <!-- Diagonal pattern with lower opacity -->
-      <div class="absolute inset-0 pattern-diagonal opacity-[0.02]"></div>
-      
-      <!-- Scattered dots pattern -->
-      <div class="absolute inset-0 pattern-dots opacity-[0.03]"></div>
-    </div>
-    
-    <!-- Main content -->
-    <div class="container mx-auto p-6 relative z-10 max-w-5xl">
-      <!-- Enhanced Title Section -->
-      <div class="flex flex-col items-center text-center mb-16">
-        <div class="inline-block relative mb-5">
-          <span class="absolute inset-x-0 bottom-0 h-[6px] bg-orange-500/20 -mb-2"></span>
-          <h2 class="text-sm uppercase tracking-wider font-semibold text-orange-500 relative z-10">DETALLE</h2>
-        </div>
-        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Tu Cotización Personalizada</h1>
-        <div class="w-16 h-1 rounded-full bg-orange-500 mb-6"></div>
-        <p class="max-w-2xl text-gray-600 text-lg">
+  <div class="bg-neutral-50">
+    <div class="container-page py-12 sm:py-16 lg:py-20">
+      <!-- Encabezado -->
+      <header class="max-w-2xl">
+        <span class="eyebrow">Detalle</span>
+        <h1 class="mt-4 text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl lg:text-5xl">Tu Cotización Personalizada</h1>
+        <p class="mt-4 text-lg leading-relaxed text-neutral-600">
           Revisa los productos configurados y solicita tu cotización formal.
         </p>
-      </div>
+      </header>
 
-      <div v-if="cart.length > 0" class="space-y-6">
-        <!-- Products Grid -->
-        <div class="grid sm:grid-cols-1 lg:grid-cols-1 gap-6">
-          <div
-            v-for="product in cart"
-            :key="product.name + JSON.stringify(product.config)"
-            class="flex flex-col md:flex-row p-6 bg-white shadow-md rounded-lg border border-gray-100 hover:shadow-lg transition-shadow duration-300"
-          >
-            <!-- Product info -->
-            <div class="flex-grow">
-              <div class="flex items-center">
-                <h2 class="text-xl font-bold text-gray-800">{{ product.name }}</h2>
-                <span v-if="product.quoteOnly" class="ml-3 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                  Solo cotización
-                </span>
-              </div>
-              
-              <div class="mt-3 grid sm:grid-cols-2 gap-x-8 gap-y-2">
-                <div v-if="product.config" class="text-gray-600">
-                  
-                  <p v-if="Object.keys(product.config).length === 0" class="font-light mb-2">Sin configuración específica</p>
+      <div v-if="cart.length > 0" class="mt-10 grid gap-8 lg:mt-12 lg:grid-cols-12 lg:gap-10">
+        <!-- Productos -->
+        <section class="lg:col-span-7" aria-labelledby="cart-products-title">
+          <div class="mb-4 flex items-center justify-between gap-4">
+            <h2 id="cart-products-title" class="text-lg font-semibold text-neutral-900">
+              Productos <span class="font-normal text-neutral-600">({{ cart.length }})</span>
+            </h2>
+            <button
+              type="button"
+              @click="clearCart"
+              class="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-neutral-600 transition-colors hover:bg-neutral-200/60 hover:text-neutral-900"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+              Vaciar Carrito
+            </button>
+          </div>
 
-                  <ul v-else class="list-disc pl-5 text-sm space-y-1">
-                    <li v-if="product.config.tipo">Tipo: <span class="font-medium">{{ formatConfigValue('tipo', product.config.tipo) }}</span></li>
-                    <li v-if="product.config.niveles">Niveles: <span class="font-medium">{{ product.config.niveles }}</span></li>
-                    <li v-if="product.config.cuerpos">Cuerpos: <span class="font-medium">{{ product.config.cuerpos }}</span></li>
-                    
-                    <!-- Propiedades de Ángulo Ranurado -->
-                    <li v-if="product.config.pintado">Acabado: <span class="font-medium">{{ formatConfigValue('pintado', product.config.pintado) }}</span></li>
-                    <li v-if="product.config.bandeja">Ancho de bandeja: <span class="font-medium">{{ product.config.bandeja }}</span></li>
-                    
-                    <!-- Propiedades de Rack Selectivo -->
-                    <li v-if="product.config.frentePallet">Frente: <span class="font-medium">{{ product.config.frentePallet }}</span></li>
-                    <li v-if="product.config.fondoPallet">Fondo: <span class="font-medium">{{ product.config.fondoPallet }}</span></li>
-                    <li v-if="product.config.altoPallet">Alto: <span class="font-medium">{{ product.config.altoPallet }}</span></li>
-                    
-                    <!-- Capacidad de carga (común a ambos productos pero con distintos valores) -->
-                    <li v-if="product.config.carga">Capacidad de carga: <span class="font-medium">{{ product.config.carga }}</span></li>
-                  </ul>
+          <ul class="space-y-4">
+            <li
+              v-for="product in cart"
+              :key="product.name + JSON.stringify(product.config)"
+              class="card p-5 sm:p-6"
+            >
+              <div class="flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                  <h3 class="text-lg font-semibold tracking-tight text-neutral-900">{{ product.name }}</h3>
+                  <span v-if="product.quoteOnly" class="mt-2 inline-flex items-center rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-800 ring-1 ring-sky-600/15 ring-inset">
+                    Solo cotización
+                  </span>
                 </div>
-                <div>
-                  <p class="text-gray-700 mb-2 font-medium">Valor:</p>
-                  <!-- Show appropriate pricing based on quote-only status -->
-                  <div v-if="product.quoteOnly">
-                    <p class="text-2xl font-bold text-blue-600">A cotizar</p>
-                    <p class="text-sm text-gray-500">Precio sujeto a evaluación</p>
-                  </div>
-                  <div v-else>
-                    <p class="text-2xl font-bold text-orange-600">${{ product.price?.toLocaleString('es-CL') }}</p>
-                    <p class="text-sm text-gray-500">Precio unitario</p>
-                  </div>
-                  
-                  <div class="mt-4 flex items-center">
-                    <p class="text-gray-700 mr-4 font-medium">Cantidad:</p>
-                    <div class="flex items-center border border-gray-300 rounded-md">
-                      <button
-                        type="button"
-                        :aria-label="`Quitar una unidad de ${product.name}`"
-                        @click="updateQuantity(product.name, product.config, product.quantity - 1)"
-                        class="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-l-md transition-colors"
-                        :disabled="product.quantity <= 1"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
-                        </svg>
-                      </button>
-                      <span class="px-4 py-1 border-x border-gray-300" aria-live="polite">{{ product.quantity }}</span>
-                      <button
-                        type="button"
-                        :aria-label="`Agregar una unidad de ${product.name}`"
-                        @click="updateQuantity(product.name, product.config, product.quantity + 1)"
-                        class="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded-r-md transition-colors"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="mt-4 flex justify-between items-end">
-                <!-- Subtotal handling for quote-only products -->
-                <p v-if="!product.quoteOnly" class="text-gray-700 font-medium">
-                  Subtotal: <span class="text-xl font-bold text-gray-800">${{ (product.price * product.quantity).toLocaleString('es-CL') }}</span>
-                </p>
-                <p v-else class="text-gray-700 font-medium">
-                  Subtotal: <span class="text-xl font-bold text-blue-600">A cotizar</span>
-                </p>
                 <button
+                  type="button"
                   @click="removeFromCart(product.name, product.config)"
-                  class="inline-flex items-center px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100 transition-colors"
+                  class="-mr-2 -mt-2 inline-flex min-h-11 flex-shrink-0 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-neutral-600 transition-colors hover:bg-red-50 hover:text-red-700"
                 >
-                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                   </svg>
                   Eliminar
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
 
-        <!-- Summary and Form Section -->
-        <div class="mt-12 p-6 bg-white rounded-lg shadow-md border border-gray-100">
-          <h2 class="text-xl font-bold text-gray-800 mb-6">Información de Contacto</h2>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <!-- Name Input -->
-            <div>
-              <label for="nameInput" class="block text-sm font-medium text-gray-700 mb-2">Nombre completo</label>
-              <input 
-                id="nameInput"
-                v-model="customerName" 
-                type="text" 
-                placeholder="Juan Pérez" 
-                class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-500"
-                :class="{'border-red-500': nameError}"
-              />
-              <p v-if="nameError" class="text-red-500 text-sm mt-1">{{ nameError }}</p>
-            </div>
-            
-            <!-- Email Input -->
-            <!-- Honeypot anti-bots: oculto para personas -->
-            <input v-model="honeypot" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" />
-            <div>
-              <label for="emailInput" class="block text-sm font-medium text-gray-700 mb-2">Correo electrónico</label>
-              <input 
-                id="emailInput"
-                v-model="userEmail" 
-                type="email" 
-                placeholder="ejemplo@correo.com" 
-                class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-500"
-                :class="{'border-red-500': emailError}"
-              />
-              <p v-if="emailError" class="text-red-500 text-sm mt-1">{{ emailError }}</p>
-            </div>
-            
-            <!-- Company Input -->
-            <div>
-              <label for="companyInput" class="block text-sm font-medium text-gray-700 mb-2">Empresa <small>(opcional)</small></label>
-              <input 
-                id="companyInput"
-                v-model="customerCompany" 
-                type="text" 
-                placeholder="Nombre de la empresa" 
-                class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-500"
-              />
-            </div>
-            
-            <!-- Phone Input -->
-            <div>
-              <label for="phoneInput" class="block text-sm font-medium text-gray-700 mb-2">Teléfono de contacto</label>
-              <input 
-                id="phoneInput"
-                v-model="customerPhone" 
-                type="text" 
-                placeholder="+56 9 1234 5678" 
-                class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-500"
-                :class="{'border-red-500': phoneError}"
-              />
-              <p v-if="phoneError" class="text-red-500 text-sm mt-1">{{ phoneError }}</p>
-            </div>
-          </div>
-          
-          <!-- Comments Textarea -->
-          <div class="mb-6">
-            <label for="commentsInput" class="block text-sm font-medium text-gray-700 mb-2">Comentarios adicionales <small>(opcional)</small></label>
-            <textarea 
-              id="commentsInput"
-              v-model="customerComments" 
-              rows="4" 
-              placeholder="Indique detalles adicionales, consultas específicas o fechas de entrega deseadas." 
-              class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-500"
-            ></textarea>
-          </div>
+              <!-- Configuración -->
+              <div v-if="product.config" class="mt-4">
+                <p v-if="Object.keys(product.config).length === 0" class="text-sm text-neutral-600">Sin configuración específica</p>
 
-          <!-- Consentimiento de privacidad (opt-in explicito, no premarcado) -->
-          <div class="mb-6 flex items-start gap-3">
-            <input
-              id="privacyInput"
-              v-model="privacyAccepted"
-              type="checkbox"
-              class="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
-              :aria-invalid="privacyError ? 'true' : 'false'"
-              :aria-describedby="privacyError ? 'privacyError' : undefined"
-            />
-            <div class="text-sm">
-              <label for="privacyInput" :class="privacyError ? 'text-red-600' : 'text-gray-600'">
-                Acepto la <NuxtLink to="/politica-privacidad" class="text-orange-600 hover:underline">política de privacidad</NuxtLink> y el uso de mis datos para responder a esta cotización.
-              </label>
-              <p v-if="privacyError" id="privacyError" class="mt-1 text-red-600">{{ privacyError }}</p>
-            </div>
-          </div>
+                <ul v-else class="flex flex-wrap gap-2 text-sm">
+                  <li v-if="product.config.tipo" class="inline-flex items-center gap-1 rounded-lg bg-neutral-100 px-2.5 py-1 text-neutral-600">Tipo: <span class="font-semibold text-neutral-900">{{ formatConfigValue('tipo', product.config.tipo) }}</span></li>
+                  <li v-if="product.config.niveles" class="inline-flex items-center gap-1 rounded-lg bg-neutral-100 px-2.5 py-1 text-neutral-600">Niveles: <span class="font-semibold text-neutral-900">{{ product.config.niveles }}</span></li>
+                  <li v-if="product.config.cuerpos" class="inline-flex items-center gap-1 rounded-lg bg-neutral-100 px-2.5 py-1 text-neutral-600">Cuerpos: <span class="font-semibold text-neutral-900">{{ product.config.cuerpos }}</span></li>
 
-          <!-- Summary Section -->
-          <div class="mt-6 pt-6 border-t border-gray-200">
-            <div class="flex justify-between items-center mb-4">
-              <span class="text-lg font-medium">Total:</span>
+                  <!-- Propiedades de Ángulo Ranurado -->
+                  <li v-if="product.config.pintado" class="inline-flex items-center gap-1 rounded-lg bg-neutral-100 px-2.5 py-1 text-neutral-600">Acabado: <span class="font-semibold text-neutral-900">{{ formatConfigValue('pintado', product.config.pintado) }}</span></li>
+                  <li v-if="product.config.bandeja" class="inline-flex items-center gap-1 rounded-lg bg-neutral-100 px-2.5 py-1 text-neutral-600">Ancho de bandeja: <span class="font-semibold text-neutral-900">{{ product.config.bandeja }}</span></li>
+
+                  <!-- Propiedades de Rack Selectivo -->
+                  <li v-if="product.config.frentePallet" class="inline-flex items-center gap-1 rounded-lg bg-neutral-100 px-2.5 py-1 text-neutral-600">Frente: <span class="font-semibold text-neutral-900">{{ product.config.frentePallet }}</span></li>
+                  <li v-if="product.config.fondoPallet" class="inline-flex items-center gap-1 rounded-lg bg-neutral-100 px-2.5 py-1 text-neutral-600">Fondo: <span class="font-semibold text-neutral-900">{{ product.config.fondoPallet }}</span></li>
+                  <li v-if="product.config.altoPallet" class="inline-flex items-center gap-1 rounded-lg bg-neutral-100 px-2.5 py-1 text-neutral-600">Alto: <span class="font-semibold text-neutral-900">{{ product.config.altoPallet }}</span></li>
+
+                  <!-- Capacidad de carga (común a ambos productos pero con distintos valores) -->
+                  <li v-if="product.config.carga" class="inline-flex items-center gap-1 rounded-lg bg-neutral-100 px-2.5 py-1 text-neutral-600">Capacidad de carga: <span class="font-semibold text-neutral-900">{{ product.config.carga }}</span></li>
+                </ul>
+              </div>
+
+              <!-- Precio, cantidad y subtotal -->
+              <div class="mt-5 flex flex-wrap items-end justify-between gap-4 border-t border-neutral-100 pt-5">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wider text-neutral-600">Cantidad</p>
+                  <div class="mt-1.5 inline-flex items-center rounded-xl bg-white ring-1 ring-neutral-200">
+                    <button
+                      type="button"
+                      :aria-label="`Quitar una unidad de ${product.name}`"
+                      @click="updateQuantity(product.name, product.config, product.quantity - 1)"
+                      class="inline-flex h-11 w-11 items-center justify-center rounded-l-xl text-neutral-700 transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:text-neutral-300 disabled:hover:bg-transparent"
+                      :disabled="product.quantity <= 1"
+                    >
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                      </svg>
+                    </button>
+                    <span class="min-w-10 px-2 text-center font-semibold tabular-nums text-neutral-900" aria-live="polite">{{ product.quantity }}</span>
+                    <button
+                      type="button"
+                      :aria-label="`Agregar una unidad de ${product.name}`"
+                      @click="updateQuantity(product.name, product.config, product.quantity + 1)"
+                      class="inline-flex h-11 w-11 items-center justify-center rounded-r-xl text-neutral-700 transition-colors hover:bg-neutral-100"
+                    >
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="text-right">
+                  <template v-if="product.quoteOnly">
+                    <p class="text-sm text-neutral-600">Precio sujeto a evaluación</p>
+                    <p class="mt-0.5 text-sm text-neutral-600">Subtotal: <span class="text-xl font-bold text-sky-800">A cotizar</span></p>
+                  </template>
+                  <template v-else>
+                    <p class="text-sm text-neutral-600">${{ product.price?.toLocaleString('es-CL') }} <span class="text-neutral-600">precio unitario</span></p>
+                    <p class="mt-0.5 text-sm text-neutral-600">Subtotal: <span class="text-xl font-bold tabular-nums text-neutral-900">${{ (product.price * product.quantity).toLocaleString('es-CL') }}</span></p>
+                  </template>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Resumen y formulario -->
+        <aside class="space-y-6 lg:sticky lg:top-28 lg:col-span-5 lg:self-start">
+          <!-- Resumen -->
+          <section class="card p-6" aria-labelledby="cart-summary-title">
+            <h2 id="cart-summary-title" class="text-lg font-semibold text-neutral-900">Resumen</h2>
+            <div class="mt-4 flex items-baseline justify-between gap-4 border-t border-neutral-100 pt-4">
+              <span class="text-base font-medium text-neutral-700">Total:</span>
               <!-- Show appropriate total based on whether there are quote-only products -->
-              <div v-if="hasQuoteOnlyProducts">
-                <span class="text-2xl font-bold text-blue-600">A cotizar</span>
-                <p class="text-sm text-gray-500 text-right">Incluye productos con precio a consultar</p>
+              <div v-if="hasQuoteOnlyProducts" class="text-right">
+                <span class="text-2xl font-bold text-sky-800">A cotizar</span>
+                <p class="mt-1 text-sm text-neutral-600">Incluye productos con precio a consultar</p>
               </div>
               <div v-else>
-                <span class="text-2xl font-bold text-orange-600">${{ cartTotal.toLocaleString('es-CL') }}</span>
+                <span class="text-2xl font-bold tabular-nums text-neutral-900 sm:text-3xl">${{ cartTotal.toLocaleString('es-CL') }}</span>
               </div>
             </div>
 
             <!-- High value alert -->
-            <div v-if="isHighValueQuote" 
-                class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
-              <div class="text-amber-600 shrink-0 mt-1">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <div v-if="isHighValueQuote" class="mt-5 flex items-start gap-3 rounded-xl bg-amber-50 p-4 ring-1 ring-amber-600/20 ring-inset">
+              <span class="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700" aria-hidden="true">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                 </svg>
-              </div>
+              </span>
               <div>
-                <h4 class="font-semibold text-amber-800 mb-1">Cotización de alto valor</h4>
-                <p class="text-amber-700 text-sm">
+                <h3 class="text-sm font-semibold text-amber-900">Cotización de alto valor</h3>
+                <p class="mt-1 text-sm leading-relaxed text-amber-800">
                   Esta cotización supera los $3.000.000. Uno de nuestros ejecutivos comerciales se pondrá en contacto para ofrecerle condiciones especiales y verificar detalles específicos de su pedido.
                 </p>
               </div>
             </div>
-            
-            <div class="flex flex-col sm:flex-row justify-between mt-6 gap-4">
-              <button
-                @click="clearCart"
-                class="px-6 py-3 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors flex items-center justify-center"
-              >
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-                Vaciar Carrito
-              </button>
-              <button
-                @click="submitQuote"
-                class="px-6 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors flex items-center justify-center shadow-md"
-                :disabled="isSubmitting"
-              >
-                <svg v-if="!isSubmitting" class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-                <svg v-if="isSubmitting" class="animate-spin w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {{ isSubmitting ? 'Enviando...' : 'Solicitar Cotización' }}
-              </button>
+          </section>
+
+          <!-- Formulario de contacto -->
+          <section class="card p-6" aria-labelledby="cart-contact-title">
+            <h2 id="cart-contact-title" class="text-lg font-semibold text-neutral-900">Información de Contacto</h2>
+
+            <!-- Honeypot anti-bots: oculto para personas -->
+            <input v-model="honeypot" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" />
+
+            <div class="mt-5 space-y-5">
+              <!-- Name Input -->
+              <div>
+                <label for="nameInput" class="form-label">Nombre completo</label>
+                <input
+                  id="nameInput"
+                  v-model="customerName"
+                  type="text"
+                  autocomplete="name"
+                  placeholder="Juan Pérez"
+                  class="form-input"
+                  :aria-invalid="nameError ? 'true' : 'false'"
+                  :aria-describedby="nameError ? 'nameInputError' : undefined"
+                />
+                <p v-if="nameError" id="nameInputError" class="form-error">{{ nameError }}</p>
+              </div>
+
+              <!-- Email Input -->
+              <div>
+                <label for="emailInput" class="form-label">Correo electrónico</label>
+                <input
+                  id="emailInput"
+                  v-model="userEmail"
+                  type="email"
+                  autocomplete="email"
+                  inputmode="email"
+                  placeholder="ejemplo@correo.com"
+                  class="form-input"
+                  :aria-invalid="emailError ? 'true' : 'false'"
+                  :aria-describedby="emailError ? 'emailInputError' : undefined"
+                />
+                <p v-if="emailError" id="emailInputError" class="form-error">{{ emailError }}</p>
+              </div>
+
+              <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                <!-- Company Input -->
+                <div>
+                  <label for="companyInput" class="form-label">Empresa <span class="font-normal text-neutral-600">(opcional)</span></label>
+                  <input
+                    id="companyInput"
+                    v-model="customerCompany"
+                    type="text"
+                    autocomplete="organization"
+                    placeholder="Nombre de la empresa"
+                    class="form-input"
+                  />
+                </div>
+
+                <!-- Phone Input -->
+                <div>
+                  <label for="phoneInput" class="form-label">Teléfono de contacto</label>
+                  <input
+                    id="phoneInput"
+                    v-model="customerPhone"
+                    type="text"
+                    autocomplete="tel"
+                    inputmode="tel"
+                    placeholder="+56 9 1234 5678"
+                    class="form-input"
+                    :aria-invalid="phoneError ? 'true' : 'false'"
+                    :aria-describedby="phoneError ? 'phoneInputError' : undefined"
+                  />
+                  <p v-if="phoneError" id="phoneInputError" class="form-error">{{ phoneError }}</p>
+                </div>
+              </div>
+
+              <!-- Comments Textarea -->
+              <div>
+                <label for="commentsInput" class="form-label">Comentarios adicionales <span class="font-normal text-neutral-600">(opcional)</span></label>
+                <textarea
+                  id="commentsInput"
+                  v-model="customerComments"
+                  rows="4"
+                  placeholder="Indique detalles adicionales, consultas específicas o fechas de entrega deseadas."
+                  class="form-input"
+                ></textarea>
+              </div>
+
+              <!-- Consentimiento de privacidad (opt-in explicito, no premarcado) -->
+              <div class="flex items-start gap-3">
+                <input
+                  id="privacyInput"
+                  v-model="privacyAccepted"
+                  type="checkbox"
+                  class="mt-0.5 h-5 w-5 flex-shrink-0 rounded border-neutral-300 accent-brand-600"
+                  :aria-invalid="privacyError ? 'true' : 'false'"
+                  :aria-describedby="privacyError ? 'privacyError' : undefined"
+                />
+                <div class="text-sm leading-relaxed">
+                  <label for="privacyInput" :class="privacyError ? 'text-red-700' : 'text-neutral-600'">
+                    Acepto la <NuxtLink to="/politica-privacidad" class="font-semibold text-brand-700 underline-offset-2 hover:underline">política de privacidad</NuxtLink> y el uso de mis datos para responder a esta cotización.
+                  </label>
+                  <p v-if="privacyError" id="privacyError" class="form-error">{{ privacyError }}</p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+
+            <button
+              type="button"
+              @click="submitQuote"
+              class="btn btn-primary btn-lg mt-6 w-full"
+              :disabled="isSubmitting"
+            >
+              <svg v-if="isSubmitting" class="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              {{ isSubmitting ? 'Enviando...' : 'Solicitar Cotización' }}
+              <svg v-if="!isSubmitting" class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+              </svg>
+            </button>
+          </section>
+        </aside>
       </div>
 
-      <!-- Empty Cart -->
-      <div v-else class="text-center p-12 bg-white rounded-lg shadow-md border border-gray-100">
-        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-        </svg>
-        <p class="text-gray-600 mb-4">No hay productos en tu cotización actualmente.</p>
-        <NuxtLink to="/" class="inline-flex items-center px-6 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors shadow-md">
-          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-          </svg>
-          Explorar Productos
-        </NuxtLink>
+      <!-- Carrito vacío -->
+      <div v-else class="mt-10 lg:mt-12">
+        <div class="card mx-auto max-w-xl px-6 py-14 text-center sm:px-10">
+          <span class="icon-tile h-14 w-14 rounded-2xl" aria-hidden="true">
+            <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+          </span>
+          <p class="mt-5 text-lg text-neutral-700">No hay productos en tu cotización actualmente.</p>
+          <NuxtLink to="/" class="btn btn-primary mt-8">
+            Explorar Productos
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+            </svg>
+          </NuxtLink>
+        </div>
       </div>
     </div>
-    
+
     <!-- Success Modal -->
-    <div v-if="showSuccessModal" class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div class="bg-white p-8 rounded-lg shadow-lg max-w-md m-4 animate-fade-in">
-        <div class="text-center">
-          <div class="bg-green-100 p-3 rounded-full inline-flex mb-4">
-            <svg class="w-16 h-16 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-          </div>
-          <h3 class="text-2xl font-bold mb-2 text-gray-800">¡Cotización Enviada!</h3>
-          <p class="mb-6 text-gray-600">Hemos enviado su cotización al correo proporcionado. Uno de nuestros ejecutivos se pondrá en contacto a la brevedad.</p>
-          <button @click="closeSuccessModal" class="px-6 py-3 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors shadow-md w-full">
-            Aceptar
-          </button>
-        </div>
+    <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-end justify-center bg-neutral-950/60 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div
+        ref="successDialogRef"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quoteSuccessTitle"
+        tabindex="-1"
+        class="animate-fade-in w-full rounded-t-3xl bg-white px-6 py-10 text-center shadow-2xl ring-1 ring-black/5 sm:max-w-md sm:rounded-2xl sm:px-8"
+      >
+        <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-700" aria-hidden="true">
+          <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </span>
+        <h2 id="quoteSuccessTitle" class="mt-5 text-xl font-semibold text-neutral-900">¡Cotización Enviada!</h2>
+        <p class="mt-2 text-neutral-600">Hemos enviado su cotización al correo proporcionado. Uno de nuestros ejecutivos se pondrá en contacto a la brevedad.</p>
+        <button type="button" @click="closeSuccessModal" class="btn btn-dark mt-8 w-full">
+          Aceptar
+        </button>
       </div>
     </div>
-    
+
     <!-- Error Modal -->
-    <div v-if="showErrorModal" class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-      <div class="bg-white p-8 rounded-lg shadow-lg max-w-md m-4 animate-fade-in">
-        <div class="text-center">
-          <div class="bg-red-100 p-3 rounded-full inline-flex mb-4">
-            <svg class="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </div>
-          <h3 class="text-2xl font-bold mb-2 text-gray-800">Error al enviar</h3>
-          <p class="mb-6 text-gray-600">Ocurrió un error al enviar su cotización. Por favor intente nuevamente o contáctenos directamente.</p>
-          <button @click="closeErrorModal" class="px-6 py-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors shadow-md w-full">
-            Cerrar
-          </button>
-        </div>
+    <div v-if="showErrorModal" class="fixed inset-0 z-50 flex items-end justify-center bg-neutral-950/60 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div
+        ref="errorDialogRef"
+        role="alertdialog"
+        aria-modal="true"
+        tabindex="-1"
+        aria-labelledby="quoteErrorTitle"
+        aria-describedby="quoteErrorDesc"
+        class="animate-fade-in w-full rounded-t-3xl bg-white px-6 py-10 text-center shadow-2xl ring-1 ring-black/5 sm:max-w-md sm:rounded-2xl sm:px-8"
+      >
+        <span class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-red-700" aria-hidden="true">
+          <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </span>
+        <h2 id="quoteErrorTitle" class="mt-5 text-xl font-semibold text-neutral-900">Error al enviar</h2>
+        <p id="quoteErrorDesc" class="mt-2 text-neutral-600">Ocurrió un error al enviar su cotización. Por favor intente nuevamente o contáctenos directamente.</p>
+        <button type="button" @click="closeErrorModal" class="btn btn-secondary mt-8 w-full">
+          Cerrar
+        </button>
       </div>
     </div>
   </div>
@@ -401,6 +400,10 @@ const isSubmitting = ref(false);
 // Success/Error modals
 const showSuccessModal = ref(false);
 const showErrorModal = ref(false);
+const successDialogRef = ref<HTMLElement | null>(null);
+const errorDialogRef = ref<HTMLElement | null>(null);
+useModalA11y(showSuccessModal, successDialogRef, () => closeSuccessModal());
+useModalA11y(showErrorModal, errorDialogRef, () => closeErrorModal());
 
 // Function to format certain config values for better readability
 function formatConfigValue(key: string, value: string): string {
@@ -564,44 +567,19 @@ usePageSeo({
 </script>
 
 <style scoped>
-.pattern-diagonal {
-  background-image: repeating-linear-gradient(
-    45deg,
-    #ff9800 0,
-    #ff9800 1px,
-    transparent 0,
-    transparent 50%
-  );
-  background-size: 10px 10px;
-}
-
 /* Modal animation */
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out forwards;
+  animation: fadeIn 0.25s ease-out forwards;
 }
 
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* Spinner animation */
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
 }
 </style>

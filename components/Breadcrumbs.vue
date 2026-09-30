@@ -1,42 +1,42 @@
 <template>
-  <nav aria-label="Breadcrumb" class="py-3">
-    <ol class="inline-flex flex-wrap items-center text-sm">
-      <!-- Home Link (Always visible) -->
+  <nav aria-label="Breadcrumb" class="py-4">
+    <ol class="flex flex-wrap items-center gap-y-1 text-sm">
+      <!-- Inicio (siempre visible) -->
       <li class="inline-flex items-center">
-        <router-link 
-          to="/" 
-          class="inline-flex items-center text-gray-700 hover:text-orange-500 transition-colors font-medium"
+        <router-link
+          to="/"
+          class="inline-flex min-h-8 items-center gap-1.5 rounded-md font-medium text-neutral-600 transition-colors hover:text-neutral-900"
         >
-          <svg class="w-3.5 h-3.5 mr-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+          <svg class="h-3.5 w-3.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
             <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z"/>
           </svg>
           Inicio
         </router-link>
       </li>
 
-      <!-- Dynamic Breadcrumbs -->
-      <li v-for="(breadcrumb, index) in breadcrumbs" :key="index" class="inline-flex items-center">
-        <!-- Separator -->
-        <svg class="rtl:rotate-180 w-3 h-3 mx-2 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+      <!-- Migas dinamicas -->
+      <li v-for="(breadcrumb, index) in breadcrumbs" :key="index" class="inline-flex min-w-0 items-center">
+        <!-- Separador -->
+        <svg class="mx-2 h-4 w-4 flex-shrink-0 text-neutral-300 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 5 7 7-7 7"/>
         </svg>
-        
-        <!-- Link or Text -->
+
+        <!-- Enlace o texto -->
         <template v-if="index !== breadcrumbs.length - 1">
-          <router-link 
-            v-if="breadcrumb.href" 
-            :to="formatHref(breadcrumb)" 
-            class="text-gray-700 hover:text-orange-500 transition-colors font-medium"
+          <router-link
+            v-if="breadcrumb.href"
+            :to="formatHref(breadcrumb)"
+            class="inline-flex min-h-8 items-center font-medium text-neutral-600 transition-colors hover:text-neutral-900"
           >
             {{ breadcrumb.label }}
           </router-link>
-          <span v-else class="text-gray-700">{{ breadcrumb.label }}</span>
+          <span v-else class="text-neutral-600">{{ breadcrumb.label }}</span>
         </template>
-        
-        <!-- Current Page (Last Item) -->
-        <span 
-          v-else 
-          class="text-orange-500 font-semibold"
+
+        <!-- Pagina actual (ultimo elemento) -->
+        <span
+          v-else
+          class="truncate font-semibold text-neutral-900"
           aria-current="page"
         >
           {{ breadcrumb.label }}

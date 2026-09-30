@@ -1,13 +1,15 @@
 <template>
-  <div class="grid grid-cols-2 gap-3">
+  <div class="grid grid-cols-2 gap-1 rounded-xl bg-neutral-100 p-1">
     <button
       v-for="option in options"
       :key="option"
+      type="button"
+      :aria-pressed="modelValue === option"
       :class="[
-        'px-4 py-2 rounded-lg border text-center transition-all',
+        'min-h-11 rounded-lg px-3 text-sm font-semibold capitalize transition-all duration-200',
         modelValue === option
-          ? 'bg-orange-100 border-orange-400 text-orange-800 font-medium'
-          : 'bg-white border-gray-300 hover:bg-gray-50'
+          ? 'bg-white text-brand-700 shadow-sm ring-1 ring-brand-600/40'
+          : 'text-neutral-600 hover:bg-white/60 hover:text-neutral-900'
       ]"
       @click="$emit('update:modelValue', option)"
     >

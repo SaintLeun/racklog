@@ -1,62 +1,69 @@
 <template>
-  <div class="container mx-auto py-20">
-    <!-- Section header with styled line -->
-    <div class="flex flex-col items-center text-center mb-16">
-      <div class="inline-block relative mb-3">
-        <span class="absolute inset-x-0 bottom-0 h-[6px] bg-orange-500/20 -mb-2"></span>
-        <h2 class="text-sm uppercase tracking-wider font-semibold text-orange-500 relative z-10">Configurador</h2>
+  <section class="section bg-white">
+    <div class="container-page">
+      <div class="section-header">
+        <span class="eyebrow">Configurador</span>
+        <h2 class="section-title">Configura y Cotiza en Tiempo Real</h2>
+        <p class="section-lead">
+          Diseña tu solución ideal de almacenamiento a medida. Selecciona las dimensiones, capacidades y características que necesitas para tu proyecto.
+        </p>
       </div>
-      <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Configura y Cotiza en Tiempo Real</h2>
-      <div class="w-16 h-1 rounded-full bg-orange-500 mb-6"></div>
-      <p class="max-w-2xl text-gray-600 text-lg">
-        Diseña tu solución ideal de almacenamiento a medida. Selecciona las dimensiones, capacidades y características que necesitas para tu proyecto.
-      </p>
-    </div>
-    
-    <section class="grid md:grid-cols-2 gap-6 max-md:max-w-xs mx-auto">
-      <!-- Rest of your content remains the same -->
-      <section v-for="(product, key) in filteredProducts" :key="key" class="text-gray-600 body-font overflow-hidden">
-        <div class="container px-5 py-5 mx-auto">
-          <div class="lg:w-full mx-auto flex flex-wrap">
-            <img loading="lazy" decoding="async" :alt="product.name" width="800" height="600" class="lg:w-1/2 w-full lg:h-auto h-64 object-cover object-center rounded" :src="product.images.render" />
-            <div class="lg:w-1/2 w-full lg:pl-10 lg:py-6 mt-6 lg:mt-0 flex flex-col">
-              <h2 class="text-sm title-font text-gray-500 tracking-widest">{{ product.type }}</h2>
-              <h3 class="text-gray-900 text-3xl title-font font-medium mb-1">{{ product.name }}</h3>
-              <p class="leading-relaxed">{{ product.description.short }}</p>
-              <div class="mt-auto">
-                <button @click="openQuoteWithProduct(product)" :class="buttonClass(product.buttonColor, '400', '500')" class="flex w-full items-center justify-center text-white border-0 py-2 px-6 focus:outline-none rounded mt-4 transition-colors">
-                  Cotiza tu {{ product.name }}
-                  <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                  </svg>
-                </button>
-                <NuxtLink :to="'/productos/' + product.slug" :class="buttonClass(product.buttonColor, '400', '500')" class="flex w-full items-center justify-center text-white border-0 py-2 px-6 focus:outline-none rounded mt-4 transition-colors">
-                  Ver más
-                  <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
-                  </svg>
-                </NuxtLink>
-              </div>
+
+      <div class="mx-auto grid max-w-5xl gap-6 md:grid-cols-2 lg:gap-8">
+        <article
+          v-for="(product, key) in filteredProducts"
+          :key="key"
+          class="card flex flex-col"
+        >
+          <div class="relative aspect-[4/3] w-full overflow-hidden bg-gradient-to-b from-neutral-50 to-neutral-100">
+            <img
+              loading="lazy"
+              decoding="async"
+              :alt="product.name"
+              width="800"
+              height="600"
+              class="h-full w-full object-contain p-4"
+              :src="product.images.render"
+            />
+            <span class="badge absolute left-4 top-4">{{ product.type }}</span>
+          </div>
+          <div class="card-body flex flex-1 flex-col sm:p-8">
+            <h3 class="text-2xl font-semibold tracking-tight text-neutral-900">{{ product.name }}</h3>
+            <p class="card-text text-base">{{ product.description.short }}</p>
+            <div class="mt-auto flex flex-col gap-3 pt-6 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                class="btn btn-primary w-full sm:w-auto"
+                @click="openQuoteWithProduct(product)"
+              >
+                Cotiza tu {{ product.name }}
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </button>
+              <NuxtLink
+                :to="'/productos/' + product.slug"
+                class="btn btn-secondary w-full sm:w-auto"
+              >
+                Ver más
+                <span class="sr-only">sobre {{ product.name }}</span>
+              </NuxtLink>
             </div>
           </div>
-        </div>
-      </section>
-    </section>
-    
-    <div class="hidden">
-      <div class="bg-orange-400 hover:bg-orange-500 bg-indigo-400 hover:bg-indigo-500"></div>
+        </article>
+      </div>
     </div>
-    
+
     <ContactModal :isVisible="isContactModalVisible" :title="modalTitle" @close="closeModal('contact')">
     </ContactModal>
-    <QuoteModal 
-      :isVisible="isQuoteModalVisible" 
-      :title="modalTitle" 
+    <QuoteModal
+      :isVisible="isQuoteModalVisible"
+      :title="modalTitle"
       :initialProduct="selectedProduct"
       @close="closeModal('quote')"
     >
     </QuoteModal>
-  </div>
+  </section>
 </template>
 
 <script lang="ts" setup>

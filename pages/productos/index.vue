@@ -1,84 +1,70 @@
 <template>
   <div class="products-page">
-    <!-- Hero Banner -->
-    <section class="relative bg-neutral-900 py-16 lg:py-24 overflow-hidden">
-      <!-- Background Pattern -->
-      <div class="absolute inset-0 z-0">
-        <div class="absolute inset-0 bg-neutral-900 opacity-80"></div>
-        <div class="absolute inset-0 bg-gradient-to-br from-orange-600/20 to-transparent"></div>
-        <div class="grid grid-cols-12 grid-rows-6 h-full w-full opacity-20">
-          <div class="col-span-1 row-span-1 border-r border-b border-gray-500"></div>
-          <div class="col-span-2 row-span-2 border-r border-b border-gray-500"></div>
-          <div class="col-start-10 col-span-3 row-span-2 border-l border-b border-gray-500"></div>
-          <div class="col-start-4 col-span-2 row-start-4 row-span-2 border-l border-t border-gray-500"></div>
-        </div>
-      </div>
-      
-      <!-- Content -->
-      <div class="container mx-auto px-6 relative z-10">
-        <div class="max-w-3xl mx-auto text-center">
-          <h1 class="text-white text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-            Productos <span class="text-orange-500">Racklog</span>
-          </h1>
-          <p class="text-gray-300 text-lg md:text-xl mb-8">
-            Soluciones de almacenamiento industrial diseñadas para optimizar tu espacio y mejorar la eficiencia operativa
-          </p>
-          <div class="flex flex-wrap justify-center gap-4">
-            <button 
-              v-for="(category, index) in productCategories" 
-              :key="index"
-              @click="activeCategory = category.id"
-              :class="[
-                'px-6 py-2 rounded-full text-sm font-medium transition-all',
-                activeCategory === category.id 
-                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' 
-                  : 'bg-white/10 text-white hover:bg-white/20'
-              ]"
-            >
-              {{ category.name }}
-            </button>
-          </div>
-        </div>
+    <!-- Hero -->
+    <section class="page-hero">
+      <div class="container-page relative">
+        <h1 class="page-hero__title">
+          Productos <span class="text-brand-400">Racklog</span>
+        </h1>
+        <p class="page-hero__lead">
+          Soluciones de almacenamiento industrial diseñadas para optimizar tu espacio y mejorar la eficiencia operativa
+        </p>
       </div>
     </section>
 
     <!-- Products Grid -->
-    <section class="py-16 bg-gray-50">
-      <div class="container mx-auto px-6">
-        <!-- Search and filters -->
-        <div class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center">
-          <h2 class="text-2xl font-bold text-gray-900 mb-4 md:mb-0">
-            <span v-if="activeCategory === 'all'">Todos los productos</span>
-            <span v-else>{{ getCategoryName(activeCategory) }}</span>
-            <span class="text-sm text-gray-500 ml-2">({{ filteredProducts.length }} productos)</span>
-          </h2>
-          
-          <div class="w-full md:w-auto flex items-center">
-            <div class="relative flex-grow md:max-w-xs">
-              <input 
-                type="text" 
-                v-model="searchQuery"
-                placeholder="Buscar productos..." 
-                class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              />
-              <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <section class="section section-muted !pt-10 sm:!pt-12">
+      <div class="container-page">
+        <!-- Filtros, busqueda y orden -->
+        <div class="card p-3 sm:p-4">
+          <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div
+              role="group"
+              aria-label="Filtrar por categoría"
+              class="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 lg:pb-0 [scrollbar-width:none]"
+            >
+              <button
+                v-for="(category, index) in productCategories"
+                :key="index"
+                type="button"
+                :aria-pressed="activeCategory === category.id"
+                @click="activeCategory = category.id"
+                :class="[
+                  'inline-flex min-h-11 flex-shrink-0 items-center rounded-xl px-4 text-sm font-semibold transition-colors',
+                  activeCategory === category.id
+                    ? 'bg-neutral-900 text-white shadow-sm'
+                    : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900'
+                ]"
+              >
+                {{ category.name }}
+              </button>
+            </div>
+
+            <div class="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
+              <div class="relative flex-grow lg:w-72">
+                <svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
+                <input
+                  type="search"
+                  v-model="searchQuery"
+                  placeholder="Buscar productos..."
+                  aria-label="Buscar productos"
+                  class="form-input pl-11"
+                />
               </div>
-            </div>
-            
-            <div class="relative ml-4">
-              <select 
-                v-model="sortOption"
-                class="appearance-none px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent pr-10"
-              >
-                <option value="alphabetical">Alfabético</option>
-                <option value="popularity">Popularidad</option>
-                <option value="newest">Más nuevos</option>
-              </select>
-              <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+
+              <div class="relative sm:w-48">
+                <select
+                  v-model="sortOption"
+                  aria-label="Ordenar productos"
+                  class="form-input appearance-none"
+                >
+                  <option value="alphabetical">Alfabético</option>
+                  <option value="popularity">Popularidad</option>
+                  <option value="newest">Más nuevos</option>
+                </select>
+                <svg class="pointer-events-none absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                 </svg>
               </div>
@@ -86,84 +72,91 @@
           </div>
         </div>
 
-        <!-- Product grid with animation -->
-        <div v-if="filteredProducts.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <div 
-            v-for="(product, index) in filteredProducts" 
+        <h2 class="mt-10 mb-6 flex flex-wrap items-baseline gap-x-3 text-2xl font-bold tracking-tight text-neutral-900">
+          <span v-if="activeCategory === 'all'">Todos los productos</span>
+          <span v-else>{{ getCategoryName(activeCategory) }}</span>
+          <span class="text-sm font-medium text-neutral-600">({{ filteredProducts.length }} productos)</span>
+        </h2>
+
+        <!-- Grid de productos -->
+        <div v-if="filteredProducts.length > 0" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <article
+            v-for="(product, index) in filteredProducts"
             :key="product.id"
-            class="product-card bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1"
+            class="product-card card card-hover group relative flex flex-col"
             :style="{ animationDelay: `${index * 0.05}s` }"
           >
-          <div class="relative overflow-hidden aspect-w-4 aspect-h-3">
-              <img loading="lazy" decoding="async" 
-                :src="product.images.card" 
-                :alt="product.name" 
-                class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+            <div class="card-media">
+              <img
+                loading="lazy"
+                decoding="async"
+                :src="product.images.card"
+                :alt="product.name"
+                width="800"
+                height="600"
               />
-              <div class="absolute top-3 left-3 flex gap-2">
-                <span v-if="product.badge" class="inline-block px-3 py-1 bg-orange-500 text-white text-xs uppercase tracking-wider rounded-full">
+              <div class="absolute left-3 top-3 flex flex-wrap gap-2">
+                <span v-if="product.badge" class="badge !bg-brand-600 !text-white !ring-0">
                   {{ product.badge }}
                 </span>
-                <span class="inline-block px-3 py-1 bg-gray-700 text-white text-xs uppercase tracking-wider rounded-full">
+                <span class="badge">
                   {{ getCategoryName(product.category) }}
                 </span>
               </div>
             </div>
-            
-            <div class="p-5">
-              <h3 class="text-lg font-bold text-gray-900 hover:text-orange-500 transition-colors">
+
+            <div class="card-body flex flex-1 flex-col">
+              <h3 class="card-title transition-colors group-hover:text-brand-700">
                 {{ product.name }}
               </h3>
-              <div class="w-8 h-[2px] bg-orange-500 rounded my-2"></div>
-              <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+              <p class="card-text line-clamp-2">
                 {{ product.description.short }}
               </p>
-              
-              <!-- Features list -->
-              <ul class="mb-5 space-y-1">
-                <li v-for="(feature, fIndex) in product.features?.slice(0, 2)" :key="fIndex" class="flex items-start">
-                  <svg class="w-4 h-4 text-orange-500 mt-0.5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+
+              <ul v-if="product.features && product.features.length" class="mt-4 space-y-1.5">
+                <li v-for="(feature, fIndex) in product.features.slice(0, 2)" :key="fIndex" class="flex items-start gap-2 text-xs text-neutral-600">
+                  <svg class="mt-0.5 h-4 w-4 flex-shrink-0 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                   </svg>
-                  <span class="text-xs text-gray-600">{{ feature }}</span>
+                  <span>{{ feature }}</span>
                 </li>
               </ul>
-              
-              <div class="pt-3 border-t border-gray-100 flex justify-between items-center">
-                <router-link 
-                  :to="'/productos/' + product.slug" 
-                  class="inline-flex items-center text-orange-500 font-medium text-sm hover:text-orange-600"
+
+              <div class="mt-auto pt-5">
+                <router-link
+                  :to="'/productos/' + product.slug"
+                  class="link-arrow text-sm after:absolute after:inset-0 after:content-['']"
                 >
-                  Ver detalles
-                  <svg class="w-4 h-4 ml-1 transform transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  Ver detalles<span class="sr-only">: {{ product.name }}</span>
+                  <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                   </svg>
                 </router-link>
-                
               </div>
             </div>
-          </div>
+          </article>
         </div>
 
-        <!-- Empty state -->
-        <div v-else class="bg-white rounded-xl border border-gray-200 p-8 text-center">
-          <div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+        <!-- Estado vacio -->
+        <div v-else class="card mx-auto max-w-lg px-6 py-14 text-center">
+          <span class="icon-tile mx-auto" aria-hidden="true">
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
-          </div>
-          <h3 class="text-lg font-medium text-gray-900 mb-2">No se encontraron productos</h3>
-          <p class="text-gray-600 mb-4">
+          </span>
+          <h3 class="mt-5 text-lg font-semibold text-neutral-900">No se encontraron productos</h3>
+          <p class="mt-2 text-neutral-600">
             No hay productos que coincidan con tu búsqueda. Intenta con otros términos o categorías.
           </p>
-          <button 
-            @click="resetFilters" 
-            class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+          <button
+            type="button"
+            @click="resetFilters"
+            class="btn btn-secondary mt-6"
           >
-            Borrar filtros
-            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
+            Borrar filtros
           </button>
         </div>
       </div>
@@ -331,45 +324,19 @@ usePageSeo({
 </script>
 
 <style scoped>
-  /* Animation for product cards */
+  /* Entrada suave de las tarjetas */
   .product-card {
-    animation: fadeInUp 0.5s ease forwards;
-    opacity: 0;
+    animation: fadeInUp 0.5s ease both;
   }
 
   @keyframes fadeInUp {
     from {
       opacity: 0;
-      transform: translateY(20px);
+      transform: translateY(16px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
-  }
-
-  /* Aspect ratio for images - 4:3 ratio */
-  .aspect-w-4 {
-    position: relative;
-    padding-bottom: 75%; /* 4:3 Aspect Ratio */
-  }
-
-  .aspect-w-4 > img {
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    object-fit: cover;
-  }
-
-  /* Line clamp for text overflow */
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;  
-    overflow: hidden;
   }
 </style>

@@ -1,34 +1,51 @@
 <template>
-  <section class="blog-section bg-gray-50 min-h-screen py-16">
-    <div class="container mx-auto px-4">
-      <div class="text-center mb-12">
-        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Proyectos Racklog</h1>
-        <p class="text-lg text-gray-600 max-w-2xl mx-auto">Descubre algunos de nuestros proyectos destacados y cómo ayudamos a empresas a optimizar su logística y almacenaje.</p>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <div v-for="entry in paginatedEntries" :key="entry.slug" class="bg-white rounded-xl shadow-md hover:shadow-xl transition-all overflow-hidden flex flex-col">
-          <img loading="lazy" decoding="async" :src="entry.gallery[0]" :alt="entry.title" width="800" height="600" class="h-56 w-full object-cover object-center">
-          <div class="p-6 flex flex-col flex-1">
-            <h2 class="text-2xl font-bold text-orange-500 mb-2">{{ entry.title }}</h2>
-            <p class="text-gray-700 mb-4 flex-1">{{ entry.description }}</p>
-            <div class="flex items-center justify-between mt-4">
-              <span class="text-sm text-gray-600">{{ formatDate(entry.date) }}</span>
-              <NuxtLink :to="`/blog/${entry.slug}`" class="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors">
-                Ver proyecto
-                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-              </NuxtLink>
-            </div>
-          </div>
+  <div class="blog-page">
+    <section class="page-hero">
+      <div class="container-page">
+        <div class="max-w-3xl">
+          <span class="eyebrow bg-white/5 text-brand-300 ring-white/10">Casos reales</span>
+          <h1 class="page-hero__title mt-5">Proyectos Racklog</h1>
+          <p class="page-hero__lead">Descubre algunos de nuestros proyectos destacados y cómo ayudamos a empresas a optimizar su logística y almacenaje.</p>
         </div>
       </div>
-      <!-- Pagination -->
-      <div class="flex justify-center mt-12" v-if="totalPages > 1">
-        <button @click="prevPage" :disabled="page === 1" class="px-4 py-2 mx-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50">Anterior</button>
-        <span class="px-4 py-2 mx-1 text-orange-500 font-bold">{{ page }} / {{ totalPages }}</span>
-        <button @click="nextPage" :disabled="page === totalPages" class="px-4 py-2 mx-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50">Siguiente</button>
+    </section>
+
+    <section class="section section-muted">
+      <div class="container-page">
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+          <article
+            v-for="entry in paginatedEntries"
+            :key="entry.slug"
+            class="card card-hover group relative flex flex-col"
+          >
+            <div class="card-media">
+              <img loading="lazy" decoding="async" :src="entry.gallery[0]" :alt="entry.title" width="800" height="600">
+            </div>
+            <div class="card-body flex flex-1 flex-col">
+              <time :datetime="entry.date" class="text-sm text-neutral-600">{{ formatDate(entry.date) }}</time>
+              <h2 class="card-title mt-2 text-xl">
+                <NuxtLink :to="`/blog/${entry.slug}`" class="after:absolute after:inset-0">
+                  {{ entry.title }}
+                </NuxtLink>
+              </h2>
+              <p class="card-text line-clamp-3 flex-1">{{ entry.description }}</p>
+              <span class="link-arrow mt-5 text-sm" aria-hidden="true">
+                Ver proyecto
+                <svg class="h-4 w-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+              </span>
+            </div>
+          </article>
+        </div>
+
+        <!-- Paginación -->
+        <nav v-if="totalPages > 1" class="mt-14 flex items-center justify-center gap-3" aria-label="Paginación de proyectos">
+          <button type="button" @click="prevPage" :disabled="page === 1" class="btn btn-secondary btn-sm min-h-11 px-4">Anterior</button>
+          <span class="px-3 text-sm font-semibold text-neutral-700" aria-live="polite">{{ page }} / {{ totalPages }}</span>
+          <button type="button" @click="nextPage" :disabled="page === totalPages" class="btn btn-secondary btn-sm min-h-11 px-4">Siguiente</button>
+        </nav>
       </div>
-    </div>
-  </section>
+    </section>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -64,9 +81,3 @@ usePageSeo({
   description: 'Proyectos de racks y estanterías industriales que Racklog ha diseñado e instalado para empresas de logística, retail, salud y más.',
 });
 </script>
-
-<style scoped>
-.blog-section {
-  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-}
-</style>

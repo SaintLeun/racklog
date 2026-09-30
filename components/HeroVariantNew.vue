@@ -1,6 +1,6 @@
 <template>
-  <div class="hero-enhanced relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 overflow-hidden py-10">
-    <!-- Background YouTube Video -->
+  <section class="hero-enhanced relative isolate overflow-hidden bg-ink-950">
+    <!-- Fondo: imagen inmediata (LCP) y video diferido -->
     <div class="video-bg absolute inset-0">
       <!-- Imagen inmediata (LCP); el video se carga despues, si corresponde -->
       <img
@@ -23,235 +23,99 @@
         referrerpolicy="strict-origin-when-cross-origin"
       ></iframe>
       <!-- Oscurecedor para legibilidad -->
-      <div class="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-ink-950/95 via-ink-950/75 to-ink-950/40" aria-hidden="true"></div>
+      <div class="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-ink-950 via-ink-950/70 to-transparent" aria-hidden="true"></div>
     </div>
 
-    <!-- Background Pattern -->
-    <div class="absolute inset-0 opacity-5">
-      <div
-        class="absolute inset-0"
-        style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 20px 20px;"
-      ></div>
-    </div>
+    <div class="container-page relative z-10 flex min-h-[inherit] flex-col">
+      <!-- Contenido principal -->
+      <div class="flex flex-1 items-center py-20 sm:py-24 lg:py-28">
+        <div class="max-w-3xl">
+          <h1 class="text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl" style="letter-spacing: -0.035em;">
+            Transformamos tu espacio en <span class="text-brand-400">eficiencia</span>
+          </h1>
 
-    <!-- Main Content Container -->
-    <div class="relative z-10 flex h-full items-center">
-      <div class="w-full max-w-7xl mx-auto px-4 md:px-8">
-        <!-- Main content grid -->
-        <div class="items-center h-full">
-          <!-- Left side - Content -->
-          <div class="text-white space-y-8 order-2 lg:order-1">
-            <!-- Main heading -->
-            <div class="space-y-4">
-              <h1
-                class="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight text-center"
-              >
-                <span class="block text-white">Transformamos</span>
-                <span class="block">
-                  <span class="text-white">tu </span>
-                  <span
-                    class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-yellow-400"
-                    >espacio</span
-                  >
-                </span>
-                <span class="block">
-                  <span class="text-white">en </span>
-                  <span
-                    class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-orange-500 to-yellow-400"
-                    >eficiencia</span
-                  >
-                </span>
-              </h1>
-            </div>
+          <p class="mt-6 max-w-2xl text-lg leading-relaxed text-neutral-300 sm:text-xl">
+            Creamos
+            <strong class="font-semibold text-white">soluciones de almacenamiento inteligentes</strong>
+            que multiplican la capacidad de tu bodega sin expandir el espacio físico.
+          </p>
 
-            <!-- Description -->
-            <div class="relative">
-              <div
-                class="bg-gradient-to-r from-orange-400 to-yellow-400 p-6 rounded-2xl shadow-2xl"
-              >
-                <p class="text-black text-lg md:text-xl font-semibold leading-relaxed">
-                  Creamos
-                  <strong class="font-black"
-                    >soluciones de almacenamiento inteligentes</strong
-                  >
-                  que multiplican la capacidad de tu bodega sin expandir el espacio
-                  físico.
-                </p>
-                <!-- Decorative -->
-                <div
-                  class="absolute -top-2 -right-2 w-4 h-4 bg-white rounded-full shadow-lg"
-                ></div>
-                <div
-                  class="absolute -bottom-1 -left-1 w-3 h-3 bg-orange-600 rounded-full"
-                ></div>
-              </div>
-            </div>
-
-            <!-- CTA -->
-            <div class="space-y-4 text-center">
-              <button
-                @click="openContactModal()"
-                class="group relative inline-flex items-center max-w-full px-5 sm:px-8 py-4 bg-white text-black rounded-xl font-bold text-base sm:text-lg shadow-2xl hover:shadow-orange-500/25 hover:scale-101 transition-all duration-300 overflow-hidden"
-              >
-                <div
-                  class="absolute inset-0 bg-gradient-to-r from-orange-400 to-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                ></div>
-
-                <div class="relative z-10 flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-                  <div class="flex items-center space-x-2">
-                    <div
-                      class="w-8 h-8 flex-shrink-0 bg-orange-500 rounded-full flex items-center justify-center"
-                    >
-                      <svg
-                        class="w-4 h-4 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M13 10V3L4 14h7v7l9-11h-7z"
-                        ></path>
-                      </svg>
-                    </div>
-                    <span class="group-hover:text-white transition-colors"
-                      >Descubre tu potencial de almacenamiento</span
-                    >
-                  </div>
-
-                  <div class="hidden sm:block h-6 w-px bg-gray-300 group-hover:bg-white/50"></div>
-
-                  <div class="flex items-center space-x-1">
-                    <span
-                      class="text-orange-600 group-hover:text-white transition-colors font-black"
-                      >CONSULTA GRATIS</span
-                    >
-                    <svg
-                      class="w-5 h-5 text-orange-600 group-hover:text-white group-hover:translate-x-1 transition-all"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M17 8l4 4m0 0l-4 4m4-4H3"
-                      ></path>
-                    </svg>
-                  </div>
-                </div>
-              </button>
-
-              <!-- Trust indicators -->
-              <div
-                class="flex items-center justify-center space-x-6 text-sm text-white-400 flex-wrap gap-2"
-              >
-                <div class="flex items-center space-x-2">
-                  <svg
-                    class="w-4 h-4 text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    ></path>
-                  </svg>
-                  <span>Análisis sin compromiso</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <svg
-                    class="w-4 h-4 text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    ></path>
-                  </svg>
-                  <span>Proyecto integral</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <svg
-                    class="w-4 h-4 text-green-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    ></path>
-                  </svg>
-                  <span>Resultados garantizados</span>
-                </div>
-              </div>
-            </div>
+          <div class="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button type="button" class="btn btn-primary btn-lg" @click="openContactModal()">
+              Consulta gratis
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+              </svg>
+            </button>
+            <NuxtLink to="/productos" class="btn btn-ghost-light btn-lg">
+              Ver productos
+            </NuxtLink>
           </div>
+
+          <!-- Beneficios -->
+          <ul class="mt-8 flex flex-wrap gap-2" aria-label="Beneficios">
+            <li
+              v-for="benefit in benefits"
+              :key="benefit"
+              class="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 text-sm font-medium text-neutral-200 ring-1 ring-white/10 ring-inset backdrop-blur"
+            >
+              <svg class="h-4 w-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+              </svg>
+              {{ benefit }}
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Logos de clientes -->
+      <div class="border-t border-white/10 py-10">
+        <div class="mb-6 flex flex-col gap-1 text-center sm:flex-row sm:items-baseline sm:justify-center sm:gap-3">
+          <p class="text-xs font-semibold uppercase tracking-wider text-brand-300">
+            Confían en nosotros
+          </p>
+          <h2 class="text-sm font-medium text-neutral-300">
+            Empresas líderes que ya transformaron sus espacios
+          </h2>
         </div>
 
-        <!-- Client Logos -->
-        <div class="mt-16 lg:mt-20">
-          <div class="text-center mb-8">
-            <p
-              class="text-white text-sm font-medium tracking-wider uppercase mb-2"
-            >
-              Confían en nosotros
-            </p>
-            <h2 class="text-white text-xl font-semibold">
-              Empresas líderes que ya transformaron sus espacios
-            </h2>
-          </div>
-
-          <div class="relative overflow-hidden logos-carousel">
+        <div class="relative overflow-hidden logos-carousel">
+          <div
+            class="flex w-max items-center gap-9 animate-scroll"
+            :style="{ '--scroll-width': clientLogos.length * 180 + 'px' }"
+          >
             <div
-              class="flex items-center space-x-12 animate-scroll"
-              :style="{ '--scroll-width': clientLogos.length * 180 + 'px' }"
+              v-for="(client, index) in clientLogos"
+              :key="`client-${index}`"
+              class="group flex h-16 w-36 flex-shrink-0 items-center justify-center"
             >
-              <div
-                v-for="(client, index) in clientLogos"
-                :key="`client-${index}`"
-                class="flex-shrink-0 w-40 h-20 flex items-center justify-center bg-white bg-opacity-10 backdrop-blur-sm rounded-xl border border-white border-opacity-20 hover:bg-opacity-20 transition-all duration-300 group"
-              >
-                <img
-                  :src="client.logo"
-                  :alt="client.name"
-                  width="128"
-                  height="48"
-                  loading="lazy"
-                  decoding="async"
-                  class="max-h-12 max-w-32 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300 opacity-90 group-hover:opacity-100"
-                />
-              </div>
+              <img
+                :src="client.logo"
+                :alt="client.name"
+                width="128"
+                height="48"
+                loading="lazy"
+                decoding="async"
+                class="max-h-10 max-w-32 object-contain brightness-0 invert opacity-60 transition-opacity duration-300 group-hover:opacity-100"
+              />
+            </div>
 
-              <div
-                v-for="(client, index) in clientLogos"
-                :key="`client-duplicate-${index}`"
-                aria-hidden="true"
-                class="flex-shrink-0 w-40 h-20 flex items-center justify-center bg-white bg-opacity-10 backdrop-blur-sm rounded-xl border border-white border-opacity-20 hover:bg-opacity-20 transition-all duration-300 group"
-              >
-                <img
-                  :src="client.logo"
-                  alt=""
-                  width="128"
-                  height="48"
-                  loading="lazy"
-                  decoding="async"
-                  class="max-h-12 max-w-32 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300 opacity-90 group-hover:opacity-100"
-                />
-              </div>
+            <div
+              v-for="(client, index) in clientLogos"
+              :key="`client-duplicate-${index}`"
+              aria-hidden="true"
+              class="group flex h-16 w-36 flex-shrink-0 items-center justify-center"
+            >
+              <img
+                :src="client.logo"
+                alt=""
+                width="128"
+                height="48"
+                loading="lazy"
+                decoding="async"
+                class="max-h-10 max-w-32 object-contain brightness-0 invert opacity-60 transition-opacity duration-300 group-hover:opacity-100"
+              />
             </div>
           </div>
         </div>
@@ -260,7 +124,7 @@
 
     <!-- Contact Modal -->
     <ContactModal :isVisible="isContactModalOpen" @close="closeContactModal" />
-  </div>
+  </section>
 </template>
 
 <script setup>
@@ -276,6 +140,9 @@ const clientLogos = ref([
   { name: 'Pichara', logo: '/assets/images/clients/pichara.webp' },
   { name: 'Skechers', logo: '/assets/images/clients/skechers.webp' }
 ]);
+
+// Solo presentacion: chips de beneficios del hero
+const benefits = ['Análisis sin compromiso', 'Proyecto integral', 'Resultados garantizados'];
 
 const playerSrc = ref('');
 const YT_ID = '-FDbkSiPtoQ';
@@ -320,12 +187,11 @@ function closeContactModal() {
 
 <style scoped>
 .hero-enhanced {
-  min-height: 600px;
-  position: relative;
+  min-height: 640px;
 }
-@media (max-width: 768px) {
+@media (min-width: 1024px) {
   .hero-enhanced {
-    min-height: 700px;
+    min-height: min(860px, 100svh);
   }
 }
 
@@ -344,22 +210,8 @@ function closeContactModal() {
   transform: translate(-50%, -50%);
 }
 
-/* Mantén tus estilos previos */
-.bg-clip-text {
-  background-size: 200% 200%;
-  animation: gradientShift 3s ease-in-out infinite;
-}
-@keyframes gradientShift {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-/* Logos carousel */
+/* Carrusel de logos: cada item mide 144px + 36px de separacion = 180px,
+   igual al --scroll-width por logo, para que el bucle no salte */
 .animate-scroll {
   animation: scroll 30s linear infinite;
 }
@@ -374,14 +226,8 @@ function closeContactModal() {
 .animate-scroll:hover {
   animation-play-state: paused;
 }
-.overflow-hidden.logos-carousel {
-  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent,
-    black 10%,
-    black 90%,
-    transparent
-  );
+.logos-carousel {
+  mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
 }
 </style>

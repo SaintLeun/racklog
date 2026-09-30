@@ -1,145 +1,143 @@
 <template>
-  <div class="cta-section relative overflow-hidden">
-    <!-- Vector Background (unchanged) -->
-    <div class="absolute inset-0 z-0 opacity-10">
-      <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
-        <path fill="#ff9800" d="M0,96L48,122.7C96,149,192,203,288,202.7C384,203,480,149,576,128C672,107,768,117,864,144C960,171,1056,213,1152,213.3C1248,213,1344,171,1392,149.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-      </svg>
-    </div>
-    <div class="absolute inset-0 z-0 opacity-5">
-      <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" style="transform: rotate(180deg)">
-        <path fill="#000000" d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,224C672,245,768,267,864,266.7C960,267,1056,245,1152,229.3C1248,213,1344,203,1392,197.3L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
-      </svg>
-    </div>
-    
-    <!-- Subtle diagonal pattern (unchanged) -->
-    <div class="absolute inset-0 z-0 opacity-5 pattern-diagonal"></div>
-    
-    <!-- Content -->
-    <section class="text-gray-700 body-font relative z-10">
-      <div class="container px-5 py-24 mx-auto">
-        <div class="flex flex-col text-center w-full mb-12">
-          <h2 class="sm:text-3xl text-2xl font-medium title-font mb-4 text-gray-900">¿Necesitas atención personalizada?</h2>
-          <p class="lg:w-2/3 mx-auto leading-relaxed text-base">Ingresa tus datos y un ejecutivo se pondrá en contacto contigo</p>
-        </div>
-        <form id="cta-form" @submit.prevent="submitForm" class="flex lg:w-2/3 w-full sm:flex-row flex-col mx-auto px-8 sm:space-x-4 sm:space-y-0 space-y-4 sm:px-0 items-end">
-          <!-- Honeypot anti-bots: oculto para personas -->
-          <input v-model="formData.website" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" />
-          <div class="relative flex-grow w-full">
-            <label for="cta-name" class="leading-7 text-sm text-gray-600">Nombre</label>
-            <input 
-              v-model="formData.name" 
-              type="text" 
-              id="cta-name" 
-              name="full-name" 
-              required
-              class="w-full bg-white bg-opacity-90 rounded border border-gray-300 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out shadow-sm"
-            >
-          </div>
-          <div class="relative flex-grow w-full">
-            <label for="cta-business" class="leading-7 text-sm text-gray-600">Empresa <small>(opcional)</small></label>
-            <input 
-              v-model="formData.business" 
-              type="text" 
-              id="cta-business" 
-              name="business" 
-              class="w-full bg-white bg-opacity-90 rounded border border-gray-300 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out shadow-sm"
-            >
-          </div>
-          <div class="relative flex-grow w-full">
-            <label for="cta-phone" class="leading-7 text-sm text-gray-600">Teléfono</label>
-            <input 
-              v-model="formData.phone" 
-              type="text" 
-              id="cta-phone" 
-              name="phone" 
-              required
-              class="w-full bg-white bg-opacity-90 rounded border border-gray-300 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out shadow-sm"
-            >
-          </div>
-          <div class="relative flex-grow w-full">
-            <label for="cta-email" class="leading-7 text-sm text-gray-600">Correo</label>
-            <input 
-              v-model="formData.email" 
-              type="email" 
-              id="cta-email" 
-              name="email" 
-              required
-              class="w-full bg-white bg-opacity-90 rounded border border-gray-300 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-200 text-base outline-none text-gray-700 py-1 px-3 leading-8 transition-colors duration-200 ease-in-out shadow-sm"
-            >
-          </div>
-          <button 
-            type="submit" 
-            :disabled="isSubmitting || !formData.privacy"
-            class="disabled:opacity-60 disabled:cursor-not-allowed text-white bg-orange-500 border-0 py-2 px-8 focus:outline-none hover:bg-orange-600 rounded text-lg shadow-md transition-colors duration-300 ease-in-out relative overflow-hidden min-w-[160px] w-full sm:w-auto"
-          >
-            <span v-if="!isSubmitting">Enviar</span>
-            <span v-else class="flex items-center justify-center">
-              <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  <section class="section section-muted">
+    <div class="container-page">
+      <div class="card p-6 sm:p-10 lg:p-12">
+        <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.4fr)] lg:gap-12">
+          <!-- Texto -->
+          <div class="flex items-start gap-4">
+            <span class="icon-tile" aria-hidden="true">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
-              Enviando...
             </span>
-          </button>
-        </form>
-        <div class="lg:w-2/3 w-full mx-auto px-8 sm:px-0 mt-4 flex items-start gap-3 text-left">
-          <input
-            id="cta-privacy"
-            v-model="formData.privacy"
-            type="checkbox"
-            form="cta-form"
-            required
-            class="mt-1 h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
-          />
-          <label for="cta-privacy" class="text-sm text-gray-700">
-            Acepto la <NuxtLink to="/politica-privacidad" class="text-orange-700 underline">política de privacidad</NuxtLink> y que Racklog me contacte por esta solicitud.
-          </label>
+            <div>
+              <h2 class="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">¿Necesitas atención personalizada?</h2>
+              <p class="mt-3 text-base leading-relaxed text-neutral-600">Ingresa tus datos y un ejecutivo se pondrá en contacto contigo</p>
+            </div>
+          </div>
+
+          <!-- Formulario -->
+          <div>
+            <form id="cta-form" @submit.prevent="submitForm" class="relative grid gap-4 sm:grid-cols-2 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto] xl:items-end">
+              <!-- Honeypot anti-bots: oculto para personas -->
+              <input v-model="formData.website" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" />
+              <div>
+                <label for="cta-name" class="form-label">Nombre</label>
+                <input
+                  v-model="formData.name"
+                  type="text"
+                  id="cta-name"
+                  name="full-name"
+                  required
+                  class="form-input"
+                >
+              </div>
+              <div>
+                <label for="cta-business" class="form-label">Empresa <span class="font-normal text-neutral-500">(opcional)</span></label>
+                <input
+                  v-model="formData.business"
+                  type="text"
+                  id="cta-business"
+                  name="business"
+                  class="form-input"
+                >
+              </div>
+              <div>
+                <label for="cta-phone" class="form-label">Teléfono</label>
+                <input
+                  v-model="formData.phone"
+                  type="text"
+                  id="cta-phone"
+                  name="phone"
+                  required
+                  class="form-input"
+                >
+              </div>
+              <div>
+                <label for="cta-email" class="form-label">Correo</label>
+                <input
+                  v-model="formData.email"
+                  type="email"
+                  id="cta-email"
+                  name="email"
+                  required
+                  class="form-input"
+                >
+              </div>
+              <button
+                type="submit"
+                :disabled="isSubmitting || !formData.privacy"
+                class="btn btn-primary h-12 w-full sm:col-span-2 xl:col-span-1 xl:w-auto xl:min-w-[140px]"
+              >
+                <span v-if="!isSubmitting">Enviar</span>
+                <span v-else class="flex items-center justify-center">
+                  <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Enviando...
+                </span>
+              </button>
+            </form>
+            <div class="mt-5 flex items-start gap-3 text-left">
+              <input
+                id="cta-privacy"
+                v-model="formData.privacy"
+                type="checkbox"
+                form="cta-form"
+                required
+                class="mt-0.5 h-5 w-5 flex-shrink-0 rounded border-neutral-300 accent-brand-600"
+              />
+              <label for="cta-privacy" class="text-sm leading-relaxed text-neutral-600">
+                Acepto la <NuxtLink to="/politica-privacidad" class="font-medium text-brand-700 underline underline-offset-2 hover:text-brand-800">política de privacidad</NuxtLink> y que Racklog me contacte por esta solicitud.
+              </label>
+            </div>
+          </div>
         </div>
       </div>
-      
-      <!-- Success/Error Messages -->
-      <div class="fixed bottom-4 right-4 z-50">
-        <transition name="fade">
-          <div v-if="showSuccessMessage" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-md flex items-center max-w-md">
-            <svg class="w-6 h-6 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div class="fixed bottom-4 right-4 left-4 z-50 flex flex-col items-end gap-3 pointer-events-none sm:left-auto">
+      <transition name="fade">
+        <div v-if="showSuccessMessage" class="pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-black/5">
+          <span class="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700" aria-hidden="true">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-            <div>
-              <p class="font-bold">Solicitud enviada</p>
-              <p>Pronto un ejecutivo se pondrá en contacto contigo.</p>
-            </div>
-            <button type="button" aria-label="Cerrar mensaje" @click="showSuccessMessage = false" class="ml-auto text-green-700">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
+          </span>
+          <div class="flex-1 text-sm">
+            <p class="font-semibold text-neutral-900">Solicitud enviada</p>
+            <p class="mt-0.5 text-neutral-600">Pronto un ejecutivo se pondrá en contacto contigo.</p>
           </div>
-        </transition>
-        
-        <transition name="fade">
-          <div v-if="showErrorMessage" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-md flex items-center max-w-md">
-            <svg class="w-6 h-6 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <button type="button" aria-label="Cerrar mensaje" @click="showSuccessMessage = false" class="-m-1 inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </transition>
+
+      <transition name="fade">
+        <div v-if="showErrorMessage" class="pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-black/5">
+          <span class="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700" aria-hidden="true">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            <div>
-              <p class="font-bold">Error al enviar</p>
-              <p>Por favor intenta nuevamente o contáctanos directamente al <b>(+56) 9 3240 3819</b></p>
-            </div>
-            <button type="button" aria-label="Cerrar mensaje" @click="showErrorMessage = false" class="ml-auto text-red-700">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
+          </span>
+          <div class="flex-1 text-sm">
+            <p class="font-semibold text-neutral-900">Error al enviar</p>
+            <p class="mt-0.5 text-neutral-600">Por favor intenta nuevamente o contáctanos directamente al <b class="text-neutral-900">(+56) 9 3240 3819</b></p>
           </div>
-        </transition>
-      </div>
-      
-      <!-- Decorative Elements (unchanged) -->
-      <div class="absolute -bottom-16 -left-16 w-32 h-32 rounded-full bg-orange-200 opacity-20 z-0"></div>
-      <div class="absolute -top-16 -right-16 w-32 h-32 rounded-full bg-gray-900 opacity-10 z-0"></div>
-    </section>
-  </div>
+          <button type="button" aria-label="Cerrar mensaje" @click="showErrorMessage = false" class="-m-1 inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </transition>
+    </div>
+  </section>
 </template>
 
 <script lang="ts" setup>
@@ -240,58 +238,12 @@ function resetForm() {
 </script>
 
 <style scoped>
-.cta-section {
-  background-color: #fafafa;
-  position: relative;
-}
-
-.pattern-diagonal {
-  background-image: repeating-linear-gradient(
-    45deg,
-    #ff9800 0,
-    #ff9800 1px,
-    transparent 0,
-    transparent 50%
-  );
-  background-size: 10px 10px;
-}
-
-/* Subtle hover effect for the button */
-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-/* Smooth transitions */
-input, button {
-  transition: all 0.3s ease;
-}
-
-/* Animation for the loading spinner */
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
 /* Fade transition for alerts */
 .fade-enter-active, .fade-leave-active {
-  transition: opacity 0.5s, transform 0.5s;
+  transition: opacity 0.4s, transform 0.4s;
 }
 .fade-enter-from, .fade-leave-to {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(16px);
 }
 </style>
