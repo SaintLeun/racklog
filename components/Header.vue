@@ -390,11 +390,8 @@ import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia'; 
 import ContactModal from '~/components/ContactModal.vue';
 
-// Abrir el formulario de contacto una vez por sesion, 3 s despues de que el
-// usuario responda el banner de cookies (o de cargar, si ya lo respondio antes),
-// para que no se encimen
+// Abrir el formulario de contacto una vez por sesion, 3 s despues de cargar la pagina
 const AUTO_OPEN_DELAY_MS = 3000;
-const { analytics: cookieConsent } = useConsent();
 
 onMounted(() => {
   try {
@@ -403,27 +400,14 @@ onMounted(() => {
     return; // Sin sessionStorage no se abre automaticamente
   }
 
-  const schedule = () => {
-    setTimeout(() => {
-      openContactModal();
-      try {
-        sessionStorage.setItem('contactModalShown', 'true');
-      } catch {
-        // Ignorar: sin sessionStorage solo se pierde el "una vez por sesion"
-      }
-    }, AUTO_OPEN_DELAY_MS);
-  };
-
-  if (cookieConsent.value !== 'unset') {
-    schedule();
-  } else {
-    const stop = watch(cookieConsent, (state) => {
-      if (state !== 'unset') {
-        stop();
-        schedule();
-      }
-    });
-  }
+  setTimeout(() => {
+    openContactModal();
+    try {
+      sessionStorage.setItem('contactModalShown', 'true');
+    } catch {
+      // Ignorar: sin sessionStorage solo se pierde el "una vez por sesion"
+    }
+  }, AUTO_OPEN_DELAY_MS);
 });
 
 const productStore = useProductStore();
