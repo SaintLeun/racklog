@@ -90,7 +90,10 @@
                 <video 
                   class="w-full h-auto"
                   controls
-                  preload="metadata"
+                  preload="none"
+                  poster="/assets/images/nosotros-poster.webp"
+                  width="1280"
+                  height="720"
                   playsinline
                   aria-label="Video institucional de Racklog"
                 >
