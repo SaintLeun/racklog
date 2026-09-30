@@ -1,30 +1,14 @@
 <template>
-  <!-- A/B Test Hero Section -->
-  <!-- <Carousel v-if="isOriginalVariant" /> -->
-  <HeroVariantNew/>
-  
+  <HeroVariantNew />
   <LandingCards />
   <Cta />
   <ProductsSection />
   <Gallery />
 </template>
 
-<script setup>
-import { onMounted } from 'vue'
-import { useHeroABTest } from '~/composables/useHeroABTest'
-import Carousel from '~/components/Carousel.vue'
-import HeroVariantNew from '~/components/HeroVariantNew.vue'
-
-// Initialize A/B test
-const { initializeTest, isOriginalVariant, isNewVariant } = useHeroABTest()
-
-onMounted(() => {
-  initializeTest()
-})
+<script setup lang="ts">
+usePageSeo({
+  title: 'Racks y estanterías industriales en Chile',
+  description: 'Fabricamos e instalamos racks selectivos, ángulo ranurado, mini racks y entreplantas. Configura y cotiza en línea tu solución de almacenaje.',
+});
 </script>
-
-<style scoped>
-h1 {
-  color: #333;
-}
-</style>
