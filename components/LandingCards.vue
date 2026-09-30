@@ -6,7 +6,7 @@
         <span class="absolute inset-x-0 bottom-0 h-[6px] bg-orange-500/20 -mb-2"></span>
         <h2 class="text-sm uppercase tracking-wider font-semibold text-orange-500 relative z-10">Configurador</h2>
       </div>
-      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Configura y Cotiza en Tiempo Real</h1>
+      <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Configura y Cotiza en Tiempo Real</h2>
       <div class="w-16 h-1 rounded-full bg-orange-500 mb-6"></div>
       <p class="max-w-2xl text-gray-600 text-lg">
         Diseña tu solución ideal de almacenamiento a medida. Selecciona las dimensiones, capacidades y características que necesitas para tu proyecto.
@@ -18,10 +18,10 @@
       <section v-for="(product, key) in filteredProducts" :key="key" class="text-gray-600 body-font overflow-hidden">
         <div class="container px-5 py-5 mx-auto">
           <div class="lg:w-full mx-auto flex flex-wrap">
-            <img alt="ecommerce" class="lg:w-1/2 w-full lg:h-auto h-64 object-cover object-center rounded" :src="product.images.render" />
+            <img loading="lazy" decoding="async" :alt="product.name" width="800" height="600" class="lg:w-1/2 w-full lg:h-auto h-64 object-cover object-center rounded" :src="product.images.render" />
             <div class="lg:w-1/2 w-full lg:pl-10 lg:py-6 mt-6 lg:mt-0 flex flex-col">
               <h2 class="text-sm title-font text-gray-500 tracking-widest">{{ product.type }}</h2>
-              <h1 class="text-gray-900 text-3xl title-font font-medium mb-1">{{ product.name }}</h1>
+              <h3 class="text-gray-900 text-3xl title-font font-medium mb-1">{{ product.name }}</h3>
               <p class="leading-relaxed">{{ product.description.short }}</p>
               <div class="mt-auto">
                 <button @click="openQuoteWithProduct(product)" :class="buttonClass(product.buttonColor, '400', '500')" class="flex w-full items-center justify-center text-white border-0 py-2 px-6 focus:outline-none rounded mt-4 transition-colors">
@@ -30,12 +30,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                   </svg>
                 </button>
-                <a :href="'/productos/' + product.slug" :class="buttonClass(product.buttonColor, '400', '500')" class="flex w-full items-center justify-center text-white border-0 py-2 px-6 focus:outline-none rounded mt-4 transition-colors">
+                <NuxtLink :to="'/productos/' + product.slug" :class="buttonClass(product.buttonColor, '400', '500')" class="flex w-full items-center justify-center text-white border-0 py-2 px-6 focus:outline-none rounded mt-4 transition-colors">
                   Ver más
                   <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                   </svg>
-                </a>
+                </NuxtLink>
               </div>
             </div>
           </div>

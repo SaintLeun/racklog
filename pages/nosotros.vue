@@ -290,6 +290,11 @@
   function closeContactModal() {
     isContactModalOpen.value = false;
   }
+
+usePageSeo({
+  title: 'Nosotros',
+  description: 'Conoce a Racklog: desde 2008 diseñamos, fabricamos e instalamos soluciones de almacenamiento industrial para empresas en todo Chile.',
+});
 </script>
 
 <style scoped>

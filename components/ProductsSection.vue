@@ -21,7 +21,7 @@
           <span class="absolute inset-x-0 bottom-0 h-[6px] bg-orange-500/20 -mb-2"></span>
           <h2 class="text-sm uppercase tracking-wider font-semibold text-orange-500 relative z-10">Explora nuestra gama</h2>
         </div>
-        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Soluciones de Almacenaje</h1>
+        <h2 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Soluciones de Almacenaje</h2>
         <div class="w-16 h-1 rounded-full bg-orange-500 mb-6"></div>
         <p class="max-w-2xl text-gray-600 text-lg">
           Descubre nuestras soluciones industriales diseñadas para maximizar el espacio y optimizar tus operaciones logísticas.
@@ -38,7 +38,7 @@
         >
           <!-- Reduced image size using aspect-w-4 aspect-h-3 for a 4:3 ratio instead of 16:9 -->
           <div class="aspect-w-4 aspect-h-3 bg-gray-100 relative overflow-hidden">
-            <img 
+            <img loading="lazy" decoding="async" 
               :src="product.images.card" 
               :alt="product.name" 
               class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"

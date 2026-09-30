@@ -1,0 +1,72 @@
+# Sitio estatico generado con `nuxt generate` (SSG).
+# Este archivo reemplaza la regla anterior que devolvia index.html para
+# cualquier URL (soft-404): ahora cada pagina existe como HTML real.
+
+Options -Indexes
+DirectoryIndex index.html
+
+RewriteEngine On
+
+# 1) Forzar HTTPS y dominio canonico (sin www) en una sola redireccion 301
+RewriteCond %{HTTPS} !=on [OR]
+RewriteCond %{HTTP_HOST} ^www\. [NC]
+RewriteRule ^ https://racklog.cl%{REQUEST_URI} [L,R=301,NE]
+
+# 2) Archivos ocultos y de respaldo nunca accesibles (.git, .env, .bak, .sql, .zip)
+RewriteRule (^|/)\.(?!well-known/) - [F,L]
+<FilesMatch "(?i)\.(bak|sql|zip|tar|gz|log|ini|env|sh)$">
+    Require all denied
+</FilesMatch>
+
+# 3) Quitar la barra final (/productos/ -> /productos) salvo en la raiz
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} ^(.+)/$
+RewriteRule ^ %1 [L,R=301]
+
+# 4) Servir /ruta desde /ruta/index.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}/index.html -f
+RewriteRule ^(.*)$ $1/index.html [L]
+
+# 5) Pagina 404 real (con codigo 404, no 200)
+ErrorDocument 404 /404.html
+
+<IfModule mod_headers.c>
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+    Header always unset X-Powered-By
+    Header unset X-Powered-By
+
+    # CSP en modo "solo reporte": no bloquea nada, pero muestra en la consola
+    # del navegador cualquier recurso no permitido. Tras revisar el sitio en
+    # produccion sin avisos, cambiar el nombre de la cabecera a
+    # Content-Security-Policy para activarla.
+    Header always set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.clarity.ms https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.racklog.cl https://api.sketchfab.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.clarity.ms https://c.bing.com; frame-src https://www.youtube-nocookie.com https://sketchfab.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+
+    # Cache: archivos versionados de Nuxt (el nombre cambia en cada build)
+    <If "%{REQUEST_URI} =~ m#^/_nuxt/#">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </If>
+    # Imagenes, videos y fuentes: 30 dias
+    <If "%{REQUEST_URI} =~ m#\.(webp|avif|png|jpe?g|gif|svg|ico|mp4|webm|woff2?)$#">
+        Header set Cache-Control "public, max-age=2592000"
+    </If>
+    # HTML y datos: siempre revalidar para ver cambios al desplegar
+    <If "%{REQUEST_URI} =~ m#(\.html|/|_payload\.json|sitemap\.xml|robots\.txt)$# || %{REQUEST_URI} !~ m#\.[a-z0-9]+$#">
+        Header set Cache-Control "no-cache"
+    </If>
+</IfModule>
+
+# Compresion (si Brotli no esta activo en el servidor)
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json application/xml image/svg+xml text/plain
+</IfModule>
+
+<IfModule mod_mime.c>
+    AddType image/webp .webp
+    AddType image/avif .avif
+    AddType application/manifest+json .webmanifest
+</IfModule>

@@ -11,9 +11,20 @@ export interface CartItem {
 
 export const useCartStore = defineStore('cartStore', {
   state: () => ({
-    cart: JSON.parse(localStorage.getItem('cart') || '[]') as CartItem[], // Load cart from localStorage
+    // Vacio en el HTML generado; se carga desde localStorage en el navegador (plugins/cart.client.ts)
+    cart: [] as CartItem[],
   }),
   actions: {
+    // Load the cart saved in this browser. A corrupt value is discarded instead of breaking the app.
+    loadCart() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('cart') || '[]');
+        this.cart = Array.isArray(saved) ? saved : [];
+      } catch {
+        this.cart = [];
+      }
+    },
+
     // Add a product to the cart
     addToCart(product: Omit<CartItem, 'total'>) {
       const existingItem = this.cart.find(
@@ -72,7 +83,11 @@ export const useCartStore = defineStore('cartStore', {
 
     // Save the cart to localStorage
     saveCart() {
-      localStorage.setItem('cart', JSON.stringify(this.cart));
+      try {
+        localStorage.setItem('cart', JSON.stringify(this.cart));
+      } catch {
+        // Sin almacenamiento (modo privado estricto) el carrito dura solo esta visita
+      }
     },
   },
   getters: {

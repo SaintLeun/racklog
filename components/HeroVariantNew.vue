@@ -2,8 +2,20 @@
   <div class="hero-enhanced relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 overflow-hidden py-10">
     <!-- Background YouTube Video -->
     <div class="video-bg absolute inset-0">
+      <!-- Imagen inmediata (LCP); el video se carga despues, si corresponde -->
+      <img
+        src="/assets/images/slide-1.webp"
+        alt=""
+        aria-hidden="true"
+        fetchpriority="high"
+        decoding="async"
+        class="absolute inset-0 w-full h-full object-cover"
+      />
       <iframe
+        v-if="playerSrc"
         class="yt-cover pointer-events-none"
+        tabindex="-1"
+        aria-hidden="true"
         :src="playerSrc"
         title="RACKLOG Background"
         frameborder="0"
@@ -198,9 +210,9 @@
             >
               Confían en nosotros
             </p>
-            <h3 class="text-white text-xl font-semibold">
+            <h2 class="text-white text-xl font-semibold">
               Empresas líderes que ya transformaron sus espacios
-            </h3>
+            </h2>
           </div>
 
           <div class="relative overflow-hidden logos-carousel">
@@ -216,19 +228,28 @@
                 <img
                   :src="client.logo"
                   :alt="client.name"
-                  class="max-h-12 max-w-32 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300 opacity-70 group-hover:opacity-100"
+                  width="128"
+                  height="48"
+                  loading="lazy"
+                  decoding="async"
+                  class="max-h-12 max-w-32 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300 opacity-90 group-hover:opacity-100"
                 />
               </div>
 
               <div
                 v-for="(client, index) in clientLogos"
                 :key="`client-duplicate-${index}`"
+                aria-hidden="true"
                 class="flex-shrink-0 w-40 h-20 flex items-center justify-center bg-white bg-opacity-10 backdrop-blur-sm rounded-xl border border-white border-opacity-20 hover:bg-opacity-20 transition-all duration-300 group"
               >
                 <img
                   :src="client.logo"
-                  :alt="client.name"
-                  class="max-h-12 max-w-32 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300 opacity-70 group-hover:opacity-100"
+                  alt=""
+                  width="128"
+                  height="48"
+                  loading="lazy"
+                  decoding="async"
+                  class="max-h-12 max-w-32 object-contain filter grayscale group-hover:grayscale-0 transition-all duration-300 opacity-90 group-hover:opacity-100"
                 />
               </div>
             </div>
@@ -259,39 +280,38 @@ const clientLogos = ref([
 const playerSrc = ref('');
 const YT_ID = '-FDbkSiPtoQ';
 
-onMounted(() => {
-  const origin =
-    typeof window !== 'undefined'
-      ? encodeURIComponent(window.location.origin)
-      : 'https%3A%2F%2Fwww.racklog.cl';
+function shouldLoadVideo() {
+  const connection = navigator.connection;
+  if (connection?.saveData) return false;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+  // En moviles el video pesa mucho para ser solo decorativo
+  return window.matchMedia('(min-width: 768px)').matches;
+}
 
+function loadVideo() {
+  if (!shouldLoadVideo()) return;
+  const origin = encodeURIComponent(window.location.origin);
   playerSrc.value =
-    `https://www.youtube.com/embed/${YT_ID}` +
+    `https://www.youtube-nocookie.com/embed/${YT_ID}` +
     `?autoplay=1&mute=1&controls=0` +
     `&loop=1&playlist=${YT_ID}` +
     `&playsinline=1&modestbranding=1` +
     `&rel=0&iv_load_policy=3&disablekb=1` +
     `&fs=0&enablejsapi=0&origin=${origin}`;
+}
 
-  if (window?.dataLayer) {
-    window.dataLayer.push({
-      event: 'ab_test_view',
-      ab_test_name: 'hero_variant',
-      ab_test_variant: 'new_hero'
-    });
+onMounted(() => {
+  // Cargar el video solo cuando la pagina ya termino de cargar
+  const schedule = () => ('requestIdleCallback' in window ? window.requestIdleCallback(loadVideo) : setTimeout(loadVideo, 1500));
+  if (document.readyState === 'complete') {
+    schedule();
+  } else {
+    window.addEventListener('load', schedule, { once: true });
   }
 });
 
 function openContactModal() {
   isContactModalOpen.value = true;
-  if (window?.dataLayer) {
-    window.dataLayer.push({
-      event: 'ab_test_conversion',
-      ab_test_name: 'hero_variant',
-      ab_test_variant: 'new_hero',
-      conversion_type: 'contact_modal_open'
-    });
-  }
 }
 function closeContactModal() {
   isContactModalOpen.value = false;

@@ -4,9 +4,43 @@
   </NuxtLayout>
 </template>
 
-<script>
-// No changes needed here, gtag is injected in plugins and used in components
-</script>
+<script setup lang="ts">
+const route = useRoute();
+const { siteUrl } = useRuntimeConfig().public;
 
-<style scoped>
-</style>
+// URL canonica sin parametros ni barra final, igual para www y sin www
+const canonical = computed(() => siteUrl + (route.path === '/' ? '/' : route.path.replace(/\/$/, '')));
+
+useHead(() => ({
+  link: [{ rel: 'canonical', href: canonical.value }],
+  meta: [{ property: 'og:url', content: canonical.value }],
+}));
+
+useHead({
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'LocalBusiness',
+        '@id': `${siteUrl}/#organization`,
+        name: 'Racklog SpA',
+        url: siteUrl,
+        logo: `${siteUrl}/assets/images/logo.png`,
+        image: `${siteUrl}/assets/images/og-racklog.jpg`,
+        description: 'Fabricación e instalación de racks y estanterías industriales en Chile.',
+        email: 'contacto@racklog.cl',
+        telephone: '+56932403819',
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: 'El Juncal 161-C',
+          addressLocality: 'Quilicura',
+          addressRegion: 'Región Metropolitana',
+          addressCountry: 'CL',
+        },
+        areaServed: 'CL',
+      }),
+    },
+  ],
+});
+</script>

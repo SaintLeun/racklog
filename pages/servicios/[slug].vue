@@ -59,7 +59,7 @@
           <!-- Service Image Container -->
           <div class="w-full lg:w-1/2 relative overflow-hidden mb-10 lg:mb-0 lg:pr-8">
             <div class="relative rounded-lg shadow-md bg-white p-4 h-full">
-              <img :src="service.mainImage" :alt="service.name" class="w-full h-full object-cover object-center rounded-lg">
+              <img :src="service.mainImage" :alt="service.name" width="800" height="600" loading="eager" fetchpriority="high" class="w-full h-full object-cover object-center rounded-lg">
             </div>
           </div>
           
@@ -115,7 +115,7 @@
       <div class="container px-5 mx-auto max-w-5xl">
         <div class="flex flex-col text-center w-full mb-12">
           <h2 class="text-xs text-orange-500 tracking-widest font-medium title-font mb-1">DETALLES DEL SERVICIO</h2>
-          <h1 class="sm:text-3xl text-2xl font-bold title-font text-gray-900 mb-2">Nuestro enfoque</h1>
+          <h2 class="sm:text-3xl text-2xl font-bold title-font text-gray-900 mb-2">Nuestro enfoque</h2>
           <div class="h-1 w-20 bg-orange-500 rounded mx-auto mb-4"></div>
           <p class="lg:w-2/3 mx-auto leading-relaxed text-base">Conoce en detalle cómo trabajamos y los beneficios de nuestro servicio profesional.</p>
         </div>
@@ -141,7 +141,7 @@
       <div class="container px-5 mx-auto max-w-5xl">
         <div class="flex flex-col text-center w-full mb-12">
           <h2 class="text-xs text-orange-500 tracking-widest font-medium title-font mb-1">GALERÍA</h2>
-          <h1 class="sm:text-3xl text-2xl font-bold title-font text-gray-900 mb-2">Nuestro servicio en acción</h1>
+          <h2 class="sm:text-3xl text-2xl font-bold title-font text-gray-900 mb-2">Nuestro servicio en acción</h2>
           <div class="h-1 w-20 bg-orange-500 rounded mx-auto mb-4"></div>
           <p class="lg:w-2/3 mx-auto leading-relaxed text-base">Algunas imágenes de nuestros servicios realizados para clientes.</p>
         </div>
@@ -149,7 +149,7 @@
         <div class="flex flex-wrap -m-4">
           <div class="p-4 md:w-1/2 lg:w-1/3" v-for="(image, index) in service.galleryImages" :key="index">
             <div class="h-full bg-white p-3 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <img :src="image" :alt="`${service.name} imagen ${index + 1}`" class="rounded-lg w-full h-64 object-cover object-center">
+              <img loading="lazy" decoding="async" :src="image" :alt="`${service.name} imagen ${index + 1}`" width="800" height="600" class="rounded-lg w-full h-64 object-cover object-center">
             </div>
           </div>
         </div>
@@ -197,12 +197,12 @@
     </svg>
     <h2 class="text-2xl font-bold text-gray-800 mb-2">Servicio no encontrado</h2>
     <p class="text-gray-600 mb-6 text-center">Lo sentimos, no podemos encontrar el servicio que estás buscando.</p>
-    <a href="/servicios" class="inline-flex items-center px-6 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors shadow-md">
+    <NuxtLink to="/" class="inline-flex items-center px-6 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors shadow-md">
       <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
       </svg>
-      Ver todos los servicios
-    </a>
+      Volver al inicio
+    </NuxtLink>
   </div>
 </template>
 
@@ -222,17 +222,11 @@ const modalTitle = ref('');
 // Computed property to access services from the store
 const services = computed(() => productStore.services);
 
-onMounted(async () => {
-  const slug = route.params.slug;
-  
-  // Find the service with matching slug
-  service.value = services.value.find(s => s.slug === slug);
-  
-  // If service not found, redirect to services page
-  if (!service.value) {
-    router.push('/servicios');
-  }
-});
+// Buscar el servicio durante el render para que el HTML generado tenga el contenido
+service.value = services.value.find(s => s.slug === route.params.slug) ?? null;
+if (!service.value) {
+  throw createError({ statusCode: 404, statusMessage: 'Servicio no encontrado', fatal: true });
+}
 
 function openContactModal() {
   modalTitle.value = `Solicitar información: ${service.value.name}`;
@@ -242,6 +236,25 @@ function openContactModal() {
 function closeModal() {
   isContactModalVisible.value = false;
 }
+
+usePageSeo({
+  title: service.value.name,
+  description: service.value.shortDescription || `${service.value.name} por Racklog en Chile.`,
+});
+
+useHead({
+  script: [{
+    type: 'application/ld+json',
+    innerHTML: JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      name: service.value.name,
+      description: service.value.shortDescription,
+      provider: { '@id': 'https://racklog.cl/#organization' },
+      areaServed: 'CL',
+    }),
+  }],
+});
 </script>
 
 <style scoped>

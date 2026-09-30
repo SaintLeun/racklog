@@ -72,7 +72,7 @@
                 execution-while-not-rendered 
                 web-share :src="product.model">
               </iframe>
-              <img v-else :src="product.images.card" alt="product image" class="w-full h-full max-h-[450px] object-cover object-center rounded-lg">
+              <img v-else :src="product.images.card" :alt="product.name" width="800" height="600" loading="eager" fetchpriority="high" class="w-full h-full max-h-[450px] object-cover object-center rounded-lg">
               
               <!-- Interactive element indicator -->
               <div v-if="product.model" class="absolute bottom-6 right-6 bg-orange-500 text-white px-3 py-1 rounded-full text-xs flex items-center shadow-md">
@@ -139,13 +139,13 @@
       <div class="container mx-auto px-5">
         <div class="flex flex-col text-center w-full mb-8">
           <h2 class="text-xs text-orange-500 tracking-widest font-medium title-font mb-1">GALERÍA DE IMÁGENES</h2>
-          <h1 class="sm:text-3xl text-2xl font-bold title-font text-gray-900 mb-2">Galería del Producto</h1>
+          <h2 class="sm:text-3xl text-2xl font-bold title-font text-gray-900 mb-2">Galería del Producto</h2>
           <div class="h-1 w-20 bg-orange-500 rounded mx-auto mb-4"></div>
           <p class="lg:w-2/3 mx-auto leading-relaxed text-base">Explora imágenes reales y renders del producto en diferentes aplicaciones y ambientes.</p>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           <div v-for="(img, idx) in product.images.gallery" :key="idx" class="rounded-lg overflow-hidden shadow-md bg-gray-50">
-            <img :src="img" :alt="`Imagen ${idx + 1} de ${product.name}`" class="w-full h-64 object-cover object-center transition-transform duration-300 hover:scale-105">
+            <img loading="lazy" decoding="async" :src="img" :alt="`Imagen ${idx + 1} de ${product.name}`" width="800" height="600" class="w-full h-64 object-cover object-center transition-transform duration-300 hover:scale-105">
           </div>
         </div>
       </div>
@@ -156,7 +156,7 @@
       <div class="container px-5 py-16 mx-auto">
         <div class="flex flex-col text-center w-full mb-12">
           <h2 class="text-xs text-orange-500 tracking-widest font-medium title-font mb-1">DETALLES TÉCNICOS</h2>
-          <h1 class="sm:text-3xl text-2xl font-bold title-font text-gray-900 mb-2">Especificaciones Técnicas</h1>
+          <h2 class="sm:text-3xl text-2xl font-bold title-font text-gray-900 mb-2">Especificaciones Técnicas</h2>
           <div class="h-1 w-20 bg-orange-500 rounded mx-auto mb-4"></div>
           <p class="lg:w-2/3 mx-auto leading-relaxed text-base">Conoce todos los detalles técnicos que hacen de este producto la solución ideal para tu negocio.</p>
         </div>
@@ -165,7 +165,7 @@
           <div class="xl:w-1/3 md:w-1/2 p-4" v-for="(spec, index) in product.technicalSpecs" :key="index">
             <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow border border-gray-100 h-full flex flex-col">
               <div class="p-2 rounded-lg bg-gray-50 mb-4 flex justify-center">
-                <img class="h-40 object-contain rounded" :src="spec.image" alt="content">
+                <img loading="lazy" decoding="async" class="h-40 w-auto object-contain rounded" :src="spec.image" :alt="spec.name" width="320" height="240">
               </div>
               <h2 class="text-lg text-gray-900 font-medium title-font mb-2">{{ spec.name }}</h2>
               <p class="leading-relaxed text-base text-gray-700 mb-4 flex-grow">{{ spec.description }}</p>
@@ -183,7 +183,7 @@
       <div class="container px-5 py-16 mx-auto">
         <div class="flex flex-col text-center w-full mb-12">
           <h2 class="text-xs text-orange-500 tracking-widest font-medium title-font mb-1">INFORMACIÓN ADICIONAL</h2>
-          <h1 class="sm:text-3xl text-2xl font-bold title-font text-gray-900 mb-2">Más Información</h1>
+          <h2 class="sm:text-3xl text-2xl font-bold title-font text-gray-900 mb-2">Más Información</h2>
           <div class="h-1 w-20 bg-orange-500 rounded mx-auto mb-4"></div>
           <p class="lg:w-2/3 mx-auto leading-relaxed text-base">Descubre más datos relevantes sobre nuestro producto y cómo puede adaptarse a tus necesidades.</p>
         </div>
@@ -228,7 +228,7 @@
             <button @click="goToCart" class="px-2 sm:px-3 py-1 bg-orange-500 text-white rounded-md text-xs sm:text-sm hover:bg-orange-600 mr-1 sm:mr-2 whitespace-nowrap">
               Ver cotización
             </button>
-            <button @click="closeNotification" class="text-gray-400 hover:text-gray-600 flex-shrink-0 p-1">
+            <button type="button" aria-label="Cerrar aviso" @click="closeNotification" class="text-gray-500 hover:text-gray-700 flex-shrink-0 p-1">
               <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
               </svg>
@@ -256,12 +256,12 @@
     </svg>
     <h2 class="text-2xl font-bold text-gray-800 mb-2">Producto no encontrado</h2>
     <p class="text-gray-600 mb-6 text-center">Lo sentimos, no podemos encontrar el producto que estás buscando.</p>
-    <a href="/" class="inline-flex items-center px-6 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors shadow-md">
+    <NuxtLink to="/" class="inline-flex items-center px-6 py-3 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors shadow-md">
       <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
       </svg>
       Volver al inicio
-    </a>
+    </NuxtLink>
   </div>
 </template>
 
@@ -295,14 +295,11 @@
     return product.value.name === 'Rack Selectivo' || product.value.name === 'Ángulo Ranurado';
   });
 
-  onMounted(() => {
-    const slug = route.params.slug;
-    product.value = Object.values(productStore.products).find(p => p.slug === slug);
-
-    if (!product.value) {
-      router.push('/404');
-    }
-  });
+  // Buscar el producto durante el render para que el HTML generado tenga el contenido
+  product.value = Object.values(productStore.products).find(p => p.slug === route.params.slug) ?? null;
+  if (!product.value) {
+    throw createError({ statusCode: 404, statusMessage: 'Producto no encontrado', fatal: true });
+  }
 
   function openQuoteModal(product) {
     selectedProduct.value = product.name === 'Rack Selectivo' ? 'RS' : 'AR';
@@ -367,6 +364,27 @@
       clearTimeout(notificationTimeout);
     }
   }
+
+usePageSeo({
+  title: product.value.name,
+  description: product.value.description?.short || `${product.value.name} de Racklog: fabricación e instalación en Chile.`,
+  type: 'product',
+});
+
+useHead({
+  script: [{
+    type: 'application/ld+json',
+    innerHTML: JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.value.name,
+      description: product.value.description?.short,
+      image: product.value.images?.card ? `https://racklog.cl${product.value.images.card}` : undefined,
+      brand: { '@type': 'Brand', name: 'Racklog' },
+      category: product.value.type,
+    }),
+  }],
+});
 </script>
 
 <style scoped>

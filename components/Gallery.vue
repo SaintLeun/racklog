@@ -8,7 +8,7 @@
             <span class="absolute inset-x-0 bottom-0 h-[6px] bg-orange-500/20 -mb-2"></span>
             <h2 class="text-xs text-orange-500 tracking-widest font-semibold uppercase relative z-10">NUESTROS PROYECTOS</h2>
           </div>
-          <h1 class="sm:text-4xl text-3xl font-bold title-font text-gray-900 mb-4">Últimas Implementaciones</h1>
+          <h2 class="sm:text-4xl text-3xl font-bold title-font text-gray-900 mb-4">Últimas Implementaciones</h2>
           <div class="w-16 h-1 rounded-full bg-orange-500 mx-auto mb-4"></div>
           <p class="lg:w-2/3 mx-auto leading-relaxed text-base text-gray-600">
             Conoce los proyectos más recientes donde hemos implementado soluciones de almacenamiento para empresas de diversos rubros.
@@ -23,7 +23,7 @@
             :to="`/blog/${latestPosts[0].slug}`"
             class="group relative lg:col-span-8 h-[500px] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
           >
-            <img 
+            <img loading="lazy" decoding="async" 
               :src="latestPosts[0].gallery[0]" 
               :alt="latestPosts[0].title"
               class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -57,7 +57,7 @@
             :to="`/blog/${latestPosts[1].slug}`"
             class="group relative lg:col-span-4 h-[500px] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
           >
-            <img 
+            <img loading="lazy" decoding="async" 
               :src="latestPosts[1].gallery[0]" 
               :alt="latestPosts[1].title"
               class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
@@ -92,7 +92,7 @@
             :to="`/blog/${post.slug}`"
             class="group relative lg:col-span-3 md:col-span-1 h-[320px] rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 hover:-translate-y-1"
           >
-            <img 
+            <img loading="lazy" decoding="async" 
               :src="post.gallery[0]" 
               :alt="post.title"
               class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"

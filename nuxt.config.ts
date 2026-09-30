@@ -1,74 +1,76 @@
 import tailwindcss from "@tailwindcss/vite";
+import products from "./stores/products.json";
+import services from "./stores/services.json";
+import blog from "./stores/blog.json";
+
+const SITE_URL = "https://racklog.cl";
+
+// Todas las rutas se generan como HTML estatico (SSG) al compilar
+const prerenderRoutes = [
+  "/",
+  "/nosotros",
+  "/productos",
+  "/blog",
+  "/carrito",
+  "/politica-privacidad",
+  "/politica-cookies",
+  "/terminos",
+  "/sitemap.xml",
+  ...products.map((p) => `/productos/${p.slug}`),
+  ...services.map((s) => `/servicios/${s.slug}`),
+  ...blog.map((b) => `/blog/${b.slug}`),
+];
 
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
-  devtools: { enabled: process.env.NODE_ENV !== 'production' },
-  css: ['~/assets/css/main.css'],
-  
-  // Disable SSR completely
-  ssr: false,
-  
-  // Set rendering mode explicitly to client-side only
-  routeRules: {
-    '/**': { ssr: false }
-  },
-  
-  // Configure app behavior for CSR
-  app: {
-    baseURL: '/',  // Ensure proper base URL
-    buildAssetsDir: '/_nuxt/', // Default directory for assets
-    head: {
-      title: 'Racklog',
-      meta: [
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' }
-      ],
-      script: [
-        {
-          type: 'text/javascript',
-          children: `(function(c,l,a,r,i,t,y){
-            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-          })(window, document, "clarity", "script", "u2i8dmi3pu");`
-        }
-      ]
-    }
-  },
-  
-  // Important: This forces static HTML generation
-  nitro: {
-    output: {
-      publicDir: '.output/public'
+  devtools: { enabled: process.env.NODE_ENV !== "production" },
+  css: ["~/assets/css/main.css"],
+
+  // Contenido estatico: se renderiza en build (SSG) para que buscadores y
+  // redes sociales reciban el HTML completo de cada pagina
+  ssr: true,
+
+  runtimeConfig: {
+    public: {
+      siteUrl: SITE_URL,
     },
-    preset: 'static'  // This is key for pure client-side rendering
   },
-  
-  // Disable features that depend on SSR
-  modules: [
-    // Remove any modules that require SSR
-  ],
-  
-  // Optimize Vite for client-side rendering
+
+  app: {
+    head: {
+      htmlAttrs: { lang: "es-CL" },
+      titleTemplate: "%s | Racklog",
+      title: "Racks y estanterías industriales en Chile",
+      meta: [
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        {
+          name: "description",
+          content:
+            "Racklog fabrica e instala racks selectivos, ángulo ranurado, mini racks y soluciones de almacenamiento industrial en Chile. Cotiza en línea.",
+        },
+        { name: "theme-color", content: "#262626" },
+        { property: "og:site_name", content: "Racklog" },
+        { property: "og:locale", content: "es_CL" },
+        { property: "og:type", content: "website" },
+        { property: "og:image", content: `${SITE_URL}/assets/images/og-racklog.jpg` },
+        { property: "og:image:width", content: "1200" },
+        { property: "og:image:height", content: "630" },
+        { name: "twitter:card", content: "summary_large_image" },
+      ],
+      link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
+    },
+  },
+
+  nitro: {
+    preset: "static",
+    prerender: {
+      routes: prerenderRoutes,
+      crawlLinks: true,
+      failOnError: true,
+    },
+  },
+
   vite: {
-    plugins: [
-      tailwindcss(),
-    ],
-    build: {
-      // Optimize chunks for client-side loading
-      rollupOptions: {
-        output: {
-          manualChunks: (id) => {
-            if (id.includes('node_modules')) {
-              return id.split('node_modules/')[1].split('/')[0].toString();
-            }
-          }
-        }
-      }
-    }
+    plugins: [tailwindcss()],
   },
-  
-  plugins: [
-    '~/plugins/pinia.ts',
-    '~/plugins/gtag.client.ts',
-  ],
 });

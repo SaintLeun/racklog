@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+/* Foco visible siempre al navegar con teclado (WCAG 2.4.7), aunque un
+   componente use focus:outline-none */
+:focus-visible {
+  outline: 2px solid #ea580c !important;
+  outline-offset: 2px;
+}
+
+/* Respetar a quienes prefieren menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

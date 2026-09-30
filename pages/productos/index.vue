@@ -95,7 +95,7 @@
             :style="{ animationDelay: `${index * 0.05}s` }"
           >
           <div class="relative overflow-hidden aspect-w-4 aspect-h-3">
-              <img 
+              <img loading="lazy" decoding="async" 
                 :src="product.images.card" 
                 :alt="product.name" 
                 class="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
@@ -323,6 +323,11 @@
     // Scroll to top when page loads
     window.scrollTo(0, 0);
   });
+
+usePageSeo({
+  title: 'Productos: racks, estanterías y entreplantas',
+  description: 'Catálogo de racks selectivos, drive-in, dinámicos, push-back, ángulo ranurado, mini racks, cajas plásticas y entreplantas. Cotiza en línea.',
+});
 </script>
 
 <style scoped>

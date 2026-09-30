@@ -7,12 +7,12 @@
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         <div v-for="entry in paginatedEntries" :key="entry.slug" class="bg-white rounded-xl shadow-md hover:shadow-xl transition-all overflow-hidden flex flex-col">
-          <img :src="entry.gallery[0]" :alt="entry.title" class="h-56 w-full object-cover object-center">
+          <img loading="lazy" decoding="async" :src="entry.gallery[0]" :alt="entry.title" width="800" height="600" class="h-56 w-full object-cover object-center">
           <div class="p-6 flex flex-col flex-1">
             <h2 class="text-2xl font-bold text-orange-500 mb-2">{{ entry.title }}</h2>
             <p class="text-gray-700 mb-4 flex-1">{{ entry.description }}</p>
             <div class="flex items-center justify-between mt-4">
-              <span class="text-xs text-gray-400">{{ formatDate(entry.date) }}</span>
+              <span class="text-sm text-gray-600">{{ formatDate(entry.date) }}</span>
               <NuxtLink :to="`/blog/${entry.slug}`" class="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors">
                 Ver proyecto
                 <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
@@ -57,6 +57,11 @@ function formatDate(date: string) {
 
 onMounted(async () => {
   await blogStore.loadEntries();
+});
+
+usePageSeo({
+  title: 'Proyectos recientes',
+  description: 'Proyectos de racks y estanterías industriales que Racklog ha diseñado e instalado para empresas de logística, retail, salud y más.',
 });
 </script>
 
