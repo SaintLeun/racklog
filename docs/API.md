@@ -3,12 +3,15 @@
 Base URL (current): `https://api.racklog.cl/api`
 
 ## POST /send-email
-Sends email(s) and creates a CRM lead.
+Sends email(s) and creates a CRM lead. Requires `Content-Type: application/json`
+(other content types get `415`, which blocks cross-site form posts).
+
+The confirmation email always goes to the email inside `data` (`email` for
+contact, `customerEmail` for quote). A `to` field is ignored if sent.
 
 Request body (JSON):
 ```json
 {
-  "to": "client@example.com",
   "data": {
     "name": "Jane Doe",
     "email": "client@example.com",
@@ -24,7 +27,6 @@ Request body (JSON):
 For quote requests:
 ```json
 {
-  "to": "client@example.com",
   "data": {
     "customerName": "Jane Doe",
     "customerEmail": "client@example.com",
@@ -53,37 +55,40 @@ Response (success):
 ```json
 {
   "status": "success",
-  "message": "Email sent successfully",
   "reference": "CT-20250301-1a2b",
-  "type": "contact",
-  "internal_result": { "success": true },
-  "client_result": { "success": true }
+  "confirmation_sent": true
 }
 ```
+
+Errors (always JSON, never internal details):
+
+| Code | Cause |
+| --- | --- |
+| 400 | Invalid JSON or unknown `type` |
+| 405 | Method other than POST |
+| 413 | Body larger than 20 KB |
+| 415 | Content-Type is not `application/json` |
+| 422 | Validation failed (email, name, product quantity/price) |
+| 429 | Rate limit (5 per IP / 10 min, 3 per recipient / hour, 200 global / hour) |
+| 500 | Unexpected error; the response includes `request_id` to find it in the log |
+| 502 | Neither the internal email nor the Kommo lead could be created |
 
 Notes:
 - Types: `contact` or `quote`.
-- The endpoint also creates a Kommo lead.
+- The endpoint also creates a Kommo lead (10 s timeout).
+- Field lengths are capped (name 100, message/comments 5000, up to 50 products).
+- Each submission is logged as one JSON line (`form_submission`) with a `request_id`.
 
-## POST /create-lead
-Creates a CRM lead directly.
-
-Request body (JSON):
-```json
-{
-  "type": "Cotizacion",
-  "customerName": "Jane Doe",
-  "customerEmail": "client@example.com"
-}
-```
-
-Response:
-```json
-{
-  "status": 200,
-  "response": { "_embedded": { "leads": [] } }
-}
-```
+## GET /health
+Uptime probe. Returns `200 {"status":"ok"}` when the Kommo token, `mail()` and
+rate-limit storage are available, or `503 {"status":"degraded"}` with the failing
+check. Point the uptime monitor here.
 
 ## CORS
-CORS headers are set in [api/config/cors.php](api/config/cors.php).
+CORS headers are set in [api/config/cors.php](api/config/cors.php). Only
+`https://racklog.cl` and `https://www.racklog.cl` are allowed; `http://localhost:3000`
+is added only when the server sets `APP_ENV=development`.
+
+## Local testing
+`KOMMO_API_URL` overrides the Kommo endpoint so the API can be tested without
+creating real leads.

@@ -2,44 +2,63 @@
 
 require_once __DIR__ . '/../utils/mailer.php';
 require_once __DIR__ . '/../utils/rate_limit.php';
+require_once __DIR__ . '/../utils/validation.php';
+require_once __DIR__ . '/../utils/logger.php';
+
+function jsonResponse(int $status, array $body): void {
+    http_response_code($status);
+    echo json_encode($body);
+}
 
 function handleSendEmail(string $method): void {
     if ($method !== 'POST') {
-        http_response_code(405);
-        echo json_encode(['error' => 'Method not allowed']);
+        header('Allow: POST, OPTIONS');
+        jsonResponse(405, ['error' => 'Method not allowed']);
         return;
     }
 
-    $inputJSON = file_get_contents('php://input');
-    $input = json_decode($inputJSON, true);
+    // Solo JSON: un formulario HTML de otro sitio no puede enviar este Content-Type
+    // sin pasar por el preflight de CORS (proteccion contra CSRF)
+    $contentType = strtolower($_SERVER['CONTENT_TYPE'] ?? '');
+    if (!str_starts_with($contentType, 'application/json')) {
+        jsonResponse(415, ['error' => 'Content-Type must be application/json']);
+        return;
+    }
 
-    $to = $input['to'] ?? $_POST['to'] ?? '';
-    $content = $input['data'] ?? $input['text'] ?? $_POST['text'] ?? '';
-    $type = strtolower(trim($input['type'] ?? $_POST['type'] ?? 'quote'));
+    $raw = file_get_contents('php://input');
+    if (strlen($raw) > 20000) {
+        jsonResponse(413, ['error' => 'Payload too large']);
+        return;
+    }
 
-    if (empty($to) || empty($content)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Missing required parameters (to, data/text)']);
+    $input = json_decode($raw, true);
+    if (!is_array($input)) {
+        jsonResponse(400, ['error' => 'Invalid JSON']);
         return;
     }
 
     // Honeypot: los bots suelen rellenar campos ocultos que un usuario real no ve
     if (!empty($input['website'] ?? $input['honeypot'] ?? '')) {
-        http_response_code(200);
-        echo json_encode(['status' => 'success', 'message' => 'Email sent successfully']);
+        jsonResponse(200, ['status' => 'success']);
         return;
     }
 
-    // Validar destinatario y tamano del contenido
-    if (!is_string($to) || strlen($to) > 254 || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Invalid email address']);
+    $type = is_string($input['type'] ?? null) ? strtolower(trim($input['type'])) : '';
+    if ($type === 'contact') {
+        [$data, $error] = validateContactData($input['data'] ?? null);
+        $recipient = $data['email'] ?? null;
+        $prefix = 'CT';
+    } elseif ($type === 'quote') {
+        [$data, $error] = validateQuoteData($input['data'] ?? null);
+        $recipient = $data['customerEmail'] ?? null;
+        $prefix = 'QT';
+    } else {
+        jsonResponse(400, ['error' => 'Invalid type']);
         return;
     }
 
-    if (strlen(is_string($content) ? $content : json_encode($content)) > 20000) {
-        http_response_code(413);
-        echo json_encode(['error' => 'Payload too large']);
+    if ($error !== null) {
+        jsonResponse(422, ['error' => $error]);
         return;
     }
 
@@ -47,74 +66,44 @@ function handleSendEmail(string $method): void {
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     if (
         !checkRateLimit('ip', $ip, 5, 600) ||
-        !checkRateLimit('to', strtolower($to), 3, 3600) ||
+        !checkRateLimit('to', strtolower($recipient), 3, 3600) ||
         !checkRateLimit('global', 'all', 200, 3600)
     ) {
-        http_response_code(429);
         header('Retry-After: 600');
-        echo json_encode(['error' => 'Too many requests']);
+        jsonResponse(429, ['error' => 'Too many requests']);
         return;
     }
 
-    // Registrar para depuración
-    error_log("handleSendEmail: tipo recibido: {$type}");
-
-    // Email interno
+    $ref = $prefix . '-' . date('Ymd') . '-' . substr(bin2hex(random_bytes(3)), 0, 4);
     $internalEmail = 'contacto@racklog.cl';
-    $ref = null;
-    $internalResult = null;
-    $clientResult = null;
 
-    // Usar elseif para evitar que se ejecuten ambos bloques
-    if($type === 'quote') {
-        $ref = 'QT-' . date('Ymd') . '-' . substr(uniqid(), -4);
-        
-        error_log("Procesando cotización con ref: {$ref}");
-        
-        // correo interno para cotización
-        $internalResult = sendEmail($internalEmail, $content, 'quote', $ref);
-        
-        // correo al cliente para cotización
-        $clientResult = sendEmail($to, $content, 'quote_confirmation', $ref);
-    }
-    elseif ($type === 'contact') {
-        $ref = 'CT-' . date('Ymd') . '-' . substr(uniqid(), -4);
-        
-        error_log("Procesando contacto con ref: {$ref}");
-        
-        // correo interno para contacto
-        $internalResult = sendEmail($internalEmail, $content, 'contact', $ref);
-        
-        // correo al cliente para contacto
-        $clientResult = sendEmail($to, $content, 'contact_confirmation', $ref);
-    }
-    else {
-        http_response_code(400);
-        echo json_encode(['error' => 'Tipo no válido: ' . $type]);
+    // La confirmacion va siempre al email del formulario, nunca a un destinatario libre
+    $internalSent = sendEmail($internalEmail, $data, $type, $ref);
+    $confirmationSent = sendEmail($recipient, $data, $type . '_confirmation', $ref);
+
+    $leadResult = createLead($data, $type, $ref);
+    $leadOk = $leadResult['error'] === null && $leadResult['status'] >= 200 && $leadResult['status'] < 300;
+
+    logEvent($internalSent && $leadOk ? 'info' : 'error', 'form_submission', [
+        'ref' => $ref,
+        'type' => $type,
+        'recipient' => maskEmail($recipient),
+        'internal_email' => $internalSent,
+        'confirmation_email' => $confirmationSent,
+        'lead_created' => $leadOk,
+        'kommo_status' => $leadResult['status'],
+        'kommo_error' => $leadResult['error'],
+    ]);
+
+    // Si no llego ni el correo interno ni el lead, la solicitud se perdio: avisar al usuario
+    if (!$internalSent && !$leadOk) {
+        jsonResponse(502, ['error' => 'No se pudo registrar la solicitud', 'reference' => $ref]);
         return;
     }
 
-    // Asegurarnos de que el contenido pasado a createLead es un array
-    $leadData = is_array($content) ? $content : $input;
-    $leadResult = createLead($leadData, $type, $ref);
-    $leadOk = ($leadResult['error'] ?? null) === null
-        && ($leadResult['status'] ?? 0) >= 200 && ($leadResult['status'] ?? 0) < 300;
-    if (!$leadOk) {
-        // El correo ya salio; dejamos rastro para no perder el lead sin aviso
-        error_log("createLead fallo ref={$ref} status=" . ($leadResult['status'] ?? 'n/a')
-            . " error=" . ($leadResult['error'] ?? 'none')
-            . " response=" . json_encode($leadResult['response'] ?? null));
-    }
-
-    // Incluir más información en la respuesta para ayudar a la depuración
-    http_response_code(200);
-    echo json_encode([
-        'status' => 'success', 
-        'message' => 'Email sent successfully',
+    jsonResponse(200, [
+        'status' => 'success',
         'reference' => $ref,
-        'type' => $type,
-        'lead_created' => $leadOk,
-        'internal_result' => json_decode($internalResult, true),
-        'client_result' => json_decode($clientResult, true)
+        'confirmation_sent' => $confirmationSent,
     ]);
 }

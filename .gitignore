@@ -31,3 +31,6 @@ api/config/token.php
 # Logs de PHP (no siguen el patrón *.log)
 api/error_log
 api/utils/mail_debug.log
+
+# Contadores del rate limit de la API
+api/storage/

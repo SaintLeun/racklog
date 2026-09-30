@@ -114,19 +114,10 @@ function generateQuoteConfirmation(array $data, string $quoteRef): string {
         </div>";
     }
 
-    // Comentarios del cliente
+    // Los comentarios del cliente no se repiten en la confirmacion: es texto libre
+    // y permitiria usar este correo para enviar contenido arbitrario a terceros.
+    // El equipo interno los recibe completos en la plantilla de cotizacion.
     $commentsHtml = '';
-    if (!empty($customerComments)) {
-        $commentsHtml = "
-        <div style='margin-bottom:25px; padding-bottom:20px; border-bottom:1px solid #f0f0f0;'>
-            <div style='background-color:#f8f8f8; color:#ff9800; font-size:16px; font-weight:bold; padding:10px 15px; border-radius:4px; margin-bottom:15px;'>
-                COMENTARIOS ADICIONALES
-            </div>
-            <div style='background-color:#fff8e1; border-left:4px solid #ffc107; padding:15px; border-radius:4px;'>
-                " . nl2br(esc($customerComments)) . "
-            </div>
-        </div>";
-    }
 
     // Productos section title
     $productsSectionTitle = "

@@ -3,7 +3,8 @@
 function createLead(array $data, string $tipo, string $referencia): array {
     global $BEARER_TOKEN;
 
-    $apiUrl = 'https://comercialracklogcl.kommo.com/api/v4/leads';
+    // KOMMO_API_URL permite apuntar a un servidor de prueba en desarrollo
+    $apiUrl = getenv('KOMMO_API_URL') ?: 'https://comercialracklogcl.kommo.com/api/v4/leads';
     $bearerToken = 'Bearer ' . $BEARER_TOKEN;
 
     // Normalizar el tipo para comparaciones consistentes
@@ -46,6 +47,9 @@ function createLead(array $data, string $tipo, string $referencia): array {
     ]);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    // Si Kommo no responde, no dejar colgado el formulario del usuario
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -53,8 +57,8 @@ function createLead(array $data, string $tipo, string $referencia): array {
     curl_close($ch); 
 
     return [
-        'status' => $httpCode,
-        'response' => json_decode($response, true),
+        'status' => (int) $httpCode,
+        'response' => is_string($response) ? json_decode($response, true) : null,
         'error' => $error ?: null
     ];
 }
@@ -143,7 +147,7 @@ function formatLeadDetails(array $data, string $tipo): string {
                     $output .= "   Configuración: " . $product['config'] . "\n";
                 }
                 
-                $output .= "   Solo cotización: " . ($product['quoteOnly'] ? 'Sí' : 'No') . "\n";
+                $output .= "   Solo cotización: " . (!empty($product['quoteOnly']) ? 'Sí' : 'No') . "\n";
                 $output .= "\n";
             }
             

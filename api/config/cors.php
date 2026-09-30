@@ -4,14 +4,18 @@
 $allowedOrigins = [
     'https://racklog.cl',
     'https://www.racklog.cl',
-    'http://localhost:3000', // desarrollo local (nuxt dev)
 ];
+
+// Desarrollo local (nuxt dev): solo si el servidor lo indica con APP_ENV
+if (getenv('APP_ENV') === 'development') {
+    $allowedOrigins[] = 'http://localhost:3000';
+}
 
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 header('Vary: Origin');
 if (in_array($origin, $allowedOrigins, true)) {
     header("Access-Control-Allow-Origin: {$origin}");
-    header('Access-Control-Allow-Methods: POST, OPTIONS');
+    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type');
 }
 
