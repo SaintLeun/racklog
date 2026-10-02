@@ -34,3 +34,4 @@ api/utils/mail_debug.log
 
 # Contadores del rate limit de la API
 api/storage/
+*.zip
