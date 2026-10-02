@@ -8,8 +8,9 @@
 const route = useRoute();
 const { siteUrl } = useRuntimeConfig().public;
 
-// URL canonica sin parametros ni barra final, igual para www y sin www
-const canonical = computed(() => siteUrl + (route.path === '/' ? '/' : route.path.replace(/\/$/, '')));
+// URL canonica sin parametros y con barra final (el hosting redirige
+// /productos -> /productos/ porque cada pagina es una carpeta), igual para www y sin www
+const canonical = computed(() => siteUrl + route.path.replace(/\/?$/, '/'));
 
 useHead(() => ({
   link: [{ rel: 'canonical', href: canonical.value }],

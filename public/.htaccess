@@ -6,7 +6,6 @@ Options -Indexes
 DirectoryIndex index.html
 
 RewriteEngine On
-RewriteBase /
 
 # 1) Forzar HTTPS y dominio canonico (sin www) en una sola redireccion 301
 RewriteCond %{HTTPS} !=on [OR]
@@ -21,7 +20,7 @@ RewriteRule (^|/)\.(?!well-known/) - [F,L]
 
 # 3) No quitar la barra final: Apache (mod_dir) agrega "/" a las carpetas
 # (/productos -> /productos/) y quitarla causaba un bucle infinito
-# (ERR_TOO_MANY_REDIRECTS). El hosting no permite DirectorySlash Off.
+# (ERR_TOO_MANY_REDIRECTS). DirectorySlash Off da error 500 en este hosting.
 
 # 4) Servir /ruta desde /ruta/index.html
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -55,10 +54,7 @@ ErrorDocument 404 /404.html
         Header set Cache-Control "public, max-age=2592000"
     </If>
     # HTML y datos: siempre revalidar para ver cambios al desplegar
-    <If "%{REQUEST_URI} =~ m#(\.html|/|_payload\.json|sitemap\.xml|robots\.txt)$#">
-        Header set Cache-Control "no-cache"
-    </If>
-    <If "%{REQUEST_URI} !~ m#\.[a-z0-9]+$#">
+    <If "%{REQUEST_URI} =~ m#(\.html|/|_payload\.json|sitemap\.xml|robots\.txt)$# || %{REQUEST_URI} !~ m#\.[a-z0-9]+$#">
         Header set Cache-Control "no-cache"
     </If>
 </IfModule>

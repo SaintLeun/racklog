@@ -20,8 +20,9 @@ export default defineEventHandler((event) => {
     { path: '/terminos', priority: '0.2' },
   ];
 
+  // Con barra final: es la URL que sirve el hosting sin redirigir
   const urls = pages
-    .map((p) => `  <url>\n    <loc>${siteUrl}${p.path}</loc>\n    <lastmod>${p.lastmod || today}</lastmod>\n    <priority>${p.priority}</priority>\n  </url>`)
+    .map((p) => `  <url>\n    <loc>${siteUrl}${p.path.replace(/\/?$/, '/')}</loc>\n    <lastmod>${p.lastmod || today}</lastmod>\n    <priority>${p.priority}</priority>\n  </url>`)
     .join('\n');
 
   setHeader(event, 'Content-Type', 'application/xml; charset=utf-8');
