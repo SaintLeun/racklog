@@ -16,7 +16,21 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Dependencias sin vulnerabilidades altas
-        run: npm audit --omit=dev --audit-level=high
+        # GHSA-86w9-cpqp-85rv: node-forge (sin version corregida) solo lo usa
+        # `nuxt dev --https` para certificados locales; no llega al sitio estatico.
+        # Quitar de la lista cuando salga node-forge > 1.4.0.
+        run: |
+          npm audit --omit=dev --json > audit.json || true
+          node -e '
+            const ignorar = ["GHSA-86w9-cpqp-85rv"];
+            const { vulnerabilities = {} } = require("./audit.json");
+            const altas = Object.values(vulnerabilities)
+              .flatMap((v) => v.via.filter((x) => typeof x === "object"))
+              .filter((x) => ["high", "critical"].includes(x.severity))
+              .filter((x) => !ignorar.some((id) => x.url.endsWith(id)));
+            if (altas.length) { console.log(altas); process.exit(1); }
+            console.log("Sin vulnerabilidades altas (ignoradas: " + ignorar.join(", ") + ")");
+          '
       - name: Generar sitio estatico (falla si alguna pagina da error)
         run: npm run generate
       - name: Verificar paginas clave
