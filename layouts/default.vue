@@ -69,7 +69,7 @@
 
   // En la propia pagina del carrito el acceso flotante sobra y tapa el formulario
   const route = useRoute()
-  const showCartButton = computed(() => cartCount.value > 0 && route.path !== '/carrito')
+  const showCartButton = computed(() => cartCount.value > 0 && route.path.replace(/\/$/, '') !== '/carrito')
 
   // Variable para controlar la animación
   const hasNewItem = ref(false)

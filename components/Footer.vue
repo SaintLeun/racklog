@@ -16,7 +16,7 @@
               </svg>
               Contáctanos ahora
             </button>
-            <router-link to="/carrito" class="btn btn-ghost-light btn-lg">Solicitar cotización</router-link>
+            <NuxtLink to="/carrito" class="btn btn-ghost-light btn-lg">Solicitar cotización</NuxtLink>
           </div>
         </div>
       </div>
@@ -53,10 +53,10 @@
           <h3 class="footer-heading">Productos</h3>
           <ul class="mt-5 space-y-1">
             <li v-for="category in productCategories" :key="category.id">
-              <router-link :to="`/productos?categoria=${category.id}`" class="footer-link">{{ category.name }}</router-link>
+              <NuxtLink :to="`/productos?categoria=${category.id}`" class="footer-link">{{ category.name }}</NuxtLink>
             </li>
             <li>
-              <router-link to="/productos" class="footer-link footer-link--accent whitespace-nowrap">Ver todos los productos →</router-link>
+              <NuxtLink to="/productos" class="footer-link footer-link--accent whitespace-nowrap">Ver todos los productos →</NuxtLink>
             </li>
           </ul>
         </div>
@@ -65,11 +65,11 @@
         <div class="lg:col-span-2">
           <h3 class="footer-heading">Enlaces útiles</h3>
           <ul class="mt-5 space-y-1">
-            <li><router-link to="/nosotros" class="footer-link">Nosotros</router-link></li>
-            <li><router-link to="/productos" class="footer-link">Catálogo de productos</router-link></li>
-            <li><router-link to="/carrito" class="footer-link">Solicitar cotización</router-link></li>
+            <li><NuxtLink to="/nosotros" class="footer-link">Nosotros</NuxtLink></li>
+            <li><NuxtLink to="/productos" class="footer-link">Catálogo de productos</NuxtLink></li>
+            <li><NuxtLink to="/carrito" class="footer-link">Solicitar cotización</NuxtLink></li>
             <li><a href="#" @click.prevent="openContactModal" class="footer-link">Contacto</a></li>
-            <li><router-link to="/blog" class="footer-link">Proyectos recientes</router-link></li>
+            <li><NuxtLink to="/blog" class="footer-link">Proyectos recientes</NuxtLink></li>
           </ul>
         </div>
 
@@ -114,12 +114,12 @@
         <h3 class="footer-heading">Productos destacados</h3>
         <ul class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           <li v-for="product in featuredProducts" :key="product.name">
-            <router-link :to="`/productos/${product.slug}`" class="group block">
+            <NuxtLink :to="`/productos/${product.slug}`" class="group block">
               <div class="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-ink-800 ring-1 ring-white/10">
                 <img loading="lazy" decoding="async" :src="product.images?.card" :alt="product.name" width="320" height="240" class="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-300 group-hover:scale-105 group-hover:opacity-100" />
               </div>
               <p class="mt-2.5 truncate text-sm font-medium text-neutral-300 transition-colors group-hover:text-white">{{ product.name }}</p>
-            </router-link>
+            </NuxtLink>
           </li>
         </ul>
       </div>

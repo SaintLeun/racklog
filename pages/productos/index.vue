@@ -123,7 +123,7 @@
               </ul>
 
               <div class="mt-auto pt-5">
-                <router-link
+                <NuxtLink
                   :to="'/productos/' + product.slug"
                   class="link-arrow text-sm after:absolute after:inset-0 after:content-['']"
                 >
@@ -131,7 +131,7 @@
                   <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                   </svg>
-                </router-link>
+                </NuxtLink>
               </div>
             </div>
           </article>

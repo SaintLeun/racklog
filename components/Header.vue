@@ -88,7 +88,7 @@
               <div class="p-5">
                 <h3 class="px-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">Productos Destacados</h3>
                 <div class="mt-3 space-y-1">
-                  <router-link
+                  <NuxtLink
                     v-for="product in featuredProducts"
                     :key="product.id"
                     :to="'/productos/' + product.slug"
@@ -102,7 +102,7 @@
                       <p class="text-sm font-semibold text-neutral-900">{{ product.name }}</p>
                       <p class="line-clamp-1 text-xs text-neutral-600">{{ product.description?.short }}</p>
                     </div>
-                  </router-link>
+                  </NuxtLink>
                 </div>
               </div>
 
@@ -111,7 +111,7 @@
                 <h3 class="px-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">Categorías</h3>
                 <ul class="mt-3 space-y-0.5">
                   <li v-for="category in productCategories" :key="category.id">
-                    <router-link
+                    <NuxtLink
                       :to="'/productos?categoria=' + category.id"
                       @click="closeAllMenus"
                       class="flex items-center justify-between rounded-lg px-2 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-white hover:text-neutral-900"
@@ -120,11 +120,11 @@
                       <svg class="h-4 w-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                       </svg>
-                    </router-link>
+                    </NuxtLink>
                   </li>
                 </ul>
 
-                <router-link
+                <NuxtLink
                   to="/productos"
                   @click="closeAllMenus"
                   class="link-arrow mt-auto rounded-lg px-2 pt-4 text-sm"
@@ -133,7 +133,7 @@
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
-                </router-link>
+                </NuxtLink>
               </div>
             </div>
           </div>
@@ -156,7 +156,7 @@
           >
             <h3 class="px-3 pt-2 text-xs font-semibold uppercase tracking-wider text-neutral-500">Nuestros Servicios</h3>
             <div class="mt-2 space-y-0.5">
-              <router-link
+              <NuxtLink
                 v-for="service in services"
                 :key="service.id"
                 :to="'/servicios/' + service.slug"
@@ -169,7 +169,7 @@
                   </svg>
                 </span>
                 <span class="text-sm font-medium text-neutral-800">{{ service.name }}</span>
-              </router-link>
+              </NuxtLink>
             </div>
           </div>
         </div>
@@ -177,7 +177,7 @@
 
       <!-- Acciones -->
       <div class="flex items-center gap-1 sm:gap-2">
-        <router-link
+        <NuxtLink
           to="/carrito"
           class="relative inline-flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
           @click="closeAllMenus"
@@ -192,7 +192,7 @@
           >
             {{ cartCount }}
           </span>
-        </router-link>
+        </NuxtLink>
 
         <button type="button" class="btn btn-primary btn-sm hidden sm:inline-flex min-h-10 px-4" @click="openContactModal">
           Cotizar
@@ -248,7 +248,7 @@
             </button>
 
             <div v-if="openMobileSubmenu === 'productos'" class="mb-2 ml-3 mt-1 space-y-0.5 border-l border-neutral-200 pl-3">
-              <router-link
+              <NuxtLink
                 v-for="category in productCategories"
                 :key="category.id"
                 :to="'/productos?categoria=' + category.id"
@@ -256,10 +256,10 @@
                 class="mobile-sublink"
               >
                 {{ category.name }}
-              </router-link>
-              <router-link to="/productos" @click="closeAllMenus" class="mobile-sublink mobile-sublink--all">
+              </NuxtLink>
+              <NuxtLink to="/productos" @click="closeAllMenus" class="mobile-sublink mobile-sublink--all">
                 Ver todos los productos →
-              </router-link>
+              </NuxtLink>
             </div>
           </li>
 
@@ -282,7 +282,7 @@
             </button>
 
             <div v-if="openMobileSubmenu === 'servicios'" class="mb-2 ml-3 mt-1 space-y-0.5 border-l border-neutral-200 pl-3">
-              <router-link
+              <NuxtLink
                 v-for="service in services"
                 :key="service.id"
                 :to="'/servicios/' + service.slug"
@@ -290,7 +290,7 @@
                 class="mobile-sublink"
               >
                 {{ service.name }}
-              </router-link>
+              </NuxtLink>
             </div>
           </li>
 
@@ -300,7 +300,7 @@
         </ul>
 
         <div class="mt-4 grid gap-2 border-t border-neutral-200 pt-4 sm:grid-cols-2">
-          <router-link to="/carrito" @click="closeAllMenus" class="btn btn-secondary justify-between">
+          <NuxtLink to="/carrito" @click="closeAllMenus" class="btn btn-secondary justify-between">
             <span class="inline-flex items-center gap-2">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -310,7 +310,7 @@
             <span v-if="cartCount > 0" class="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-brand-700 px-1.5 text-xs font-bold text-white">
               {{ cartCount }}
             </span>
-          </router-link>
+          </NuxtLink>
           <button type="button" class="btn btn-primary" @click="openContactModal">Cotizar</button>
         </div>
 
@@ -347,8 +347,10 @@ import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia'; 
 import ContactModal from '~/components/ContactModal.vue';
 
-// Abrir el formulario de contacto una vez por sesion, 3 s despues de cargar la pagina
-const AUTO_OPEN_DELAY_MS = 3000;
+// Abrir el formulario de contacto una vez por sesion, 30 s despues de cargar la pagina.
+// No se abre mientras el aviso de cookies siga sin responder, para no apilar ventanas.
+const AUTO_OPEN_DELAY_MS = 30000;
+const { analytics: consentState } = useConsent();
 
 onMounted(() => {
   try {
@@ -358,6 +360,7 @@ onMounted(() => {
   }
 
   setTimeout(() => {
+    if (consentState.value === 'unset' || isContactModalOpen.value) return;
     openContactModal();
     try {
       sessionStorage.setItem('contactModalShown', 'true');

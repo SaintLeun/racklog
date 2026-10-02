@@ -36,6 +36,14 @@ export default defineNuxtConfig({
     },
   },
 
+  // El hosting sirve cada pagina como carpeta (/productos/), asi que los
+  // enlaces llevan barra final para evitar un 301 en cada clic
+  experimental: {
+    defaults: {
+      nuxtLink: { trailingSlash: "append" },
+    },
+  },
+
   app: {
     head: {
       htmlAttrs: { lang: "es-CL" },
