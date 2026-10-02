@@ -5,11 +5,6 @@
 Options -Indexes
 DirectoryIndex index.html
 
-# Sin esto, Apache (mod_dir) redirige /productos -> /productos/ porque existe
-# la carpeta, y la regla 3 la devuelve a /productos: bucle infinito
-# (ERR_TOO_MANY_REDIRECTS). La regla 4 ya sirve el index.html de la carpeta.
-DirectorySlash Off
-
 RewriteEngine On
 RewriteBase /
 
@@ -24,10 +19,9 @@ RewriteRule (^|/)\.(?!well-known/) - [F,L]
     Require all denied
 </FilesMatch>
 
-# 3) Quitar la barra final (/productos/ -> /productos) salvo en la raiz
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} ^(.+)/$
-RewriteRule ^ %1 [L,R=301]
+# 3) No quitar la barra final: Apache (mod_dir) agrega "/" a las carpetas
+# (/productos -> /productos/) y quitarla causaba un bucle infinito
+# (ERR_TOO_MANY_REDIRECTS). El hosting no permite DirectorySlash Off.
 
 # 4) Servir /ruta desde /ruta/index.html
 RewriteCond %{REQUEST_FILENAME} !-f
@@ -61,7 +55,10 @@ ErrorDocument 404 /404.html
         Header set Cache-Control "public, max-age=2592000"
     </If>
     # HTML y datos: siempre revalidar para ver cambios al desplegar
-    <If "%{REQUEST_URI} =~ m#(\.html|/|_payload\.json|sitemap\.xml|robots\.txt)$# || %{REQUEST_URI} !~ m#\.[a-z0-9]+$#">
+    <If "%{REQUEST_URI} =~ m#(\.html|/|_payload\.json|sitemap\.xml|robots\.txt)$#">
+        Header set Cache-Control "no-cache"
+    </If>
+    <If "%{REQUEST_URI} !~ m#\.[a-z0-9]+$#">
         Header set Cache-Control "no-cache"
     </If>
 </IfModule>
