@@ -36,9 +36,12 @@ alter table public.leads_web add column if not exists kommo_lead_id bigint;
 alter table public.leads_web enable row level security;
 revoke all on public.leads_web from anon;
 
--- Lectura y gestion desde la intranet. Activar solo si en la intranet unicamente
--- inician sesion usuarios internos (sin registro publico); si no, restringir por rol/email.
--- create policy "intranet lee leads" on public.leads_web for select to authenticated using (true);
+-- Lectura desde la intranet: solo usuarios con sesion iniciada (rol authenticated).
+-- Supone que en la intranet solo inician sesion usuarios internos (sin registro publico);
+-- si no, restringir por rol/email en el using.
+drop policy if exists "intranet lee leads" on public.leads_web;
+create policy "intranet lee leads" on public.leads_web for select to authenticated using (true);
+-- Para cambiar el estado de un lead desde la intranet (pendiente de decidir):
 -- create policy "intranet actualiza estado" on public.leads_web for update to authenticated using (true) with check (true);
 
 create schema if not exists privado;
