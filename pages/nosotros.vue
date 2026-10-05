@@ -75,12 +75,14 @@
             <div class="overflow-hidden rounded-2xl bg-ink-950 shadow-xl shadow-neutral-900/10 ring-1 ring-neutral-900/5">
               <video
                 class="block aspect-video h-auto w-full"
-                controls
-                preload="none"
+                autoplay
+                muted
+                loop
                 poster="/assets/images/nosotros-poster.webp"
                 width="1280"
                 height="720"
                 playsinline
+                disablepictureinpicture
                 aria-label="Video institucional de Racklog"
               >
                 <source src="/assets/videos/nosotros.mp4" type="video/mp4">

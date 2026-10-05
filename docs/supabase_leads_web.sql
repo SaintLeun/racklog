@@ -5,6 +5,9 @@
 --   privado.config_api             hash del token que usa la API del sitio (no expuesto por la API REST)
 --   public.registrar_lead_web()    unica puerta de entrada: valida el token e inserta
 --
+-- Despues de este archivo ejecutar docs/supabase_leads_clientes.sql (vinculo con clientes).
+-- Si se vuelve a ejecutar ESTE archivo, volver a ejecutar tambien ese (redefine registrar_lead_web).
+--
 -- La API del sitio solo conoce la clave publicable (anon) y el token: si se filtraran,
 -- lo unico que permiten es insertar leads. La clave service_role nunca sale de Supabase.
 
