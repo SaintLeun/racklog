@@ -2,8 +2,9 @@
 
 /**
  * Sonda de disponibilidad para monitoreo de uptime (GET /api/health).
- * Revisa lo que necesita el formulario: token de Kommo, mail() y
- * almacenamiento para el rate limit. No expone valores, solo el estado.
+ * Revisa lo que necesita el formulario: al menos un destino de leads
+ * (Kommo o la intranet en Supabase), mail() y almacenamiento para el
+ * rate limit. No expone valores, solo el estado.
  */
 function handleHealth(string $method): void {
     if ($method !== 'GET') {
@@ -13,14 +14,13 @@ function handleHealth(string $method): void {
         return;
     }
 
-    global $BEARER_TOKEN;
     $checks = [
-        'kommo_token' => is_string($BEARER_TOKEN) && strlen($BEARER_TOKEN) > 20
-            && $BEARER_TOKEN !== 'PON_AQUI_EL_TOKEN_ROTADO',
+        'kommo_token' => kommoConfigured(),
+        'intranet' => intranetConfigured(),
         'mail' => function_exists('mail'),
         'storage' => rateLimitStorageDir() !== null,
     ];
-    $ok = !in_array(false, $checks, true);
+    $ok = ($checks['kommo_token'] || $checks['intranet']) && $checks['mail'] && $checks['storage'];
 
     header('Cache-Control: no-store');
     http_response_code($ok ? 200 : 503);

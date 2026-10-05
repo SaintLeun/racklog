@@ -27,6 +27,7 @@ production.env
 
 # Secretos de la API (solo deben existir en el servidor)
 api/config/token.php
+api/config/supabase.php
 
 # Logs de PHP (no siguen el patrón *.log)
 api/error_log

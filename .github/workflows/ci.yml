@@ -65,3 +65,16 @@ jobs:
           check 422 -X POST -H 'Content-Type: application/json' -d '{"type":"contact","data":{"name":"A","email":"malo"}}' $A
           check 422 -X POST -H 'Content-Type: application/json' -d '{"type":"quote","data":{"customerName":"A","customerEmail":"a@b.cl","products":[{"name":"R","price":"abc"}]}}' $A
           check 200 -X POST -H 'Content-Type: application/json' -d '{"type":"contact","data":{"name":"Ana","email":"ana@example.com"}}' $A
+      - name: API sin Kommo, solo intranet (Supabase simulado)
+        run: |
+          rm -f api/config/token.php
+          mkdir -p /tmp/supabase && echo '<?php echo "\"ok\"";' > /tmp/supabase/index.php
+          php -S 127.0.0.1:8093 -t /tmp/supabase /tmp/supabase/index.php >/dev/null 2>&1 &
+          php -d sendmail_path=/bin/true -S 127.0.0.1:8092 -t api api/index.php >/dev/null 2>&1 &
+          SUPABASE_URL=http://127.0.0.1:8093 SUPABASE_ANON_KEY=ci_anon SUPABASE_LEAD_TOKEN=ci_token \
+            php -d sendmail_path=/bin/false -S 127.0.0.1:8094 -t api api/index.php >/dev/null 2>&1 &
+          sleep 1
+          check() { code=$(curl -s -o /dev/null -w '%{http_code}' "${@:2}"); [ "$code" = "$1" ] || { echo "Esperado $1, recibido $code: ${*:2}"; exit 1; }; }
+          check 503 http://127.0.0.1:8092/api/health
+          check 200 http://127.0.0.1:8094/api/health
+          check 200 -X POST -H 'Content-Type: application/json' -d '{"type":"contact","data":{"name":"Ana","email":"ana@example.com"}}' http://127.0.0.1:8094/api/send-email

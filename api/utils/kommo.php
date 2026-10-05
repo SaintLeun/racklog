@@ -1,7 +1,21 @@
 <?php
 
+function kommoConfigured(): bool {
+    global $BEARER_TOKEN;
+    return is_string($BEARER_TOKEN) && strlen($BEARER_TOKEN) > 20
+        && $BEARER_TOKEN !== 'PON_AQUI_EL_TOKEN_ROTADO';
+}
+
+/**
+ * Crea el lead en Kommo
+ * @return array ['status' => int, 'id' => ?int, 'response' => ?array, 'error' => ?string]; status 0 si no esta configurado o no hubo respuesta
+ */
 function createLead(array $data, string $tipo, string $referencia): array {
     global $BEARER_TOKEN;
+
+    if (!kommoConfigured()) {
+        return ['status' => 0, 'id' => null, 'response' => null, 'error' => 'not_configured'];
+    }
 
     // KOMMO_API_URL permite apuntar a un servidor de prueba en desarrollo
     $apiUrl = getenv('KOMMO_API_URL') ?: 'https://comercialracklogcl.kommo.com/api/v4/leads';
@@ -56,9 +70,13 @@ function createLead(array $data, string $tipo, string $referencia): array {
     $error = curl_error($ch);
     curl_close($ch); 
 
+    $body = is_string($response) ? json_decode($response, true) : null;
+    $id = $body['_embedded']['leads'][0]['id'] ?? null;
+
     return [
         'status' => (int) $httpCode,
-        'response' => is_string($response) ? json_decode($response, true) : null,
+        'id' => is_int($id) ? $id : null,
+        'response' => $body,
         'error' => $error ?: null
     ];
 }

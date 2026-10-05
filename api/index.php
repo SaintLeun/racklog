@@ -2,7 +2,12 @@
 
 // Configuraciones generales
 require_once __DIR__ . '/config/cors.php';
-require_once __DIR__ . '/config/token.php';
+// Kommo es opcional: sin token.php (o con el valor de ejemplo) los leads solo van a la intranet
+if (is_file(__DIR__ . '/config/token.php')) {
+    require_once __DIR__ . '/config/token.php';
+} else {
+    $BEARER_TOKEN = getenv('KOMMO_BEARER_TOKEN') ?: null;
+}
 
 // Utilidades y plantillas
 require_once __DIR__ . '/utils/logger.php';

@@ -80,9 +80,15 @@ Notes:
 - Each submission is logged as one JSON line (`form_submission`) with a `request_id`.
 
 ## GET /health
-Uptime probe. Returns `200 {"status":"ok"}` when the Kommo token, `mail()` and
-rate-limit storage are available, or `503 {"status":"degraded"}` with the failing
-check. Point the uptime monitor here.
+Uptime probe. Returns `200 {"status":"ok"}` when at least one lead destination
+(Kommo token or intranet Supabase config), `mail()` and rate-limit storage are
+available, or `503 {"status":"degraded"}` with the failing check. Point the uptime
+monitor here.
+
+Kommo is optional: without `api/config/token.php` (or with its placeholder value) the
+API skips Kommo and stores leads only in the intranet (`leads_web`, see
+[ENVIRONMENT.md](ENVIRONMENT.md)). When both are configured, the intranet row
+gets the Kommo lead id in `kommo_lead_id`.
 
 ## CORS
 CORS headers are set in [api/config/cors.php](api/config/cors.php). Only

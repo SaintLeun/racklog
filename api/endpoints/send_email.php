@@ -4,6 +4,7 @@ require_once __DIR__ . '/../utils/mailer.php';
 require_once __DIR__ . '/../utils/rate_limit.php';
 require_once __DIR__ . '/../utils/validation.php';
 require_once __DIR__ . '/../utils/logger.php';
+require_once __DIR__ . '/../utils/supabase.php';
 
 function jsonResponse(int $status, array $body): void {
     http_response_code($status);
@@ -84,7 +85,13 @@ function handleSendEmail(string $method): void {
     $leadResult = createLead($data, $type, $ref);
     $leadOk = $leadResult['error'] === null && $leadResult['status'] >= 200 && $leadResult['status'] < 300;
 
-    logEvent($internalSent && $leadOk ? 'info' : 'error', 'form_submission', [
+    $intranetResult = saveLeadToIntranet($data, $type, $ref, $leadOk ? $leadResult['id'] : null);
+    $intranetOk = $intranetResult['error'] === null;
+
+    // Un destino sin configurar (p. ej. sin Kommo) no es un error; si lo es que falle uno configurado
+    $kommoFailed = !$leadOk && $leadResult['error'] !== 'not_configured';
+    $intranetFailed = !$intranetOk && $intranetResult['error'] !== 'not_configured';
+    logEvent($internalSent && !$kommoFailed && !$intranetFailed ? 'info' : 'error', 'form_submission', [
         'ref' => $ref,
         'type' => $type,
         'recipient' => maskEmail($recipient),
@@ -93,10 +100,14 @@ function handleSendEmail(string $method): void {
         'lead_created' => $leadOk,
         'kommo_status' => $leadResult['status'],
         'kommo_error' => $leadResult['error'],
+        'kommo_lead_id' => $leadResult['id'] ?? null,
+        'intranet_saved' => $intranetOk,
+        'intranet_status' => $intranetResult['status'],
+        'intranet_error' => $intranetResult['error'],
     ]);
 
-    // Si no llego ni el correo interno ni el lead, la solicitud se perdio: avisar al usuario
-    if (!$internalSent && !$leadOk) {
+    // Si no llego ni el correo interno ni el lead ni la intranet, la solicitud se perdio: avisar al usuario
+    if (!$internalSent && !$leadOk && !$intranetOk) {
         jsonResponse(502, ['error' => 'No se pudo registrar la solicitud', 'reference' => $ref]);
         return;
     }

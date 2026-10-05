@@ -40,6 +40,7 @@ npm run generate
 1) Upload the `api/` folder to `api.racklog.cl` (PHP 8.0+, `mail()` enabled).
 2) Keep the existing `api/config/token.php` on the server (gitignored).
    If missing, copy `api/config/token.example.php` and fill the token.
+   Same for `api/config/supabase.php` (intranet leads, see `docs/ENVIRONMENT.md`).
 3) `api/.htaccess` blocks `config/`, `utils/`, `partials/`, `endpoints/`
    and `storage/` from the web and forces HTTPS.
 4) Optional: `APP_ENV=development` enables CORS for `http://localhost:3000`.
