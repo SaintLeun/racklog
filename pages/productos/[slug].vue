@@ -12,7 +12,7 @@
           <div class="lg:sticky lg:top-24">
             <div class="card relative aspect-[4/3] bg-neutral-100">
               <iframe v-if="product.model"
-                title="Modelo_RS_Ejemplo" 
+                :title="`Modelo 3D interactivo de ${product.name}`"
                 class="absolute inset-0 h-full w-full"
                 frameborder="0" 
                 allowfullscreen 

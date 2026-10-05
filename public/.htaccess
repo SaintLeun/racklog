@@ -39,11 +39,11 @@ ErrorDocument 404 /404.html
     Header always unset X-Powered-By
     Header unset X-Powered-By
 
-    # CSP en modo "solo reporte": no bloquea nada, pero muestra en la consola
-    # del navegador cualquier recurso no permitido. Tras revisar el sitio en
-    # produccion sin avisos, cambiar el nombre de la cabecera a
-    # Content-Security-Policy para activarla.
-    Header always set Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.clarity.ms https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.racklog.cl https://api.sketchfab.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.clarity.ms https://c.bing.com; frame-src https://www.youtube-nocookie.com https://sketchfab.com https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+    # CSP activa. Ademas de GTM, GA4 y Clarity permite Google Ads (conversiones
+    # y remarketing), el pixel de Meta, YouTube y Sketchfab, que hoy se cargan
+    # desde GTM o el sitio. Si se agrega una etiqueta nueva en GTM que use otro
+    # dominio, sumarlo aqui o el navegador la bloqueara (aviso en la consola).
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.clarity.ms https://www.google-analytics.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://connect.facebook.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.racklog.cl https://api.sketchfab.com https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.googletagmanager.com https://*.clarity.ms https://c.bing.com https://www.google.com https://*.doubleclick.net https://www.googleadservices.com https://www.facebook.com https://connect.facebook.net; frame-src https://www.youtube-nocookie.com https://sketchfab.com https://www.googletagmanager.com https://td.doubleclick.net https://www.facebook.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
 
     # Cache: archivos versionados de Nuxt (el nombre cambia en cada build)
     <If "%{REQUEST_URI} =~ m#^/_nuxt/#">

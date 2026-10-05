@@ -55,10 +55,10 @@ npm run generate
   → no `access-control-allow-origin` header.
 - Submit a contact form and a quote: internal email, client confirmation
   and Kommo lead are created; GTM Preview shows `generate_lead`.
-- Open the browser console on the home page: no Content-Security-Policy
-  report-only warnings. After a week without warnings, rename the header
-  in `public/.htaccess` from `Content-Security-Policy-Report-Only` to
-  `Content-Security-Policy` to enforce it.
+- Accept analytics in the cookie banner and open the browser console on the
+  home page and a product page: no "Content Security Policy" errors. The CSP
+  is enforced (since 2026-10-05); a new GTM tag on a new domain needs that
+  domain added in `public/.htaccess`.
 - Submit `https://racklog.cl/sitemap.xml` in Google Search Console.
 
 ## Operations
