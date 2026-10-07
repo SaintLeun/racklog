@@ -21,7 +21,7 @@ RewriteCond %{HTTPS} !=on
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
 # Codigo interno, configuracion y almacenamiento: nunca accesibles por web
-RewriteRule ^(config|utils|partials|endpoints|storage)(/|$) - [F,L]
+RewriteRule ^(config|utils|partials|endpoints|scripts|storage)(/|$) - [F,L]
 
 # Archivos sensibles en cualquier carpeta
 <FilesMatch "(?i)(\.(env|log|bak|sql|zip|ini)|^error_log|^token\.php)$">

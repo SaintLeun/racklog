@@ -81,9 +81,10 @@ function kommoEstado(array $result): string {
 
 /**
  * Crea el lead en Kommo
+ * @param ?int $recibido Fecha original del formulario (al reenviar leads antiguos); por defecto, ahora
  * @return array ['status' => int, 'id' => ?int, 'response' => ?array, 'error' => ?string]; status 0 si no esta configurado o no hubo respuesta
  */
-function createLead(array $data, string $tipo, string $referencia): array {
+function createLead(array $data, string $tipo, string $referencia, ?int $recibido = null): array {
     global $BEARER_TOKEN;
 
     if (!kommoConfigured()) {
@@ -97,7 +98,7 @@ function createLead(array $data, string $tipo, string $referencia): array {
     $tipoNormalizado = strtolower(trim($tipo));
     
     // Formatear los datos según el tipo y estructura específica
-    $detalleTexto = formatLeadDetails($data, $tipoNormalizado);
+    $detalleTexto = formatLeadDetails($data, $tipoNormalizado, $recibido);
     
     // Determinar el nombre del lead según la estructura específica
     $nombre = determineLeadName($data, $tipoNormalizado);
@@ -180,9 +181,10 @@ function determineLeadName(array $data, string $tipo): string {
  * Maneja las diferentes estructuras que pueden llegar del frontend
  * @param array $data Datos del lead
  * @param string $tipo Tipo de lead normalizado
+ * @param ?int $recibido Fecha original del formulario; por defecto, ahora
  * @return string Texto formateado para mostrar en Kommo
  */
-function formatLeadDetails(array $data, string $tipo): string {
+function formatLeadDetails(array $data, string $tipo, ?int $recibido = null): string {
     $output = "";
     
     // Verificar si estamos trabajando con la estructura anidada {"to":..., "data":...}
@@ -291,7 +293,7 @@ function formatLeadDetails(array $data, string $tipo): string {
     
     // Información técnica
     $output .= "───────────────────────────\n";
-    $output .= "ORIGEN: Sitio web - " . date('d/m/Y H:i:s') . "\n";
+    $output .= "ORIGEN: Sitio web - " . date('d/m/Y H:i:s', $recibido ?? time()) . "\n";
     
     // Solo agregar la IP y User Agent si están disponibles
     if (isset($_SERVER['REMOTE_ADDR'])) {
