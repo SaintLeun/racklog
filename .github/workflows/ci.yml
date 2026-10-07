@@ -22,10 +22,14 @@ jobs:
         # GHSA-vfj7-8cjw-p6xm: braces <= 3.0.3 (sin version corregida) viene de
         # nitropack > globby > micromatch; solo resuelve rutas durante el build.
         # Quitar de la lista cuando salga braces > 3.0.3.
+        # GHSA-v5rq-49vh-5v5c, GHSA-x6jw-m9v5-85vh, GHSA-g4wm-2vf7-vfgr y
+        # GHSA-858h-whjf-mvg5: simple-git 3.x (y su @simple-git/argv-parser) viene de
+        # nuxt > @nuxt/devtools; solo corre con `nuxt dev`, no llega al sitio.
+        # Quitar de la lista cuando @nuxt/devtools use simple-git >= 4.0.2.
         run: |
           npm audit --omit=dev --json > audit.json || true
           node -e '
-            const ignorar = ["GHSA-86w9-cpqp-85rv", "GHSA-vfj7-8cjw-p6xm"];
+            const ignorar = ["GHSA-86w9-cpqp-85rv", "GHSA-vfj7-8cjw-p6xm", "GHSA-v5rq-49vh-5v5c", "GHSA-x6jw-m9v5-85vh", "GHSA-g4wm-2vf7-vfgr", "GHSA-858h-whjf-mvg5"];
             const { vulnerabilities = {} } = require("./audit.json");
             const altas = Object.values(vulnerabilities)
               .flatMap((v) => v.via.filter((x) => typeof x === "object"))
