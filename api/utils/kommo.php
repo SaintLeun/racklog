@@ -6,6 +6,79 @@ function kommoConfigured(): bool {
         && $BEARER_TOKEN !== 'PON_AQUI_EL_TOKEN_ROTADO';
 }
 
+function kommoApiUrl(): string {
+    // KOMMO_API_URL permite apuntar a un servidor de prueba en desarrollo
+    return getenv('KOMMO_API_URL') ?: 'https://comercialracklogcl.kommo.com/api/v4/leads';
+}
+
+/** Archivo con el ultimo resultado de autenticacion del token actual (cambia si se cambia el token) */
+function kommoAuthCacheFile(): ?string {
+    global $BEARER_TOKEN;
+    $dir = rateLimitStorageDir();
+    return $dir === null ? null : $dir . '/kommo_auth_' . substr(hash('sha256', (string) $BEARER_TOKEN), 0, 16);
+}
+
+function rememberKommoAuth(bool $accepted): void {
+    $file = kommoAuthCacheFile();
+    if ($file !== null) {
+        @file_put_contents($file, $accepted ? '1' : '0', LOCK_EX);
+    }
+}
+
+/**
+ * Comprueba que Kommo acepte el token (GET /api/v4/account). El resultado se guarda
+ * 10 minutos para que el monitoreo de /health no consulte Kommo en cada sondeo.
+ * @return ?bool true aceptado, false rechazado (401/403), null sin configurar o sin respuesta
+ */
+function kommoTokenAccepted(): ?bool {
+    global $BEARER_TOKEN;
+
+    if (!kommoConfigured()) {
+        return null;
+    }
+
+    $cacheFile = kommoAuthCacheFile();
+    if ($cacheFile !== null && is_file($cacheFile) && time() - filemtime($cacheFile) < 600) {
+        return file_get_contents($cacheFile) === '1';
+    }
+
+    $ch = curl_init(preg_replace('#/leads$#', '/account', kommoApiUrl()));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: Bearer ' . $BEARER_TOKEN,
+        'Accept: application/json'
+    ]);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+    curl_exec($ch);
+    $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($httpCode >= 200 && $httpCode < 300) {
+        rememberKommoAuth(true);
+        return true;
+    }
+    if ($httpCode === 401 || $httpCode === 403) {
+        rememberKommoAuth(false);
+        return false;
+    }
+    return null;
+}
+
+/** Resumen corto del resultado de createLead() para guardarlo con el lead en la intranet */
+function kommoEstado(array $result): string {
+    if ($result['error'] === 'not_configured') {
+        return 'no_configurado';
+    }
+    if ($result['error'] !== null || $result['status'] === 0) {
+        return 'sin_respuesta';
+    }
+    if ($result['status'] < 200 || $result['status'] >= 300) {
+        return 'http_' . $result['status'];
+    }
+    return $result['id'] !== null ? 'creado' : 'sin_id';
+}
+
 /**
  * Crea el lead en Kommo
  * @return array ['status' => int, 'id' => ?int, 'response' => ?array, 'error' => ?string]; status 0 si no esta configurado o no hubo respuesta
@@ -17,8 +90,7 @@ function createLead(array $data, string $tipo, string $referencia): array {
         return ['status' => 0, 'id' => null, 'response' => null, 'error' => 'not_configured'];
     }
 
-    // KOMMO_API_URL permite apuntar a un servidor de prueba en desarrollo
-    $apiUrl = getenv('KOMMO_API_URL') ?: 'https://comercialracklogcl.kommo.com/api/v4/leads';
+    $apiUrl = kommoApiUrl();
     $bearerToken = 'Bearer ' . $BEARER_TOKEN;
 
     // Normalizar el tipo para comparaciones consistentes
@@ -69,6 +141,11 @@ function createLead(array $data, string $tipo, string $referencia): array {
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
     curl_close($ch); 
+
+    // Un token rechazado al crear el lead se refleja de inmediato en /health
+    if ($httpCode === 401 || $httpCode === 403) {
+        rememberKommoAuth(false);
+    }
 
     $body = is_string($response) ? json_decode($response, true) : null;
     $id = $body['_embedded']['leads'][0]['id'] ?? null;

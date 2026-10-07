@@ -21,9 +21,10 @@ function intranetConfigured(): bool {
 
 /**
  * Guarda el lead en la base de la intranet (Supabase) via la funcion registrar_lead_web
+ * @param array $kommoResult Resultado de createLead(): se guarda el id y el estado de Kommo
  * @return array ['status' => int, 'error' => ?string]; status 0 si no esta configurado o no hubo respuesta
  */
-function saveLeadToIntranet(array $data, string $tipo, string $referencia, ?int $kommoLeadId = null): array {
+function saveLeadToIntranet(array $data, string $tipo, string $referencia, array $kommoResult): array {
     global $SUPABASE_URL, $SUPABASE_ANON_KEY, $SUPABASE_LEAD_TOKEN;
 
     if (!intranetConfigured()) {
@@ -31,6 +32,7 @@ function saveLeadToIntranet(array $data, string $tipo, string $referencia, ?int 
     }
 
     $isQuote = $tipo === 'quote';
+    $kommoEstado = kommoEstado($kommoResult);
     $lead = [
         'referencia' => $referencia,
         'tipo' => $tipo,
@@ -46,7 +48,8 @@ function saveLeadToIntranet(array $data, string $tipo, string $referencia, ?int 
         'total' => $isQuote ? $data['cartTotal'] : null,
         'ip' => $_SERVER['REMOTE_ADDR'] ?? null,
         'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
-        'kommo_lead_id' => $kommoLeadId,
+        'kommo_lead_id' => $kommoEstado === 'creado' ? $kommoResult['id'] : null,
+        'kommo_estado' => $kommoEstado,
         'datos' => $data,
     ];
 

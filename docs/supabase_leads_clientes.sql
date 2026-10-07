@@ -12,6 +12,10 @@
 -- RUT opcional del formulario de cotizacion (registrar_lead_web lo inserta)
 alter table public.leads_web add column if not exists rut text;
 
+-- Resultado de Kommo al registrar el lead: creado, no_configurado, sin_respuesta, sin_id
+-- o http_<codigo> (http_401 = token de Kommo vencido o revocado)
+alter table public.leads_web add column if not exists kommo_estado text;
+
 alter table public.leads_web
   add column if not exists cliente_id int references public.clientes(id) on delete set null;
 
@@ -69,7 +73,7 @@ begin
 
   insert into public.leads_web (
     referencia, tipo, nombre, email, telefono, empresa, rut, asunto, mensaje,
-    servicio, productos, total, ip, user_agent, kommo_lead_id, cliente_id, estado, datos
+    servicio, productos, total, ip, user_agent, kommo_lead_id, kommo_estado, cliente_id, estado, datos
   ) values (
     p_lead->>'referencia',
     p_lead->>'tipo',
@@ -86,6 +90,7 @@ begin
     p_lead->>'ip',
     left(p_lead->>'user_agent', 500),
     (p_lead->>'kommo_lead_id')::bigint,
+    p_lead->>'kommo_estado',
     privado.cliente_unico_por_email(p_lead->>'email'),
     case when v_coincidencias > 1 then 'revisar_cliente' else 'nuevo' end,
     coalesce(p_lead->'datos', '{}'::jsonb)

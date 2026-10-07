@@ -88,10 +88,17 @@ Uptime probe. Returns `200 {"status":"ok"}` when at least one lead destination
 available, or `503 {"status":"degraded"}` with the failing check. Point the uptime
 monitor here.
 
+When a Kommo token is configured, `kommo_auth` checks it against Kommo
+(`GET /api/v4/account`, result cached 10 minutes per token): `false` means Kommo
+rejected it (401/403, expired or revoked token) and the probe returns 503; `null`
+means no token or no answer from Kommo, which does not degrade the probe.
+
 Kommo is optional: without `api/config/token.php` (or with its placeholder value) the
 API skips Kommo and stores leads only in the intranet (`leads_web`, see
 [ENVIRONMENT.md](ENVIRONMENT.md)). When both are configured, the intranet row
-gets the Kommo lead id in `kommo_lead_id`.
+gets the Kommo lead id in `kommo_lead_id` and the Kommo outcome in `kommo_estado`
+(`creado`, `no_configurado`, `sin_respuesta`, `sin_id` or `http_<code>`; `http_401` =
+expired token).
 
 ## CORS
 CORS headers are set in [api/config/cors.php](api/config/cors.php). Only

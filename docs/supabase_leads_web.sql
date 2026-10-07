@@ -29,6 +29,7 @@ create table if not exists public.leads_web (
   ip          text,
   user_agent  text,
   kommo_lead_id bigint,          -- vacio si Kommo no esta configurado o fallo
+  kommo_estado text,             -- creado, no_configurado, sin_respuesta, sin_id o http_<codigo> (http_401 = token vencido)
   datos       jsonb not null,
   creado_en   timestamptz not null default now()
 );
@@ -36,6 +37,7 @@ create table if not exists public.leads_web (
 -- Por si la tabla ya se habia creado con la version anterior de este script
 alter table public.leads_web add column if not exists kommo_lead_id bigint;
 alter table public.leads_web add column if not exists rut text;
+alter table public.leads_web add column if not exists kommo_estado text;
 
 -- RLS activo y sin politicas para anon: nadie lee ni escribe la tabla directamente con la clave publicable
 alter table public.leads_web enable row level security;
@@ -75,7 +77,7 @@ begin
 
   insert into public.leads_web (
     referencia, tipo, nombre, email, telefono, empresa, rut, asunto, mensaje,
-    servicio, productos, total, ip, user_agent, kommo_lead_id, datos
+    servicio, productos, total, ip, user_agent, kommo_lead_id, kommo_estado, datos
   ) values (
     p_lead->>'referencia',
     p_lead->>'tipo',
@@ -92,6 +94,7 @@ begin
     p_lead->>'ip',
     left(p_lead->>'user_agent', 500),
     (p_lead->>'kommo_lead_id')::bigint,
+    p_lead->>'kommo_estado',
     coalesce(p_lead->'datos', '{}'::jsonb)
   )
   on conflict (referencia) do nothing;

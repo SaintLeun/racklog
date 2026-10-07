@@ -81,3 +81,14 @@ jobs:
           check 503 http://127.0.0.1:8092/api/health
           check 200 http://127.0.0.1:8094/api/health
           check 200 -X POST -H 'Content-Type: application/json' -d '{"type":"contact","data":{"name":"Ana","email":"ana@example.com"}}' http://127.0.0.1:8094/api/send-email
+      - name: Token de Kommo rechazado (401) degrada /health
+        run: |
+          mkdir -p /tmp/kommo401 && echo '<?php http_response_code(401);' > /tmp/kommo401/index.php
+          php -S 127.0.0.1:8095 -t /tmp/kommo401 >/dev/null 2>&1 &
+          KOMMO_API_URL=http://127.0.0.1:8095/ KOMMO_BEARER_TOKEN=ci_expired_token_1234567890123456 \
+            php -d sendmail_path=/bin/true -S 127.0.0.1:8096 -t api api/index.php >/dev/null 2>&1 &
+          sleep 1
+          check() { code=$(curl -s -o /dev/null -w '%{http_code}' "${@:2}"); [ "$code" = "$1" ] || { echo "Esperado $1, recibido $code: ${*:2}"; exit 1; }; }
+          check 503 http://127.0.0.1:8096/api/health
+          curl -s http://127.0.0.1:8096/api/health | grep -q '"kommo_auth":false' || { echo "Falta kommo_auth:false"; exit 1; }
+          check 200 -X POST -H 'Content-Type: application/json' -d '{"type":"contact","data":{"name":"Ana","email":"ana@example.com"}}' http://127.0.0.1:8096/api/send-email

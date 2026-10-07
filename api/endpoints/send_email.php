@@ -85,7 +85,7 @@ function handleSendEmail(string $method): void {
     $leadResult = createLead($data, $type, $ref);
     $leadOk = $leadResult['error'] === null && $leadResult['status'] >= 200 && $leadResult['status'] < 300;
 
-    $intranetResult = saveLeadToIntranet($data, $type, $ref, $leadOk ? $leadResult['id'] : null);
+    $intranetResult = saveLeadToIntranet($data, $type, $ref, $leadResult);
     $intranetOk = $intranetResult['error'] === null;
 
     // Un destino sin configurar (p. ej. sin Kommo) no es un error; si lo es que falle uno configurado
