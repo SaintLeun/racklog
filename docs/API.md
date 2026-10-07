@@ -31,7 +31,8 @@ For quote requests:
     "customerName": "Jane Doe",
     "customerEmail": "client@example.com",
     "customerPhone": "+56 9 1234 5678",
-    "customerCompany": "Acme",
+    "customerCompany": "Acme SpA",
+    "customerRut": "76.123.456-0",
     "customerComments": "Please call me",
     "products": [
       {

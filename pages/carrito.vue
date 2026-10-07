@@ -196,18 +196,39 @@
                 <p v-if="emailError" id="emailInputError" class="form-error">{{ emailError }}</p>
               </div>
 
+              <!-- Company Input -->
+              <div>
+                <label for="companyInput" class="form-label">Razón social</label>
+                <input
+                  id="companyInput"
+                  v-model="customerCompany"
+                  type="text"
+                  autocomplete="organization"
+                  placeholder="Empresa SpA, o su nombre si es persona natural"
+                  class="form-input"
+                  :aria-invalid="companyError ? 'true' : 'false'"
+                  :aria-describedby="companyError ? 'companyInputError' : undefined"
+                />
+                <p v-if="companyError" id="companyInputError" class="form-error">{{ companyError }}</p>
+              </div>
+
               <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-                <!-- Company Input -->
+                <!-- RUT Input (opcional: hay clientes que prefieren no entregarlo) -->
                 <div>
-                  <label for="companyInput" class="form-label">Empresa <span class="font-normal text-neutral-600">(opcional)</span></label>
+                  <label for="rutInput" class="form-label">RUT <span class="font-normal text-neutral-600">(opcional)</span></label>
                   <input
-                    id="companyInput"
-                    v-model="customerCompany"
+                    id="rutInput"
+                    v-model="customerRut"
                     type="text"
-                    autocomplete="organization"
-                    placeholder="Nombre de la empresa"
+                    autocomplete="off"
+                    placeholder="76.123.456-0"
+                    maxlength="12"
                     class="form-input"
+                    :aria-invalid="rutError ? 'true' : 'false'"
+                    :aria-describedby="rutError ? 'rutInputError' : undefined"
+                    @blur="formatRutInput"
                   />
+                  <p v-if="rutError" id="rutInputError" class="form-error">{{ rutError }}</p>
                 </div>
 
                 <!-- Phone Input -->
@@ -385,6 +406,7 @@ const userEmail = ref('');
 const honeypot = ref(''); // honeypot anti-bots
 const customerName = ref('');
 const customerCompany = ref('');
+const customerRut = ref('');
 const customerPhone = ref('');
 const customerComments = ref('');
 const privacyAccepted = ref(false);
@@ -392,6 +414,8 @@ const privacyAccepted = ref(false);
 // Form validation errors
 const emailError = ref('');
 const nameError = ref('');
+const companyError = ref('');
+const rutError = ref('');
 const phoneError = ref('');
 const privacyError = ref('');
 
@@ -422,6 +446,38 @@ function validateEmail(email: string) {
   return re.test(email);
 }
 
+// RUT chileno: cuerpo + digito verificador (modulo 11)
+function cleanRut(rut: string) {
+  return rut.replace(/[^0-9kK]/g, '').toUpperCase();
+}
+
+function validateRut(rut: string) {
+  const clean = cleanRut(rut);
+  if (!/^\d{7,8}[0-9K]$/.test(clean)) return false;
+  const body = clean.slice(0, -1);
+  let sum = 0;
+  let factor = 2;
+  for (let i = body.length - 1; i >= 0; i--) {
+    sum += Number(body[i]) * factor;
+    factor = factor === 7 ? 2 : factor + 1;
+  }
+  const expected = 11 - (sum % 11);
+  const dv = expected === 11 ? '0' : expected === 10 ? 'K' : String(expected);
+  return clean.slice(-1) === dv;
+}
+
+function formatRut(rut: string) {
+  const clean = cleanRut(rut);
+  const body = clean.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `${body}-${clean.slice(-1)}`;
+}
+
+function formatRutInput() {
+  if (customerRut.value.trim() && validateRut(customerRut.value)) {
+    customerRut.value = formatRut(customerRut.value);
+  }
+}
+
 // Function to validate form
 function validateForm() {
   let isValid = true;
@@ -429,6 +485,8 @@ function validateForm() {
   // Reset errors
   nameError.value = '';
   emailError.value = '';
+  companyError.value = '';
+  rutError.value = '';
   phoneError.value = '';
   privacyError.value = '';
   
@@ -447,6 +505,18 @@ function validateForm() {
     isValid = false;
   }
   
+  // Validate company
+  if (!customerCompany.value.trim()) {
+    companyError.value = 'Por favor ingrese la razón social';
+    isValid = false;
+  }
+
+  // Validate RUT (opcional: solo si lo ingresaron)
+  if (customerRut.value.trim() && !validateRut(customerRut.value)) {
+    rutError.value = 'El RUT no es válido. Puede dejarlo en blanco';
+    isValid = false;
+  }
+
   // Validate phone
   if (!customerPhone.value.trim()) {
     phoneError.value = 'Por favor ingrese su teléfono';
@@ -478,6 +548,7 @@ async function submitQuote() {
       customerEmail: userEmail.value,
       customerPhone: customerPhone.value,
       customerCompany: customerCompany.value,
+      customerRut: customerRut.value.trim() ? formatRut(customerRut.value) : '',
       customerComments: customerComments.value,
       products: cart.value.map(item => ({
         name: item.name,
@@ -540,6 +611,7 @@ function resetForm() {
   userEmail.value = '';
   customerName.value = '';
   customerCompany.value = '';
+  customerRut.value = '';
   customerPhone.value = '';
   customerComments.value = '';
   privacyAccepted.value = false;
@@ -547,6 +619,8 @@ function resetForm() {
   emailError.value = '';
   privacyError.value = '';
   nameError.value = '';
+  companyError.value = '';
+  rutError.value = '';
   phoneError.value = '';
 }
 

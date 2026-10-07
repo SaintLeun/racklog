@@ -125,7 +125,8 @@ function formatLeadDetails(array $data, string $tipo): string {
         $output .= "Nombre: " . ($actualData['customerName'] ?? 'No especificado') . "\n";
         $output .= "Email: " . ($actualData['customerEmail'] ?? 'No especificado') . "\n";
         $output .= "Teléfono: " . ($actualData['customerPhone'] ?? 'No especificado') . "\n";
-        $output .= "Empresa: " . ($actualData['customerCompany'] ?? 'No especificado') . "\n\n";
+        $output .= "Razón social: " . ($actualData['customerCompany'] ?? 'No especificado') . "\n";
+        $output .= "RUT: " . (($actualData['customerRut'] ?? '') ?: 'No especificado') . "\n\n";
         
         // Comentarios adicionales
         if (!empty($actualData['customerComments'])) {

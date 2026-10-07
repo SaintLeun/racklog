@@ -18,7 +18,8 @@ create table if not exists public.leads_web (
   nombre      text not null,
   email       text not null,
   telefono    text,
-  empresa     text,
+  empresa     text,              -- razon social en las cotizaciones
+  rut         text,              -- opcional
   asunto      text,
   mensaje     text,
   servicio    text,
@@ -34,6 +35,7 @@ create table if not exists public.leads_web (
 
 -- Por si la tabla ya se habia creado con la version anterior de este script
 alter table public.leads_web add column if not exists kommo_lead_id bigint;
+alter table public.leads_web add column if not exists rut text;
 
 -- RLS activo y sin politicas para anon: nadie lee ni escribe la tabla directamente con la clave publicable
 alter table public.leads_web enable row level security;
@@ -72,7 +74,7 @@ begin
   end if;
 
   insert into public.leads_web (
-    referencia, tipo, nombre, email, telefono, empresa, asunto, mensaje,
+    referencia, tipo, nombre, email, telefono, empresa, rut, asunto, mensaje,
     servicio, productos, total, ip, user_agent, kommo_lead_id, datos
   ) values (
     p_lead->>'referencia',
@@ -81,6 +83,7 @@ begin
     p_lead->>'email',
     nullif(p_lead->>'telefono', ''),
     nullif(p_lead->>'empresa', ''),
+    nullif(p_lead->>'rut', ''),
     nullif(p_lead->>'asunto', ''),
     nullif(p_lead->>'mensaje', ''),
     nullif(p_lead->>'servicio', ''),

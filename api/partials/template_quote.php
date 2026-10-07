@@ -11,6 +11,7 @@ function generateQuote(array $data, string $quoteRef): string {
     $customerEmail = $data['customerEmail'] ?? '';
     $customerPhone = $data['customerPhone'] ?? '';
     $customerCompany = $data['customerCompany'] ?? '';
+    $customerRut = $data['customerRut'] ?? '';
     $customerComments = $data['customerComments'] ?? '';
     
     // Calcular urgencia basada en el valor total aproximado (si existe)
@@ -103,8 +104,16 @@ function generateQuote(array $data, string $quoteRef): string {
         if (!empty($customerCompany)) {
             $customerInfoHtml .= "
                 <tr>
-                    <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Empresa:</td>
+                    <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Razón social:</td>
                     <td style='padding:8px 12px;'>" . esc($customerCompany) . "</td>
+                </tr>";
+        }
+
+        if (!empty($customerRut)) {
+            $customerInfoHtml .= "
+                <tr>
+                    <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>RUT:</td>
+                    <td style='padding:8px 12px;'>" . esc($customerRut) . "</td>
                 </tr>";
         }
                 

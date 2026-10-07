@@ -38,6 +38,7 @@ function saveLeadToIntranet(array $data, string $tipo, string $referencia, ?int 
         'email' => $isQuote ? $data['customerEmail'] : $data['email'],
         'telefono' => $isQuote ? $data['customerPhone'] : $data['phone'],
         'empresa' => $isQuote ? $data['customerCompany'] : '',
+        'rut' => $isQuote ? $data['customerRut'] : '',
         'asunto' => $isQuote ? '' : $data['subject'],
         'mensaje' => $isQuote ? $data['customerComments'] : $data['message'],
         'servicio' => $isQuote ? '' : $data['serviceInfo'],

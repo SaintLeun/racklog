@@ -114,6 +114,7 @@ function validateQuoteData($data): array {
         'customerEmail' => $email,
         'customerPhone' => cleanString($data['customerPhone'] ?? null, 30) ?? '',
         'customerCompany' => cleanString($data['customerCompany'] ?? null, 150) ?? '',
+        'customerRut' => cleanString($data['customerRut'] ?? null, 12) ?? '',
         'customerComments' => cleanString($data['customerComments'] ?? null, 5000) ?? '',
         'products' => $products,
         'cartTotal' => $cartTotal === false ? 0 : max(0, $cartTotal),

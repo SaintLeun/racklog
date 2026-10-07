@@ -11,6 +11,7 @@ function generateQuoteConfirmation(array $data, string $quoteRef): string {
     $customerEmail = $data['customerEmail'] ?? '';
     $customerPhone = $data['customerPhone'] ?? '';
     $customerCompany = $data['customerCompany'] ?? '';
+    $customerRut = $data['customerRut'] ?? '';
     $customerComments = $data['customerComments'] ?? '';
 
     $productsHtml = '';
@@ -96,8 +97,16 @@ function generateQuoteConfirmation(array $data, string $quoteRef): string {
         if (!empty($customerCompany)) {
             $customerInfoHtml .= "
                 <tr>
-                    <td style='padding:5px 15px 5px 0; font-weight:bold;'>Empresa:</td>
+                    <td style='padding:5px 15px 5px 0; font-weight:bold;'>Razón social:</td>
                     <td style='padding:5px 0;'>" . esc($customerCompany) . "</td>
+                </tr>";
+        }
+
+        if (!empty($customerRut)) {
+            $customerInfoHtml .= "
+                <tr>
+                    <td style='padding:5px 15px 5px 0; font-weight:bold;'>RUT:</td>
+                    <td style='padding:5px 0;'>" . esc($customerRut) . "</td>
                 </tr>";
         }
                 

@@ -9,6 +9,9 @@
 -- un vinculo vacio se detecta y completa; uno equivocado no.
 -- El sitio nunca crea clientes; eso se hace desde la intranet.
 
+-- RUT opcional del formulario de cotizacion (registrar_lead_web lo inserta)
+alter table public.leads_web add column if not exists rut text;
+
 alter table public.leads_web
   add column if not exists cliente_id int references public.clientes(id) on delete set null;
 
@@ -65,7 +68,7 @@ begin
   v_coincidencias := privado.coincidencias_cliente(p_lead->>'email');
 
   insert into public.leads_web (
-    referencia, tipo, nombre, email, telefono, empresa, asunto, mensaje,
+    referencia, tipo, nombre, email, telefono, empresa, rut, asunto, mensaje,
     servicio, productos, total, ip, user_agent, kommo_lead_id, cliente_id, estado, datos
   ) values (
     p_lead->>'referencia',
@@ -74,6 +77,7 @@ begin
     p_lead->>'email',
     nullif(p_lead->>'telefono', ''),
     nullif(p_lead->>'empresa', ''),
+    nullif(p_lead->>'rut', ''),
     nullif(p_lead->>'asunto', ''),
     nullif(p_lead->>'mensaje', ''),
     nullif(p_lead->>'servicio', ''),
