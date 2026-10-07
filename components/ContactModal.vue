@@ -131,6 +131,53 @@
                   <p v-if="errors.email" :id="`${uid}-email-error`" class="field-error">{{ errors.email }}</p>
                 </div>
 
+                <!-- Razon social -->
+                <div>
+                  <label :for="`${uid}-company`" class="field-label">Razón social <span class="text-orange-700" aria-hidden="true">*</span></label>
+                  <div class="field-wrap">
+                    <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <input
+                      :id="`${uid}-company`"
+                      v-model="form.company"
+                      type="text"
+                      name="company"
+                      autocomplete="organization"
+                      placeholder="Empresa SpA, o tu nombre"
+                      required
+                      :aria-invalid="errors.company ? 'true' : 'false'"
+                      :aria-describedby="errors.company ? `${uid}-company-error` : undefined"
+                      :class="['field-input', { 'field-input--error': errors.company }]"
+                    >
+                  </div>
+                  <p v-if="errors.company" :id="`${uid}-company-error`" class="field-error">{{ errors.company }}</p>
+                </div>
+
+                <!-- RUT (opcional: hay clientes que prefieren no entregarlo) -->
+                <div>
+                  <label :for="`${uid}-rut`" class="field-label">RUT <span class="font-normal text-neutral-500">(opcional)</span></label>
+                  <div class="field-wrap">
+                    <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                    </svg>
+                    <input
+                      :id="`${uid}-rut`"
+                      v-model="form.rut"
+                      type="text"
+                      name="rut"
+                      autocomplete="off"
+                      placeholder="76.123.456-0"
+                      maxlength="12"
+                      :aria-invalid="errors.rut ? 'true' : 'false'"
+                      :aria-describedby="errors.rut ? `${uid}-rut-error` : undefined"
+                      :class="['field-input', { 'field-input--error': errors.rut }]"
+                      @blur="formatRutInput"
+                    >
+                  </div>
+                  <p v-if="errors.rut" :id="`${uid}-rut-error`" class="field-error">{{ errors.rut }}</p>
+                </div>
+
                 <!-- Telefono -->
                 <div>
                   <label :for="`${uid}-phone`" class="field-label">Teléfono <span class="font-normal text-neutral-500">(opcional)</span></label>
@@ -281,6 +328,8 @@ const form = reactive({
   name: '',
   phone: '',
   email: '',
+  company: '',
+  rut: '',
   subject: '',
   message: '',
   privacy: false
@@ -290,6 +339,8 @@ const form = reactive({
 const errors = reactive({
   name: '',
   email: '',
+  company: '',
+  rut: '',
   subject: '',
   message: '',
   privacy: ''
@@ -344,13 +395,15 @@ watch(() => props.isVisible, (newVal) => {
         name: '',
         phone: '',
         email: '',
+        company: '',
+        rut: '',
         subject: tempSubject,
         message: '',
         privacy: false
       });
       
       // Clear errors and status
-      (Object.keys(errors) as Array<'name' | 'email' | 'subject' | 'message' | 'privacy'>).forEach((key) => {
+      (Object.keys(errors) as Array<keyof typeof errors>).forEach((key) => {
           errors[key] = '';
       });
       
@@ -364,6 +417,12 @@ useModalA11y(computed(() => !!props.isVisible), dialogRef, () => closeModal());
 
 function closeModal() {
   emit('close');
+}
+
+function formatRutInput() {
+  if (form.rut.trim() && validateRut(form.rut)) {
+    form.rut = formatRut(form.rut);
+  }
 }
 
 function validateForm() {
@@ -393,6 +452,18 @@ function validateForm() {
     isValid = false;
   }
   
+  // Validate company
+  if (!form.company.trim()) {
+    errors.company = 'La razón social es requerida';
+    isValid = false;
+  }
+
+  // Validate RUT (opcional: solo si lo ingresaron)
+  if (form.rut.trim() && !validateRut(form.rut)) {
+    errors.rut = 'El RUT no es válido. Puedes dejarlo en blanco';
+    isValid = false;
+  }
+
   // Validate subject
   if (!form.subject.trim()) {
     errors.subject = 'El asunto es requerido';
@@ -439,6 +510,8 @@ async function submitForm() {
       name: form.name,
       email: form.email,
       phone: form.phone,
+      company: form.company,
+      rut: form.rut.trim() ? formatRut(form.rut) : '',
       subject: form.subject,
       message: form.message,
       serviceInfo: props.serviceInfo
@@ -483,6 +556,8 @@ async function submitForm() {
       name: '',
       phone: '',
       email: '',
+      company: '',
+      rut: '',
       subject: tempSubject,
       message: '',
       privacy: false

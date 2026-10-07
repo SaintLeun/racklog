@@ -50,6 +50,8 @@ function validateContactData($data): array {
         'name' => $name,
         'email' => $email,
         'phone' => cleanString($data['phone'] ?? null, 30) ?? '',
+        'company' => cleanString($data['company'] ?? null, 150) ?? '',
+        'rut' => cleanString($data['rut'] ?? null, 12) ?? '',
         'subject' => cleanString($data['subject'] ?? null, 150) ?? '',
         'message' => cleanString($data['message'] ?? null, 5000) ?? '',
         'serviceInfo' => cleanString($data['serviceInfo'] ?? null, 150) ?? '',

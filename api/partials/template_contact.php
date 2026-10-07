@@ -10,6 +10,8 @@ function generateContact(array $data, string $contactRef): string {
     $name = $data['name'] ?? 'Usuario';
     $email = $data['email'] ?? '';
     $phone = $data['phone'] ?? 'No proporcionado';
+    $company = $data['company'] ?? '';
+    $rut = $data['rut'] ?? '';
     $subject = $data['subject'] ?? 'Contacto';
     $message = $data['message'] ?? '';
     $serviceInfo = $data['serviceInfo'] ?? '';
@@ -32,6 +34,14 @@ function generateContact(array $data, string $contactRef): string {
             <tr>
                 <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Teléfono:</td>
                 <td style='padding:8px 12px;'>" . esc($phone) . "</td>
+            </tr>
+            <tr>
+                <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Razón social:</td>
+                <td style='padding:8px 12px;'>" . esc($company ?: 'No proporcionado') . "</td>
+            </tr>
+            <tr>
+                <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>RUT:</td>
+                <td style='padding:8px 12px;'>" . esc($rut ?: 'No proporcionado') . "</td>
             </tr>
             <tr>
                 <td style='padding:8px 12px; background-color:#f5f5f5; text-align:left; font-weight:600;'>Asunto:</td>

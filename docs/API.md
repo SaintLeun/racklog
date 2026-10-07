@@ -17,6 +17,8 @@ Request body (JSON):
     "email": "client@example.com",
     "phone": "+56 9 1234 5678",
     "subject": "Contact request",
+    "company": "Acme SpA",
+    "rut": "",
     "message": "I want more info",
     "serviceInfo": "General"
   },
