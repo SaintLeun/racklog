@@ -72,17 +72,17 @@
                 Cotiza tu {{ product.name }}
               </button>
               
-              <!-- Productos no configurables: se agregan directo a la cotizacion -->
+              <!-- Productos no configurables: formulario con el producto ya indicado -->
               <button 
                 v-else 
                 type="button"
-                @click="addToCart(product)" 
+                @click="openContactModal" 
                 class="btn btn-primary btn-lg w-full sm:w-auto"
               >
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                 </svg>
-                Añadir a mi Cotización
+                Cotizar {{ product.name }}
               </button>
             </div>
           </div>
@@ -172,35 +172,6 @@
       </div>
     </section>
 
-    <transition name="toast">
-      <div 
-        v-if="showCartNotification" 
-        class="fixed z-50 toast-notification"
-      >
-        <div class="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-2xl ring-1 ring-black/5 sm:p-4">
-          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700" aria-hidden="true">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
-            </svg>
-          </span>
-          <div class="min-w-0 flex-1">
-            <p class="truncate text-sm font-semibold text-neutral-900 sm:text-base">Producto añadido a la cotización</p>
-            <p class="truncate text-xs text-neutral-600 sm:text-sm">{{ lastAddedProduct }}</p>
-          </div>
-          <div class="flex flex-shrink-0 items-center gap-1">
-            <button type="button" @click="goToCart" class="btn btn-primary btn-sm whitespace-nowrap">
-              Ver cotización
-            </button>
-            <button type="button" aria-label="Cerrar aviso" @click="closeNotification" class="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </transition>
-    
     <!-- Quote Modal & Contact Modal -->
     <QuoteModal 
       v-if="isQuoteModalVisible" 
@@ -209,7 +180,7 @@
       :initialProduct="selectedProduct"
       @close="closeModal('quote')"
     />
-    <ContactModal :isVisible="isContactModalVisible" :title="modalTitle" @close="closeModal('contact')" />
+    <ContactModal :isVisible="isContactModalVisible" :quoteItem="{ name: product.name }" @close="closeModal('contact')" />
   </div>
   
   <!-- Not Found State -->
@@ -232,27 +203,19 @@
 
 <script setup>
   import { ref, onMounted, computed } from 'vue';
-  import { useRoute, useRouter } from 'vue-router';
+  import { useRoute } from 'vue-router';
   import { useProductStore } from '~/stores/productStore';
-  import { useCartStore } from '~/stores/cartStore';
   import QuoteModal from '~/components/QuoteModal/QuoteModal.vue';
   import ContactModal from '~/components/ContactModal.vue';
 
   const productStore = useProductStore();
-  const cartStore = useCartStore();
   const route = useRoute();
-  const router = useRouter();
 
   const product = ref(null);
   const isQuoteModalVisible = ref(false);
   const isContactModalVisible = ref(false);
   const modalTitle = ref('');
   const selectedProduct = ref('');
-
-  // Cart notification state
-  const showCartNotification = ref(false);
-  const lastAddedProduct = ref('');
-  let notificationTimeout = null;
 
   // Check if the product is one of the configurable ones (Rack Selectivo or Ángulo Ranurado)
   const isConfigurableProduct = computed(() => {
@@ -273,7 +236,6 @@
   }
 
   function openContactModal() {
-    modalTitle.value = 'Solicitar Cotización';
     isContactModalVisible.value = true;
   }
 
@@ -283,50 +245,6 @@
     } else {
       isQuoteModalVisible.value = false;
       selectedProduct.value = '';
-    }
-  }
-
-  // Function to add non-configurable products directly to cart
-  function addToCart(product) {
-    // Create a simplified item for quotation-only products
-    const cartItem = {
-      name: product.name,
-      price: 0, // Price will be determined by sales
-      quantity: 1,
-      config: {}, // Flag to identify it's not configurable
-      quoteOnly: true,
-      image: product.images?.card || product.images?.render || '',
-      description: product.description?.short || ''
-    };
-    
-    cartStore.addToCart(cartItem);
-    
-    // Set notification data and show it
-    lastAddedProduct.value = product.name;
-    showCartNotification.value = true;
-    
-    // Clear any existing timeout
-    if (notificationTimeout) {
-      clearTimeout(notificationTimeout);
-    }
-    
-    // Auto-hide the notification after 5 seconds
-    notificationTimeout = setTimeout(() => {
-      showCartNotification.value = false;
-    }, 5000);
-  }
-
-  // Navigate to cart page
-  function goToCart() {
-    closeNotification();
-    router.push('/carrito');
-  }
-
-  // Close the notification
-  function closeNotification() {
-    showCartNotification.value = false;
-    if (notificationTimeout) {
-      clearTimeout(notificationTimeout);
     }
   }
 
@@ -352,37 +270,3 @@ useHead({
 });
 </script>
 
-<style scoped>
-/* Toast animation */
-.toast-enter-active, 
-.toast-leave-active {
-  transition: all 0.3s ease;
-}
-
-.toast-enter-from {
-  opacity: 0;
-  transform: translateY(-20px);
-}
-
-.toast-leave-to {
-  opacity: 0;
-  transform: translateX(20px);
-}
-
-/* Toast notification responsive styles */
-.toast-notification {
-  top: 1rem;
-  right: 1rem;
-  left: 1rem;
-  max-width: 100%;
-  width: auto;
-}
-
-@media (min-width: 640px) {
-  .toast-notification {
-    left: auto;
-    max-width: 440px;
-    width: auto;
-  }
-}
-</style>

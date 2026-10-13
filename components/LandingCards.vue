@@ -54,13 +54,11 @@
       </div>
     </div>
 
-    <ContactModal :isVisible="isContactModalVisible" :title="modalTitle" @close="closeModal('contact')">
-    </ContactModal>
     <QuoteModal
       :isVisible="isQuoteModalVisible"
       :title="modalTitle"
       :initialProduct="selectedProduct"
-      @close="closeModal('quote')"
+      @close="closeModal"
     >
     </QuoteModal>
   </section>
@@ -69,7 +67,6 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
 import { useProductStore } from '@/stores/productStore';
-import ContactModal from './ContactModal.vue';
 import QuoteModal from './QuoteModal/QuoteModal.vue';
 
 const productStore = useProductStore();
@@ -83,10 +80,9 @@ const filteredProducts = computed(() => {
     }));
 });
 
-const isContactModalVisible = ref(false);
 const isQuoteModalVisible = ref(false);
 const modalTitle = ref('');
-const selectedProduct = ref('');
+const selectedProduct = ref<'RS' | 'AR' | ''>('');
 
 function openQuoteWithProduct(product: { slug: string; name: string }) {
   // Set the selected product based on its name
@@ -97,24 +93,9 @@ function openQuoteWithProduct(product: { slug: string; name: string }) {
   isQuoteModalVisible.value = true;
 }
 
-function openModal(modal: string) {
-  modalTitle.value = 'Modal';
-  if (modal === 'contact') {
-    isContactModalVisible.value = false;
-    isContactModalVisible.value = true;
-  } else {
-    isQuoteModalVisible.value = true;
-  }
-}
-
-function closeModal(modal: string) {
-  if (modal === 'contact') {
-    isContactModalVisible.value = false;
-  } else {
-    isQuoteModalVisible.value = false;
-    // Reset the selected product when closing the modal
-    selectedProduct.value = '';
-  }
+function closeModal() {
+  isQuoteModalVisible.value = false;
+  selectedProduct.value = '';
 }
 
 function buttonClass(color: string, base: string, hover: string) {

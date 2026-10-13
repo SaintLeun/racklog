@@ -21,3 +21,9 @@ export interface RackSelectivoConfig  {
 }
 
 export type ProductConfig = AnguloRanuradoConfig | RackSelectivoConfig;
+
+// Producto que se adjunta al formulario de cotizacion: config con etiquetas legibles
+export interface QuoteItem {
+    name: string;
+    config?: Record<string, string | number>;
+}

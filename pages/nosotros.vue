@@ -175,22 +175,11 @@
         </div>
       </div>
     </section>
-
-    <!-- Contact Modal -->
-    <ContactModal
-      :isVisible="isContactModalOpen"
-      @close="closeContactModal"
-    />
   </div>
 </template>
 
 <script setup>
-  import { ref } from 'vue';
   import Breadcrumbs from '@/components/Breadcrumbs.vue';
-  import ContactModal from '@/components/ContactModal.vue';
-
-  // Estado para el modal de contacto
-  const isContactModalOpen = ref(false);
 
   // Datos para las migas de pan
   const breadcrumbs = [
@@ -200,15 +189,6 @@
       type: 'page'
     }
   ];
-
-  // Funciones para el modal
-  function openContactModal() {
-    isContactModalOpen.value = true;
-  }
-
-  function closeContactModal() {
-    isContactModalOpen.value = false;
-  }
 
   // Contenido visual (valores y razones), antes repetido en la plantilla
   const valores = [

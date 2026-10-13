@@ -10,13 +10,8 @@
             <p class="mt-2 text-neutral-400">Te respondemos en menos de 24 horas con una propuesta a medida.</p>
           </div>
           <div class="flex flex-col gap-3 sm:flex-row">
-            <button type="button" class="btn btn-primary btn-lg" @click="openContactModal">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              Contáctanos ahora
-            </button>
-            <NuxtLink to="/carrito" class="btn btn-ghost-light btn-lg">Solicitar cotización</NuxtLink>
+            <button type="button" class="btn btn-primary btn-lg" @click="openContactModal">Solicitar cotización</button>
+            <NuxtLink to="/productos" class="btn btn-ghost-light btn-lg">Ver productos</NuxtLink>
           </div>
         </div>
       </div>
@@ -67,7 +62,6 @@
           <ul class="mt-5 space-y-1">
             <li><NuxtLink to="/nosotros" class="footer-link">Nosotros</NuxtLink></li>
             <li><NuxtLink to="/productos" class="footer-link">Catálogo de productos</NuxtLink></li>
-            <li><NuxtLink to="/carrito" class="footer-link">Solicitar cotización</NuxtLink></li>
             <li><a href="#" @click.prevent="openContactModal" class="footer-link">Contacto</a></li>
             <li><NuxtLink to="/blog" class="footer-link">Proyectos recientes</NuxtLink></li>
           </ul>

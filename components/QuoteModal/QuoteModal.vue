@@ -26,17 +26,6 @@
             </div>
           </div>
           <div class="flex flex-shrink-0 items-center gap-2">
-            <button
-              type="button"
-              @click="goToCart"
-              class="btn btn-secondary !px-4 text-sm"
-            >
-              <svg class="h-5 w-5 text-neutral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              <span class="hidden sm:inline">Mi Cotización</span>
-              <span class="sm:hidden">Cotización</span>
-            </button>
             <button type="button" aria-label="Cerrar configurador" @click="closeModal" class="inline-flex h-11 w-11 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900">
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -252,32 +241,17 @@
                   </div>
                 </div>
 
-                <!-- Añadir a cotizacion -->
+                <!-- Solicitar cotizacion: abre el formulario con esta configuracion adjunta -->
                 <button
                   type="button"
-                  @click="addToCart"
+                  @click="openQuoteForm"
                   class="btn btn-primary btn-lg w-full"
-                  :disabled="!isConfigurationComplete || isAddingToCart"
+                  :disabled="!isConfigurationComplete"
                 >
-                  <span v-if="!isAddingToCart && !showSuccessOverlay" class="flex items-center justify-center gap-2">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                    Añadir a cotización
-                  </span>
-                  <span v-else-if="isAddingToCart" class="flex items-center justify-center gap-2">
-                    <svg class="h-5 w-5 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Añadiendo...
-                  </span>
-                  <span v-else-if="showSuccessOverlay" class="flex items-center justify-center gap-2">
-                    <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    ¡Añadido!
-                  </span>
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Solicitar cotización de este {{ productNameMap[selectedProduct as ProductType] }}
                 </button>
                 <p v-if="!isConfigurationComplete" class="text-center text-sm text-neutral-600">
                   Completa todos los campos
@@ -289,50 +263,22 @@
       </div>
     </div>
 
-    <!-- Aviso: producto agregado -->
-    <Teleport to="body">
-      <transition name="toast">
-        <div
-          v-if="showCartNotification"
-          class="fixed left-4 right-4 top-4 z-[60] flex items-center gap-3 rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-black/5 sm:left-auto sm:max-w-md"
-        >
-          <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700" aria-hidden="true">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-            </svg>
-          </span>
-          <div class="min-w-0 flex-1">
-            <p class="truncate font-semibold text-neutral-900">Producto añadido a la cotización</p>
-            <p class="truncate text-sm text-neutral-600">{{ lastAddedProduct }}</p>
-          </div>
-          <button type="button" aria-label="Cerrar aviso" @click="showCartNotification = false" class="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900">
-            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-      </transition>
-    </Teleport>
+    <ContactModal
+      :isVisible="isQuoteFormOpen"
+      :quoteItem="quoteItem"
+      @close="isQuoteFormOpen = false"
+    />
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, computed, onBeforeUnmount, onMounted, inject } from 'vue'
-import { useRouter } from 'vue-router'
-import { useCartStore } from '~/stores/cartStore'
+import { ref, watch, computed, onBeforeUnmount, onMounted } from 'vue'
+import ContactModal from '~/components/ContactModal.vue'
 import AnguloRanuradoPanel from '~/components/QuoteModal/AnguloRanuradoPanel.vue'
 import RackSelectivoPanel from '~/components/QuoteModal/RackSelectivoPanel.vue'
-import type { ProductType, ProductConfig, AnguloRanuradoConfig, RackSelectivoConfig } from '~/components/QuoteModal/ProductConfig'
+import type { ProductType, ProductConfig, AnguloRanuradoConfig, RackSelectivoConfig, QuoteItem } from '~/components/QuoteModal/ProductConfig'
 
-
-
-const isAddingToCart = ref(false)
-const showSuccessOverlay = ref(false)
-const showCartNotification = ref(false)
-const lastAddedProduct = ref('')
-let notificationTimeout: number | null = null
-
-const props = defineProps<{ isVisible: boolean; title?: string }>()
+const props = defineProps<{ isVisible: boolean; title?: string; initialProduct?: ProductType | '' }>()
 const emit = defineEmits(['close'])
 
 const uid = useId()
@@ -345,19 +291,21 @@ const loading = ref(false)
 // Cuenta de Sketchfab con los modelos 3D publicos (la busqueda publica no requiere token)
 const SKETCHFAB_USER = 'racklog.cl'
 
-const router = useRouter()
-const cartStore = useCartStore()
+const isQuoteFormOpen = ref(false)
 
-useModalA11y(computed(() => props.isVisible), dialogRef, () => closeModal())
+// Con el formulario abierto, Escape y Tab los maneja el formulario
+useModalA11y(computed(() => props.isVisible && !isQuoteFormOpen.value), dialogRef, () => closeModal())
 
 function closeModal() {
   emit('close')
 }
 
-function goToCart() {
-  router.push('/carrito')
-  closeModal()
-}
+// "Cotiza tu Rack Selectivo" abre el configurador con ese producto ya elegido
+watch(() => props.isVisible, (visible) => {
+  if (visible && props.initialProduct && props.initialProduct !== selectedProduct.value) {
+    selectProduct(props.initialProduct)
+  }
+}, { immediate: true })
 
 const isConfigurationComplete = computed(() => {
   if (!selectedProduct.value) return false
@@ -428,36 +376,6 @@ const productCode = computed(() => {
   const nivelesCode = `${config.value.niveles}E`
   return `${selectedProduct.value}${tipoCode}_${cuerposCode}_${nivelesCode}`
 })
-
-const summaryText = computed(() => {
-  if (!selectedProduct.value) return ['Seleccione un producto'];
-  
-  // Crear un array de características para mostrar como listado
-  const features = [];
-
-  
-  // Características comunes
-  features.push(`Tipo: ${config.value.tipo === 'simple' ? 'Simple' : 'Doble'}`);
-  features.push(`Niveles: ${config.value.niveles}`);
-  features.push(`Cuerpos: ${config.value.cuerpos}`);
-  
-  // Características específicas por tipo de producto
-  if (selectedProduct.value === 'AR') {
-    const c = config.value as AnguloRanuradoConfig;
-    if (c.carga) features.push(`Carga: ${c.carga}`);
-    if (c.pintado) features.push(`Acabado: ${c.pintado}`);
-    if (c.bandeja) features.push(`Bandeja: ${c.bandeja}`);
-  } else if (selectedProduct.value === 'RS') {
-    const c = config.value as RackSelectivoConfig;
-    if (c.frentePallet) features.push(`Frente: ${c.frentePallet}`);
-    if (c.fondoPallet) features.push(`Fondo: ${c.fondoPallet}`);
-    if (c.altoPallet) features.push(`Alto: ${c.altoPallet}`);
-    if (c.carga) features.push(`Carga: ${c.carga}`);
-    if (c.palletsPerBeam) features.push(`Pallets/nivel: ${c.palletsPerBeam}`);
-  }
-  
-  return features;
-});
 
 // Computed properties for dimensions calculations
 const rackDimensions = computed(() => {
@@ -644,10 +562,40 @@ onBeforeUnmount(() => {
   document.body.classList.remove('modal-open');
 });
 
-async function addToCart() {
+// Configuracion con etiquetas legibles: asi la recibe el vendedor (correo, Kommo, intranet)
+const quoteItem = computed<QuoteItem | null>(() => {
+  if (!selectedProduct.value) return null
+  const c = config.value
+  const details: Record<string, string | number> = {
+    'Código': productCode.value,
+    'Tipo': c.tipo === 'doble' ? 'Doble' : 'Simple',
+    'Módulos': c.cuerpos,
+    'Niveles': c.niveles,
+    'Capacidad': c.carga,
+  }
+  if (selectedProduct.value === 'AR') {
+    const ar = c as AnguloRanuradoConfig
+    details['Bandeja'] = ar.bandeja
+    details['Acabado'] = ar.pintado === 'galvanizado' ? 'Galvanizado' : 'Pintado'
+  } else {
+    const rs = c as RackSelectivoConfig
+    details['Frente pallet'] = rs.frentePallet
+    details['Fondo pallet'] = rs.fondoPallet
+    details['Alto pallet'] = rs.altoPallet
+    details['Pallets por viga'] = rs.palletsPerBeam
+    details['Altura del marco'] = `${rackDimensions.value.height} mm`
+    details['Largo total'] = `${rackDimensions.value.width} mm`
+    details['Ancho'] = `${rackDimensions.value.depth} mm`
+    details['Largo de viga'] = `${beamDimensions.value.length} mm`
+    details['Posiciones de pallet'] = palletPositions.value.total
+  }
+  return { name: productNameMap[selectedProduct.value], config: details }
+})
+
+function openQuoteForm() {
   if (!selectedProduct.value || !isConfigurationComplete.value) return
 
-  // GTM event: funnel step - product added to quote
+  // GTM: paso del embudo, el cliente termino de configurar
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({
     event: 'add_to_cart',
@@ -660,44 +608,11 @@ async function addToCart() {
     value: 0
   });
 
-  isAddingToCart.value = true
-
-  const productName = selectedProduct.value === 'AR' ? 'Ángulo Ranurado' : 'Rack Selectivo'
-  const configDescription = summaryText.value
-
-  cartStore.addToCart({
-    name: productName,
-    config: { ...config.value },
-    price: 0,
-    quoteOnly: true,
-    quantity: 1
-  })
-
-  lastAddedProduct.value = `${productName} - ${configDescription}`
-  showCartNotification.value = true
-  showSuccessOverlay.value = true
-
-  if (notificationTimeout) clearTimeout(notificationTimeout)
-  notificationTimeout = window.setTimeout(() => {
-    showCartNotification.value = false
-  }, 5000)
-
-  setTimeout(() => {
-    showSuccessOverlay.value = false
-    isAddingToCart.value = false
-  }, 1500)
+  isQuoteFormOpen.value = true
 }
 </script>
 
 <style scoped>
-.toast-enter-active, .toast-leave-active {
-  transition: all 0.3s ease;
-}
-.toast-leave-to, .toast-enter-from {
-  transform: translateY(-20px) translateX(20px);
-  opacity: 0;
-}
-
 /* Prevenir scroll en el body cuando el modal está abierto */
 :deep(body.modal-open) {
   overflow: hidden;

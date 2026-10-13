@@ -177,23 +177,6 @@
 
       <!-- Acciones -->
       <div class="flex items-center gap-1 sm:gap-2">
-        <NuxtLink
-          to="/carrito"
-          class="relative inline-flex h-11 items-center gap-2 rounded-xl px-3 text-sm font-semibold text-neutral-700 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
-          @click="closeAllMenus"
-        >
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          <span class="sr-only xl:not-sr-only">Cotización</span>
-          <span
-            v-if="cartCount > 0"
-            class="absolute right-0.5 top-1 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-700 px-1 text-[11px] font-bold text-white ring-2 ring-white xl:static xl:ring-0"
-          >
-            {{ cartCount }}
-          </span>
-        </NuxtLink>
-
         <button type="button" class="btn btn-primary btn-sm hidden sm:inline-flex min-h-10 px-4" @click="openContactModal">
           Cotizar
         </button>
@@ -299,18 +282,7 @@
           </li>
         </ul>
 
-        <div class="mt-4 grid gap-2 border-t border-neutral-200 pt-4 sm:grid-cols-2">
-          <NuxtLink to="/carrito" @click="closeAllMenus" class="btn btn-secondary justify-between">
-            <span class="inline-flex items-center gap-2">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              Mi Cotización
-            </span>
-            <span v-if="cartCount > 0" class="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-brand-700 px-1.5 text-xs font-bold text-white">
-              {{ cartCount }}
-            </span>
-          </NuxtLink>
+        <div class="mt-4 grid border-t border-neutral-200 pt-4">
           <button type="button" class="btn btn-primary" @click="openContactModal">Cotizar</button>
         </div>
 
@@ -342,9 +314,6 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
 import { useProductStore } from '~/stores/productStore';
-import { useCartStore } from '~/stores/cartStore'; 
-import { useRouter } from 'vue-router'; 
-import { storeToRefs } from 'pinia'; 
 import ContactModal from '~/components/ContactModal.vue';
 
 // Abrir el formulario de contacto una vez por sesion, 30 s despues de cargar la pagina.
@@ -374,13 +343,9 @@ const productStore = useProductStore();
 const products = productStore.products;
 const services = productStore.services || [];
 
-const cartStore = useCartStore();
-const { cartCount } = storeToRefs(cartStore);
-
 const isMenuOpen = ref(false);
 const openMobileSubmenu = ref(null);
 const isContactModalOpen = ref(false);
-const router = useRouter();
 
 // Categorías de productos para el menú
 const productCategories = [
@@ -423,11 +388,6 @@ function closeAllMenus() {
   openMobileSubmenu.value = null;
 }
 
-function goToCart() {
-  router.push('/carrito');
-  closeAllMenus();
-}
-
 function openContactModal() {
   isContactModalOpen.value = true;
   closeAllMenus();
@@ -438,8 +398,9 @@ function closeContactModal() {
 }
 
 // Cerrar los menús cuando la ruta cambia
+const route = useRoute();
 watch(
-  () => router.currentRoute.value.path,
+  () => route.path,
   () => {
     closeAllMenus();
   }

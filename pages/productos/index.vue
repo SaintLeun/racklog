@@ -161,19 +161,6 @@
         </div>
       </div>
     </section>
-
-    <!-- Quote Modal -->
-    <QuoteModal 
-      :isVisible="isQuoteModalOpen" 
-      :initialProduct="selectedProduct" 
-      @close="closeQuoteModal" 
-    />
-
-    <!-- Contact Modal -->
-    <ContactModal 
-      :isVisible="isContactModalOpen" 
-      @close="closeContactModal" 
-    />
   </div>
 </template>
 
@@ -181,18 +168,12 @@
   import { ref, computed, onMounted, watch } from 'vue';
   import { useProductStore } from '@/stores/productStore';
   import { useRoute, useRouter } from 'vue-router';
-  import QuoteModal from '@/components/QuoteModal/QuoteModal.vue';
-  import ContactModal from '@/components/ContactModal.vue';
 
   // Router and route for query params
   const route = useRoute();
   const router = useRouter();
 
-  // Store and modals
   const productStore = useProductStore();
-  const isQuoteModalOpen = ref(false);
-  const isContactModalOpen = ref(false);
-  const selectedProduct = ref('');
 
   // Filters state
   const activeCategory = ref('all');
@@ -272,24 +253,6 @@
         return products;
     }
   });
-
-  // Modal functions
-  function openQuoteModal(productSlug = '') {
-    selectedProduct.value = productSlug;
-    isQuoteModalOpen.value = true;
-  }
-
-  function closeQuoteModal() {
-    isQuoteModalOpen.value = false;
-  }
-
-  function openContactModal() {
-    isContactModalOpen.value = true;
-  }
-
-  function closeContactModal() {
-    isContactModalOpen.value = false;
-  }
 
   // Filter reset
   function resetFilters() {

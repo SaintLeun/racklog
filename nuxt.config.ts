@@ -11,7 +11,6 @@ const prerenderRoutes = [
   "/nosotros",
   "/productos",
   "/blog",
-  "/carrito",
   "/politica-privacidad",
   "/politica-cookies",
   "/terminos",

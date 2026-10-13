@@ -4,7 +4,7 @@
     <transition name="backdrop">
       <div
         v-if="isVisible"
-        class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-neutral-950/60 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto"
+        class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-neutral-950/60 backdrop-blur-sm p-0 sm:p-4 overflow-y-auto"
         @click.self="closeModal"
       >
         <transition name="dialog" appear>
@@ -81,6 +81,18 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p>{{ formStatus.message }}</p>
+              </div>
+
+              <!-- Producto a cotizar (desde el configurador o la ficha del producto) -->
+              <div v-if="quoteItem" class="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3">
+                <p class="text-xs font-semibold uppercase tracking-wider text-neutral-600">Producto a cotizar</p>
+                <p class="mt-0.5 font-semibold text-neutral-900">{{ quoteItem.name }}</p>
+                <dl v-if="quoteDetails.length" class="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+                  <div v-for="[label, value] in quoteDetails" :key="label" class="flex justify-between gap-2">
+                    <dt class="text-neutral-600">{{ label }}</dt>
+                    <dd class="font-medium text-neutral-900">{{ value }}</dd>
+                  </div>
+                </dl>
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -198,8 +210,8 @@
                   </div>
                 </div>
 
-                <!-- Asunto -->
-                <div>
+                <!-- Asunto (con producto adjunto ya se sabe que es) -->
+                <div v-if="!quoteItem">
                   <label :for="`${uid}-subject`" class="field-label">Asunto <span class="text-orange-700" aria-hidden="true">*</span></label>
                   <div class="field-wrap">
                     <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -223,15 +235,19 @@
 
               <!-- Mensaje -->
               <div>
-                <label :for="`${uid}-message`" class="field-label">Mensaje <span class="text-orange-700" aria-hidden="true">*</span></label>
+                <label :for="`${uid}-message`" class="field-label">
+                  {{ quoteItem ? 'Comentarios' : 'Mensaje' }}
+                  <span v-if="quoteItem" class="font-normal text-neutral-500">(opcional)</span>
+                  <span v-else class="text-orange-700" aria-hidden="true">*</span>
+                </label>
                 <textarea
                   :id="`${uid}-message`"
                   v-model="form.message"
                   name="message"
                   rows="4"
                   maxlength="2000"
-                  placeholder="Cuéntanos sobre tu proyecto: medidas, carga, plazos…"
-                  required
+                  :placeholder="quoteItem ? 'Cantidad, plazos, dirección de instalación…' : 'Cuéntanos sobre tu proyecto: medidas, carga, plazos…'"
+                  :required="!quoteItem"
                   :aria-invalid="errors.message ? 'true' : 'false'"
                   :aria-describedby="errors.message ? `${uid}-message-error` : undefined"
                   :class="['field-input field-input--textarea', { 'field-input--error': errors.message }]"
@@ -302,7 +318,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, watch, computed } from 'vue';
+import { ref, reactive, watch, computed, type PropType } from 'vue';
+import type { QuoteItem } from '~/components/QuoteModal/ProductConfig';
 
 const props = defineProps({
   isVisible: Boolean,
@@ -313,6 +330,11 @@ const props = defineProps({
   serviceInfo: {
     type: String,
     default: ''
+  },
+  // Producto a cotizar: se envia como cotizacion (tipo quote) con su configuracion
+  quoteItem: {
+    type: Object as PropType<QuoteItem | null>,
+    default: null
   }
 });
 
@@ -353,6 +375,8 @@ const formStatus = reactive({
   message: ''
 });
 
+
+const quoteDetails = computed(() => Object.entries(props.quoteItem?.config ?? {}));
 
 // Initialize form with service info if available
 const hasServiceInfo = computed(() => Boolean(props.serviceInfo));
@@ -465,7 +489,9 @@ function validateForm() {
   }
 
   // Validate subject
-  if (!form.subject.trim()) {
+  if (props.quoteItem) {
+    // Sin asunto: lo da el producto
+  } else if (!form.subject.trim()) {
     errors.subject = 'El asunto es requerido';
     isValid = false;
   } else if (form.subject.trim().length < 5) {
@@ -474,7 +500,9 @@ function validateForm() {
   }
   
   // Validate message
-  if (!form.message.trim()) {
+  if (props.quoteItem) {
+    // Comentarios opcionales
+  } else if (!form.message.trim()) {
     errors.message = 'El mensaje es requerido';
     isValid = false;
   } else if (form.message.trim().length < 10) {
@@ -506,16 +534,36 @@ async function submitForm() {
   formStatus.message = '';
 
   try {
-    const contactData = {
-      name: form.name,
-      email: form.email,
-      phone: form.phone,
-      company: form.company,
-      rut: form.rut.trim() ? formatRut(form.rut) : '',
-      subject: form.subject,
-      message: form.message,
-      serviceInfo: props.serviceInfo
-    };
+    const rut = form.rut.trim() ? formatRut(form.rut) : '';
+    const leadType = props.quoteItem ? 'quote' : 'contact';
+    // Con producto se usa el formato de cotizacion de la API: el vendedor recibe la configuracion
+    const payloadData = props.quoteItem
+      ? {
+          customerName: form.name,
+          customerEmail: form.email,
+          customerPhone: form.phone,
+          customerCompany: form.company,
+          customerRut: rut,
+          customerComments: form.message,
+          products: [{
+            name: props.quoteItem.name,
+            quantity: 1,
+            price: 0,
+            quoteOnly: true,
+            config: props.quoteItem.config ?? {}
+          }],
+          cartTotal: 0
+        }
+      : {
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          company: form.company,
+          rut,
+          subject: form.subject,
+          message: form.message,
+          serviceInfo: props.serviceInfo
+        };
 
     const response = await fetch('https://api.racklog.cl/api/send-email', {
       method: 'POST',
@@ -523,8 +571,8 @@ async function submitForm() {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        data: contactData,
-        type: 'contact',
+        data: payloadData,
+        type: leadType,
         website: form.website
       })
     });
@@ -542,9 +590,10 @@ async function submitForm() {
     window.dataLayer.push({
       event: 'generate_lead',
       event_category: 'Conversion',
-      event_label: 'Contact Form Sent',
-      funnel_step: 'contact_form_sent',
-      lead_type: 'contact',
+      event_label: props.quoteItem ? 'Quote Form Sent' : 'Contact Form Sent',
+      funnel_step: props.quoteItem ? 'quote_form_sent' : 'contact_form_sent',
+      lead_type: leadType,
+      product: props.quoteItem?.name,
       lead_reference: data.reference,
       currency: 'CLP',
       value: 0

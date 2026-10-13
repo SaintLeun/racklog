@@ -21,6 +21,8 @@ RewriteRule (^|/)\.(?!well-known/) - [F,L]
 # Redirecciones 301 de URLs del sitio anterior (anuncios de Google Ads y links
 # antiguos). La query (?gclid=...) se conserva.
 RewriteRule ^rack[_-]penetrables?/?$ /productos/rack-drive-in/ [L,R=301]
+# El carrito de cotizacion se elimino (oct 2026): se cotiza desde cada producto
+RewriteRule ^carrito/?$ /productos/ [L,R=301]
 
 # 3) No quitar la barra final: Apache (mod_dir) agrega "/" a las carpetas
 # (/productos -> /productos/) y quitarla causaba un bucle infinito
