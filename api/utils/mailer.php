@@ -37,3 +37,10 @@ function sendEmail(string $to, array $data, string $type, string $referenceId): 
         ))
     );
 }
+
+/** Aviso interno en texto plano a contacto@ (fallas que alguien debe saber) */
+function sendInternalAlert(string $subject, string $body): bool {
+    $sender = 'contacto@racklog.cl';
+    $headers = "From: Racklog API <{$sender}>\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8";
+    return mail($sender, '=?UTF-8?B?' . base64_encode('[Aviso API] ' . $subject) . '?=', $body, $headers);
+}

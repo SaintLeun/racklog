@@ -77,7 +77,7 @@ begin
 
   insert into public.leads_web (
     referencia, tipo, nombre, email, telefono, empresa, rut, asunto, mensaje,
-    servicio, productos, total, ip, user_agent, kommo_lead_id, kommo_estado, datos
+    servicio, productos, total, ip, user_agent, kommo_lead_id, kommo_estado, datos, creado_en
   ) values (
     p_lead->>'referencia',
     p_lead->>'tipo',
@@ -95,7 +95,9 @@ begin
     left(p_lead->>'user_agent', 500),
     (p_lead->>'kommo_lead_id')::bigint,
     p_lead->>'kommo_estado',
-    coalesce(p_lead->'datos', '{}'::jsonb)
+    coalesce(p_lead->'datos', '{}'::jsonb),
+    -- Hora del formulario (la API la envia; importa cuando el lead se guarda tarde desde la cola de reintento)
+    coalesce((p_lead->>'creado_en')::timestamptz, now())
   )
   on conflict (referencia) do nothing;
 

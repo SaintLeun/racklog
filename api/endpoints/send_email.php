@@ -87,6 +87,15 @@ function handleSendEmail(string $method): void {
 
     $intranetResult = saveLeadToIntranet($data, $type, $ref, $leadResult);
     $intranetOk = $intranetResult['error'] === null;
+    $intranetQueued = $intranetResult['queued'] ?? false;
+    if ($intranetQueued) {
+        sendInternalAlert(
+            "Lead {$ref} pendiente en la intranet",
+            "El formulario {$ref} no se pudo guardar en la intranet ({$intranetResult['error']}).\n"
+            . "Los datos completos estan en el correo \"desde Sitio Web\" con esa referencia.\n"
+            . "La API lo reintenta sola cada 5 minutos y avisara cuando quede guardado."
+        );
+    }
 
     // Un destino sin configurar (p. ej. sin Kommo) no es un error; si lo es que falle uno configurado
     $kommoFailed = !$leadOk && $leadResult['error'] !== 'not_configured';
@@ -104,10 +113,11 @@ function handleSendEmail(string $method): void {
         'intranet_saved' => $intranetOk,
         'intranet_status' => $intranetResult['status'],
         'intranet_error' => $intranetResult['error'],
+        'intranet_queued' => $intranetQueued,
     ]);
 
-    // Si no llego ni el correo interno ni el lead ni la intranet, la solicitud se perdio: avisar al usuario
-    if (!$internalSent && !$leadOk && !$intranetOk) {
+    // Si no llego ni el correo interno ni el lead ni la intranet (ni quedo en cola), la solicitud se perdio: avisar al usuario
+    if (!$internalSent && !$leadOk && !$intranetOk && !$intranetQueued) {
         jsonResponse(502, ['error' => 'No se pudo registrar la solicitud', 'reference' => $ref]);
         return;
     }
