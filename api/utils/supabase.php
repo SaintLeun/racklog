@@ -51,15 +51,6 @@ function buildIntranetLead(array $data, string $tipo, string $referencia, array 
     ];
 }
 
-/** Guarda el lead en la intranet y, si falla, lo deja en la cola de pendientes */
-function saveLeadToIntranet(array $data, string $tipo, string $referencia, array $kommoResult): array {
-    $lead = buildIntranetLead($data, $tipo, $referencia, $kommoResult);
-    $result = sendLeadToIntranet($lead);
-    $result['queued'] = $result['error'] !== null && $result['error'] !== 'not_configured'
-        && queueIntranetLead($lead, $result['error']);
-    return $result;
-}
-
 /**
  * Envia un lead ya armado a la base de la intranet (Supabase) via la funcion registrar_lead_web.
  * Repetir el envio no duplica: registrar_lead_web ignora una referencia que ya existe.
@@ -97,35 +88,4 @@ function sendLeadToIntranet(array $lead): array {
     }
 
     return ['status' => $httpCode, 'error' => $error ?: null];
-}
-
-/** Carpeta de leads que no se pudieron guardar en la intranet (fuera del temporal: no debe borrarse sola) */
-function intranetQueueDir(): ?string {
-    $dir = __DIR__ . '/../storage/intranet_pendientes';
-    return (is_dir($dir) || @mkdir($dir, 0700, true)) && is_writable($dir) ? $dir : null;
-}
-
-/** Deja el lead en la cola; scripts/reintentar_intranet.php lo reenvia y avisa */
-function queueIntranetLead(array $lead, string $error): bool {
-    $dir = intranetQueueDir();
-    if ($dir === null || !preg_match('/^(CT|QT)-\d{8}-[0-9a-f]{4}$/', $lead['referencia'])) {
-        logEvent('error', 'intranet_queue_unavailable', ['ref' => $lead['referencia']]);
-        return false;
-    }
-    $pendiente = ['lead' => $lead, 'encolado' => date('c'), 'intentos' => 1, 'ultimo_error' => $error];
-    $file = $dir . '/' . $lead['referencia'] . '.json';
-    if (@file_put_contents($file, json_encode($pendiente, JSON_UNESCAPED_UNICODE), LOCK_EX) === false) {
-        logEvent('error', 'intranet_queue_unavailable', ['ref' => $lead['referencia']]);
-        return false;
-    }
-    @chmod($file, 0600);
-    return true;
-}
-
-/** @return string[] Archivos de leads pendientes, del mas antiguo al mas nuevo */
-function intranetQueueFiles(): array {
-    $dir = intranetQueueDir();
-    $files = $dir === null ? [] : (glob($dir . '/*.json') ?: []);
-    usort($files, fn($a, $b) => filemtime($a) <=> filemtime($b));
-    return $files;
 }

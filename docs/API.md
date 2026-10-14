@@ -85,8 +85,8 @@ Notes:
 ## GET /health
 Uptime probe. Returns `200 {"status":"ok"}` when at least one lead destination
 (Kommo token or intranet Supabase config), `mail()` and rate-limit storage are
-available and no lead has been waiting in the intranet queue for more than 30 minutes
-(`intranet_atrasados`, see MAINTENANCE.md), or `503 {"status":"degraded"}` with the
+available and no lead has been waiting in the retry queue for more than 30 minutes
+(`leads_atrasados`, see MAINTENANCE.md), or `503 {"status":"degraded"}` with the
 failing check. Point the uptime monitor here.
 
 When a Kommo token is configured, `kommo_auth` checks it against Kommo

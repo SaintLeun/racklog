@@ -141,7 +141,8 @@ function createLead(array $data, string $tipo, string $referencia, ?int $recibid
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
-    curl_close($ch); 
+    $errno = curl_errno($ch);
+    curl_close($ch);
 
     // Un token rechazado al crear el lead se refleja de inmediato en /health
     if ($httpCode === 401 || $httpCode === 403) {
@@ -155,8 +156,23 @@ function createLead(array $data, string $tipo, string $referencia, ?int $recibid
         'status' => (int) $httpCode,
         'id' => is_int($id) ? $id : null,
         'response' => $body,
-        'error' => $error ?: null
+        'error' => $error ?: null,
+        'errno' => $errno,
     ];
+}
+
+/**
+ * Si es seguro reintentar un createLead() fallido sin arriesgar un lead duplicado en Kommo:
+ * solo cuando la solicitud no llego a Kommo (sin conexion) o Kommo la rechazo sin procesarla.
+ * Un corte a mitad de respuesta, un 5xx o un 2xx sin id son ambiguos: el lead pudo crearse.
+ */
+function kommoReintentable(array $result): bool {
+    if ($result['error'] !== null) {
+        // 6 sin DNS, 7 no conecta, 35 falla TLS; 28 solo si vencio el plazo de conexion (no el de respuesta)
+        return in_array($result['errno'] ?? 0, [6, 7, 35], true)
+            || (($result['errno'] ?? 0) === 28 && preg_match('/^(Connection|Resolving) timed out/', $result['error']) === 1);
+    }
+    return in_array($result['status'], [401, 403, 429], true);
 }
 
 /**

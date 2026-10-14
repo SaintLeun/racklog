@@ -5,6 +5,7 @@ require_once __DIR__ . '/../utils/rate_limit.php';
 require_once __DIR__ . '/../utils/validation.php';
 require_once __DIR__ . '/../utils/logger.php';
 require_once __DIR__ . '/../utils/supabase.php';
+require_once __DIR__ . '/../utils/lead_queue.php';
 
 function jsonResponse(int $status, array $body): void {
     http_response_code($status);
@@ -85,21 +86,47 @@ function handleSendEmail(string $method): void {
     $leadResult = createLead($data, $type, $ref);
     $leadOk = $leadResult['error'] === null && $leadResult['status'] >= 200 && $leadResult['status'] < 300;
 
-    $intranetResult = saveLeadToIntranet($data, $type, $ref, $leadResult);
+    $intranetLead = buildIntranetLead($data, $type, $ref, $leadResult);
+    $intranetResult = sendLeadToIntranet($intranetLead);
     $intranetOk = $intranetResult['error'] === null;
-    $intranetQueued = $intranetResult['queued'] ?? false;
-    if ($intranetQueued) {
-        sendInternalAlert(
-            "Lead {$ref} pendiente en la intranet",
-            "El formulario {$ref} no se pudo guardar en la intranet ({$intranetResult['error']}).\n"
-            . "Los datos completos estan en el correo \"desde Sitio Web\" con esa referencia.\n"
-            . "La API lo reintenta sola cada 5 minutos y avisara cuando quede guardado."
-        );
-    }
 
     // Un destino sin configurar (p. ej. sin Kommo) no es un error; si lo es que falle uno configurado
     $kommoFailed = !$leadOk && $leadResult['error'] !== 'not_configured';
     $intranetFailed = !$intranetOk && $intranetResult['error'] !== 'not_configured';
+
+    // Lo que fallo y se puede reintentar sin duplicar queda en cola (scripts/reintentar_leads.php)
+    $kommoRetry = $kommoFailed && kommoReintentable($leadResult);
+    $queued = ($kommoRetry || $intranetFailed) && queueLead(
+        $intranetLead,
+        $kommoRetry,
+        $intranetFailed,
+        implode('; ', array_filter([
+            $kommoRetry ? 'Kommo: ' . ($leadResult['error'] ?? 'http_' . $leadResult['status']) : null,
+            $intranetFailed ? 'intranet: ' . $intranetResult['error'] : null,
+        ]))
+    );
+    if ($queued) {
+        sendInternalAlert(
+            "Lead {$ref} pendiente",
+            "El formulario {$ref} no llego a " . implode(' ni a ', array_filter([
+                $kommoRetry ? 'Kommo' : null,
+                $intranetFailed ? 'la intranet' : null,
+            ])) . ".\n"
+            . "Los datos completos estan en el correo \"desde Sitio Web\" con esa referencia.\n"
+            . "La API lo reintenta sola cada 5 minutos y avisara cuando quede registrado."
+        );
+    }
+    // Fallo de Kommo que no se puede reintentar sin riesgo de duplicar: lo revisa una persona
+    if ($kommoFailed && !$kommoRetry) {
+        sendInternalAlert(
+            "Revisar lead {$ref} en Kommo",
+            "Kommo no confirmo el lead {$ref} (" . kommoEstado($leadResult)
+            . ($leadResult['error'] ? ", {$leadResult['error']}" : '') . ").\n"
+            . "Puede que se haya creado igual: buscalo en Kommo por la referencia y, si no esta, crealo a mano\n"
+            . "con los datos del correo \"desde Sitio Web\"."
+        );
+    }
+
     logEvent($internalSent && !$kommoFailed && !$intranetFailed ? 'info' : 'error', 'form_submission', [
         'ref' => $ref,
         'type' => $type,
@@ -113,11 +140,11 @@ function handleSendEmail(string $method): void {
         'intranet_saved' => $intranetOk,
         'intranet_status' => $intranetResult['status'],
         'intranet_error' => $intranetResult['error'],
-        'intranet_queued' => $intranetQueued,
+        'queued' => $queued,
     ]);
 
     // Si no llego ni el correo interno ni el lead ni la intranet (ni quedo en cola), la solicitud se perdio: avisar al usuario
-    if (!$internalSent && !$leadOk && !$intranetOk && !$intranetQueued) {
+    if (!$internalSent && !$leadOk && !$intranetOk && !$queued) {
         jsonResponse(502, ['error' => 'No se pudo registrar la solicitud', 'reference' => $ref]);
         return;
     }

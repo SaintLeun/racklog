@@ -1,3 +1,7 @@
+-- NO EJECUTAR sin revisar antes con quien mantiene la intranet: al 2026-10-14 la base real
+-- no tiene esta version (la intranet vincula clientes por su cuenta) y este script
+-- reemplazaria registrar_lead_web.
+--
 -- Vincula cada lead del sitio con la tabla clientes de la intranet (proyecto cierre-mes-intranet)
 --
 -- Ejecutar una vez en Supabase > SQL Editor, DESPUES de docs/supabase_leads_web.sql.
@@ -97,7 +101,10 @@ begin
     -- Hora del formulario (la API la envia; importa cuando el lead se guarda tarde desde la cola de reintento)
     coalesce((p_lead->>'creado_en')::timestamptz, now())
   )
-  on conflict (referencia) do nothing;
+  -- Ya existia (reintento desde la cola de la API): solo completar el id de Kommo si faltaba
+  on conflict (referencia) do update
+    set kommo_lead_id = excluded.kommo_lead_id
+    where public.leads_web.kommo_lead_id is null and excluded.kommo_lead_id is not null;
 
   return p_lead->>'referencia';
 end;

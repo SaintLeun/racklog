@@ -99,7 +99,10 @@ begin
     -- Hora del formulario (la API la envia; importa cuando el lead se guarda tarde desde la cola de reintento)
     coalesce((p_lead->>'creado_en')::timestamptz, now())
   )
-  on conflict (referencia) do nothing;
+  -- Ya existia (reintento desde la cola de la API): solo completar el id de Kommo si faltaba
+  on conflict (referencia) do update
+    set kommo_lead_id = excluded.kommo_lead_id
+    where public.leads_web.kommo_lead_id is null and excluded.kommo_lead_id is not null;
 
   return p_lead->>'referencia';
 end;
