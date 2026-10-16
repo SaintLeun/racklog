@@ -392,6 +392,11 @@ const props = defineProps({
   quoteItem: {
     type: Object as PropType<QuoteItem | null>,
     default: null
+  },
+  // Archivos que se adjuntan al abrir (p. ej. el plano del planificador); el cliente puede quitarlos
+  initialFiles: {
+    type: Array as PropType<File[]>,
+    default: () => []
   }
 });
 
@@ -473,6 +478,7 @@ watch(() => props.serviceInfo, (newVal) => {
 watch(() => props.isVisible, (newVal) => {
   if (newVal) {
     document.body.style.overflow = 'hidden';
+    if (props.initialFiles.length && !attachments.value.length) addFiles(props.initialFiles);
 
     // Inicio del embudo: el usuario abrio el formulario
     window.dataLayer = window.dataLayer || [];

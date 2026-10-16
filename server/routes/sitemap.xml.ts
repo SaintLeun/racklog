@@ -10,6 +10,7 @@ export default defineEventHandler((event) => {
   const pages: { path: string; lastmod?: string; priority: string }[] = [
     { path: '/', priority: '1.0' },
     { path: '/productos', priority: '0.9' },
+    { path: '/planificador', priority: '0.8' },
     ...products.map((p) => ({ path: `/productos/${p.slug}`, priority: '0.9' })),
     ...services.map((s) => ({ path: `/servicios/${s.slug}`, priority: '0.8' })),
     { path: '/blog', priority: '0.7' },

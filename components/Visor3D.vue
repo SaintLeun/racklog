@@ -31,10 +31,13 @@
 <script lang="ts" setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
 
-// Producto 'RS' (rack selectivo) o 'AR' (angulo ranurado) con la misma config del configurador
+// Un producto ('RS' rack selectivo o 'AR' angulo ranurado, con la config del configurador)
+// o, en el planificador, una bodega con sus racks
 const props = defineProps<{
-  producto: 'RS' | 'AR';
-  config: Record<string, unknown>;
+  producto?: 'RS' | 'AR';
+  config?: Record<string, unknown>;
+  bodega?: { ancho: number; largo: number; forma?: Array<{ x: number; y: number }> | null };
+  racks?: Array<Record<string, unknown>>;
   etiqueta?: string;
 }>();
 
@@ -45,38 +48,49 @@ type Modulos = {
   visor: typeof import('~/lib/rack3d/visor.js');
   construir: typeof import('~/lib/rack3d/construir.js');
   medidas: typeof import('~/lib/rack3d/medidas.js');
+  bodega: typeof import('~/lib/rack3d/bodega.js');
 };
 let mods: Modulos | null = null;
 let visor: ReturnType<Modulos['visor']['crearVisor']> | null = null;
 
+let ultimaBodega = '';
+
 function construirModelo() {
   if (!mods || !visor) return;
-  const { construir, medidas } = mods;
+  const { construir, medidas, bodega } = mods;
+  if (props.bodega) {
+    // Mover o editar un rack no mueve la camara; cambiar la bodega si la reencuadra
+    const clave = JSON.stringify([props.bodega.ancho, props.bodega.largo, props.bodega.forma ?? null]);
+    visor.mostrar(bodega.construirBodega(props.bodega, props.racks ?? []), { reencuadrar: clave !== ultimaBodega, direccion: [0.25, 1.1, 1], margen: 0.95 });
+    ultimaBodega = clave;
+    return;
+  }
   const grupo = props.producto === 'AR'
-    ? construir.construirAnra(medidas.medidasAnra(props.config))
-    : construir.construirSelectivo(medidas.medidasSelectivo(props.config));
+    ? construir.construirAnra(medidas.medidasAnra(props.config ?? {}))
+    : construir.construirSelectivo(medidas.medidasSelectivo(props.config ?? {}));
   visor.mostrar(grupo);
 }
 
 onMounted(async () => {
   // three.js se descarga solo cuando hay un visor en pantalla
-  const [visorMod, construir, medidas] = await Promise.all([
+  const [visorMod, construir, medidas, bodega] = await Promise.all([
     import('~/lib/rack3d/visor.js'),
     import('~/lib/rack3d/construir.js'),
     import('~/lib/rack3d/medidas.js'),
+    import('~/lib/rack3d/bodega.js'),
   ]);
   if (!lienzoRef.value) return;
   if (!visorMod.webglDisponible()) {
     estado.value = 'sin-webgl';
     return;
   }
-  mods = { visor: visorMod, construir, medidas };
+  mods = { visor: visorMod, construir, medidas, bodega };
   visor = visorMod.crearVisor(lienzoRef.value);
   construirModelo();
   estado.value = 'listo';
 });
 
-watch(() => [props.producto, JSON.stringify(props.config)], construirModelo);
+watch(() => JSON.stringify([props.producto, props.config, props.bodega, props.racks]), construirModelo);
 
 onBeforeUnmount(() => {
   visor?.destruir();

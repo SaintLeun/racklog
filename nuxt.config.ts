@@ -9,6 +9,7 @@ const SITE_URL = "https://racklog.cl";
 const prerenderRoutes = [
   "/",
   "/nosotros",
+  "/planificador",
   "/productos",
   "/blog",
   "/politica-privacidad",

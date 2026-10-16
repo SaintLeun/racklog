@@ -67,6 +67,7 @@
         <NuxtLink to="/" class="nav-link" @click="closeAllMenus">Inicio</NuxtLink>
         <NuxtLink to="/nosotros" class="nav-link" @click="closeAllMenus">Nosotros</NuxtLink>
         <NuxtLink to="/blog" class="nav-link" @click="closeAllMenus">Proyectos recientes</NuxtLink>
+        <NuxtLink to="/planificador" class="nav-link" @click="closeAllMenus">Planificador 3D</NuxtLink>
 
         <!-- Productos -->
         <div class="relative dropdown-container">
@@ -211,6 +212,7 @@
           <li><NuxtLink to="/" @click="closeAllMenus" class="mobile-link">Inicio</NuxtLink></li>
           <li><NuxtLink to="/nosotros" @click="closeAllMenus" class="mobile-link">Nosotros</NuxtLink></li>
           <li><NuxtLink to="/blog" @click="closeAllMenus" class="mobile-link">Proyectos recientes</NuxtLink></li>
+          <li><NuxtLink to="/planificador" @click="closeAllMenus" class="mobile-link">Planificador 3D</NuxtLink></li>
 
           <!-- Productos -->
           <li>

@@ -64,6 +64,7 @@
             <li><NuxtLink to="/productos" class="footer-link">Catálogo de productos</NuxtLink></li>
             <li><a href="#" @click.prevent="openContactModal" class="footer-link">Contacto</a></li>
             <li><NuxtLink to="/blog" class="footer-link">Proyectos recientes</NuxtLink></li>
+            <li><NuxtLink to="/planificador" class="footer-link">Planificador 3D</NuxtLink></li>
           </ul>
         </div>
 
