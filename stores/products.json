@@ -4,7 +4,7 @@
     "slug": "rack-selectivo",
     "type": "Almacenamiento Industrial",
     "category": "racks",
-    "model": "https://sketchfab.com/models/1d90e83ff7704eaa9d7b0cc5f0f6a804/embed",
+    "model3d": {"producto": "RS", "config": {"tipo": "simple", "cuerpos": 3, "niveles": 3, "frentePallet": "1000mm", "fondoPallet": "1000mm", "altoPallet": "1200mm", "palletsPerBeam": 2}},
     "images": {
       "main": "/assets/images/rack-selectivo-main.webp",
       "card": "/assets/images/gallery-rack-selectivo-1.webp",
@@ -90,7 +90,7 @@
     "slug": "angulo-ranurado",
     "type": "Optimizacion de Espacios",
     "category": "estanterias",
-    "model": "https://sketchfab.com/models/4587a2df7cd44193804ea88fa98bd025/embed",
+    "model3d": {"producto": "AR", "config": {"tipo": "simple", "cuerpos": 3, "niveles": 5, "bandeja": "400mm", "pintado": "galvanizado"}},
     "images": {
       "main": "/assets/images/angulo-ranurado-main.webp",
       "card": "/assets/images/gallery-angulo-ranurado-1.webp",

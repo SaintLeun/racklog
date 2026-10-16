@@ -12,7 +12,6 @@
 - Sin `supabase.php` la API sigue enviando correo y creando el lead en Kommo; el log marca `intranet_error: not_configured`.
 
 ## Valores públicos en el frontend (no son secretos, pero quedan visibles en el bundle)
-- Sketchfab API token: [components/QuoteModal/QuoteModal.vue](components/QuoteModal/QuoteModal.vue) (búsqueda de modelos, solo lectura). Conviene rotarlo si se sospecha abuso.
 - Google Tag Manager ID: [plugins/gtag.client.ts](plugins/gtag.client.ts)
 - Microsoft Clarity tag ID: [nuxt.config.ts](nuxt.config.ts)
 

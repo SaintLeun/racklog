@@ -24,7 +24,7 @@ Sitio web de Racklog construido como sitio estatico en Nuxt 3 con una API PHP pe
 - Google Tag Manager (analitica y conversiones).
 - Microsoft Clarity (analitica de sesiones).
 - Kommo CRM (creacion de leads).
-- Sketchfab (busqueda/incrustacion de modelos 3D para el configurador).
+- Vista 3D propia (three.js, `lib/rack3d/`): reemplaza a Sketchfab desde 2026-10-16; ya no hay servicio externo.
 
 ## Resumen de despliegue (alto nivel)
 - El frontend es un build estatico subido a la raiz del sitio.
