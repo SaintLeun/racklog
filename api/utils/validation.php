@@ -61,7 +61,33 @@ const ATTACHMENT_TYPES = [
 ];
 
 /**
- * Valida los archivos adjuntos (base64). El tipo se toma del contenido real, no del que declara el navegador.
+ * Lee los archivos de $_FILES['attachments'] (campo attachments[] del formulario)
+ * @return array [[['name', 'content'], ...], null] o [null, 'mensaje de error']
+ */
+function readUploadedFiles($upload): array {
+    if (!is_array($upload) || !is_array($upload['name'] ?? null)) {
+        return [[], null];
+    }
+    if (count($upload['name']) > ATTACHMENT_MAX_FILES) {
+        return [null, 'Adjuntos invalidos'];
+    }
+    $files = [];
+    foreach (array_keys($upload['name']) as $i) {
+        $error = $upload['error'][$i] ?? UPLOAD_ERR_NO_FILE;
+        if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
+            return [null, 'Adjuntos demasiado grandes'];
+        }
+        if ($error !== UPLOAD_ERR_OK || !is_uploaded_file($upload['tmp_name'][$i])) {
+            return [null, 'Adjunto invalido'];
+        }
+        $files[] = ['name' => (string) $upload['name'][$i], 'content' => file_get_contents($upload['tmp_name'][$i])];
+    }
+    return [$files, null];
+}
+
+/**
+ * Valida los archivos adjuntos. El tipo se toma del contenido real, no del que declara el navegador.
+ * @param array|null $raw [['name', 'content'], ...]
  * @return array [[['name', 'type', 'content'], ...], null] o [null, 'mensaje de error']
  */
 function validateAttachments($raw): array {
@@ -76,8 +102,8 @@ function validateAttachments($raw): array {
     $total = 0;
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     foreach ($raw as $i => $item) {
-        $content = is_array($item) && is_string($item['data'] ?? null) ? base64_decode($item['data'], true) : false;
-        if ($content === false || $content === '') {
+        $content = is_array($item) ? ($item['content'] ?? false) : false;
+        if (!is_string($content) || $content === '') {
             return [null, 'Adjunto invalido'];
         }
         $total += strlen($content);

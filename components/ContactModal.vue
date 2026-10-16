@@ -426,7 +426,7 @@ const errors = reactive({
   attachments: ''
 });
 
-// Adjuntos: van en base64 dentro del JSON (la API solo acepta JSON). Limites iguales a los de la API
+// Adjuntos: se suben como multipart (el firewall del hosting corta JSON de mas de 1 MB). Limites iguales a los de la API
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
 const MAX_FILES = 3;
 const MAX_TOTAL_MB = 5;
@@ -622,15 +622,6 @@ function clearAttachments() {
 
 onBeforeUnmount(clearAttachments);
 
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
-}
-
 function formatRutInput() {
   if (form.rut.trim() && validateRut(form.rut)) {
     form.rut = formatRut(form.rut);
@@ -761,22 +752,18 @@ async function submitForm() {
           serviceInfo: props.serviceInfo
         };
 
-    const response = await fetch('https://api.racklog.cl/api/send-email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        data: payloadData,
-        type: leadType,
-        website: form.website,
-        attachments: await Promise.all(attachments.value.map(async (a) => ({
-          name: a.name,
-          type: a.type,
-          data: await blobToBase64(a.blob)
-        })))
-      })
-    });
+    const payload = JSON.stringify({ data: payloadData, type: leadType, website: form.website });
+    let request: RequestInit;
+    if (attachments.value.length) {
+      // La cabecera propia obliga al preflight de CORS (proteccion contra CSRF, como el JSON)
+      const body = new FormData();
+      body.append('payload', payload);
+      attachments.value.forEach((a) => body.append('attachments[]', a.blob, a.name));
+      request = { method: 'POST', headers: { 'X-Racklog-Form': '1' }, body };
+    } else {
+      request = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload };
+    }
+    const response = await fetch('https://api.racklog.cl/api/send-email', request);
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.status !== 'success') {

@@ -19,22 +19,47 @@ function handleSendEmail(string $method): void {
         return;
     }
 
-    // Solo JSON: un formulario HTML de otro sitio no puede enviar este Content-Type
-    // sin pasar por el preflight de CORS (proteccion contra CSRF)
+    // Proteccion contra CSRF: un formulario HTML de otro sitio no puede enviar JSON ni cabeceras
+    // propias sin pasar por el preflight de CORS
     $contentType = strtolower($_SERVER['CONTENT_TYPE'] ?? '');
-    if (!str_starts_with($contentType, 'application/json')) {
+    $rawAttachments = null;
+    if (str_starts_with($contentType, 'multipart/form-data')) {
+        // Con adjuntos: el firewall del hosting (ModSecurity) corta los JSON de mas de 1 MB,
+        // pero deja pasar archivos subidos como multipart
+        if (($_SERVER['HTTP_X_RACKLOG_FORM'] ?? '') !== '1') {
+            jsonResponse(415, ['error' => 'Missing form header']);
+            return;
+        }
+        // Si se supera post_max_size, PHP descarta todo el cuerpo
+        if (empty($_POST) && (int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+            jsonResponse(413, ['error' => 'Payload too large']);
+            return;
+        }
+        $input = json_decode(is_string($_POST['payload'] ?? null) ? $_POST['payload'] : '', true);
+        [$rawAttachments, $uploadError] = readUploadedFiles($_FILES['attachments'] ?? null);
+        if ($uploadError !== null) {
+            jsonResponse($uploadError === 'Adjuntos demasiado grandes' ? 413 : 422, ['error' => $uploadError]);
+            return;
+        }
+    } elseif (str_starts_with($contentType, 'application/json')) {
+        $raw = file_get_contents('php://input');
+        if (strlen($raw) > 1100000) {
+            jsonResponse(413, ['error' => 'Payload too large']);
+            return;
+        }
+        $input = json_decode($raw, true);
+        // Version anterior del formulario (en cache): adjuntos en base64 dentro del JSON
+        if (is_array($input) && is_array($input['attachments'] ?? null)) {
+            $rawAttachments = array_map(fn($a) => [
+                'name' => $a['name'] ?? '',
+                'content' => is_string($a['data'] ?? null) ? base64_decode($a['data'], true) : false,
+            ], array_filter($input['attachments'], 'is_array'));
+        }
+    } else {
         jsonResponse(415, ['error' => 'Content-Type must be application/json']);
         return;
     }
 
-    $raw = file_get_contents('php://input');
-    // Hasta 5 MB de adjuntos en base64 (+33%) mas los datos del formulario
-    if (strlen($raw) > 7200000) {
-        jsonResponse(413, ['error' => 'Payload too large']);
-        return;
-    }
-
-    $input = json_decode($raw, true);
     if (!is_array($input)) {
         jsonResponse(400, ['error' => 'Invalid JSON']);
         return;
@@ -61,7 +86,7 @@ function handleSendEmail(string $method): void {
     }
 
     if ($error === null) {
-        [$attachments, $error] = validateAttachments($input['attachments'] ?? null);
+        [$attachments, $error] = validateAttachments($rawAttachments);
     }
 
     if ($error !== null) {
