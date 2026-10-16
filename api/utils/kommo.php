@@ -229,6 +229,10 @@ function formatLeadDetails(array $data, string $tipo, ?int $recibido = null): st
             $output .= $actualData['customerComments'] . "\n\n";
         }
         
+        if (!empty($actualData['adjuntos'])) {
+            $output .= "ARCHIVOS ADJUNTOS (en el correo a contacto@)\n" . implode("\n", $actualData['adjuntos']) . "\n\n";
+        }
+
         // Lista de productos
         if (!empty($actualData['products']) && is_array($actualData['products'])) {
             $output .= "PRODUCTOS SOLICITADOS\n";
@@ -294,6 +298,10 @@ function formatLeadDetails(array $data, string $tipo, ?int $recibido = null): st
             $output .= "Mensaje:\n" . $actualData['message'] . "\n\n";
         }
         
+        if (!empty($actualData['adjuntos'])) {
+            $output .= "ARCHIVOS ADJUNTOS (en el correo a contacto@)\n" . implode("\n", $actualData['adjuntos']) . "\n\n";
+        }
+
         // Información de servicio relacionado
         if (!empty($actualData['serviceInfo'])) {
             $output .= "SERVICIO RELACIONADO\n";

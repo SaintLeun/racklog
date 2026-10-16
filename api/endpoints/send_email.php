@@ -28,7 +28,8 @@ function handleSendEmail(string $method): void {
     }
 
     $raw = file_get_contents('php://input');
-    if (strlen($raw) > 20000) {
+    // Hasta 5 MB de adjuntos en base64 (+33%) mas los datos del formulario
+    if (strlen($raw) > 7200000) {
         jsonResponse(413, ['error' => 'Payload too large']);
         return;
     }
@@ -59,10 +60,16 @@ function handleSendEmail(string $method): void {
         return;
     }
 
+    if ($error === null) {
+        [$attachments, $error] = validateAttachments($input['attachments'] ?? null);
+    }
+
     if ($error !== null) {
-        jsonResponse(422, ['error' => $error]);
+        jsonResponse($error === 'Adjuntos demasiado grandes' ? 413 : 422, ['error' => $error]);
         return;
     }
+    // A Kommo, la intranet y las plantillas solo van los nombres; los archivos van en el correo interno
+    $data['adjuntos'] = array_column($attachments, 'name');
 
     // Limites de uso: por IP, por destinatario y global
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
@@ -80,7 +87,7 @@ function handleSendEmail(string $method): void {
     $internalEmail = 'contacto@racklog.cl';
 
     // La confirmacion va siempre al email del formulario, nunca a un destinatario libre
-    $internalSent = sendEmail($internalEmail, $data, $type, $ref);
+    $internalSent = sendEmail($internalEmail, $data, $type, $ref, $attachments);
     $confirmationSent = sendEmail($recipient, $data, $type . '_confirmation', $ref);
 
     $leadResult = createLead($data, $type, $ref);
@@ -131,6 +138,7 @@ function handleSendEmail(string $method): void {
         'ref' => $ref,
         'type' => $type,
         'recipient' => maskEmail($recipient),
+        'attachments' => count($attachments),
         'internal_email' => $internalSent,
         'confirmation_email' => $confirmationSent,
         'lead_created' => $leadOk,

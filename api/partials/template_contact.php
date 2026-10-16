@@ -106,6 +106,7 @@ function generateContact(array $data, string $contactRef): string {
                 {$contactInfoTable}
                 
                 {$messageSection}
+                " . attachmentsSection($data, '#ff9800') . "
                 
                 {$instructionsSection}
                 

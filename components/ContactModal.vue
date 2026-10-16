@@ -166,9 +166,9 @@
                   <p v-if="errors.company" :id="`${uid}-company-error`" class="field-error">{{ errors.company }}</p>
                 </div>
 
-                <!-- RUT (opcional: hay clientes que prefieren no entregarlo) -->
+                <!-- RUT -->
                 <div>
-                  <label :for="`${uid}-rut`" class="field-label">RUT <span class="font-normal text-neutral-500">(opcional)</span></label>
+                  <label :for="`${uid}-rut`" class="field-label">RUT <span class="text-orange-700" aria-hidden="true">*</span></label>
                   <div class="field-wrap">
                     <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
@@ -181,6 +181,7 @@
                       autocomplete="off"
                       placeholder="76.123.456-0"
                       maxlength="12"
+                      required
                       :aria-invalid="errors.rut ? 'true' : 'false'"
                       :aria-describedby="errors.rut ? `${uid}-rut-error` : undefined"
                       :class="['field-input', { 'field-input--error': errors.rut }]"
@@ -251,8 +252,64 @@
                   :aria-invalid="errors.message ? 'true' : 'false'"
                   :aria-describedby="errors.message ? `${uid}-message-error` : undefined"
                   :class="['field-input field-input--textarea', { 'field-input--error': errors.message }]"
+                  @paste="onPaste"
                 ></textarea>
                 <p v-if="errors.message" :id="`${uid}-message-error`" class="field-error">{{ errors.message }}</p>
+              </div>
+
+              <!-- Adjuntos: fotos o planos (tambien se pueden pegar en el mensaje) -->
+              <div>
+                <span class="field-label">Fotos o planos <span class="font-normal text-neutral-500">(opcional)</span></span>
+                <input
+                  ref="fileInputRef"
+                  type="file"
+                  :accept="ACCEPTED_TYPES.join(',')"
+                  multiple
+                  class="sr-only"
+                  tabindex="-1"
+                  aria-hidden="true"
+                  @change="onFileChange"
+                >
+                <button
+                  type="button"
+                  :disabled="attachments.length >= MAX_FILES || isProcessingFiles"
+                  class="inline-flex h-11 items-center gap-2 rounded-xl border border-dashed border-neutral-300 px-4 text-sm font-medium text-neutral-700 hover:border-orange-500 hover:text-orange-700 transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                  :aria-describedby="`${uid}-files-hint`"
+                  @click="fileInputRef?.click()"
+                >
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                  </svg>
+                  {{ isProcessingFiles ? 'Procesando…' : 'Adjuntar archivo' }}
+                </button>
+                <p :id="`${uid}-files-hint`" class="mt-1.5 text-xs text-neutral-500">
+                  También puedes pegar una imagen en el mensaje (Ctrl+V). Hasta {{ MAX_FILES }} archivos JPG, PNG o PDF, {{ MAX_TOTAL_MB }} MB en total.
+                </p>
+                <ul v-if="attachments.length" class="mt-3 space-y-2">
+                  <li
+                    v-for="file in attachments"
+                    :key="file.id"
+                    class="flex items-center gap-3 rounded-xl border border-neutral-200 bg-neutral-50 p-2 pr-1"
+                  >
+                    <img v-if="file.previewUrl" :src="file.previewUrl" alt="" class="h-10 w-10 flex-shrink-0 rounded-lg object-cover">
+                    <span v-else class="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-red-100 text-xs font-bold text-red-700" aria-hidden="true">PDF</span>
+                    <span class="min-w-0 flex-1 text-sm">
+                      <span class="block truncate font-medium text-neutral-900">{{ file.name }}</span>
+                      <span class="text-neutral-500">{{ formatSize(file.size) }}</span>
+                    </span>
+                    <button
+                      type="button"
+                      class="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-200 hover:text-neutral-900"
+                      :aria-label="`Quitar ${file.name}`"
+                      @click="removeAttachment(file.id)"
+                    >
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </li>
+                </ul>
+                <p v-if="errors.attachments" class="field-error" role="alert">{{ errors.attachments }}</p>
               </div>
 
               <!-- Privacidad -->
@@ -318,7 +375,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, watch, computed, type PropType } from 'vue';
+import { ref, reactive, watch, computed, onBeforeUnmount, type PropType } from 'vue';
 import type { QuoteItem } from '~/components/QuoteModal/ProductConfig';
 
 const props = defineProps({
@@ -365,8 +422,32 @@ const errors = reactive({
   rut: '',
   subject: '',
   message: '',
-  privacy: ''
+  privacy: '',
+  attachments: ''
 });
+
+// Adjuntos: van en base64 dentro del JSON (la API solo acepta JSON). Limites iguales a los de la API
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'application/pdf'];
+const MAX_FILES = 3;
+const MAX_TOTAL_MB = 5;
+const MAX_TOTAL_BYTES = MAX_TOTAL_MB * 1024 * 1024;
+// Fotos de celular y capturas grandes se achican antes de enviar
+const IMAGE_MAX_SIDE = 2000;
+const IMAGE_COMPRESS_FROM = 1024 * 1024;
+
+interface Attachment {
+  id: number;
+  name: string;
+  type: string;
+  size: number;
+  blob: Blob;
+  previewUrl: string | null;
+}
+
+const fileInputRef = ref<HTMLInputElement | null>(null);
+const attachments = ref<Attachment[]>([]);
+const isProcessingFiles = ref(false);
+let attachmentSeq = 0;
 
 // Form submission state
 const isSubmitting = ref(false);
@@ -425,6 +506,7 @@ watch(() => props.isVisible, (newVal) => {
         message: '',
         privacy: false
       });
+      clearAttachments();
       
       // Clear errors and status
       (Object.keys(errors) as Array<keyof typeof errors>).forEach((key) => {
@@ -441,6 +523,112 @@ useModalA11y(computed(() => !!props.isVisible), dialogRef, () => closeModal());
 
 function closeModal() {
   emit('close');
+}
+
+function formatSize(bytes: number) {
+  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
+/** Achica la imagen a JPEG si es pesada o muy grande; si no, la deja igual */
+async function compressImage(file: File): Promise<{ blob: Blob; name: string; type: string }> {
+  if (file.type === 'image/gif') return { blob: file, name: file.name, type: file.type };
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, IMAGE_MAX_SIDE / Math.max(bitmap.width, bitmap.height));
+  if (scale === 1 && file.size <= IMAGE_COMPRESS_FROM) {
+    bitmap.close();
+    return { blob: file, name: file.name, type: file.type };
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const ctx = canvas.getContext('2d')!;
+  // Fondo blanco: las capturas PNG con transparencia quedarian negras en JPEG
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+  if (!blob || blob.size >= file.size) return { blob: file, name: file.name, type: file.type };
+  return { blob, name: file.name.replace(/\.[^.]+$/, '') + '.jpg', type: 'image/jpeg' };
+}
+
+async function addFiles(files: File[]) {
+  errors.attachments = '';
+  isProcessingFiles.value = true;
+  try {
+    for (const file of files) {
+      if (attachments.value.length >= MAX_FILES) {
+        errors.attachments = `Puedes adjuntar hasta ${MAX_FILES} archivos.`;
+        break;
+      }
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        errors.attachments = `"${file.name}" no es un formato permitido. Usa JPG, PNG o PDF.`;
+        continue;
+      }
+      let processed: { blob: Blob; name: string; type: string };
+      try {
+        processed = file.type.startsWith('image/') ? await compressImage(file) : { blob: file, name: file.name, type: file.type };
+      } catch {
+        errors.attachments = `No se pudo leer "${file.name}".`;
+        continue;
+      }
+      const used = attachments.value.reduce((sum, a) => sum + a.size, 0);
+      if (used + processed.blob.size > MAX_TOTAL_BYTES) {
+        errors.attachments = `"${file.name}" supera el límite de ${MAX_TOTAL_MB} MB en total. Envíalo a contacto@racklog.cl o por WhatsApp.`;
+        continue;
+      }
+      attachments.value.push({
+        id: ++attachmentSeq,
+        name: processed.name,
+        type: processed.type,
+        size: processed.blob.size,
+        blob: processed.blob,
+        previewUrl: processed.type.startsWith('image/') ? URL.createObjectURL(processed.blob) : null
+      });
+    }
+  } finally {
+    isProcessingFiles.value = false;
+  }
+}
+
+function onFileChange(event: Event) {
+  const input = event.target as HTMLInputElement;
+  addFiles(Array.from(input.files ?? []));
+  input.value = '';
+}
+
+// Imagen pegada en el mensaje: se adjunta; si ademas viene texto, el texto se pega normal
+function onPaste(event: ClipboardEvent) {
+  const files = Array.from(event.clipboardData?.files ?? []);
+  if (!files.length) return;
+  if (!event.clipboardData?.getData('text/plain')) event.preventDefault();
+  const stamp = new Date().toTimeString().slice(0, 8).replace(/:/g, '');
+  addFiles(files.map((file, i) => file.name && file.name !== 'image.png'
+    ? file
+    : new File([file], `imagen-pegada-${stamp}${i ? `-${i + 1}` : ''}.${file.type.split('/')[1] || 'png'}`, { type: file.type })));
+}
+
+function removeAttachment(id: number) {
+  const file = attachments.value.find((a) => a.id === id);
+  if (file?.previewUrl) URL.revokeObjectURL(file.previewUrl);
+  attachments.value = attachments.value.filter((a) => a.id !== id);
+  errors.attachments = '';
+}
+
+function clearAttachments() {
+  attachments.value.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl));
+  attachments.value = [];
+}
+
+onBeforeUnmount(clearAttachments);
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
 }
 
 function formatRutInput() {
@@ -482,9 +670,12 @@ function validateForm() {
     isValid = false;
   }
 
-  // Validate RUT (opcional: solo si lo ingresaron)
-  if (form.rut.trim() && !validateRut(form.rut)) {
-    errors.rut = 'El RUT no es válido. Puedes dejarlo en blanco';
+  // Validate RUT
+  if (!form.rut.trim()) {
+    errors.rut = 'El RUT es requerido';
+    isValid = false;
+  } else if (!validateRut(form.rut)) {
+    errors.rut = 'El RUT no es válido';
     isValid = false;
   }
 
@@ -510,6 +701,11 @@ function validateForm() {
     isValid = false;
   }
   
+  if (isProcessingFiles.value) {
+    errors.attachments = 'Espera a que terminen de cargarse los archivos.';
+    isValid = false;
+  }
+
   // Validate privacy checkbox
   if (!form.privacy) {
     errors.privacy = 'Debe aceptar la política de privacidad';
@@ -534,7 +730,7 @@ async function submitForm() {
   formStatus.message = '';
 
   try {
-    const rut = form.rut.trim() ? formatRut(form.rut) : '';
+    const rut = formatRut(form.rut);
     const leadType = props.quoteItem ? 'quote' : 'contact';
     // Con producto se usa el formato de cotizacion de la API: el vendedor recibe la configuracion
     const payloadData = props.quoteItem
@@ -573,13 +769,18 @@ async function submitForm() {
       body: JSON.stringify({
         data: payloadData,
         type: leadType,
-        website: form.website
+        website: form.website,
+        attachments: await Promise.all(attachments.value.map(async (a) => ({
+          name: a.name,
+          type: a.type,
+          data: await blobToBase64(a.blob)
+        })))
       })
     });
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.status !== 'success') {
-      throw new Error(response.status === 429 ? 'rate_limit' : (data.error || 'api_error'));
+      throw new Error(response.status === 429 ? 'rate_limit' : response.status === 413 ? 'too_large' : (data.error || 'api_error'));
     }
 
     formStatus.success = true;
@@ -611,6 +812,7 @@ async function submitForm() {
       message: '',
       privacy: false
     });
+    clearAttachments();
 
     // Auto-close after delay
     setTimeout(() => {
@@ -620,8 +822,11 @@ async function submitForm() {
     }, 3000);
   } catch (error) {
     formStatus.success = false;
-    formStatus.message = error instanceof Error && error.message === 'rate_limit'
+    const reason = error instanceof Error ? error.message : '';
+    formStatus.message = reason === 'rate_limit'
       ? 'Has enviado varios mensajes seguidos. Espera unos minutos e inténtalo de nuevo.'
+      : reason === 'too_large'
+      ? `Los archivos adjuntos superan los ${MAX_TOTAL_MB} MB. Quita alguno o envíalos a contacto@racklog.cl.`
       : 'Ha ocurrido un error al enviar el mensaje. Por favor, inténtalo de nuevo más tarde o escríbenos a contacto@racklog.cl.';
   } finally {
     isSubmitting.value = false;

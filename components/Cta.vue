@@ -18,7 +18,7 @@
 
           <!-- Formulario -->
           <div>
-            <form id="cta-form" @submit.prevent="submitForm" class="relative grid gap-4 sm:grid-cols-2 xl:grid-cols-[repeat(4,minmax(0,1fr))_auto] xl:items-end">
+            <form id="cta-form" @submit.prevent="submitForm" class="relative grid gap-4 sm:grid-cols-2 xl:grid-cols-[repeat(5,minmax(0,1fr))_auto] xl:items-end">
               <!-- Honeypot anti-bots: oculto para personas -->
               <input v-model="formData.website" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" />
               <div>
@@ -41,6 +41,27 @@
                   name="business"
                   class="form-input"
                 >
+              </div>
+              <div class="relative">
+                <label for="cta-rut" class="form-label">RUT</label>
+                <input
+                  v-model="formData.rut"
+                  type="text"
+                  id="cta-rut"
+                  name="rut"
+                  autocomplete="off"
+                  placeholder="76.123.456-0"
+                  maxlength="12"
+                  required
+                  :aria-invalid="rutError ? 'true' : 'false'"
+                  :aria-describedby="rutError ? 'cta-rut-error' : undefined"
+                  class="form-input"
+                  :class="{ 'border-red-400 bg-red-50': rutError }"
+                  @blur="formatRutInput"
+                  @input="rutError = ''"
+                >
+                <!-- En una fila (xl) el error va bajo el campo sin desalinear los demas -->
+                <p v-if="rutError" id="cta-rut-error" class="mt-1 text-sm text-red-700 xl:absolute xl:top-full xl:left-0 xl:whitespace-nowrap">{{ rutError }}</p>
               </div>
               <div>
                 <label for="cta-phone" class="form-label">Teléfono</label>
@@ -67,7 +88,7 @@
               <button
                 type="submit"
                 :disabled="isSubmitting || !formData.privacy"
-                class="btn btn-primary h-12 w-full sm:col-span-2 xl:col-span-1 xl:w-auto xl:min-w-[140px]"
+                class="btn btn-primary h-12 w-full xl:w-auto xl:min-w-[140px]"
               >
                 <span v-if="!isSubmitting">Enviar</span>
                 <span v-else class="flex items-center justify-center">
@@ -148,10 +169,19 @@ const formData = ref({
   website: '', // honeypot
   name: '',
   business: '',
+  rut: '',
   phone: '',
   email: '',
   privacy: false
 });
+
+const rutError = ref('');
+
+function formatRutInput() {
+  if (validateRut(formData.value.rut)) {
+    formData.value.rut = formatRut(formData.value.rut);
+  }
+}
 
 // Form submission state
 const isSubmitting = ref(false);
@@ -161,6 +191,11 @@ const showErrorMessage = ref(false);
 // Function to submit the form
 async function submitForm() {
   if (isSubmitting.value) return;
+  if (!validateRut(formData.value.rut)) {
+    rutError.value = 'El RUT no es válido';
+    document.getElementById('cta-rut')?.focus();
+    return;
+  }
 
   isSubmitting.value = true;
   showSuccessMessage.value = false;
@@ -172,6 +207,7 @@ async function submitForm() {
       name: formData.value.name,
       email: formData.value.email,
       phone: formData.value.phone,
+      rut: formatRut(formData.value.rut),
       subject: 'Solicitud de información desde formulario CTA',
       message: business
         ? `Cliente solicitando contacto desde el formulario principal. Empresa: ${business}.`
@@ -228,6 +264,7 @@ function resetForm() {
   formData.value = {
     name: '',
     business: '',
+    rut: '',
     phone: '',
     email: '',
     website: '',

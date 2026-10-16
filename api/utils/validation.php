@@ -32,6 +32,72 @@ function cleanEmail($value): ?string {
     return $value;
 }
 
+/** RUT chileno: cuerpo + digito verificador (modulo 11), con o sin puntos y guion */
+function validRut(string $rut): bool {
+    $clean = strtoupper(preg_replace('/[^0-9kK]/', '', $rut) ?? '');
+    if (!preg_match('/^(\d{7,8})([0-9K])$/', $clean, $m)) {
+        return false;
+    }
+    $sum = 0;
+    $factor = 2;
+    for ($i = strlen($m[1]) - 1; $i >= 0; $i--) {
+        $sum += (int) $m[1][$i] * $factor;
+        $factor = $factor === 7 ? 2 : $factor + 1;
+    }
+    $expected = 11 - ($sum % 11);
+    $dv = $expected === 11 ? '0' : ($expected === 10 ? 'K' : (string) $expected);
+    return $m[2] === $dv;
+}
+
+// Adjuntos: mismos limites que el formulario (ContactModal.vue)
+const ATTACHMENT_MAX_FILES = 3;
+const ATTACHMENT_MAX_TOTAL_BYTES = 5 * 1024 * 1024;
+const ATTACHMENT_TYPES = [
+    'image/jpeg' => 'jpg',
+    'image/png' => 'png',
+    'image/webp' => 'webp',
+    'image/gif' => 'gif',
+    'application/pdf' => 'pdf',
+];
+
+/**
+ * Valida los archivos adjuntos (base64). El tipo se toma del contenido real, no del que declara el navegador.
+ * @return array [[['name', 'type', 'content'], ...], null] o [null, 'mensaje de error']
+ */
+function validateAttachments($raw): array {
+    if ($raw === null || $raw === []) {
+        return [[], null];
+    }
+    if (!is_array($raw) || $raw !== array_values($raw) || count($raw) > ATTACHMENT_MAX_FILES) {
+        return [null, 'Adjuntos invalidos'];
+    }
+
+    $files = [];
+    $total = 0;
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    foreach ($raw as $i => $item) {
+        $content = is_array($item) && is_string($item['data'] ?? null) ? base64_decode($item['data'], true) : false;
+        if ($content === false || $content === '') {
+            return [null, 'Adjunto invalido'];
+        }
+        $total += strlen($content);
+        if ($total > ATTACHMENT_MAX_TOTAL_BYTES) {
+            return [null, 'Adjuntos demasiado grandes'];
+        }
+        $type = $finfo->buffer($content);
+        $ext = ATTACHMENT_TYPES[$type] ?? null;
+        if ($ext === null) {
+            return [null, 'Tipo de adjunto no permitido'];
+        }
+        // Nombre seguro para el correo, con la extension que corresponde al contenido
+        $base = pathinfo(is_string($item['name'] ?? null) ? $item['name'] : '', PATHINFO_FILENAME);
+        $base = trim(preg_replace('/[^\p{L}\p{N} ._-]+/u', '_', $base) ?? '', ' ._');
+        $base = mb_substr($base, 0, 80) ?: 'adjunto-' . ($i + 1);
+        $files[] = ['name' => "{$base}.{$ext}", 'type' => $type, 'content' => $content];
+    }
+    return [$files, null];
+}
+
 function validateContactData($data): array {
     if (!is_array($data)) {
         return [null, 'Datos de contacto invalidos'];
@@ -45,13 +111,18 @@ function validateContactData($data): array {
     if ($name === null) {
         return [null, 'Nombre requerido'];
     }
+    // Opcional (el formulario rapido de la portada no lo pide), pero si viene debe ser valido
+    $rut = cleanString($data['rut'] ?? null, 12) ?? '';
+    if ($rut !== '' && !validRut($rut)) {
+        return [null, 'RUT invalido'];
+    }
 
     return [[
         'name' => $name,
         'email' => $email,
         'phone' => cleanString($data['phone'] ?? null, 30) ?? '',
         'company' => cleanString($data['company'] ?? null, 150) ?? '',
-        'rut' => cleanString($data['rut'] ?? null, 12) ?? '',
+        'rut' => $rut,
         'subject' => cleanString($data['subject'] ?? null, 150) ?? '',
         'message' => cleanString($data['message'] ?? null, 5000) ?? '',
         'serviceInfo' => cleanString($data['serviceInfo'] ?? null, 150) ?? '',
@@ -70,6 +141,11 @@ function validateQuoteData($data): array {
     }
     if ($name === null) {
         return [null, 'Nombre requerido'];
+    }
+
+    $rut = cleanString($data['customerRut'] ?? null, 12) ?? '';
+    if ($rut !== '' && !validRut($rut)) {
+        return [null, 'RUT invalido'];
     }
 
     $rawProducts = $data['products'] ?? [];
@@ -116,7 +192,7 @@ function validateQuoteData($data): array {
         'customerEmail' => $email,
         'customerPhone' => cleanString($data['customerPhone'] ?? null, 30) ?? '',
         'customerCompany' => cleanString($data['customerCompany'] ?? null, 150) ?? '',
-        'customerRut' => cleanString($data['customerRut'] ?? null, 12) ?? '',
+        'customerRut' => $rut,
         'customerComments' => cleanString($data['customerComments'] ?? null, 5000) ?? '',
         'products' => $products,
         'cartTotal' => $cartTotal === false ? 0 : max(0, $cartTotal),

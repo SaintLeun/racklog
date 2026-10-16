@@ -218,6 +218,7 @@ function generateQuote(array $data, string $quoteRef): string {
                 {$customerInfoHtml}
                 
                 {$commentsHtml}
+                " . attachmentsSection($data, '#3f51b5') . "
                 
                 {$productsSectionTitle}
                 {$productsHtml}

@@ -2,7 +2,10 @@
 
 require_once __DIR__ . '/templates.php';
 
-function sendEmail(string $to, array $data, string $type, string $referenceId): bool {
+/**
+ * @param array $attachments Archivos de validateAttachments(): [['name', 'type', 'content'], ...]
+ */
+function sendEmail(string $to, array $data, string $type, string $referenceId, array $attachments = []): bool {
     $sender = 'contacto@racklog.cl';
     $normalizedType = strtolower(trim($type));
 
@@ -22,6 +25,25 @@ function sendEmail(string $to, array $data, string $type, string $referenceId): 
     ];
 
     $htmlMessage = generateEmailTemplate($data, $normalizedType, $referenceId);
+
+    if ($attachments) {
+        // multipart/mixed: el HTML y luego cada archivo en base64
+        $boundary = 'racklog-' . bin2hex(random_bytes(12));
+        $headers['Content-Type'] = "multipart/mixed; boundary=\"{$boundary}\"";
+        $body = "--{$boundary}\r\n"
+            . "Content-Type: text/html; charset=UTF-8\r\n"
+            . "Content-Transfer-Encoding: base64\r\n\r\n"
+            . chunk_split(base64_encode($htmlMessage)) . "\r\n";
+        foreach ($attachments as $file) {
+            $encodedName = '=?UTF-8?B?' . base64_encode($file['name']) . '?=';
+            $body .= "--{$boundary}\r\n"
+                . "Content-Type: {$file['type']}; name=\"{$encodedName}\"\r\n"
+                . "Content-Transfer-Encoding: base64\r\n"
+                . "Content-Disposition: attachment; filename=\"{$encodedName}\"\r\n\r\n"
+                . chunk_split(base64_encode($file['content'])) . "\r\n";
+        }
+        $htmlMessage = $body . "--{$boundary}--";
+    }
 
     // Codificar el asunto para que los acentos lleguen bien en todos los clientes
     $encodedSubject = '=?UTF-8?B?' . base64_encode($subject) . '?=';
