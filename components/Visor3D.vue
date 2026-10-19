@@ -94,6 +94,9 @@ onMounted(async () => {
     return;
   }
   mods = { visor: visorMod, construir, medidas, bodega };
+  // El logo de las cajas: se espera un momento para que salga en el primer dibujo
+  await Promise.race([construir.cargarLogo(), new Promise((ok) => setTimeout(ok, 1500))]);
+  if (!lienzoRef.value) return;
   visor = visorMod.crearVisor(lienzoRef.value);
   if (props.bodega) {
     visor.arrastrar({
