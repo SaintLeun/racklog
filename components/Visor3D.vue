@@ -31,10 +31,10 @@
 <script lang="ts" setup>
 import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 
-// Un producto ('RS' rack selectivo o 'AR' angulo ranurado, con la config del configurador)
+// Un producto ('RS' rack selectivo, 'AR' angulo ranurado o 'DI' drive-in, con la config del configurador)
 // o, en el planificador, una bodega con sus racks
 const props = defineProps<{
-  producto?: 'RS' | 'AR';
+  producto?: 'RS' | 'AR' | 'DI';
   config?: Record<string, unknown>;
   bodega?: { ancho: number; largo: number; forma?: Array<{ x: number; y: number }> | null };
   racks?: Array<Record<string, unknown>>;
@@ -71,9 +71,12 @@ function construirModelo() {
     ultimaBodega = clave;
     return;
   }
+  const c = (props.config ?? {}) as Record<string, any>;
   const grupo = props.producto === 'AR'
-    ? construir.construirAnra(medidas.medidasAnra(props.config ?? {}))
-    : construir.construirSelectivo(medidas.medidasSelectivo(props.config ?? {}));
+    ? construir.construirAnra(medidas.medidasAnra(c))
+    : props.producto === 'DI'
+      ? construir.construirDriveIn(medidas.medidasDriveIn({ calles: c.cuerpos, fondos: c.fondos, niveles: c.niveles }))
+      : construir.construirSelectivo(medidas.medidasSelectivo(c));
   visor.mostrar(grupo);
 }
 

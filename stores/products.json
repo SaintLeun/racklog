@@ -234,10 +234,11 @@
     "type": "Almacenamiento Industrial",
     "category": "racks",
     "model": "",
+    "model3d": {"producto": "DI", "config": {"cuerpos": 3, "fondos": 4, "niveles": 3}},
     "images": {
       "main": "/assets/images/rack-drivein-main.webp",
       "card": "/assets/images/gallery-drive-in-1.webp",
-      "render": "/assets/images/anra_body.webp",
+      "render": "/assets/images/drive_in.webp",
       "gallery": [
         "/assets/images/gallery-drive-in-1.webp",
         "/assets/images/gallery-drive-in-2.webp",

@@ -75,7 +75,7 @@
             </div>
 
             <div class="mt-10 border-t border-neutral-200 pt-8">
-              <!-- Producto configurable: Rack Selectivo y Angulo Ranurado -->
+              <!-- Producto configurable: Rack Selectivo, Angulo Ranurado y Drive-in -->
               <button 
                 v-if="isConfigurableProduct" 
                 type="button"
@@ -233,10 +233,11 @@
   const modalTitle = ref('');
   const selectedProduct = ref('');
 
-  // Check if the product is one of the configurable ones (Rack Selectivo or Ángulo Ranurado)
+  // Productos con configurador (QuoteModal): Rack Selectivo, Angulo Ranurado y Drive-in
+  const CONFIGURADOR = { 'rack-selectivo': 'RS', 'angulo-ranurado': 'AR', 'rack-drive-in': 'DI' };
   const isConfigurableProduct = computed(() => {
     if (!product.value) return false;
-    return product.value.name === 'Rack Selectivo' || product.value.name === 'Ángulo Ranurado';
+    return product.value.slug in CONFIGURADOR;
   });
 
   // Buscar el producto durante el render para que el HTML generado tenga el contenido
@@ -255,7 +256,7 @@
   }
 
   function openQuoteModal(product) {
-    selectedProduct.value = product.name === 'Rack Selectivo' ? 'RS' : 'AR';
+    selectedProduct.value = CONFIGURADOR[product.slug];
     modalTitle.value = `Configurador de ${product.name}`;
     isQuoteModalVisible.value = true;
   }

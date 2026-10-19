@@ -9,7 +9,7 @@
         </p>
       </div>
 
-      <div class="mx-auto grid max-w-5xl gap-6 md:grid-cols-2 lg:gap-8">
+      <div class="mx-auto grid max-w-5xl gap-6 md:grid-cols-2 lg:max-w-none lg:grid-cols-3 lg:gap-8">
         <article
           v-for="(product, key) in filteredProducts"
           :key="key"
@@ -30,20 +30,21 @@
           <div class="card-body flex flex-1 flex-col sm:p-8">
             <h3 class="text-2xl font-semibold tracking-tight text-neutral-900">{{ product.name }}</h3>
             <p class="card-text text-base">{{ product.description.short }}</p>
-            <div class="mt-auto flex flex-col gap-3 pt-6 sm:flex-row sm:items-center">
+            <div class="mt-auto flex flex-col gap-3 pt-6 sm:flex-row sm:items-center md:flex-col md:items-stretch xl:flex-row xl:items-center">
               <button
                 type="button"
-                class="btn btn-primary w-full sm:w-auto"
+                class="btn btn-primary w-full whitespace-nowrap sm:w-auto md:w-full xl:w-auto"
                 @click="openQuoteWithProduct(product)"
               >
-                Cotiza tu {{ product.name }}
+                Configurar y cotizar
+                <span class="sr-only">{{ product.name }}</span>
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
               </button>
               <NuxtLink
                 :to="'/productos/' + product.slug"
-                class="btn btn-secondary w-full sm:w-auto"
+                class="btn btn-secondary w-full whitespace-nowrap sm:w-auto md:w-full xl:w-auto"
               >
                 Ver más
                 <span class="sr-only">sobre {{ product.name }}</span>
@@ -71,9 +72,12 @@ import QuoteModal from './QuoteModal/QuoteModal.vue';
 
 const productStore = useProductStore();
 
+// Productos del configurador (QuoteModal), con su codigo
+const CONFIGURABLES: Record<string, 'RS' | 'AR' | 'DI'> = { 'rack-selectivo': 'RS', 'angulo-ranurado': 'AR', 'rack-drive-in': 'DI' };
+
 const filteredProducts = computed(() => {
   return Object.values(productStore.products)
-    .filter(product => product.slug === 'rack-selectivo' || product.slug === 'angulo-ranurado')
+    .filter(product => product.slug in CONFIGURABLES)
     .map(product => ({
       ...product,
       buttonColor: product.slug === 'rack-selectivo' ? 'bg-orange' : 'bg-indigo'
@@ -82,11 +86,11 @@ const filteredProducts = computed(() => {
 
 const isQuoteModalVisible = ref(false);
 const modalTitle = ref('');
-const selectedProduct = ref<'RS' | 'AR' | ''>('');
+const selectedProduct = ref<'RS' | 'AR' | 'DI' | ''>('');
 
 function openQuoteWithProduct(product: { slug: string; name: string }) {
   // Set the selected product based on its name
-  selectedProduct.value = product.slug === 'rack-selectivo' ? 'RS' : 'AR';
+  selectedProduct.value = CONFIGURABLES[product.slug];
   // Set modal title based on the product
   modalTitle.value = `Configurador de ${product.name}`;
   // Open the quote modal

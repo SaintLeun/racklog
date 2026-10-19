@@ -43,7 +43,7 @@
                 <h3 class="text-xs font-semibold uppercase tracking-wider text-neutral-600">
                   Selecciona tu Producto
                 </h3>
-                <div class="mt-4 grid grid-cols-2 gap-3">
+                <div class="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
                   <button type="button" :aria-pressed="selectedProduct === 'AR'" @click="selectProduct('AR')" :class="productButtonClass('AR')">
                     <img loading="lazy" decoding="async" src="/assets/images/anra_body.webp" alt="" width="650" height="700" class="mx-auto h-16 w-auto sm:h-20" />
                     <span class="mt-2 block text-center text-sm font-semibold">Ángulo Ranurado</span>
@@ -51,6 +51,10 @@
                   <button type="button" :aria-pressed="selectedProduct === 'RS'" @click="selectProduct('RS')" :class="productButtonClass('RS')">
                     <img loading="lazy" decoding="async" src="/assets/images/rack_selectivo.webp" alt="" width="650" height="700" class="mx-auto h-16 w-auto sm:h-20" />
                     <span class="mt-2 block text-center text-sm font-semibold">Rack Selectivo</span>
+                  </button>
+                  <button type="button" :aria-pressed="selectedProduct === 'DI'" @click="selectProduct('DI')" :class="productButtonClass('DI')">
+                    <img loading="lazy" decoding="async" src="/assets/images/drive_in.webp" alt="" width="650" height="652" class="mx-auto h-16 w-auto sm:h-20" />
+                    <span class="mt-2 block text-center text-sm font-semibold">Drive-in</span>
                   </button>
                 </div>
               </div>
@@ -68,6 +72,10 @@
                   <RackSelectivoPanel
                     v-else-if="selectedProduct === 'RS'"
                     v-model="config as RackSelectivoConfig"
+                  />
+                  <DriveInPanel
+                    v-else-if="selectedProduct === 'DI'"
+                    v-model="config as DriveInConfig"
                   />
                   <div v-else class="flex flex-col items-center py-8 text-center">
                     <span class="icon-tile" aria-hidden="true">
@@ -122,9 +130,10 @@
                       </span>
                       <div>
                         <h4 class="font-semibold text-neutral-900">
-                          {{ selectedProduct === 'AR' ? 'Ángulo Ranurado' : 'Rack Selectivo' }}
+                          {{ productNameMap[selectedProduct] }}
                         </h4>
-                        <p class="text-sm text-neutral-600">{{ config.tipo === 'simple' ? 'Simple' : 'Doble' }} • {{ config.cuerpos }} {{ config.cuerpos === 1 ? 'módulo' : 'módulos' }} • {{ config.niveles }} {{ config.niveles === 1 ? 'nivel' : 'niveles' }}</p>
+                        <p v-if="selectedProduct === 'DI'" class="text-sm text-neutral-600">{{ config.cuerpos }} {{ config.cuerpos === 1 ? 'calle' : 'calles' }} • {{ (config as DriveInConfig).fondos }} pallets de fondo • {{ config.niveles }} {{ config.niveles === 1 ? 'nivel' : 'niveles' }}</p>
+                        <p v-else class="text-sm text-neutral-600">{{ config.tipo === 'simple' ? 'Simple' : 'Doble' }} • {{ config.cuerpos }} {{ config.cuerpos === 1 ? 'módulo' : 'módulos' }} • {{ config.niveles }} {{ config.niveles === 1 ? 'nivel' : 'niveles' }}</p>
                       </div>
                     </div>
                     <div class="rounded-lg bg-neutral-100 px-3 py-1.5 text-right">
@@ -134,7 +143,7 @@
                   </div>
                   <dl class="mt-4 grid grid-cols-1 gap-x-6 gap-y-2 border-t border-neutral-100 pt-4 text-sm sm:grid-cols-2">
                     <div class="flex justify-between gap-2">
-                      <dt class="text-neutral-600">Capacidad</dt>
+                      <dt class="text-neutral-600">{{ selectedProduct === 'DI' ? 'Peso por pallet' : 'Capacidad' }}</dt>
                       <dd class="font-semibold text-neutral-900">{{ config.carga }}</dd>
                     </div>
                     <div v-if="selectedProduct === 'RS'" class="flex justify-between gap-2">
@@ -157,7 +166,17 @@
                       <dt class="text-neutral-600">Acabado</dt>
                       <dd class="font-semibold text-neutral-900">{{ (config as AnguloRanuradoConfig).pintado === 'galvanizado' ? 'Galvanizado' : 'Pintado' }}</dd>
                     </div>
-                    <template v-if="selectedProduct === 'AR'">
+                    <template v-if="selectedProduct === 'DI'">
+                      <div class="flex justify-between gap-2">
+                        <dt class="text-neutral-600">Pallet</dt>
+                        <dd class="font-semibold text-neutral-900">1000 × 1200 × 1200 mm</dd>
+                      </div>
+                      <div class="flex justify-between gap-2">
+                        <dt class="font-semibold text-neutral-800">Posiciones de pallet</dt>
+                        <dd class="font-bold tabular-nums text-brand-700">{{ palletPositions.total }}</dd>
+                      </div>
+                    </template>
+                    <template v-if="selectedProduct === 'AR' || selectedProduct === 'DI'">
                       <div class="flex justify-between gap-2">
                         <dt class="text-neutral-600">Altura</dt>
                         <dd class="font-semibold tabular-nums text-neutral-900">{{ rackDimensions.height }} mm</dd>
@@ -273,8 +292,9 @@ import { ref, watch, computed, onBeforeUnmount, onMounted } from 'vue'
 import ContactModal from '~/components/ContactModal.vue'
 import AnguloRanuradoPanel from '~/components/QuoteModal/AnguloRanuradoPanel.vue'
 import RackSelectivoPanel from '~/components/QuoteModal/RackSelectivoPanel.vue'
-import type { ProductType, ProductConfig, AnguloRanuradoConfig, RackSelectivoConfig, QuoteItem } from '~/components/QuoteModal/ProductConfig'
-import { medidasAnra } from '~/lib/rack3d/medidas.js'
+import DriveInPanel from '~/components/QuoteModal/DriveInPanel.vue'
+import type { ProductType, ProductConfig, AnguloRanuradoConfig, RackSelectivoConfig, DriveInConfig, QuoteItem } from '~/components/QuoteModal/ProductConfig'
+import { medidasAnra, medidasDriveIn, huella, capacidad } from '~/lib/rack3d/medidas.js'
 
 const props = defineProps<{ isVisible: boolean; title?: string; initialProduct?: ProductType | '' }>()
 const emit = defineEmits(['close'])
@@ -313,6 +333,10 @@ const isConfigurationComplete = computed(() => {
     const c = config.value as RackSelectivoConfig
     return common && c.frentePallet && c.fondoPallet && c.altoPallet && c.carga && c.palletsPerBeam
   }
+  if (selectedProduct.value === 'DI') {
+    const c = config.value as DriveInConfig
+    return common && c.fondos && c.carga
+  }
   return false
 })
 
@@ -325,6 +349,14 @@ function getDefaultConfig(type: ProductType): ProductConfig {
       pintado: 'galvanizado',
       carga: '90kg',
       bandeja: '300mm'
+    }
+  } else if (type === 'DI') {
+    return {
+      tipo: 'simple',
+      niveles: 3,
+      cuerpos: 3,
+      fondos: 4,
+      carga: '1000kg'
     }
   } else {
     return {
@@ -358,11 +390,21 @@ function productButtonClass(type: ProductType) {
 const productNameMap = {
   'AR': 'Ángulo Ranurado',
   'RS': 'Rack Selectivo',
+  'DI': 'Rack Drive In',
 };
+
+// Drive-in: medidas y posiciones las da el mismo calculo que el visor 3D
+const medidasDI = computed(() => {
+  const c = config.value as DriveInConfig
+  return medidasDriveIn({ calles: c.cuerpos, fondos: c.fondos, niveles: c.niveles })
+})
 
 
 const productCode = computed(() => {
   if (!selectedProduct.value) return ''
+  if (selectedProduct.value === 'DI') {
+    return `DI_${config.value.cuerpos}C_${(config.value as DriveInConfig).fondos}F_${config.value.niveles}N`
+  }
   const tipoCode = config.value.tipo === 'doble' ? '2' : ''
   const cuerposCode = `${config.value.cuerpos}M`
   const nivelesCode = `${config.value.niveles}E`
@@ -387,6 +429,11 @@ const rackDimensions = computed(() => {
     height = Math.round(m.alto * 1000);
     width = Math.round(m.frente * 1000) * m.cuerpos + 4;
     depth = Math.round(m.fondo * 1000) * (m.doble ? 2 : 1) + 4;
+  } else if (selectedProduct.value === 'DI') {
+    const h = huella(medidasDI.value);
+    height = Math.round(medidasDI.value.alto * 1000);
+    width = Math.round(h.largo * 1000);
+    depth = Math.round(h.fondo * 1000);
   } else if (selectedProduct.value === 'RS') {
     const c = config.value as RackSelectivoConfig;
     const frentePallet = parseInt(c.frentePallet?.replace('mm', '') || '1000');
@@ -468,6 +515,10 @@ const beamDimensions = computed(() => {
 });
 
 const palletPositions = computed(() => {
+  if (selectedProduct.value === 'DI') {
+    const total = capacidad(medidasDI.value).pallets;
+    return { perLevel: 0, onFloor: 0, total };
+  }
   // Only calculate pallet positions for Rack Selectivo
   if (!selectedProduct.value || selectedProduct.value !== 'RS') {
     return { perLevel: 0, onFloor: 0, total: 0 };
@@ -521,6 +572,23 @@ onBeforeUnmount(() => {
 const quoteItem = computed<QuoteItem | null>(() => {
   if (!selectedProduct.value) return null
   const c = config.value
+  if (selectedProduct.value === 'DI') {
+    return {
+      name: productNameMap.DI,
+      config: {
+        'Código': productCode.value,
+        'Calles': c.cuerpos,
+        'Pallets de fondo': (c as DriveInConfig).fondos,
+        'Niveles': c.niveles,
+        'Pallet': '1000 × 1200 × 1200 mm',
+        'Peso por pallet': c.carga,
+        'Altura': `${rackDimensions.value.height} mm`,
+        'Largo total': `${rackDimensions.value.width} mm`,
+        'Fondo': `${rackDimensions.value.depth} mm`,
+        'Posiciones de pallet': palletPositions.value.total,
+      },
+    }
+  }
   const details: Record<string, string | number> = {
     'Código': productCode.value,
     'Tipo': c.tipo === 'doble' ? 'Doble' : 'Simple',
