@@ -32,6 +32,11 @@
         :x="marco.x0" :y="marco.y0" :width="marco.x1 - marco.x0" :height="marco.y1 - marco.y0"
         fill="#fff" @pointerdown="presionarFondo"
       />
+      <image
+        v-if="calco && !cotasTodas" :href="calco.url" x="0" y="0"
+        :width="calco.w * calco.escala" :height="calco.h * calco.escala"
+        :opacity="calco.opacidad" preserveAspectRatio="none" pointer-events="none"
+      />
       <rect :x="marco.x0" :y="marco.y0" :width="marco.x1 - marco.x0" :height="marco.y1 - marco.y0" :fill="`url(#${uid}-grilla)`" pointer-events="none" />
       <rect :x="marco.x0" :y="marco.y0" :width="marco.x1 - marco.x0" :height="marco.y1 - marco.y0" :fill="`url(#${uid}-grilla5)`" pointer-events="none" />
       <!-- Guias de alineacion con otras esquinas -->
@@ -75,6 +80,11 @@
     <template v-else>
       <!-- Piso y muros -->
       <path :d="trazo" fill="#fff" @pointerdown="presionarFondo" />
+      <image
+        v-if="calco && !cotasTodas" :href="calco.url" x="0" y="0"
+        :width="calco.w * calco.escala" :height="calco.h * calco.escala"
+        :opacity="calco.opacidad * 0.6" preserveAspectRatio="none" pointer-events="none"
+      />
       <path :d="trazo" :fill="`url(#${uid}-grilla)`" pointer-events="none" />
       <path :d="trazo" :fill="`url(#${uid}-grilla5)`" pointer-events="none" />
       <path :d="trazo" fill="none" stroke="#374151" stroke-width="0.2" stroke-linejoin="round" pointer-events="none" />
@@ -84,6 +94,32 @@
         :x1="ladoSel.a.x" :y1="ladoSel.a.y" :x2="ladoSel.b.x" :y2="ladoSel.b.y"
         stroke="#0ea5e9" stroke-width="0.35" stroke-linecap="round" pointer-events="none"
       />
+
+      <!-- Pilares, portones, andenes, oficinas y zonas bloqueadas -->
+      <g
+        v-for="el in bodega.elementos ?? []" :key="el.id"
+        class="plan-rack outline-none" :class="herramienta === 'medir' ? '' : 'cursor-move'"
+        style="touch-action: none" tabindex="0" role="button"
+        :aria-label="`${ELEMENTOS[el.clase].nombre} de ${formatoM(el.ancho)} × ${formatoM(el.alto)} m`"
+        :aria-pressed="elementoSel === el.id"
+        @pointerdown.stop="herramienta === 'medir' ? presionarFondo($event) : iniciarArrastre($event, { tipo: 'elemento', id: el.id, x: el.x, y: el.y })"
+        @keydown="tecladoElemento($event, el)"
+        @focus="emit('seleccionar-elemento', el.id)"
+      >
+        <rect
+          v-bind="rectSvg(el)"
+          :fill="ELEMENTOS[el.clase].relleno" :fill-opacity="el.clase === 'pilar' ? 1 : 0.75"
+          :stroke="elementoSel === el.id ? '#0f172a' : ELEMENTOS[el.clase].color"
+          :stroke-width="elementoSel === el.id ? 0.12 : 0.06"
+          :stroke-dasharray="el.clase === 'zona' ? '0.3 0.15' : undefined"
+        />
+        <line v-if="el.clase === 'zona'" v-bind="diagonal(el)" :stroke="ELEMENTOS.zona.color" stroke-width="0.04" pointer-events="none" />
+        <text
+          v-if="el.clase !== 'pilar' && Math.min(el.ancho, el.alto) >= 0.5"
+          :x="el.x" :y="el.y" v-bind="TEXTO_COTA" :font-size="Math.min(0.4 * k, el.alto * 0.45, el.ancho * 0.18)"
+          :fill="ELEMENTOS[el.clase].color" text-anchor="middle" dominant-baseline="central"
+        >{{ ELEMENTOS[el.clase].nombre }}</text>
+      </g>
 
       <!-- Racks -->
       <g
@@ -179,6 +215,16 @@
       </template>
     </template>
 
+    <!-- Calibracion del calco: los dos puntos de una medida conocida -->
+    <g v-if="puntosCalibracion?.length" pointer-events="none">
+      <line
+        v-if="puntosCalibracion.length === 2"
+        :x1="puntosCalibracion[0].x" :y1="puntosCalibracion[0].y" :x2="puntosCalibracion[1].x" :y2="puntosCalibracion[1].y"
+        stroke="#db2777" stroke-width="2" vector-effect="non-scaling-stroke"
+      />
+      <circle v-for="(q, i) in puntosCalibracion" :key="`cal${i}`" :cx="q.x" :cy="q.y" :r="0.2 * k" fill="#db2777" />
+    </g>
+
     <!-- Cinta de medir -->
     <g v-if="medicion" pointer-events="none">
       <line
@@ -196,7 +242,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
-import { rectangulo, medidasRack, describir, contorno, caja, cotasRack, formatoM, PASO } from '~/lib/rack3d/planificador.js';
+import { rectangulo, rectElemento, medidasRack, describir, contorno, caja, cotasRack, formatoM, PASO, ELEMENTOS } from '~/lib/rack3d/planificador.js';
 
 export interface RackPlano {
   id: string;
@@ -210,9 +256,10 @@ export interface RackPlano {
   fondos?: number;
 }
 export interface Punto { x: number; y: number }
+export interface Elemento { id: string; clase: 'pilar' | 'porton' | 'anden' | 'oficina' | 'zona'; x: number; y: number; ancho: number; alto: number }
 
 const props = defineProps<{
-  bodega: { ancho: number; largo: number; forma: Punto[] | null };
+  bodega: { ancho: number; largo: number; forma: Punto[] | null; elementos?: Elemento[] };
   racks: RackPlano[];
   seleccion: string | null;
   conflictos: Set<string>;
@@ -229,6 +276,13 @@ const props = defineProps<{
   herramienta?: 'mover' | 'medir';
   // Muro seleccionado (indice del lado del contorno) para editar su largo
   muroSel?: number | null;
+  // Elemento seleccionado (pilar, porton, anden, oficina o zona)
+  elementoSel?: string | null;
+  // Plano o foto de referencia para calcar: url, tamano en px y metros por px
+  calco?: { url: string; w: number; h: number; escala: number; opacidad: number } | null;
+  // Calibrando el calco: los clics marcan dos puntos de una medida conocida
+  calibrando?: boolean;
+  puntosCalibracion?: Punto[];
 }>();
 
 const emit = defineEmits<{
@@ -242,6 +296,10 @@ const emit = defineEmits<{
   'seleccionar-muro': [i: number | null];
   // Fin de un arrastre de rack o esquina: la pagina lo guarda en el historial (deshacer)
   'fin-cambio': [];
+  'punto-calibracion': [p: Punto];
+  'seleccionar-elemento': [id: string | null];
+  'mover-elemento': [id: string, x: number, y: number];
+  'eliminar-elemento': [id: string];
 }>();
 
 const MARGEN = 1.8;   // deja lugar a las medidas de los muros (se multiplica por k)
@@ -273,7 +331,8 @@ const marco = computed(() => {
   if (!props.dibujando) return c;
   // Al dibujar: el lienzo, ampliado si un muro escrito por teclado sale de el
   const pts = puntosDibujo.value, xs = pts.map((q) => q.x), ys = pts.map((q) => q.y);
-  return { x0: Math.min(0, ...xs), y0: Math.min(0, ...ys), x1: Math.max(props.bodega.ancho, ...xs), y1: Math.max(props.bodega.largo, ...ys) };
+  const cw = props.calco ? props.calco.w * props.calco.escala : 0, ch = props.calco ? props.calco.h * props.calco.escala : 0;
+  return { x0: Math.min(0, ...xs), y0: Math.min(0, ...ys), x1: Math.max(props.bodega.ancho, cw, ...xs), y1: Math.max(props.bodega.largo, ch, ...ys) };
 });
 // Crece con la bodega para que se lea igual en una de 10 m que en una de 80 m
 const k = computed(() => { const c = marco.value; return Math.max(1, Math.max(c.x1 - c.x0, c.y1 - c.y0) / 25); });
@@ -349,6 +408,9 @@ function posCota(c: { x1: number; y1: number; x2: number; y2: number; valor: num
   if (corta) return horizontal ? { x: mx, y: my - 0.3 * k.value, rot: '', anchor: 'middle' } : { x: mx + 0.25 * k.value, y: my, rot: '', anchor: 'start' };
   return { x: mx, y: my, rot: horizontal ? '' : `rotate(-90 ${mx} ${my})`, anchor: 'middle' };
 }
+
+const rectSvg = (el: Elemento) => { const p = rectElemento(el); return { x: p.x0, y: p.y0, width: p.ancho, height: p.alto }; };
+const diagonal = (el: Elemento) => { const p = rectElemento(el); return { x1: p.x0, y1: p.y0, x2: p.x0 + p.ancho, y2: p.y0 + p.alto }; };
 
 const rectDe = (r: RackPlano) => { const p = rectangulo(r); return { x: p.x0, y: p.y0, width: p.ancho, height: p.alto }; };
 
@@ -462,12 +524,12 @@ function ajustarMedida(p: Punto): Punto {
 }
 
 // ─── Puntero ───
-let arrastre: { tipo: 'rack' | 'vertice'; id: string; dx: number; dy: number; puntero: number } | null = null;
+let arrastre: { tipo: 'rack' | 'vertice' | 'elemento'; id: string; dx: number; dy: number; puntero: number } | null = null;
 let paneoInicio: { x: number; y: number; c: Punto; puntero: number; movio: boolean } | null = null;
 const paneo = ref(false);
 
 function presionarFondo(e: PointerEvent) {
-  if (e.button === 1 || (e.button === 0 && !props.dibujando && props.herramienta !== 'medir')) {
+  if (e.button === 1 || (e.button === 0 && !props.dibujando && !props.calibrando && props.herramienta !== 'medir')) {
     // Arrastrar el piso desplaza el plano (con zoom); un clic sin mover deselecciona
     const v = vista.value;
     paneoInicio = { x: e.clientX, y: e.clientY, c: { x: v.x + v.w / 2, y: v.y + v.h / 2 }, puntero: e.pointerId, movio: false };
@@ -475,6 +537,11 @@ function presionarFondo(e: PointerEvent) {
     return;
   }
   if (e.button !== 0) return;
+  if (props.calibrando) {
+    const q = aPlano(e);
+    emit('punto-calibracion', { x: +q.x.toFixed(3), y: +q.y.toFixed(3) });
+    return;
+  }
   if (props.herramienta === 'medir' && !props.dibujando) {
     const p = ajustarMedida(aPlano(e));
     medicion.value = !medicion.value || medicion.value.fija ? { a: p, b: p, fija: false } : { ...medicion.value, b: p, fija: true };
@@ -483,9 +550,10 @@ function presionarFondo(e: PointerEvent) {
   if (props.dibujando) emit('agregar-punto', ajustarDibujo(aPlano(e), e));
 }
 
-function iniciarArrastre(e: PointerEvent, o: { tipo: 'rack' | 'vertice'; id: string; x: number; y: number }) {
+function iniciarArrastre(e: PointerEvent, o: { tipo: 'rack' | 'vertice' | 'elemento'; id: string; x: number; y: number }) {
   if (e.button !== 0) return;
   if (o.tipo === 'rack') emit('seleccionar', o.id);
+  if (o.tipo === 'elemento') emit('seleccionar-elemento', o.id);
   const p = aPlano(e);
   arrastre = { tipo: o.tipo, id: o.id, dx: o.x - p.x, dy: o.y - p.y, puntero: e.pointerId };
   svgRef.value?.setPointerCapture(e.pointerId);
@@ -515,12 +583,13 @@ function moverPuntero(e: PointerEvent) {
   if (!arrastre || e.pointerId !== arrastre.puntero) return;
   const destino = { x: p.x + arrastre.dx, y: p.y + arrastre.dy };
   if (arrastre.tipo === 'rack') emit('mover', arrastre.id, destino.x, destino.y);
+  else if (arrastre.tipo === 'elemento') emit('mover-elemento', arrastre.id, redondear(destino.x, PASO), redondear(destino.y, PASO));
   else emit('mover-vertice', Number(arrastre.id), { x: redondear(destino.x, Math.min(paso.value, 0.5)), y: redondear(destino.y, Math.min(paso.value, 0.5)) });
 }
 
 function soltar(e: PointerEvent) {
   if (paneoInicio && e.pointerId === paneoInicio.puntero) {
-    if (!paneoInicio.movio) { emit('seleccionar', null); emit('seleccionar-muro', null); }
+    if (!paneoInicio.movio) { emit('seleccionar', null); emit('seleccionar-muro', null); emit('seleccionar-elemento', null); }
     paneoInicio = null;
     paneo.value = false;
     return;
@@ -543,6 +612,18 @@ function teclado(e: KeyboardEvent, r: RackPlano) {
   } else if (e.key === 'Delete' || e.key === 'Backspace') {
     e.preventDefault();
     emit('eliminar', r.id);
+  }
+}
+
+function tecladoElemento(e: KeyboardEvent, el: Elemento) {
+  const d = e.shiftKey ? 1 : PASO;
+  const mov: Record<string, [number, number]> = { ArrowLeft: [-d, 0], ArrowRight: [d, 0], ArrowUp: [0, -d], ArrowDown: [0, d] };
+  if (mov[e.key]) {
+    e.preventDefault();
+    emit('mover-elemento', el.id, +(el.x + mov[e.key][0]).toFixed(2), +(el.y + mov[e.key][1]).toFixed(2));
+  } else if (e.key === 'Delete' || e.key === 'Backspace') {
+    e.preventDefault();
+    emit('eliminar-elemento', el.id);
   }
 }
 </script>

@@ -119,7 +119,60 @@
                   class="plan-input" @change="aplicarAltura"
                 >
               </div>
-              <p class="mt-3 text-xs text-neutral-500">{{ Math.round(area(contorno(bodega))) }} m² · cuadrícula de 1 m</p>
+              <!-- Pilares, portones, andenes, oficinas y zonas bloqueadas -->
+              <div v-if="!dibujando" class="mt-4 rounded-xl bg-neutral-50 p-3 ring-1 ring-neutral-200">
+                <p class="flex items-center text-sm font-medium text-neutral-800">
+                  Pilares, portones y zonas
+                  <PlanificadorAyuda titulo="elementos de la bodega">Marca lo que no se puede mover: pilares, portones, andenes, oficinas o zonas que deben quedar libres. Si un rack queda encima, se pone rojo.</PlanificadorAyuda>
+                </p>
+                <div class="mt-2 grid grid-cols-3 gap-1.5">
+                  <button v-for="(def, cl) in ELEMENTOS" :key="cl" type="button" class="plan-accion h-9 px-1 text-xs" @click="agregarElemento(cl)">+ {{ def.nombre }}</button>
+                </div>
+                <form class="mt-2 flex items-center gap-2 text-xs text-neutral-600" @submit.prevent="ponerGrillaPilares">
+                  <label for="plan-grilla-pilares">Grilla de pilares cada</label>
+                  <input id="plan-grilla-pilares" v-model.number="pasoPilares" type="number" min="3" max="30" step="0.5" class="plan-input !h-8 w-16 !px-2 text-sm">
+                  <span>m</span>
+                  <button type="submit" class="plan-accion h-8 px-2.5 text-xs">Poner</button>
+                </form>
+              </div>
+
+              <!-- Calcar un plano o foto -->
+              <div class="mt-4 rounded-xl bg-neutral-50 p-3 ring-1 ring-neutral-200">
+                <p class="flex items-center text-sm font-medium text-neutral-800">
+                  Calcar un plano o foto
+                  <PlanificadorAyuda titulo="calcar un plano">Sube una imagen de tu plano (si es PDF, una captura de pantalla). La calibras con una medida que conozcas y dibujas el contorno encima. Se adjunta a tu cotización; no queda guardada en esta página.</PlanificadorAyuda>
+                </p>
+                <template v-if="!calco">
+                  <input ref="inputCalco" type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" @change="subirCalco">
+                  <button type="button" class="plan-accion mt-2 w-full" @click="inputCalco?.click()">Subir plano o foto</button>
+                </template>
+                <template v-else-if="calibrando">
+                  <p class="mt-2 text-sm text-pink-800" role="status">
+                    {{ puntosCalibracion.length < 2 ? `Haz clic en los dos extremos de una medida que conozcas, por ejemplo un muro (${puntosCalibracion.length} de 2).` : '¿Cuánto mide esa línea en la realidad?' }}
+                  </p>
+                  <form v-if="puntosCalibracion.length === 2" class="mt-2 grid grid-cols-[1fr_auto] gap-2" @submit.prevent="calibrarCalco">
+                    <label class="sr-only" for="plan-calibra">Medida real en metros</label>
+                    <input id="plan-calibra" v-model.number="medidaCalibracion" type="number" inputmode="decimal" min="0.5" step="0.1" placeholder="Metros" class="plan-input !h-10">
+                    <button type="submit" class="plan-accion h-10 bg-pink-600 px-3 text-white hover:bg-pink-700" :disabled="!(medidaCalibracion > 0)">Calibrar</button>
+                  </form>
+                  <div class="mt-2 flex gap-4 text-xs font-medium text-neutral-500">
+                    <button v-if="puntosCalibracion.length" type="button" class="hover:text-neutral-800" @click="puntosCalibracion = []">Marcar de nuevo</button>
+                    <button type="button" class="hover:text-neutral-800" @click="calco.calibrado ? (calibrando = false) : quitarCalco()">Cancelar</button>
+                  </div>
+                </template>
+                <template v-else>
+                  <label class="mt-2 flex items-center gap-3 text-xs text-neutral-600">
+                    Transparencia
+                    <input v-model.number="calco.opacidad" type="range" min="0.15" max="1" step="0.05" class="flex-1 accent-brand-600">
+                  </label>
+                  <div class="mt-2 grid grid-cols-2 gap-2">
+                    <button type="button" class="plan-accion" @click="calibrando = true; puntosCalibracion = []">Calibrar de nuevo</button>
+                    <button type="button" class="plan-accion text-red-700 hover:bg-red-50" @click="quitarCalco">Quitar</button>
+                  </div>
+                  <button v-if="!dibujando" type="button" class="plan-accion mt-2 w-full bg-brand-600 text-white hover:bg-brand-700" @click="formaLibre ? empezarDibujo() : cambiarForma(true)">Dibujar el contorno encima</button>
+                </template>
+              </div>
+              <p class="mt-3 text-xs text-neutral-500">{{ Math.round(area(contorno(bodega))) }} m² · cuadrícula de {{ formatoM(grilla) }} m</p>
             </div>
 
             <!-- 2. Agregar racks -->
@@ -140,7 +193,22 @@
             <!-- 3. Rack seleccionado -->
             <div :class="['card p-5 transition', resaltar(2)]">
               <h2 class="text-sm font-semibold uppercase tracking-wider text-neutral-600">3. Ajusta el rack</h2>
-              <template v-if="rackSel">
+              <template v-if="elementoActual">
+                <p class="mt-3 font-semibold text-neutral-900">{{ ELEMENTOS[elementoActual.clase].nombre }}</p>
+                <div class="mt-3 grid grid-cols-2 gap-3">
+                  <label class="block text-sm font-medium text-neutral-700">Ancho (m)
+                    <input :value="elementoActual.ancho" type="number" min="0.1" step="0.1" class="plan-input mt-1 !h-10" @change="cambiarElemento({ ancho: Number(($event.target as HTMLInputElement).value) })">
+                  </label>
+                  <label class="block text-sm font-medium text-neutral-700">Largo (m)
+                    <input :value="elementoActual.alto" type="number" min="0.1" step="0.1" class="plan-input mt-1 !h-10" @change="cambiarElemento({ alto: Number(($event.target as HTMLInputElement).value) })">
+                  </label>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-2">
+                  <button type="button" class="plan-accion" @click="cambiarElemento({ ancho: elementoActual.alto, alto: elementoActual.ancho })">Girar</button>
+                  <button type="button" class="plan-accion text-red-700 hover:bg-red-50" @click="eliminarElemento(elementoActual.id)">Eliminar</button>
+                </div>
+              </template>
+              <template v-else-if="rackSel">
                 <p class="mt-3 font-semibold text-neutral-900">
                   {{ indiceSel + 1 }}. {{ NOMBRE[rackSel.tipo] }}
                 </p>
@@ -281,9 +349,17 @@
                   :grilla="grilla"
                   :herramienta="herramienta"
                   :muro-sel="muroSel"
+                  :calco="calco"
+                  :calibrando="calibrando"
+                  :puntos-calibracion="puntosCalibracion"
                   class="p-3"
+                  :elemento-sel="elementoSel"
+                  @seleccionar-elemento="seleccionarElemento"
+                  @mover-elemento="(id, x, y) => cambiarElemento({ x, y }, id)"
+                  @eliminar-elemento="eliminarElemento"
+                  @punto-calibracion="(q) => puntosCalibracion.length < 2 && puntosCalibracion.push(q)"
                   @seleccionar-muro="seleccionarMuro"
-                  @seleccionar="seleccion = $event"
+                  @seleccionar="seleccion = $event; if ($event) elementoSel = null"
                   @mover="mover"
                   @girar="girar"
                   @eliminar="eliminar"
@@ -295,13 +371,13 @@
                   <Visor3D
                     ref="visorRef"
                     :bodega="bodega" :racks="racks" etiqueta="Vista 3D de la bodega con los racks dibujados"
-                    @seleccionar="seleccion = $event" @mover="mover"
+                    @seleccionar="seleccion = $event; if ($event) elementoSel = null" @mover="mover"
                   />
                 </ClientOnly>
               </div>
 
               <div v-if="malos.size" class="border-t border-red-100 bg-red-50 px-4 py-2.5 text-sm text-red-800" role="status">
-                Hay racks superpuestos o fuera de la bodega (en rojo). Muévelos para separarlos.
+                Hay racks superpuestos, sobre un pilar o una zona, o fuera de la bodega (en rojo). Muévelos para separarlos.
               </div>
               <div v-if="altos.size" class="border-t border-amber-100 bg-amber-50 px-4 py-2.5 text-sm text-amber-900" role="status">
                 {{ altos.size === 1 ? 'Un rack es más alto' : `${altos.size} racks son más altos` }} que la altura libre ({{ formatoM(bodega.altura || 0) }} m), marcados con borde ámbar. Quítales niveles o revisa la altura.
@@ -349,10 +425,10 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import {
   LIMITES, NOMBRE, TIPOS, PERFILES, dentroDeBodega, conflictos, lugarLibre, totales, resumenCotizacion, normalizar, contorno, area, caja,
-  altoRack, racksAltos, indicadores, rectangulo, medidasRack, describir, formatoM,
+  altoRack, racksAltos, indicadores, rectangulo, medidasRack, describir, formatoM, ELEMENTOS, grillaPilares,
 } from '~/lib/rack3d/planificador.js';
 import { capacidad } from '~/lib/rack3d/medidas.js';
-import type { RackPlano, Punto } from '~/components/planificador/Plano2D.vue';
+import type { RackPlano, Punto, Elemento } from '~/components/planificador/Plano2D.vue';
 import type { QuoteItem } from '~/components/QuoteModal/ProductConfig';
 
 usePageSeo({
@@ -366,7 +442,7 @@ const GUARDADO_RECORRIDO = 'racklog-planificador-recorrido';
 const route = useRoute();
 const router = useRouter();
 
-const bodega = reactive<{ ancho: number; largo: number; forma: Punto[] | null; altura: number | null }>({ ancho: 20, largo: 30, forma: null, altura: null });
+const bodega = reactive<{ ancho: number; largo: number; forma: Punto[] | null; altura: number | null; elementos: Elemento[] }>({ ancho: 20, largo: 30, forma: null, altura: null, elementos: [] });
 const alturaEntrada = ref<number | null>(null);
 const bodegaEntrada = reactive({ ancho: bodega.ancho, largo: bodega.largo });
 const formaLibre = computed(() => !!bodega.forma || dibujando.value);
@@ -456,6 +532,100 @@ function agregarMuroTeclado() {
   // Siguiente muro: girando 90° a la derecha, lo mas comun en una bodega
   muroTeclado.largo = null;
   muroTeclado.angulo = ((ang - 90) % 360 + 360) % 360;
+}
+
+// ─── Pilares, portones, andenes, oficinas y zonas bloqueadas ───
+const elementoSel = ref<string | null>(null);
+const elementoActual = computed(() => bodega.elementos.find((e) => e.id === elementoSel.value) ?? null);
+const pasoPilares = ref(6);
+
+function seleccionarElemento(id: string | null) {
+  elementoSel.value = id;
+  if (id) seleccion.value = null;
+}
+
+function agregarElemento(clase: Elemento['clase']) {
+  const def = ELEMENTOS[clase], c = caja(contorno(bodega)), n = bodega.elementos.length;
+  // Porton y anden junto al muro de abajo; lo demas cerca del centro, sin apilarse
+  const junto = clase === 'porton' || clase === 'anden';
+  const x = +((c.x0 + c.x1) / 2 + (n % 4) * 1.5).toFixed(1);
+  const y = junto ? +(c.y1 - def.alto / 2).toFixed(2) : +((c.y0 + c.y1) / 2 + (n % 3) * 1.5).toFixed(1);
+  const el: Elemento = { id: nuevoId(), clase, x, y, ancho: def.ancho, alto: def.alto };
+  bodega.elementos = [...bodega.elementos, el];
+  seleccionarElemento(el.id);
+  vista.value = '2d';
+  marcar('planner_add_element', { clase });
+}
+
+function cambiarElemento(cambio: Partial<Elemento>, id = elementoSel.value) {
+  bodega.elementos = bodega.elementos.map((e) => {
+    if (e.id !== id) return e;
+    const n = { ...e, ...cambio };
+    n.ancho = Math.min(60, Math.max(0.1, +Number(n.ancho).toFixed(2) || e.ancho));
+    n.alto = Math.min(60, Math.max(0.1, +Number(n.alto).toFixed(2) || e.alto));
+    return n;
+  });
+}
+
+function eliminarElemento(id: string) {
+  bodega.elementos = bodega.elementos.filter((e) => e.id !== id);
+  if (elementoSel.value === id) elementoSel.value = null;
+}
+
+function ponerGrillaPilares() {
+  const p = Number(pasoPilares.value);
+  if (!(p >= 3)) return;
+  const nuevos = grillaPilares(bodega, p).map((q: Punto) => ({ id: nuevoId(), clase: 'pilar' as const, x: q.x, y: q.y, ancho: ELEMENTOS.pilar.ancho, alto: ELEMENTOS.pilar.alto }));
+  bodega.elementos = [...bodega.elementos.filter((e) => e.clase !== 'pilar'), ...nuevos];
+  marcar('planner_pillar_grid', { paso: p, pilares: nuevos.length });
+}
+
+// ─── Calcar un plano o foto: se sube, se calibra con una medida conocida y se dibuja encima ───
+const calco = ref<{ url: string; w: number; h: number; escala: number; opacidad: number; calibrado: boolean; archivo: File } | null>(null);
+const calibrando = ref(false);
+const puntosCalibracion = ref<Punto[]>([]);
+const medidaCalibracion = ref<number | null>(null);
+const inputCalco = ref<HTMLInputElement | null>(null);
+
+async function subirCalco(e: Event) {
+  const archivo = (e.target as HTMLInputElement).files?.[0];
+  (e.target as HTMLInputElement).value = '';
+  if (!archivo || !archivo.type.startsWith('image/')) return;
+  const url = await new Promise<string>((ok) => { const r = new FileReader(); r.onload = () => ok(r.result as string); r.readAsDataURL(archivo); });
+  const img = new Image();
+  await new Promise((ok) => { img.onload = ok; img.onerror = ok; img.src = url; });
+  if (!img.naturalWidth) return;
+  // Hasta calibrar, la imagen ocupa el ancho de la bodega
+  calco.value = { url, w: img.naturalWidth, h: img.naturalHeight, escala: bodega.ancho / img.naturalWidth, opacidad: 0.6, calibrado: false, archivo };
+  calibrando.value = true;
+  puntosCalibracion.value = [];
+  medidaCalibracion.value = null;
+  vista.value = '2d';
+  planoRef.value?.restablecerVista();
+  marcar('planner_trace_upload', { mb: +(archivo.size / 1048576).toFixed(1) });
+}
+
+function calibrarCalco() {
+  const c = calco.value, [a, b] = puntosCalibracion.value, D = Number(medidaCalibracion.value);
+  if (!c || !a || !b || !(D > 0)) return;
+  const d0 = Math.hypot(b.x - a.x, b.y - a.y);
+  if (d0 < 0.01) return;
+  c.escala *= D / d0;
+  c.calibrado = true;
+  calibrando.value = false;
+  puntosCalibracion.value = [];
+  // Lienzo del tamano del plano calibrado y a dibujar el contorno encima
+  bodega.ancho = bodegaEntrada.ancho = Math.min(LIMITES.bodega.max, Math.max(LIMITES.bodega.min, Math.ceil(c.w * c.escala)));
+  bodega.largo = bodegaEntrada.largo = Math.min(LIMITES.bodega.max, Math.max(LIMITES.bodega.min, Math.ceil(c.h * c.escala)));
+  planoRef.value?.restablecerVista();
+  if (formaLibre.value) empezarDibujo(); else cambiarForma(true);
+  marcar('planner_trace_calibrated', { ancho: bodega.ancho, largo: bodega.largo });
+}
+
+function quitarCalco() {
+  calco.value = null;
+  calibrando.value = false;
+  puntosCalibracion.value = [];
 }
 
 // ─── Deshacer / rehacer (Ctrl+Z / Ctrl+Y) ───
@@ -728,7 +898,8 @@ async function pedir(m: 'cotizar' | 'pdf') {
   await nextTick();
   try {
     const plano = await imagenPlano();
-    archivosPlano.value = plano ? [plano] : [];
+    // El plano o foto que calco el cliente tambien le sirve al vendedor
+    archivosPlano.value = [plano, calco.value?.archivo].filter(Boolean) as File[];
   } finally {
     exportando.value = false;
     preparando.value = false;
@@ -809,6 +980,9 @@ onMounted(() => {
       bodegaEntrada.largo = g.bodega.largo;
       aplicarBodega();
       bodega.altura = Number(g.bodega.altura) >= 2 ? Number(g.bodega.altura) : null;
+      bodega.elementos = Array.isArray(g.bodega.elementos)
+        ? g.bodega.elementos.filter((e: Elemento) => e && e.clase in ELEMENTOS && [e.x, e.y, e.ancho, e.alto].every(Number.isFinite))
+        : [];
       alturaEntrada.value = bodega.altura;
       const forma = Array.isArray(g.bodega.forma) && g.bodega.forma.length >= 3 ? g.bodega.forma : null;
       bodega.forma = forma && forma.every((p: Punto) => Number.isFinite(p?.x) && Number.isFinite(p?.y)) ? forma : null;
