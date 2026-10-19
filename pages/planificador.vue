@@ -74,6 +74,22 @@
                     Arrastra las esquinas naranjas para ajustar la forma, o vuelve a dibujar el contorno.
                   </template>
                 </p>
+                <!-- Muro por teclado: largo y angulo desde la ultima esquina -->
+                <form v-if="dibujando" class="mt-3 rounded-xl bg-neutral-50 p-3 ring-1 ring-neutral-200" @submit.prevent="agregarMuroTeclado">
+                  <p class="flex items-center text-sm font-medium text-neutral-800">
+                    O escribe cada muro
+                    <PlanificadorAyuda titulo="muros por teclado">Largo en metros y ángulo: 0° hacia la derecha, 90° hacia arriba, 180° a la izquierda y 270° hacia abajo. Al dibujar con el mouse, Shift fija 0° o 90°.</PlanificadorAyuda>
+                  </p>
+                  <div class="mt-2 grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+                    <label class="block text-xs text-neutral-600">Largo del muro (m)
+                      <input v-model.number="muroTeclado.largo" type="number" inputmode="decimal" min="0.1" step="0.1" class="plan-input mt-1 !h-10" placeholder="12,5">
+                    </label>
+                    <label class="block text-xs text-neutral-600">Ángulo del muro (°)
+                      <input v-model.number="muroTeclado.angulo" type="number" inputmode="numeric" step="1" class="plan-input mt-1 !h-10" placeholder="0">
+                    </label>
+                    <button type="submit" class="plan-accion h-10 px-3" :disabled="!(muroTeclado.largo > 0)">Agregar</button>
+                  </div>
+                </form>
                 <div v-if="dibujando" class="mt-3 grid grid-cols-3 gap-2">
                   <button type="button" class="plan-accion" :disabled="!puntosDibujo.length" @click="puntosDibujo.pop()">Deshacer</button>
                   <button type="button" class="plan-accion" @click="cancelarDibujo">Cancelar</button>
@@ -81,6 +97,16 @@
                 </div>
                 <button v-else type="button" class="plan-accion mt-3 w-full" @click="empezarDibujo">Volver a dibujar el contorno</button>
               </template>
+              <!-- Muro seleccionado (clic en su medida): se escribe el largo exacto -->
+              <form v-if="muroSel !== null && !dibujando" class="mt-3 rounded-xl bg-sky-50 p-3 ring-1 ring-sky-200" @submit.prevent="aplicarMuro">
+                <label for="plan-muro" class="block text-sm font-medium text-neutral-800">Largo del muro {{ muroSel + 1 }} (m)</label>
+                <div class="mt-1.5 grid grid-cols-[1fr_auto_auto] gap-2">
+                  <input id="plan-muro" ref="inputMuro" v-model.number="largoMuro" type="number" inputmode="decimal" min="1" step="0.1" class="plan-input !h-10">
+                  <button type="submit" class="plan-accion h-10 bg-sky-600 px-3 text-white hover:bg-sky-700">Aplicar</button>
+                  <button type="button" class="plan-accion h-10 px-3" @click="muroSel = null">Cerrar</button>
+                </div>
+              </form>
+              <p v-else-if="!dibujando" class="mt-3 text-xs text-neutral-500">Toca la medida de un muro en el plano para escribir su largo exacto.</p>
               <div v-if="!dibujando" class="mt-4">
                 <div class="mb-1.5 flex items-center text-sm font-medium text-neutral-700">
                   <label for="plan-altura">Altura libre (m)</label>
@@ -206,7 +232,34 @@
                 </div>
               </dl>
 
+              <!-- Herramientas del plano -->
+              <div v-show="vista === '2d'" class="flex flex-wrap gap-1.5 border-b border-neutral-100 bg-neutral-50 px-3 py-2" role="toolbar" aria-label="Herramientas del plano">
+                <div class="plan-barra">
+                  <button type="button" :class="['plan-herr', herramienta === 'mover' && 'plan-herr--on']" :aria-pressed="herramienta === 'mover'" title="Mover racks y esquinas" @click="herramienta = 'mover'">Mover</button>
+                  <button type="button" :class="['plan-herr', herramienta === 'medir' && 'plan-herr--on']" :aria-pressed="herramienta === 'medir'" title="Cinta de medir: clic en dos puntos" :disabled="dibujando" @click="herramienta = 'medir'">Medir</button>
+                </div>
+                <div class="plan-barra">
+                  <button type="button" class="plan-herr" aria-label="Alejar" @click="planoRef?.acercar(1 / 1.3)">−</button>
+                  <button type="button" class="plan-herr" aria-label="Acercar" @click="planoRef?.acercar(1.3)">+</button>
+                  <button type="button" class="plan-herr" title="Ver toda la bodega" @click="planoRef?.restablecerVista()">Ajustar</button>
+                </div>
+                <div class="plan-barra">
+                  <button type="button" class="plan-herr" aria-label="Deshacer (Ctrl+Z)" title="Deshacer (Ctrl+Z)" :disabled="!puedeDeshacer" @click="deshacer">↶</button>
+                  <button type="button" class="plan-herr" aria-label="Rehacer (Ctrl+Y)" title="Rehacer (Ctrl+Y)" :disabled="!puedeRehacer" @click="rehacer">↷</button>
+                </div>
+                <label class="plan-barra px-2 text-xs font-medium text-neutral-600">
+                  Cuadrícula
+                  <select v-model.number="grilla" class="ml-1 h-8 rounded-md bg-transparent text-xs font-semibold text-neutral-900 focus:outline-none">
+                    <option :value="0.5">0,5 m</option>
+                    <option :value="1">1 m</option>
+                    <option :value="5">5 m</option>
+                  </select>
+                </label>
+              </div>
               <div :class="['relative h-[60vh] min-h-[360px] bg-neutral-50 transition sm:h-[65vh]', resaltar(2)]">
+                <p v-if="herramienta === 'medir' && vista === '2d'" class="absolute bottom-3 left-3 z-10 rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-medium text-white">
+                  Clic en dos puntos para medir · Esc para salir
+                </p>
                 <ClientOnly>
                   <PlanificadorPerfil v-if="mostrarPerfil" @elegir="elegirPerfil" />
                   <div v-else-if="pasoRecorrido !== null" class="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center lg:absolute lg:bottom-4 lg:z-20">
@@ -225,7 +278,11 @@
                   :editar-contorno="formaLibre && !dibujando"
                   :altos="altos"
                   :cotas-todas="exportando"
+                  :grilla="grilla"
+                  :herramienta="herramienta"
+                  :muro-sel="muroSel"
                   class="p-3"
+                  @seleccionar-muro="seleccionarMuro"
                   @seleccionar="seleccion = $event"
                   @mover="mover"
                   @girar="girar"
@@ -289,7 +346,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed, watch, onMounted } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import {
   LIMITES, NOMBRE, TIPOS, PERFILES, dentroDeBodega, conflictos, lugarLibre, totales, resumenCotizacion, normalizar, contorno, area, caja,
   altoRack, racksAltos, indicadores, rectangulo, medidasRack, describir, formatoM,
@@ -318,7 +375,7 @@ const puntosDibujo = ref<Punto[]>([]);
 const racks = ref<RackPlano[]>([]);
 const seleccion = ref<string | null>(null);
 const vista = ref<'2d' | '3d'>('2d');
-const planoRef = ref<{ $el: SVGSVGElement } | null>(null);
+const planoRef = ref<{ $el: SVGSVGElement; restablecerVista: () => void; acercar: (f: number) => void } | null>(null);
 const visorRef = ref<{ captura: () => string | null } | null>(null);
 
 // Caja del contorno dibujado: es lo que se informa en la cotizacion
@@ -342,6 +399,118 @@ function aplicarAltura() {
   alturaEntrada.value = bodega.altura;
   if (bodega.altura) marcar('planner_height', { altura: bodega.altura });
 }
+
+// ─── Herramientas del plano: cuadricula, cinta de medir, muros con medida exacta ───
+const grilla = ref(1);
+const herramienta = ref<'mover' | 'medir'>('mover');
+const muroSel = ref<number | null>(null);
+const largoMuro = ref<number | null>(null);
+const inputMuro = ref<HTMLInputElement | null>(null);
+const muroTeclado = reactive<{ largo: number | null; angulo: number | null }>({ largo: null, angulo: 0 });
+
+function seleccionarMuro(i: number | null) {
+  muroSel.value = i;
+  if (i === null) return;
+  const poly = contorno(bodega), a = poly[i], b = poly[(i + 1) % poly.length];
+  largoMuro.value = +Math.hypot(b.x - a.x, b.y - a.y).toFixed(2);
+  nextTick(() => inputMuro.value?.select());
+}
+
+// Cambia el largo del muro moviendo su esquina final en la misma direccion
+function aplicarMuro() {
+  const i = muroSel.value, L = Number(largoMuro.value);
+  if (i === null || !(L >= 1)) return;
+  if (!bodega.forma) {
+    if (i % 2 === 0) bodegaEntrada.ancho = L; else bodegaEntrada.largo = L;
+    aplicarBodega();
+  } else {
+    // Se estira como en un CAD: la esquina final y la siguiente se mueven juntas, asi el muro vecino
+    // queda paralelo y con su largo (cambia el que viene despues)
+    const poly = bodega.forma.map((p) => ({ ...p })), n = poly.length, j = (i + 1) % n;
+    const a = poly[i], b = poly[j], l0 = Math.hypot(b.x - a.x, b.y - a.y) || 1;
+    const dx = ((b.x - a.x) * (L - l0)) / l0, dy = ((b.y - a.y) * (L - l0)) / l0;
+    const mover = n >= 4 ? [j, (j + 1) % n] : [j];
+    mover.forEach((m) => { poly[m] = { x: +(poly[m].x + dx).toFixed(2), y: +(poly[m].y + dy).toFixed(2) }; });
+    fijarForma(poly);
+  }
+  marcar('planner_wall_edit', { largo: L });
+}
+
+// Contorno en coordenadas positivas y lienzo que lo contiene
+function fijarForma(poly: Punto[]) {
+  const c = caja(poly);
+  const pts = poly.map((p) => ({ x: +(p.x - Math.min(0, c.x0)).toFixed(2), y: +(p.y - Math.min(0, c.y0)).toFixed(2) }));
+  const c2 = caja(pts);
+  bodega.ancho = bodegaEntrada.ancho = Math.min(LIMITES.bodega.max, Math.max(bodega.ancho, Math.ceil(c2.x1)));
+  bodega.largo = bodegaEntrada.largo = Math.min(LIMITES.bodega.max, Math.max(bodega.largo, Math.ceil(c2.y1)));
+  bodega.forma = pts;
+  racks.value = racks.value.map((r) => dentroDeBodega(r, bodega) as RackPlano);
+}
+
+function agregarMuroTeclado() {
+  const L = Number(muroTeclado.largo), ang = Number(muroTeclado.angulo) || 0;
+  if (!(L > 0)) return;
+  if (!puntosDibujo.value.length) puntosDibujo.value.push({ x: 0, y: 0 });
+  const u = puntosDibujo.value[puntosDibujo.value.length - 1], rad = (ang * Math.PI) / 180;
+  puntosDibujo.value.push({ x: +(u.x + L * Math.cos(rad)).toFixed(2), y: +(u.y - L * Math.sin(rad)).toFixed(2) });
+  // Siguiente muro: girando 90° a la derecha, lo mas comun en una bodega
+  muroTeclado.largo = null;
+  muroTeclado.angulo = ((ang - 90) % 360 + 360) % 360;
+}
+
+// ─── Deshacer / rehacer (Ctrl+Z / Ctrl+Y) ───
+const historial: string[] = [];
+let posHistorial = -1;
+let restaurando = false;
+const versionHistorial = ref(0);
+const estado = () => JSON.stringify({ bodega: { ...bodega }, racks: racks.value });
+let temporizador: ReturnType<typeof setTimeout> | null = null;
+function registrar() {
+  if (restaurando) return;
+  if (temporizador) clearTimeout(temporizador);
+  temporizador = setTimeout(() => {
+    const e = estado();
+    if (historial[posHistorial] === e) return;
+    historial.splice(posHistorial + 1);
+    historial.push(e);
+    if (historial.length > 60) historial.shift();
+    posHistorial = historial.length - 1;
+    versionHistorial.value++;
+  }, 350);
+}
+function restaurar(i: number) {
+  const g = JSON.parse(historial[i]);
+  restaurando = true;
+  Object.assign(bodega, g.bodega);
+  bodegaEntrada.ancho = bodega.ancho;
+  bodegaEntrada.largo = bodega.largo;
+  alturaEntrada.value = bodega.altura;
+  racks.value = g.racks;
+  posHistorial = i;
+  versionHistorial.value++;
+  nextTick(() => { restaurando = false; });
+}
+const puedeDeshacer = computed(() => (versionHistorial.value, dibujando.value ? puntosDibujo.value.length > 0 : posHistorial > 0));
+const puedeRehacer = computed(() => (versionHistorial.value, !dibujando.value && posHistorial < historial.length - 1));
+function deshacer() {
+  if (dibujando.value) { puntosDibujo.value.pop(); return; }
+  if (posHistorial > 0) restaurar(posHistorial - 1);
+}
+function rehacer() {
+  if (!dibujando.value && posHistorial < historial.length - 1) restaurar(posHistorial + 1);
+}
+watch([racks, () => ({ ...bodega })], registrar, { deep: true });
+
+function atajos(e: KeyboardEvent) {
+  const t = e.target as HTMLElement;
+  if (t.closest('input, textarea, select, [contenteditable]') || formularioAbierto.value) return;
+  const ctrl = e.ctrlKey || e.metaKey;
+  if (ctrl && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); deshacer(); }
+  else if (ctrl && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) { e.preventDefault(); rehacer(); }
+  else if (e.key === 'Escape') { herramienta.value = 'mover'; muroSel.value = null; }
+}
+onMounted(() => window.addEventListener('keydown', atajos));
+onBeforeUnmount(() => window.removeEventListener('keydown', atajos));
 
 // ─── Perfil y recorrido inicial ───
 const perfil = ref<string | null>(null);
@@ -427,7 +596,7 @@ function cerrarContorno() {
     return Math.abs((p.x - a.x) * (b.y - a.y) - (p.y - a.y) * (b.x - a.x)) > 1e-6;
   });
   if (limpios.length < 3 || area(limpios) < 1) return;
-  bodega.forma = limpios;
+  fijarForma(limpios);
   dibujando.value = false;
   puntosDibujo.value = [];
   racks.value = racks.value.map((r) => dentroDeBodega(r, bodega) as RackPlano);
@@ -551,7 +720,10 @@ async function pedir(m: 'cotizar' | 'pdf') {
   modo.value = m;
   preparando.value = true;
   pdfListo.value = false;
-  seleccion.value = null;   // el plano sale sin el rack resaltado y con todas las cotas
+  seleccion.value = null;   // el plano sale sin el rack resaltado, sin zoom y con todas las cotas
+  muroSel.value = null;
+  herramienta.value = 'mover';
+  planoRef.value?.restablecerVista();
   exportando.value = true;
   await nextTick();
   try {
@@ -665,6 +837,36 @@ watch([racks, () => ({ ...bodega })], () => {
 </script>
 
 <style scoped>
+.plan-barra {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  border-radius: 0.625rem;
+  background: rgb(255 255 255 / 0.95);
+  padding: 0.1875rem;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.12), inset 0 0 0 1px #e5e5e5;
+}
+.plan-herr {
+  min-width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  padding: 0 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #404040;
+}
+.plan-herr:hover:not(:disabled) {
+  background: #f5f5f5;
+}
+.plan-herr:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.plan-herr--on {
+  background: #fff7ed;
+  color: #9a3412;
+  box-shadow: inset 0 0 0 1px #fdba74;
+}
 .plan-input {
   display: block;
   width: 100%;
