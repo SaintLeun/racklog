@@ -387,6 +387,44 @@
               </p>
             </div>
 
+            <!-- Evaluacion del proyecto y escenarios -->
+            <ClientOnly>
+              <div class="mt-5 space-y-5">
+                <PlanificadorEvaluacion
+                  ref="evaluacionRef"
+                  :bodega="bodega" :posiciones="total.pallets" :abierto="perfil === 'supply'"
+                  @resumen="resumenEvaluacion = $event"
+                  @abrir="marcar('planner_evaluation_open', {})"
+                />
+                <div class="card p-5">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h2 class="text-sm font-semibold uppercase tracking-wider text-neutral-600">Escenarios</h2>
+                      <p class="mt-1 text-sm text-neutral-600">Guarda versiones de tu diseño (un nivel más, otro sistema…) y compáralas.</p>
+                    </div>
+                    <form class="flex gap-2" @submit.prevent="guardarEscenario">
+                      <label class="sr-only" for="plan-escenario">Nombre del escenario</label>
+                      <input id="plan-escenario" v-model="nombreEscenario" type="text" maxlength="40" :placeholder="`Escenario ${escenarios.length + 1}`" class="plan-input !h-10 w-44">
+                      <button type="submit" class="plan-accion h-10 px-3" :disabled="!racks.length || escenarios.length >= 8">Guardar</button>
+                    </form>
+                  </div>
+                  <ul v-if="escenarios.length" class="mt-3 divide-y divide-neutral-100 rounded-xl ring-1 ring-neutral-200">
+                    <li v-for="(esc, i) in escenarios" :key="esc.fecha" class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
+                      <span class="min-w-0">
+                        <span class="font-semibold text-neutral-900">{{ esc.nombre }}</span>
+                        <span class="text-neutral-600"> · {{ esc.racks }} racks · {{ esc.pallets }} posiciones<template v-if="esc.bandejas"> · {{ esc.bandejas }} bandejas</template></span>
+                        <span v-if="esc.pallets !== total.pallets" :class="['ml-1 font-semibold', esc.pallets > total.pallets ? 'text-green-700' : 'text-red-700']">({{ esc.pallets > total.pallets ? '+' : '' }}{{ esc.pallets - total.pallets }} vs. el actual)</span>
+                      </span>
+                      <span class="flex gap-2">
+                        <button type="button" class="text-xs font-semibold text-brand-700 hover:underline" @click="cargarEscenario(i)">Cargar</button>
+                        <button type="button" class="text-xs font-semibold text-neutral-500 hover:text-red-700" @click="borrarEscenario(i)">Borrar</button>
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </ClientOnly>
+
             <!-- Cotizar -->
             <div :class="['mt-5 flex flex-col gap-4 rounded-2xl bg-brand-50 p-5 ring-1 ring-brand-100 transition lg:flex-row lg:items-center lg:justify-between', resaltar(3)]">
               <div>
@@ -682,6 +720,45 @@ function atajos(e: KeyboardEvent) {
 onMounted(() => window.addEventListener('keydown', atajos));
 onBeforeUnmount(() => window.removeEventListener('keydown', atajos));
 
+// ─── Evaluacion y escenarios ───
+const evaluacionRef = ref<{ comparacion: { nombre: string; posiciones: number; detalle: string }[] } | null>(null);
+const resumenEvaluacion = ref('');
+const GUARDADO_ESCENARIOS = 'racklog-planificador-escenarios';
+const escenarios = ref<{ nombre: string; fecha: number; racks: number; pallets: number; bandejas: number; estado: string }[]>([]);
+const nombreEscenario = ref('');
+
+function persistirEscenarios() {
+  try { localStorage.setItem(GUARDADO_ESCENARIOS, JSON.stringify(escenarios.value)); } catch { /* sin almacenamiento */ }
+}
+function guardarEscenario() {
+  if (!racks.value.length || escenarios.value.length >= 8) return;
+  escenarios.value.push({
+    nombre: nombreEscenario.value.trim() || `Escenario ${escenarios.value.length + 1}`,
+    fecha: Date.now(),
+    racks: racks.value.length,
+    pallets: total.value.pallets,
+    bandejas: total.value.bandejas,
+    estado: estado(),
+  });
+  nombreEscenario.value = '';
+  persistirEscenarios();
+  marcar('planner_scenario_save', { escenarios: escenarios.value.length });
+}
+function cargarEscenario(i: number) {
+  const g = JSON.parse(escenarios.value[i].estado);
+  Object.assign(bodega, g.bodega);
+  bodegaEntrada.ancho = bodega.ancho;
+  bodegaEntrada.largo = bodega.largo;
+  alturaEntrada.value = bodega.altura;
+  racks.value = g.racks;
+  seleccion.value = null;
+  elementoSel.value = null;
+}
+function borrarEscenario(i: number) {
+  escenarios.value.splice(i, 1);
+  persistirEscenarios();
+}
+
 // ─── Perfil y recorrido inicial ───
 const perfil = ref<string | null>(null);
 const mostrarPerfil = ref(false);
@@ -837,6 +914,7 @@ const itemCotizacion = computed<QuoteItem>(() => ({
     ...resumenCotizacion(bodega, racks.value),
     ...(bodega.altura ? { 'Altura libre': `${formatoM(bodega.altura)} m` } : {}),
     ...(perfil.value ? { 'Perfil': PERFILES.find((p) => p.v === perfil.value)?.t ?? perfil.value } : {}),
+    ...(resumenEvaluacion.value ? { 'Evaluación': resumenEvaluacion.value } : {}),
     'Solicitud': modo.value === 'pdf' ? 'Descargó el plano en PDF' : 'Cotización',
   },
   analytics: {
@@ -945,6 +1023,11 @@ async function alEnviar(cliente: { reference: string; name: string; email: strin
     vista3d,
     bodega: resumenCotizacion(bodega, racks.value).Bodega + (bodega.altura ? ` · altura libre ${formatoM(bodega.altura)} m` : ''),
     filas,
+    // Lo que lleno el cliente va primero: si no cabe todo, se corta el comparador
+    evaluacion: [
+      ...(resumenEvaluacion.value ? [`Tu proyecto: ${resumenEvaluacion.value}.`] : []),
+      ...(evaluacionRef.value?.comparacion ?? []).map((c) => `${c.nombre}: ${c.posiciones.toLocaleString('es-CL')} posiciones estimadas (${c.detalle}).`),
+    ],
     indicadores: [
       ['Racks', String(racks.value.length)],
       ...(total.value.pallets ? [['Posiciones de pallet', String(total.value.pallets)] as [string, string]] : []),
@@ -995,6 +1078,10 @@ onMounted(() => {
     agregar(pedido as RackPlano['tipo']);
     router.replace({ query: {} });   // al recargar no se vuelve a agregar
   }
+  try {
+    const e = JSON.parse(localStorage.getItem(GUARDADO_ESCENARIOS) || '[]');
+    if (Array.isArray(e)) escenarios.value = e.filter((x) => x && typeof x.estado === 'string').slice(0, 8);
+  } catch { /* sin almacenamiento */ }
   try {
     const p = localStorage.getItem(GUARDADO_PERFIL);
     if (p) perfil.value = p === 'sin_perfil' ? null : p;
