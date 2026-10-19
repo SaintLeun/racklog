@@ -74,8 +74,7 @@
             :stroke="conflictos.has(r.id) ? '#dc2626' : (seleccion === r.id ? '#0f172a' : COLOR[r.tipo].borde)"
             :stroke-width="seleccion === r.id ? 0.12 : 0.06"
           />
-          <!-- Divisiones (cuerpos, calles o filas) y zona del pasillo/escalera del altillo -->
-          <rect v-for="(z, k) in f.zonas" :key="`z${k}`" :x="z.x0" :y="z.y0" :width="z.ancho" :height="z.alto" :fill="COLOR[r.tipo].zona" pointer-events="none" />
+          <!-- Divisiones (cuerpos, calles o filas) -->
           <line
             v-for="(l, k) in f.lineas" :key="k"
             :x1="l[0]" :y1="l[1]" :x2="l[2]" :y2="l[3]"
@@ -117,7 +116,7 @@ import { rectangulo, medidasRack, describir, contorno, caja, PASO, PASO_MURO } f
 
 export interface RackPlano {
   id: string;
-  tipo: 'RS' | 'AR' | 'DI' | 'AL';
+  tipo: 'RS' | 'AR' | 'DI';
   x: number;
   y: number;
   rot: 0 | 90 | 180 | 270;
@@ -125,7 +124,6 @@ export interface RackPlano {
   niveles: number;
   doble: boolean;
   fondos?: number;
-  pisos?: number;
 }
 export interface Punto { x: number; y: number }
 
@@ -151,10 +149,9 @@ const emit = defineEmits<{
 
 const MARGEN = 1;
 const COLOR = {
-  RS: { fondo: '#ffedd5', borde: '#ea580c', linea: '#fb923c', zona: 'transparent' },
-  DI: { fondo: '#fef3c7', borde: '#d97706', linea: '#f59e0b', zona: 'transparent' },
-  AR: { fondo: '#e0e7ff', borde: '#4f46e5', linea: '#818cf8', zona: 'transparent' },
-  AL: { fondo: '#ede9fe', borde: '#7c3aed', linea: '#a78bfa', zona: 'rgba(124, 58, 237, 0.12)' },
+  RS: { fondo: '#ffedd5', borde: '#ea580c', linea: '#fb923c' },
+  DI: { fondo: '#fef3c7', borde: '#d97706', linea: '#f59e0b' },
+  AR: { fondo: '#e0e7ff', borde: '#4f46e5', linea: '#818cf8' },
 };
 const uid = useId();
 const svgRef = ref<SVGSVGElement | null>(null);
@@ -182,27 +179,13 @@ function figura(r: RackPlano) {
     270: [p.x0 + v, p.y0 + L - u],
   })[r.rot];
   const seg = (u0: number, v0: number, u1: number, v1: number) => [...aPlanoLocal(u0, v0), ...aPlanoLocal(u1, v1)];
-  const zona = (u0: number, v0: number, u1: number, v1: number) => {
-    const [a, b, c, d] = seg(u0, v0, u1, v1);
-    return { x0: Math.min(a, c), y0: Math.min(b, d), ancho: Math.abs(c - a), alto: Math.abs(d - b) };
-  };
-  const lineas: number[][] = [], zonas: ReturnType<typeof zona>[] = [];
-  let entrada: number[] | null = null;
-  if (r.tipo === 'AL') {
-    // Escalera a la izquierda, pasillo al frente y la estanteria detras (como construir.js)
-    const esc = m.largoEscalera, pas = 1;
-    zonas.push(zona(0, 0, esc, 0.8), zona(esc, 0, L, pas));
-    const paso = (L - esc) / r.cuerpos;
-    for (let k = 1; k < r.cuerpos; k++) lineas.push(seg(esc + k * paso, pas, esc + k * paso, F));
-    lineas.push(seg(esc, 0, esc, F));
-    if (r.doble) lineas.push(seg(esc, pas + (F - pas) / 2, L, pas + (F - pas) / 2));
-  } else {
-    if (r.tipo === 'DI') entrada = seg(0, 0.06, L, 0.06);   // lado por donde entra la grua
-    const n = r.cuerpos, paso = L / n;
-    for (let k = 1; k < n; k++) lineas.push(seg(k * paso, 0, k * paso, F));
-    if (r.doble) lineas.push(seg(0, F / 2, L, F / 2));
-  }
-  return { ...p, lineas, zonas, entrada, clave: `${r.id}-${m.tipo}` };
+  const lineas: number[][] = [];
+  // Lado por donde entra la grua en el drive-in
+  const entrada = r.tipo === 'DI' ? seg(0, 0.06, L, 0.06) : null;
+  const n = r.cuerpos, paso = L / n;
+  for (let k = 1; k < n; k++) lineas.push(seg(k * paso, 0, k * paso, F));
+  if (r.doble) lineas.push(seg(0, F / 2, L, F / 2));
+  return { ...p, lineas, entrada, clave: `${r.id}-${m.tipo}` };
 }
 
 // Coordenadas del puntero en metros de la bodega

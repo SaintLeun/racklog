@@ -113,7 +113,6 @@
                       <button type="button" class="plan-step" :aria-label="`${def[0]}: agregar uno`" :disabled="valor(campo) >= def[2]" @click="cambiar({ [campo]: valor(campo) + 1 })">+</button>
                     </div>
                   </div>
-                  <p v-if="rackSel.tipo === 'AL' && rackSel.pisos > 1" class="text-xs text-neutral-500">Con 2 pisos el altillo lleva al menos 4 cuerpos.</p>
 
                   <div class="grid grid-cols-3 gap-2">
                     <button type="button" class="plan-accion" @click="girar(rackSel.id)">Girar</button>
@@ -123,7 +122,7 @@
                 </div>
               </template>
               <p v-else class="mt-3 text-sm text-neutral-600">
-                {{ racks.length ? 'Toca un rack en el plano para ajustarlo o moverlo.' : 'Agrega tu primer rack para empezar.' }}
+                {{ racks.length ? 'Toca un rack en el plano o en 3D para ajustarlo o moverlo.' : 'Agrega tu primer rack para empezar.' }}
               </p>
             </div>
           </aside>
@@ -169,7 +168,10 @@
                   @mover-vertice="moverVertice"
                 />
                 <ClientOnly v-if="vista === '3d'">
-                  <Visor3D :bodega="bodega" :racks="racks" etiqueta="Vista 3D de la bodega con los racks dibujados" />
+                  <Visor3D
+                    :bodega="bodega" :racks="racks" etiqueta="Vista 3D de la bodega con los racks dibujados"
+                    @seleccionar="seleccion = $event" @mover="mover"
+                  />
                 </ClientOnly>
               </div>
 
@@ -219,7 +221,7 @@ import type { QuoteItem } from '~/components/QuoteModal/ProductConfig';
 
 useSeoMeta({
   title: 'Planificador de bodega 3D',
-  description: 'Dibuja tu bodega, agrega rack selectivo, drive-in, ángulo ranurado o altillo, míralos en 3D y pide tu cotización a Racklog. Gratis y sin registro.',
+  description: 'Dibuja tu bodega, agrega rack selectivo, drive-in o ángulo ranurado, míralos en 3D y pide tu cotización a Racklog. Gratis y sin registro.',
 });
 
 const GUARDADO = 'racklog-planificador-v1';

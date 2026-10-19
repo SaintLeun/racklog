@@ -23,13 +23,13 @@
       v-else-if="estado === 'listo'"
       class="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/85 px-3 py-1 text-xs font-medium text-neutral-600 shadow-sm ring-1 ring-black/5"
     >
-      Arrastra para girar · rueda o pellizca para acercar
+      {{ bodega ? 'Arrastra un rack para moverlo · arrastra el piso para girar' : 'Arrastra para girar · rueda o pellizca para acercar' }}
     </p>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 
 // Un producto ('RS' rack selectivo o 'AR' angulo ranurado, con la config del configurador)
 // o, en el planificador, una bodega con sus racks
@@ -39,6 +39,12 @@ const props = defineProps<{
   bodega?: { ancho: number; largo: number; forma?: Array<{ x: number; y: number }> | null };
   racks?: Array<Record<string, unknown>>;
   etiqueta?: string;
+}>();
+
+// Planificador: los racks se pueden arrastrar en 3D
+const emit = defineEmits<{
+  seleccionar: [id: string];
+  mover: [id: string, x: number, y: number];
 }>();
 
 const lienzoRef = ref<HTMLElement | null>(null);
@@ -86,11 +92,25 @@ onMounted(async () => {
   }
   mods = { visor: visorMod, construir, medidas, bodega };
   visor = visorMod.crearVisor(lienzoRef.value);
+  if (props.bodega) {
+    visor.arrastrar({
+      alElegir: (id: string) => emit('seleccionar', id),
+      async alSoltar(id: string, x: number, z: number) {
+        const antes = claveModelo();
+        emit('mover', id, x, z);
+        await nextTick();
+        // Si la posicion no cambio (p. ej. quedo en el borde de la bodega) la escena no se
+        // reconstruye sola y el rack quedaria donde se solto
+        if (claveModelo() === antes) construirModelo();
+      },
+    });
+  }
   construirModelo();
   estado.value = 'listo';
 });
 
-watch(() => JSON.stringify([props.producto, props.config, props.bodega, props.racks]), construirModelo);
+const claveModelo = () => JSON.stringify([props.producto, props.config, props.bodega, props.racks]);
+watch(claveModelo, construirModelo);
 
 onBeforeUnmount(() => {
   visor?.destruir();
