@@ -49,7 +49,7 @@
           </div>
         </div>
         <p class="mt-2 text-xs text-neutral-500">
-          Estimación referencial llenando la bodega con un solo sistema, con pasillos de 3,5 m (grúa contrapeso){{ bodega.altura ? ` y altura libre de ${formatoM(bodega.altura)} m` : '; indica la altura libre para ajustar los niveles' }}. Racklog la confirma en la revisión de tu diseño.
+          Estimación referencial llenando la bodega con un solo sistema, con pasillos de {{ formatoM(pasillo ?? SUPUESTOS.pasillo) }} m ({{ (grua ?? 'grúa contrapeso').toLowerCase() }}){{ bodega.altura ? ` y altura libre de ${formatoM(bodega.altura)} m` : '; indica la altura libre para ajustar los niveles' }}. Racklog la confirma en la revisión de tu diseño.
         </p>
       </section>
 
@@ -85,6 +85,9 @@ const props = defineProps<{
   bodega: { ancho: number; largo: number; forma: { x: number; y: number }[] | null; altura: number | null };
   posiciones: number;
   abierto?: boolean;
+  // Pasillo y nombre de la grua elegida (el comparador llena la bodega con ese pasillo)
+  pasillo?: number;
+  grua?: string;
 }>();
 // resumen: una linea para la cotizacion y el PDF (vacia si no se lleno nada)
 const emit = defineEmits<{ resumen: [texto: string]; abrir: [] }>();
@@ -108,7 +111,7 @@ const arriendo = computed(() => arriendoEvitado(props.posiciones, m2.value, e.va
 const dinero = (v: number) => (e.moneda === 'UF' ? `${v.toLocaleString('es-CL', { maximumFractionDigits: 1 })} UF` : `$${Math.round(v).toLocaleString('es-CL')}`);
 
 const comparacion = computed(() => {
-  const rs = estimarSistema(props.bodega, 'RS'), di = estimarSistema(props.bodega, 'DI');
+  const rs = estimarSistema(props.bodega, 'RS', props.pasillo), di = estimarSistema(props.bodega, 'DI', props.pasillo);
   const mejor = rs.posiciones >= di.posiciones ? 'RS' : 'DI';
   return [
     { tipo: 'RS', nombre: 'Rack selectivo', ...rs, mejor: mejor === 'RS', nota: 'Acceso directo a cada pallet: ideal con muchos productos distintos.' },

@@ -119,6 +119,29 @@
                   class="plan-input" @change="aplicarAltura"
                 >
               </div>
+              <!-- Operacion: grua y peso de la carga (definen pasillos, niveles y el semaforo de carga) -->
+              <div v-if="!dibujando" class="mt-4 rounded-xl bg-neutral-50 p-3 ring-1 ring-neutral-200">
+                <p class="flex items-center text-sm font-medium text-neutral-800">
+                  Tu operación
+                  <PlanificadorAyuda titulo="grúa y peso">La grúa define el ancho de pasillo y hasta qué altura se carga; el peso, si las vigas o bandejas lo resisten. Los valores son referenciales y los confirma Racklog.</PlanificadorAyuda>
+                </p>
+                <label for="plan-grua" class="mt-2 block text-xs font-medium text-neutral-600">Equipo que usas</label>
+                <select id="plan-grua" v-model="bodega.grua" class="plan-input mt-1 !h-10 text-sm">
+                  <option v-for="(g, k) in GRUAS" :key="k" :value="k">{{ g.nombre }} · pasillo {{ formatoM(g.pasillo) }} m · hasta {{ formatoM(g.levante) }} m</option>
+                </select>
+                <div class="mt-2 grid grid-cols-2 gap-2">
+                  <div>
+                    <label for="plan-peso" class="block text-xs font-medium text-neutral-600">Peso por pallet (kg)</label>
+                    <input id="plan-peso" v-model.number="bodega.pesoPallet" type="number" min="0" step="50" placeholder="1.000" class="plan-input mt-1 !h-10">
+                  </div>
+                  <div v-if="racks.some((r) => r.tipo === 'AR')">
+                    <label for="plan-peso-bandeja" class="block text-xs font-medium text-neutral-600">Peso por bandeja (kg)</label>
+                    <input id="plan-peso-bandeja" v-model.number="bodega.pesoBandeja" type="number" min="0" step="10" placeholder="150" class="plan-input mt-1 !h-10">
+                  </div>
+                </div>
+                <p v-if="esProvisorio(gruaActual)" class="mt-2 text-xs text-neutral-500">Pasillos, alturas y capacidades provisorios: Racklog los confirma en la revisión.</p>
+              </div>
+
               <!-- Pilares, portones, andenes, oficinas y zonas bloqueadas -->
               <div v-if="!dibujando" class="mt-4 rounded-xl bg-neutral-50 p-3 ring-1 ring-neutral-200">
                 <p class="flex items-center text-sm font-medium text-neutral-800">
@@ -190,6 +213,18 @@
               </div>
             </div>
 
+            <!-- Llenado automatico -->
+            <div v-if="!dibujando" class="-mt-2 card p-4">
+              <p class="flex items-center text-sm font-medium text-neutral-800">
+                Llenar la bodega automáticamente
+                <PlanificadorAyuda titulo="llenar la bodega">Pone filas del sistema elegido con el pasillo de tu grúa, los niveles que caben bajo el techo y esquivando pilares y zonas. Reemplaza los racks que tengas.</PlanificadorAyuda>
+              </p>
+              <div class="mt-2 grid grid-cols-2 gap-2">
+                <button type="button" class="plan-accion" @click="llenar('RS')">Con selectivo</button>
+                <button type="button" class="plan-accion" @click="llenar('DI')">Con drive-in</button>
+              </div>
+            </div>
+
             <!-- 3. Rack seleccionado -->
             <div :class="['card p-5 transition', resaltar(2)]">
               <h2 class="text-sm font-semibold uppercase tracking-wider text-neutral-600">3. Ajusta el rack</h2>
@@ -243,6 +278,17 @@
                     <span v-if="altos.has(rackSel.id)" class="font-semibold text-amber-700">· más alto que la bodega</span>
                   </p>
 
+                  <p v-if="semaforoSel" :class="['rounded-lg px-3 py-2 text-sm', SEMAFORO[semaforoSel.color]]" role="status">
+                    Carga por nivel: {{ semaforoSel.carga.toLocaleString('es-CL') }} de {{ semaforoSel.capacidad.toLocaleString('es-CL') }} kg ({{ Math.round(semaforoSel.uso * 100) }} %)
+                    <template v-if="semaforoSel.color === 'rojo'"> · requiere revisión de ingeniería</template>
+                  </p>
+                  <p v-else-if="rackSel.tipo !== 'AR'" class="text-xs text-neutral-500">Indica el peso por pallet en "Tu operación" para ver si las vigas lo resisten.</p>
+                  <p v-if="avisos.levante.has(rackSel.id)" class="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                    El nivel más alto ({{ formatoM(alturaUltimoNivel(rackSel)) }} m) supera lo que alcanza tu equipo (~{{ formatoM(avisos.levanteMax) }} m).
+                  </p>
+
+                  <PlanificadorCorteRack :rack="rackSel" :altura="bodega.altura" />
+
                   <details class="rounded-xl bg-neutral-50 text-sm ring-1 ring-neutral-200">
                     <summary class="cursor-pointer px-3 py-2.5 font-semibold text-neutral-800">¿Este sistema te conviene?</summary>
                     <dl class="space-y-2 px-3 pb-3 text-neutral-600">
@@ -253,11 +299,13 @@
                     </dl>
                   </details>
 
-                  <div class="grid grid-cols-3 gap-2">
+                  <div class="grid grid-cols-2 gap-2">
                     <button type="button" class="plan-accion" @click="girar(rackSel.id)">Girar</button>
                     <button type="button" class="plan-accion" @click="duplicar(rackSel.id)">Duplicar</button>
+                    <button type="button" class="plan-accion" :title="`Copia separada por un pasillo de ${formatoM(rackSel.tipo === 'AR' ? 1.2 : avisos.pasilloMin)} m`" @click="filaParalelaSel">Fila paralela</button>
                     <button type="button" class="plan-accion text-red-700 hover:bg-red-50" @click="eliminar(rackSel.id)">Eliminar</button>
                   </div>
+                  <p v-if="avisoFila" class="text-xs text-amber-800" role="status">{{ avisoFila }}</p>
                 </div>
               </template>
               <p v-else class="mt-3 text-sm text-neutral-600">
@@ -294,6 +342,7 @@
               <dl v-if="racks.length" class="flex flex-wrap gap-x-5 gap-y-1 border-b border-neutral-100 px-4 py-2 text-xs text-neutral-600">
                 <div class="flex gap-1"><dt>Piso ocupado:</dt><dd class="font-semibold text-neutral-900">{{ porcentaje(ind.ocupacion) }}</dd></div>
                 <div v-if="total.pallets" class="flex gap-1"><dt>Posiciones por m²:</dt><dd class="font-semibold text-neutral-900">{{ ind.posicionesM2.toLocaleString('es-CL', { maximumFractionDigits: 2 }) }}</dd></div>
+                <div v-if="recorrido !== null" class="flex gap-1"><dt>Recorrido promedio desde el portón:</dt><dd class="font-semibold text-neutral-900">{{ formatoM(recorrido) }} m</dd></div>
                 <div class="flex gap-1">
                   <dt>Uso de la altura:</dt>
                   <dd class="font-semibold text-neutral-900">{{ ind.usoAltura === null ? 'indica la altura libre' : porcentaje(ind.usoAltura) }}</dd>
@@ -354,6 +403,7 @@
                   :puntos-calibracion="puntosCalibracion"
                   class="p-3"
                   :elemento-sel="elementoSel"
+                  :pasillo-min="avisos.pasilloMin"
                   @seleccionar-elemento="seleccionarElemento"
                   @mover-elemento="(id, x, y) => cambiarElemento({ x, y }, id)"
                   @eliminar-elemento="eliminarElemento"
@@ -380,9 +430,16 @@
                 Hay racks superpuestos, sobre un pilar o una zona, o fuera de la bodega (en rojo). Muévelos para separarlos.
               </div>
               <div v-if="altos.size" class="border-t border-amber-100 bg-amber-50 px-4 py-2.5 text-sm text-amber-900" role="status">
-                {{ altos.size === 1 ? 'Un rack es más alto' : `${altos.size} racks son más altos` }} que la altura libre ({{ formatoM(bodega.altura || 0) }} m), marcados con borde ámbar. Quítales niveles o revisa la altura.
+                {{ altos.size === 1 ? 'Un rack queda' : `${altos.size} racks quedan` }} sin los {{ formatoM(DISTANCIAS.holguraTecho.valor) }} m libres bajo el techo ({{ formatoM(bodega.altura || 0) }} m), marcados con borde ámbar. Quítales niveles o revisa la altura.
               </div>
-              <p v-if="!malos.size && !altos.size && vista === '2d' && racks.length" class="border-t border-neutral-100 px-4 py-2.5 text-xs text-neutral-500">
+              <div v-if="avisos.pasillos.length" class="border-t border-amber-100 bg-amber-50 px-4 py-2.5 text-sm text-amber-900" role="status">
+                {{ avisos.pasillos.length === 1 ? 'Hay un pasillo más angosto' : `Hay ${avisos.pasillos.length} pasillos más angostos` }} que los ~{{ formatoM(avisos.pasilloMin) }} m que necesita tu {{ gruaActual.nombre.toLowerCase() }}
+                ({{ avisos.pasillos.map((p) => `${numeroRack(p.a)}–${numeroRack(p.b)}: ${formatoM(p.ancho)} m`).join(', ') }}). Usa "Fila paralela" para separarlos al pasillo justo.
+              </div>
+              <div v-if="avisos.levante.size" class="border-t border-amber-100 bg-amber-50 px-4 py-2.5 text-sm text-amber-900" role="status">
+                {{ avisos.levante.size === 1 ? 'Un rack tiene' : `${avisos.levante.size} racks tienen` }} el nivel más alto sobre lo que alcanza tu equipo (~{{ formatoM(avisos.levanteMax) }} m).
+              </div>
+              <p v-if="!malos.size && !altos.size && !avisos.pasillos.length && !avisos.levante.size && vista === '2d' && racks.length" class="border-t border-neutral-100 px-4 py-2.5 text-xs text-neutral-500">
                 Arrastra los racks para moverlos. Con teclado: flechas para mover, R para girar y Suprimir para eliminar.
               </p>
             </div>
@@ -392,7 +449,7 @@
               <div class="mt-5 space-y-5">
                 <PlanificadorEvaluacion
                   ref="evaluacionRef"
-                  :bodega="bodega" :posiciones="total.pallets" :abierto="perfil === 'supply'"
+                  :bodega="bodega" :posiciones="total.pallets" :abierto="perfil === 'supply'" :pasillo="avisos.pasilloMin" :grua="gruaActual.nombre"
                   @resumen="resumenEvaluacion = $event"
                   @abrir="marcar('planner_evaluation_open', {})"
                 />
@@ -453,6 +510,7 @@
       :quote-item="itemCotizacion"
       :initial-files="archivosPlano"
       require-project
+      :config-extra="configAlEnviar"
       @sent="alEnviar"
       @close="formularioAbierto = false"
     />
@@ -463,9 +521,13 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import {
   LIMITES, NOMBRE, TIPOS, PERFILES, dentroDeBodega, conflictos, lugarLibre, totales, resumenCotizacion, normalizar, contorno, area, caja,
-  altoRack, racksAltos, indicadores, rectangulo, medidasRack, describir, formatoM, ELEMENTOS, grillaPilares,
+  altoRack, indicadores, rectangulo, medidasRack, describir, formatoM, ELEMENTOS, grillaPilares,
 } from '~/lib/rack3d/planificador.js';
 import { capacidad } from '~/lib/rack3d/medidas.js';
+import { GRUAS, DISTANCIAS, esProvisorio } from '~/lib/rack3d/parametrosTecnicos.js';
+import {
+  gruaDe, avisosOperacion, semaforoCarga, racksSinHolgura, filaParalela, llenarBodega, recorridoPromedio, puntajeLead, materiales, alturaUltimoNivel,
+} from '~/lib/rack3d/operacion.js';
 import type { RackPlano, Punto, Elemento } from '~/components/planificador/Plano2D.vue';
 import type { QuoteItem } from '~/components/QuoteModal/ProductConfig';
 
@@ -480,7 +542,10 @@ const GUARDADO_RECORRIDO = 'racklog-planificador-recorrido';
 const route = useRoute();
 const router = useRouter();
 
-const bodega = reactive<{ ancho: number; largo: number; forma: Punto[] | null; altura: number | null; elementos: Elemento[] }>({ ancho: 20, largo: 30, forma: null, altura: null, elementos: [] });
+const bodega = reactive<{
+  ancho: number; largo: number; forma: Punto[] | null; altura: number | null; elementos: Elemento[];
+  grua: keyof typeof GRUAS; pesoPallet: number | null; pesoBandeja: number | null;
+}>({ ancho: 20, largo: 30, forma: null, altura: null, elementos: [], grua: 'contrapeso', pesoPallet: null, pesoBandeja: null });
 const alturaEntrada = ref<number | null>(null);
 const bodegaEntrada = reactive({ ancho: bodega.ancho, largo: bodega.largo });
 const formaLibre = computed(() => !!bodega.forma || dibujando.value);
@@ -502,7 +567,43 @@ const total = computed(() => totales(racks.value));
 const indiceSel = computed(() => racks.value.findIndex((r) => r.id === seleccion.value));
 const rackSel = computed(() => racks.value[indiceSel.value] ?? null);
 const rectSel = computed(() => (rackSel.value ? rectangulo(rackSel.value) : { ancho: 0, alto: 0 }));
-const altos = computed(() => racksAltos(racks.value, bodega.altura) as Set<string>);
+// Sin la holgura al techo (incluye los que derechamente no caben)
+const altos = computed(() => racksSinHolgura(racks.value, bodega.altura) as Set<string>);
+const gruaActual = computed(() => gruaDe(bodega));
+const avisos = computed(() => avisosOperacion(racks.value, bodega) as { pasillos: { a: string; b: string; ancho: number }[]; levante: Set<string>; pasilloMin: number; levanteMax: number });
+const recorrido = computed(() => recorridoPromedio(racks.value, bodega) as number | null);
+const SEMAFORO = { verde: 'bg-green-50 text-green-900', amarillo: 'bg-amber-50 text-amber-900', rojo: 'bg-red-50 text-red-900' } as const;
+const semaforoSel = computed(() => (rackSel.value ? semaforoCarga(rackSel.value, bodega.pesoPallet, bodega.pesoBandeja) as { uso: number; carga: number; capacidad: number; color: keyof typeof SEMAFORO } | null : null));
+const numeroRack = (id: string) => racks.value.findIndex((r) => r.id === id) + 1;
+const avisoFila = ref('');
+
+function filaParalelaSel() {
+  const r = rackSel.value;
+  if (!r) return;
+  const n = filaParalela(r, racks.value, bodega, nuevoId()) as RackPlano | null;
+  avisoFila.value = n ? '' : 'No cabe otra fila al pasillo justo: mueve el rack o achica la fila.';
+  if (!n) return;
+  racks.value.push(n);
+  seleccion.value = n.id;
+  marcar('planner_parallel_row', { rack_type: r.tipo });
+}
+
+function llenar(tipo: 'RS' | 'DI') {
+  if (racks.value.length && !confirm('Esto reemplaza los racks que tienes por filas automáticas. ¿Seguir?')) return;
+  racks.value = llenarBodega(bodega, tipo, nuevoId) as RackPlano[];
+  seleccion.value = null;
+  vista.value = '2d';
+  marcar('planner_autofill', { rack_type: tipo, racks: racks.value.length, posiciones: total.value.pallets });
+}
+
+// Al enviar: puntaje del lead (con la fecha y el telefono del formulario) y materiales para el vendedor
+function configAlEnviar({ plazo, telefono }: { plazo: string; telefono: string }) {
+  const lista = materiales(racks.value);
+  return {
+    'Puntaje del lead': `${puntajeLead({ bodega, racks: racks.value, perfil: perfil.value, plazo, telefono })}/100`,
+    ...(lista ? { 'Materiales (preliminar)': lista } : {}),
+  };
+}
 const ind = computed(() => indicadores(bodega, racks.value));
 const porcentaje = (v: number) => `${Math.round(v * 100)} %`;
 
@@ -793,7 +894,11 @@ const ASESORIA_ETIQUETAS = { sirve: 'Para qué sirve', conviene: 'Te conviene si
 function ayudaCampo(tipo: string, campo: string) {
   if (campo === 'cuerpos') return tipo === 'DI' ? 'Pasillos por donde entra la grúa a dejar los pallets.' : 'Cada cuerpo es un módulo entre dos marcos. Más cuerpos, rack más largo.';
   if (campo === 'fondos') return 'Cuántos pallets quedan uno detrás de otro en cada calle.';
-  if (campo === 'niveles') return tipo === 'AR' ? 'Bandejas por cuerpo, de abajo hacia arriba.' : 'Niveles de carga, contando el pallet que va en el piso.';
+  if (campo === 'niveles') {
+    if (tipo === 'AR') return 'Bandejas por cuerpo, de abajo hacia arriba.';
+    if (tipo === 'DI') return 'Niveles de pallets, contando el que va en el piso.';
+    return 'Niveles con vigas. Además va un nivel de pallets en el piso: 3 niveles son 4 alturas de pallet.';
+  }
   return '';
 }
 
@@ -913,6 +1018,7 @@ const itemCotizacion = computed<QuoteItem>(() => ({
   config: {
     ...resumenCotizacion(bodega, racks.value),
     ...(bodega.altura ? { 'Altura libre': `${formatoM(bodega.altura)} m` } : {}),
+    'Operación': `${gruaActual.value.nombre}${bodega.pesoPallet ? ` · pallet de ${bodega.pesoPallet.toLocaleString('es-CL')} kg` : ''}${bodega.pesoBandeja ? ` · bandeja de ${bodega.pesoBandeja} kg` : ''}`,
     ...(perfil.value ? { 'Perfil': PERFILES.find((p) => p.v === perfil.value)?.t ?? perfil.value } : {}),
     ...(resumenEvaluacion.value ? { 'Evaluación': resumenEvaluacion.value } : {}),
     'Solicitud': modo.value === 'pdf' ? 'Descargó el plano en PDF' : 'Cotización',
@@ -1014,14 +1120,16 @@ async function alEnviar(cliente: { reference: string; name: string; email: strin
   const filas = racks.value.map((r, i) => {
     const p = rectangulo(r), c = capacidad(medidasRack(r));
     const [sistema, ...resto] = describir(r).split(' · ');
-    return [String(i + 1), sistema, resto.join(' · '), `${formatoM(p.ancho)} × ${formatoM(p.alto)} × ${formatoM(altoRack(r))} m`, c.pallets ? `${c.pallets} posiciones de pallet` : `${c.bandejas} bandejas`];
+    const sem = semaforoCarga(r, bodega.pesoPallet, bodega.pesoBandeja) as { uso: number; color: string } | null;
+    const carga = sem ? `${Math.round(sem.uso * 100)} %${sem.color === 'rojo' ? ' · revisar' : ''}` : 'Sin peso';
+    return [String(i + 1), sistema, resto.join(' · '), `${formatoM(p.ancho)} × ${formatoM(p.alto)} × ${formatoM(altoRack(r))} m`, c.pallets ? `${c.pallets} posiciones` : `${c.bandejas} bandejas`, carga];
   });
   const i = ind.value;
   const blob = await crearPdfPlano({
     cliente,
     plano: planoUrl,
     vista3d,
-    bodega: resumenCotizacion(bodega, racks.value).Bodega + (bodega.altura ? ` · altura libre ${formatoM(bodega.altura)} m` : ''),
+    bodega: resumenCotizacion(bodega, racks.value).Bodega + (bodega.altura ? ` · altura libre ${formatoM(bodega.altura)} m` : '') + ` · ${gruaActual.value.nombre.toLowerCase()}${bodega.pesoPallet ? `, pallet de ${bodega.pesoPallet.toLocaleString('es-CL')} kg` : ''}`,
     filas,
     // Lo que lleno el cliente va primero: si no cabe todo, se corta el comparador
     evaluacion: [
@@ -1063,6 +1171,9 @@ onMounted(() => {
       bodegaEntrada.largo = g.bodega.largo;
       aplicarBodega();
       bodega.altura = Number(g.bodega.altura) >= 2 ? Number(g.bodega.altura) : null;
+      bodega.grua = g.bodega.grua in GRUAS ? g.bodega.grua : 'contrapeso';
+      bodega.pesoPallet = Number(g.bodega.pesoPallet) > 0 ? Number(g.bodega.pesoPallet) : null;
+      bodega.pesoBandeja = Number(g.bodega.pesoBandeja) > 0 ? Number(g.bodega.pesoBandeja) : null;
       bodega.elementos = Array.isArray(g.bodega.elementos)
         ? g.bodega.elementos.filter((e: Elemento) => e && e.clase in ELEMENTOS && [e.x, e.y, e.ancho, e.alto].every(Number.isFinite))
         : [];

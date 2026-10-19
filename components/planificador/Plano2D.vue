@@ -190,9 +190,9 @@
 
       <!-- Cotas: medidas del rack y distancia a muros o al rack vecino (pasillo) -->
       <g v-for="(c, i) in cotas" :key="`c${i}`" pointer-events="none">
-        <line :x1="c.x1" :y1="c.y1" :x2="c.x2" :y2="c.y2" :stroke="c.a === 'rack' ? '#0f766e' : '#64748b'" stroke-width="0.04" stroke-dasharray="0.18 0.1" />
+        <line :x1="c.x1" :y1="c.y1" :x2="c.x2" :y2="c.y2" :stroke="colorCota(c)" stroke-width="0.04" stroke-dasharray="0.18 0.1" />
         <text
-          v-bind="TEXTO_COTA" :fill="c.a === 'rack' ? '#0f766e' : '#334155'" dominant-baseline="central"
+          v-bind="TEXTO_COTA" :fill="colorCota(c)" dominant-baseline="central"
           :x="posCota(c).x" :y="posCota(c).y" :transform="posCota(c).rot" :text-anchor="posCota(c).anchor"
         >{{ c.a === 'rack' ? 'pasillo ' : '' }}{{ formatoM(c.valor) }} m</text>
       </g>
@@ -276,6 +276,8 @@ const props = defineProps<{
   herramienta?: 'mover' | 'medir';
   // Muro seleccionado (indice del lado del contorno) para editar su largo
   muroSel?: number | null;
+  // Pasillo minimo de la grua (m): un pasillo entre racks mas angosto se marca en rojo
+  pasilloMin?: number;
   // Elemento seleccionado (pilar, porton, anden, oficina o zona)
   elementoSel?: string | null;
   // Plano o foto de referencia para calcar: url, tamano en px y metros por px
@@ -411,6 +413,8 @@ function posCota(c: { x1: number; y1: number; x2: number; y2: number; valor: num
 
 const rectSvg = (el: Elemento) => { const p = rectElemento(el); return { x: p.x0, y: p.y0, width: p.ancho, height: p.alto }; };
 const diagonal = (el: Elemento) => { const p = rectElemento(el); return { x1: p.x0, y1: p.y0, x2: p.x0 + p.ancho, y2: p.y0 + p.alto }; };
+
+const colorCota = (c: { a: string; valor: number }) => (c.a !== 'rack' ? '#334155' : props.pasilloMin && c.valor < props.pasilloMin - 1e-6 ? '#dc2626' : '#0f766e');
 
 const rectDe = (r: RackPlano) => { const p = rectangulo(r); return { x: p.x0, y: p.y0, width: p.ancho, height: p.alto }; };
 

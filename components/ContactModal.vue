@@ -458,6 +458,11 @@ const props = defineProps({
   requireProject: {
     type: Boolean,
     default: false
+  },
+  // Campos que se calculan al enviar con lo escrito en el formulario (p. ej. el puntaje del lead)
+  configExtra: {
+    type: Function as PropType<(datos: { plazo: string; telefono: string }) => Record<string, string | number>>,
+    default: null
   }
 });
 
@@ -852,7 +857,8 @@ async function submitForm() {
             quoteOnly: true,
             config: {
               ...(props.quoteItem.config ?? {}),
-              ...(props.requireProject ? { 'Comuna de instalación': form.comuna.trim(), 'Fecha requerida': form.plazo } : {})
+              ...(props.requireProject ? { 'Comuna de instalación': form.comuna.trim(), 'Fecha requerida': form.plazo } : {}),
+              ...(props.configExtra ? props.configExtra({ plazo: form.plazo, telefono: form.phone.trim() }) : {})
             }
           }],
           cartTotal: 0
