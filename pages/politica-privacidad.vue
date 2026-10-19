@@ -2,7 +2,7 @@
   <LegalPage
     title="Política de Privacidad"
     subtitle="Cómo tratamos y protegemos tus datos personales"
-    updated="30 de septiembre de 2026"
+    updated="19 de octubre de 2026"
   >
     <h2>1. Responsable del tratamiento</h2>
     <p>
@@ -20,8 +20,9 @@
     <p>Al completar los formularios de contacto o de cotización:</p>
     <ul>
       <li>Nombre, correo electrónico y teléfono.</li>
-      <li>Empresa (opcional).</li>
+      <li>Razón social y RUT.</li>
       <li>Productos, configuraciones y comentarios de tu solicitud.</li>
+      <li>Archivos que adjuntes (fotos, planos o PDF) y el plano que dibujes en el planificador.</li>
     </ul>
     <h3>Datos que se recogen al navegar</h3>
     <ul>
@@ -55,6 +56,7 @@
       </thead>
       <tbody>
         <tr><td>Kommo</td><td>CRM: gestión de contactos y cotizaciones</td><td>Estados Unidos / otros</td></tr>
+        <tr><td>Supabase</td><td>Base de datos de nuestra intranet, donde registramos las solicitudes</td><td>Estados Unidos / otros</td></tr>
         <tr><td>Google (Analytics y Tag Manager)</td><td>Analítica web, solo con tu consentimiento</td><td>Estados Unidos</td></tr>
         <tr><td>Microsoft (Clarity)</td><td>Analítica de uso, solo con tu consentimiento</td><td>Estados Unidos</td></tr>
         <tr><td>[PROVEEDOR DE HOSTING Y CORREO]</td><td>Alojamiento del sitio y envío de correos</td><td>[PAÍS]</td></tr>

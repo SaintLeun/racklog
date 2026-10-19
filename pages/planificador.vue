@@ -219,7 +219,7 @@ import {
 import type { RackPlano, Punto } from '~/components/planificador/Plano2D.vue';
 import type { QuoteItem } from '~/components/QuoteModal/ProductConfig';
 
-useSeoMeta({
+usePageSeo({
   title: 'Planificador de bodega 3D',
   description: 'Dibuja tu bodega, agrega rack selectivo, drive-in o ángulo ranurado, míralos en 3D y pide tu cotización a Racklog. Gratis y sin registro.',
 });

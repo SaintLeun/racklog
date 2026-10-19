@@ -313,7 +313,7 @@
     ],
     "description": {
       "short": "Estructura almacén, máximo espacio. Integración edificio, alta eficiencia. Almacenaje avanzado y seguro.",
-      "long": "El <b>Rack Autoportante</b> de Racklog es una solución avanzada que integra el almacenamiento con la estructura de la bodega. Este sistema innovador sirve como <b>estantería industrial</b> y edificación, optimizando cada área del almacén. Diseñado para cargas convencionales y <b>almacenes automatizados</b>, el Rack Autoportante maximiza el espacio y reduce costos de construcción."
+      "long": "El Rack Autoportante de Racklog es una solución avanzada que integra el almacenamiento con la estructura de la bodega. Este sistema innovador sirve como estantería industrial y edificación, optimizando cada área del almacén. Diseñado para cargas convencionales y almacenes automatizados, el Rack Autoportante maximiza el espacio y reduce costos de construcción."
     },
     "technicalSpecs": [],
     "infoCards": [
@@ -449,11 +449,10 @@
       "width": ""
     },
     "perks": [
-      "Integración total con la estructura del edificio.",
-      "Versatilidad de Carga.",
-      "Solución integral en una sola fase, ahorrando tiempo y costos.",
-      "Menor costo de implementación al integrar estructura y almacenamiento."
-
+      "Rotación FIFO: el primer pallet en entrar es el primero en salir.",
+      "Los pallets avanzan solos por gravedad sobre rodillos.",
+      "Carga y retiro por pasillos distintos, sin cruces de grúas.",
+      "Alta densidad: elimina pasillos intermedios entre racks."
     ],
     "description": {
       "short": "Almacenaje FIFO por gravedad, acceso posterior y salida frontal. Optimiza rotación, sin ingreso grúa.",

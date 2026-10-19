@@ -332,6 +332,12 @@
                 <p v-if="errors.privacy" :id="`${uid}-privacy-error`" class="field-error pl-8">{{ errors.privacy }}</p>
               </div>
 
+              <!-- Archivos que no se pudieron adjuntar: que el cliente lo sepa antes de enviar -->
+              <div v-if="rejectedFiles.length" class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900" role="status">
+                <p class="font-semibold">{{ rejectedFiles.length === 1 ? 'Este archivo no se adjuntó:' : 'Estos archivos no se adjuntaron:' }} {{ rejectedFiles.map((r) => r.name).join(', ') }}</p>
+                <p class="mt-1">Puedes enviar el formulario igual: avisaremos al ejecutivo y podrás mandarlo respondiendo el correo de confirmación.</p>
+              </div>
+
               <!-- Enviar -->
               <button
                 type="submit"
@@ -453,6 +459,16 @@ const fileInputRef = ref<HTMLInputElement | null>(null);
 const attachments = ref<Attachment[]>([]);
 const isProcessingFiles = ref(false);
 let attachmentSeq = 0;
+// Archivos que el cliente intento adjuntar y no se pudo: se avisa junto a Enviar y el vendedor
+// lo ve en el mensaje (asi puede pedirlo por correo)
+const rejectedFiles = ref<{ name: string; reason: string }[]>([]);
+
+function rejectFile(file: File, reason: string, message: string) {
+  errors.attachments = message;
+  if (!rejectedFiles.value.some((r) => r.name === file.name)) rejectedFiles.value.push({ name: file.name, reason });
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event: 'attachment_rejected', event_category: 'Formulario', reason, file_type: file.type || file.name.split('.').pop(), file_mb: +(file.size / 1048576).toFixed(1) });
+}
 
 // Form submission state
 const isSubmitting = ref(false);
@@ -568,21 +584,22 @@ async function addFiles(files: File[]) {
         break;
       }
       if (!ACCEPTED_TYPES.includes(file.type)) {
-        errors.attachments = `"${file.name}" no es un formato permitido. Usa JPG, PNG o PDF.`;
+        rejectFile(file, 'formato', `"${file.name}" no es un formato permitido. Usa JPG, PNG o PDF.`);
         continue;
       }
       let processed: { blob: Blob; name: string; type: string };
       try {
         processed = file.type.startsWith('image/') ? await compressImage(file) : { blob: file, name: file.name, type: file.type };
       } catch {
-        errors.attachments = `No se pudo leer "${file.name}".`;
+        rejectFile(file, 'ilegible', `No se pudo leer "${file.name}".`);
         continue;
       }
       const used = attachments.value.reduce((sum, a) => sum + a.size, 0);
       if (used + processed.blob.size > MAX_TOTAL_BYTES) {
-        errors.attachments = `"${file.name}" supera el límite de ${MAX_TOTAL_MB} MB en total. Envíalo a contacto@racklog.cl o por WhatsApp.`;
+        rejectFile(file, 'tamano', `"${file.name}" supera el límite de ${MAX_TOTAL_MB} MB en total. Envíalo a contacto@racklog.cl o por WhatsApp.`);
         continue;
       }
+      rejectedFiles.value = rejectedFiles.value.filter((r) => r.name !== file.name && r.name !== processed.name);
       attachments.value.push({
         id: ++attachmentSeq,
         name: processed.name,
@@ -624,6 +641,16 @@ function removeAttachment(id: number) {
 function clearAttachments() {
   attachments.value.forEach((a) => a.previewUrl && URL.revokeObjectURL(a.previewUrl));
   attachments.value = [];
+  rejectedFiles.value = [];
+}
+
+// Nota para el vendedor con los archivos que no se pudieron adjuntar
+function rejectedNote() {
+  if (!rejectedFiles.value.length) return '';
+  const motivo = { formato: 'formato no permitido', tamano: `supera ${MAX_TOTAL_MB} MB`, ilegible: 'no se pudo leer' } as Record<string, string>;
+  return '\n\n[El cliente intentó adjuntar y no se pudo: '
+    + rejectedFiles.value.map((r) => `${r.name} (${motivo[r.reason] ?? r.reason})`).join('; ')
+    + '. Pídeselo por correo.]';
 }
 
 onBeforeUnmount(clearAttachments);
@@ -737,7 +764,7 @@ async function submitForm() {
           customerPhone: form.phone,
           customerCompany: form.company,
           customerRut: rut,
-          customerComments: form.message,
+          customerComments: form.message + rejectedNote(),
           products: [{
             name: props.quoteItem.name,
             quantity: 1,
@@ -754,7 +781,7 @@ async function submitForm() {
           company: form.company,
           rut,
           subject: form.subject,
-          message: form.message,
+          message: form.message + rejectedNote(),
           serviceInfo: props.serviceInfo
         };
 
