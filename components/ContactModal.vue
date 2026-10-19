@@ -193,7 +193,11 @@
 
                 <!-- Telefono -->
                 <div>
-                  <label :for="`${uid}-phone`" class="field-label">Teléfono <span class="font-normal text-neutral-500">(opcional)</span></label>
+                  <label :for="`${uid}-phone`" class="field-label">
+                    Teléfono
+                    <span v-if="requireProject" class="text-orange-700" aria-hidden="true">*</span>
+                    <span v-else class="font-normal text-neutral-500">(opcional)</span>
+                  </label>
                   <div class="field-wrap">
                     <svg class="field-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -206,10 +210,51 @@
                       autocomplete="tel"
                       inputmode="tel"
                       placeholder="+56 9 1234 5678"
-                      class="field-input"
+                      :required="requireProject"
+                      :aria-invalid="errors.phone ? 'true' : 'false'"
+                      :aria-describedby="errors.phone ? `${uid}-phone-error` : undefined"
+                      :class="['field-input', { 'field-input--error': errors.phone }]"
                     >
                   </div>
+                  <p v-if="errors.phone" :id="`${uid}-phone-error`" class="field-error">{{ errors.phone }}</p>
                 </div>
+
+                <!-- Proyecto (planificador): donde y para cuando -->
+                <template v-if="requireProject">
+                  <div>
+                    <label :for="`${uid}-comuna`" class="field-label">Comuna de instalación <span class="text-orange-700" aria-hidden="true">*</span></label>
+                    <input
+                      :id="`${uid}-comuna`"
+                      v-model="form.comuna"
+                      type="text"
+                      name="comuna"
+                      autocomplete="address-level2"
+                      placeholder="Quilicura"
+                      maxlength="60"
+                      required
+                      :aria-invalid="errors.comuna ? 'true' : 'false'"
+                      :aria-describedby="errors.comuna ? `${uid}-comuna-error` : undefined"
+                      :class="['field-input !pl-3.5', { 'field-input--error': errors.comuna }]"
+                    >
+                    <p v-if="errors.comuna" :id="`${uid}-comuna-error`" class="field-error">{{ errors.comuna }}</p>
+                  </div>
+                  <div>
+                    <label :for="`${uid}-plazo`" class="field-label">¿Para cuándo lo necesitas? <span class="text-orange-700" aria-hidden="true">*</span></label>
+                    <select
+                      :id="`${uid}-plazo`"
+                      v-model="form.plazo"
+                      name="plazo"
+                      required
+                      :aria-invalid="errors.plazo ? 'true' : 'false'"
+                      :aria-describedby="errors.plazo ? `${uid}-plazo-error` : undefined"
+                      :class="['field-input !pl-3.5', { 'field-input--error': errors.plazo }]"
+                    >
+                      <option value="" disabled>Elige una opción</option>
+                      <option v-for="p in PLAZOS" :key="p" :value="p">{{ p }}</option>
+                    </select>
+                    <p v-if="errors.plazo" :id="`${uid}-plazo-error`" class="field-error">{{ errors.plazo }}</p>
+                  </div>
+                </template>
 
                 <!-- Asunto (con producto adjunto ya se sabe que es) -->
                 <div v-if="!quoteItem">
@@ -403,8 +448,15 @@ const props = defineProps({
   initialFiles: {
     type: Array as PropType<File[]>,
     default: () => []
+  },
+  // Lead de proyecto (planificador): telefono, comuna y fecha obligatorios para cotizar sin llamar
+  requireProject: {
+    type: Boolean,
+    default: false
   }
 });
+
+const PLAZOS = ['Lo antes posible', 'En 1 a 3 meses', 'En 3 a 6 meses', 'En más de 6 meses o evaluando'];
 
 const emit = defineEmits(['close']);
 
@@ -420,6 +472,8 @@ const form = reactive({
   email: '',
   company: '',
   rut: '',
+  comuna: '',
+  plazo: '',
   subject: '',
   message: '',
   privacy: false
@@ -431,6 +485,9 @@ const errors = reactive({
   email: '',
   company: '',
   rut: '',
+  phone: '',
+  comuna: '',
+  plazo: '',
   subject: '',
   message: '',
   privacy: '',
@@ -524,6 +581,8 @@ watch(() => props.isVisible, (newVal) => {
         email: '',
         company: '',
         rut: '',
+        comuna: '',
+        plazo: '',
         subject: tempSubject,
         message: '',
         privacy: false
@@ -694,6 +753,21 @@ function validateForm() {
     isValid = false;
   }
 
+  if (props.requireProject) {
+    if ((form.phone.match(/\d/g) || []).length < 8) {
+      errors.phone = 'Ingresa un teléfono para coordinar la visita';
+      isValid = false;
+    }
+    if (form.comuna.trim().length < 3) {
+      errors.comuna = 'Indica la comuna donde va la bodega';
+      isValid = false;
+    }
+    if (!form.plazo) {
+      errors.plazo = 'Elige para cuándo lo necesitas';
+      isValid = false;
+    }
+  }
+
   // Validate RUT
   if (!form.rut.trim()) {
     errors.rut = 'El RUT es requerido';
@@ -770,7 +844,10 @@ async function submitForm() {
             quantity: 1,
             price: 0,
             quoteOnly: true,
-            config: props.quoteItem.config ?? {}
+            config: {
+              ...(props.quoteItem.config ?? {}),
+              ...(props.requireProject ? { 'Comuna de instalación': form.comuna.trim(), 'Fecha requerida': form.plazo } : {})
+            }
           }],
           cartTotal: 0
         }
@@ -815,6 +892,7 @@ async function submitForm() {
       funnel_step: props.quoteItem ? 'quote_form_sent' : 'contact_form_sent',
       lead_type: leadType,
       product: props.quoteItem?.name,
+      ...props.quoteItem?.analytics,
       lead_reference: data.reference,
       currency: 'CLP',
       value: 0
@@ -828,6 +906,8 @@ async function submitForm() {
       email: '',
       company: '',
       rut: '',
+      comuna: '',
+      plazo: '',
       subject: tempSubject,
       message: '',
       privacy: false

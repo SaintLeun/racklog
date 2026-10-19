@@ -36,9 +36,20 @@
                   @click="cambiarForma(op.v)"
                 >{{ op.t }}</button>
               </div>
-              <div class="mt-4 grid grid-cols-2 gap-3">
+              <!-- Forma libre ya cerrada: las medidas reales del contorno (las mismas que van en la cotizacion) -->
+              <dl v-if="bodega.forma && !dibujando" class="mt-4 grid grid-cols-2 gap-3">
+                <div class="rounded-xl bg-neutral-50 px-3 py-2 ring-1 ring-neutral-200">
+                  <dt class="text-xs font-medium text-neutral-500">Ancho total</dt>
+                  <dd class="text-lg font-semibold tabular-nums text-neutral-900">{{ medidasContorno.ancho.toLocaleString('es-CL') }} m</dd>
+                </div>
+                <div class="rounded-xl bg-neutral-50 px-3 py-2 ring-1 ring-neutral-200">
+                  <dt class="text-xs font-medium text-neutral-500">Largo total</dt>
+                  <dd class="text-lg font-semibold tabular-nums text-neutral-900">{{ medidasContorno.largo.toLocaleString('es-CL') }} m</dd>
+                </div>
+              </dl>
+              <div v-else class="mt-4 grid grid-cols-2 gap-3">
                 <label class="block">
-                  <span class="mb-1.5 block text-sm font-medium text-neutral-700">Ancho (m)</span>
+                  <span class="mb-1.5 block text-sm font-medium text-neutral-700">{{ dibujando ? 'Área de dibujo: ancho (m)' : 'Ancho (m)' }}</span>
                   <input
                     v-model.number="bodegaEntrada.ancho"
                     type="number" inputmode="decimal" :min="LIMITES.bodega.min" :max="LIMITES.bodega.max" step="0.5"
@@ -46,7 +57,7 @@
                   >
                 </label>
                 <label class="block">
-                  <span class="mb-1.5 block text-sm font-medium text-neutral-700">Largo (m)</span>
+                  <span class="mb-1.5 block text-sm font-medium text-neutral-700">{{ dibujando ? 'Área de dibujo: largo (m)' : 'Largo (m)' }}</span>
                   <input
                     v-model.number="bodegaEntrada.largo"
                     type="number" inputmode="decimal" :min="LIMITES.bodega.min" :max="LIMITES.bodega.max" step="0.5"
@@ -60,7 +71,7 @@
                     Haz clic en cada esquina de tu bodega sobre la cuadrícula ({{ puntosDibujo.length }} {{ puntosDibujo.length === 1 ? 'esquina' : 'esquinas' }}). Para cerrar, haz clic en el primer punto (naranja).
                   </template>
                   <template v-else>
-                    Ancho y largo son el área de dibujo. Arrastra las esquinas naranjas para ajustar la forma.
+                    Arrastra las esquinas naranjas para ajustar la forma, o vuelve a dibujar el contorno.
                   </template>
                 </p>
                 <div v-if="dibujando" class="mt-3 grid grid-cols-3 gap-2">
@@ -206,6 +217,7 @@
       title="Cotiza tu diseño"
       :quote-item="itemCotizacion"
       :initial-files="archivosPlano"
+      require-project
       @close="formularioAbierto = false"
     />
   </div>
@@ -214,7 +226,7 @@
 <script lang="ts" setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue';
 import {
-  LIMITES, NOMBRE, TIPOS, dentroDeBodega, conflictos, lugarLibre, totales, resumenCotizacion, normalizar, contorno, area,
+  LIMITES, NOMBRE, TIPOS, dentroDeBodega, conflictos, lugarLibre, totales, resumenCotizacion, normalizar, contorno, area, caja,
 } from '~/lib/rack3d/planificador.js';
 import type { RackPlano, Punto } from '~/components/planificador/Plano2D.vue';
 import type { QuoteItem } from '~/components/QuoteModal/ProductConfig';
@@ -238,6 +250,11 @@ const seleccion = ref<string | null>(null);
 const vista = ref<'2d' | '3d'>('2d');
 const planoRef = ref<{ $el: SVGSVGElement } | null>(null);
 
+// Caja del contorno dibujado: es lo que se informa en la cotizacion
+const medidasContorno = computed(() => {
+  const c = caja(contorno(bodega));
+  return { ancho: +(c.x1 - c.x0).toFixed(1), largo: +(c.y1 - c.y0).toFixed(1) };
+});
 const malos = computed(() => conflictos(racks.value, bodega) as Set<string>);
 const total = computed(() => totales(racks.value));
 const indiceSel = computed(() => racks.value.findIndex((r) => r.id === seleccion.value));
@@ -354,7 +371,18 @@ function reiniciar() {
 const formularioAbierto = ref(false);
 const preparando = ref(false);
 const archivosPlano = ref<File[]>([]);
-const itemCotizacion = computed<QuoteItem>(() => ({ name: 'Diseño del planificador de bodega', config: resumenCotizacion(bodega, racks.value) }));
+const itemCotizacion = computed<QuoteItem>(() => ({
+  name: 'Diseño del planificador de bodega',
+  config: resumenCotizacion(bodega, racks.value),
+  analytics: {
+    lead_origin: 'planificador',
+    sistemas: [...new Set(racks.value.map((r) => r.tipo))].join(','),
+    m2: Math.round(area(contorno(bodega))),
+    posiciones: total.value.pallets,
+    bandejas: total.value.bandejas,
+    racks: racks.value.length,
+  },
+}));
 
 async function imagenPlano(): Promise<File | null> {
   const svg = planoRef.value?.$el;

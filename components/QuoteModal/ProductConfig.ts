@@ -35,4 +35,6 @@ export type ProductConfig = AnguloRanuradoConfig | RackSelectivoConfig | DriveIn
 export interface QuoteItem {
     name: string;
     config?: Record<string, string | number>;
+    // Parametros extra del evento generate_lead (p. ej. el planificador: sistemas, m2, posiciones)
+    analytics?: Record<string, string | number>;
 }

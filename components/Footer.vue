@@ -62,7 +62,7 @@
           <ul class="mt-5 space-y-1">
             <li><NuxtLink to="/nosotros" class="footer-link">Nosotros</NuxtLink></li>
             <li><NuxtLink to="/productos" class="footer-link">Catálogo de productos</NuxtLink></li>
-            <li><a href="#" @click.prevent="openContactModal" class="footer-link">Contacto</a></li>
+            <li><button type="button" class="footer-link" @click="openContactModal">Contacto</button></li>
             <li><NuxtLink to="/blog" class="footer-link">Proyectos recientes</NuxtLink></li>
             <li><NuxtLink to="/planificador" class="footer-link">Planificador 3D</NuxtLink></li>
           </ul>

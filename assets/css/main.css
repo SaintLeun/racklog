@@ -204,6 +204,12 @@
   outline-offset: 2px;
 }
 
+/* Racks del plano: el SVG mide en metros y esos 2px se verian como un marco de ~2 m.
+   Plano2D.vue dibuja su propio anillo de foco, fino y del tamano del rack */
+svg .plan-rack:focus-visible {
+  outline: none !important;
+}
+
 /* Un dialogo recibe el foco al abrirse solo para anunciarlo; sin anillo */
 [role="dialog"][tabindex="-1"]:focus-visible {
   outline: none !important;

@@ -57,7 +57,7 @@
       <g
         v-for="(r, i) in racks"
         :key="r.id"
-        class="cursor-move outline-none"
+        class="plan-rack cursor-move outline-none"
         style="touch-action: none"
         tabindex="0"
         role="button"
@@ -65,7 +65,8 @@
         :aria-pressed="seleccion === r.id"
         @pointerdown.stop="iniciarArrastre($event, { tipo: 'rack', id: r.id, x: r.x, y: r.y })"
         @keydown="teclado($event, r)"
-        @focus="emit('seleccionar', r.id)"
+        @focus="enfocar($event, r.id)"
+        @blur="focoTeclado = null"
       >
         <template v-for="f in [figura(r)]" :key="f.clave">
           <rect
@@ -92,6 +93,12 @@
             :font-size="Math.min(0.6, Math.min(f.ancho, f.alto) * 0.55)"
             font-weight="700" font-family="Inter, Arial, sans-serif" fill="#1f2937" pointer-events="none"
           >{{ i + 1 }}</text>
+          <!-- Foco de teclado: borde de 2 px de pantalla, sin importar el zoom del plano -->
+          <rect
+            v-if="focoTeclado === r.id"
+            :x="f.x0 - 0.12" :y="f.y0 - 0.12" :width="f.ancho + 0.24" :height="f.alto + 0.24"
+            fill="none" stroke="#ea580c" stroke-width="2" vector-effect="non-scaling-stroke" pointer-events="none"
+          />
         </template>
       </g>
 
@@ -156,6 +163,13 @@ const COLOR = {
 const uid = useId();
 const svgRef = ref<SVGSVGElement | null>(null);
 const cursor = ref<Punto | null>(null);
+// Rack con foco de teclado (no de clic): lleva el anillo naranjo
+const focoTeclado = ref<string | null>(null);
+
+function enfocar(e: FocusEvent, id: string) {
+  emit('seleccionar', id);
+  focoTeclado.value = (e.target as Element).matches(':focus-visible') ? id : null;
+}
 const puntosDibujo = computed(() => props.puntosDibujo ?? []);
 
 // Area visible: al dibujar, el lienzo (ancho × largo); si no, la caja del contorno
@@ -237,6 +251,7 @@ function soltar() {
 }
 
 function teclado(e: KeyboardEvent, r: RackPlano) {
+  focoTeclado.value = r.id;
   const d = e.shiftKey ? 1 : PASO;
   const mov: Record<string, [number, number]> = { ArrowLeft: [-d, 0], ArrowRight: [d, 0], ArrowUp: [0, -d], ArrowDown: [0, d] };
   if (mov[e.key]) {
