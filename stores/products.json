@@ -252,31 +252,30 @@
       "width": ""
     },
     "perks": [
-      "Integración total con la estructura del edificio.",
-      "Versatilidad de Carga.",
-      "Solución integral en una sola fase, ahorrando tiempo y costos.",
-      "Menor costo de implementación al integrar estructura y almacenamiento."
-
+      "Máxima densidad: elimina los pasillos entre racks.",
+      "Varios pallets en profundidad por calle y nivel.",
+      "Ideal para productos homogéneos con muchos pallets por referencia.",
+      "Muy eficiente en cámaras de frío, donde cada metro cúbico cuesta."
     ],
     "description": {
-      "short": "Almacenaje FIFO por gravedad, acceso posterior y salida frontal. Optimiza rotación, sin ingreso grúa.",
-      "long": "El Rack Dinámico de Racklog es una solución de almacenamiento avanzada para pallets, que opera bajo el principio FIFO (First In, First Out). Este sistema innovador permite la entrada de pallets por la parte posterior, desplazándose por gravedad mediante polines o ruedas, y su salida por la parte frontal. Optimiza la rotación y eficiencia del almacén."
+      "short": "Almacenaje de alta densidad: la grúa entra a la calle y deja los pallets en profundidad, sin pasillos entre racks.",
+      "long": "El Rack Drive In de Racklog es un sistema de almacenamiento compacto para pallets. Las estructuras forman calles por donde la grúa horquilla entra y deposita los pallets sobre carriles laterales, uno detrás de otro y en varios niveles. Al eliminar los pasillos entre racks, aprovecha al máximo la superficie y la altura de la bodega."
     },
     "technicalSpecs": [],
     "infoCards": [
       {
         "title": "¿Cómo funciona?",
-        "description": "Utiliza la gravedad para mover los pallets a lo largo de carriles con polines o ruedas. Los pallets se cargan por la parte posterior y se desplazan automáticamente hacia el frente, donde se retiran. Este sistema asegura que los productos más antiguos salgan primero, garantizando una gestión de inventario óptima.",
+        "description": "Cada calle tiene carriles a ambos lados donde se apoyan los pallets. La grúa entra a la calle, deja el pallet en el fondo y va llenando hacia la entrada. Con una sola entrada funciona como LIFO (el último pallet en entrar es el primero en salir); con entrada por ambos lados (drive-through) puede funcionar como FIFO.",
         "perks": []
       },
       {
         "title": "Usos",
-        "description": "El Rack Dinámico de Racklog es ideal para:",
+        "description": "El Rack Drive In de Racklog es ideal para:",
         "perks": [
-          "Almacenes de productos perecederos.",
-          "Centros de distribución de alta rotación.",
-          "Industrias con gestión de inventario FIFO.",
-          "Almacenes con espacio limitado que requieren alta densidad."
+          "Cámaras de frío y congelado.",
+          "Productos de temporada o con poca rotación.",
+          "Bodegas con muchos pallets de una misma referencia.",
+          "Espacios donde se necesita la mayor cantidad de pallets por metro cuadrado."
         ]
       }
     ]
