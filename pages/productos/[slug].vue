@@ -35,6 +35,22 @@
               </svg>
               Modelo 3D Interactivo
             </p>
+
+            <!-- Invitacion al planificador: con el rack ya puesto si el planificador lo tiene -->
+            <NuxtLink
+              :to="rackPlanificador ? `/planificador?rack=${rackPlanificador}` : '/planificador'"
+              class="group mt-5 flex items-center gap-4 rounded-2xl bg-brand-50 p-4 ring-1 ring-brand-100 transition hover:ring-brand-300"
+              @click="marcarPlanificador"
+            >
+              <img src="/assets/images/planificador-3d.webp" alt="" width="832" height="624" loading="lazy" decoding="async" class="h-16 w-20 flex-shrink-0 rounded-lg bg-white object-cover ring-1 ring-brand-100">
+              <span class="min-w-0 flex-1">
+                <span class="block font-semibold text-neutral-900">{{ rackPlanificador ? '¿Cómo se vería en tu bodega?' : 'Diseña tu bodega en 3D' }}</span>
+                <span class="block text-sm text-neutral-600">{{ rackPlanificador ? 'Ponlo en el plano de tu bodega y míralo en 3D. Gratis y sin registro.' : 'Dibuja tu bodega, agrega racks y míralos en 3D. Gratis.' }}</span>
+              </span>
+              <svg class="h-5 w-5 flex-shrink-0 text-brand-700 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </NuxtLink>
           </div>
 
           <!-- Informacion del producto -->
@@ -227,6 +243,15 @@
   product.value = Object.values(productStore.products).find(p => p.slug === route.params.slug) ?? null;
   if (!product.value) {
     throw createError({ statusCode: 404, statusMessage: 'Producto no encontrado', fatal: true });
+  }
+
+  // Productos que el planificador puede dibujar
+  const RACK_PLANIFICADOR = { 'rack-selectivo': 'RS', 'rack-drive-in': 'DI', 'angulo-ranurado': 'AR' };
+  const rackPlanificador = computed(() => RACK_PLANIFICADOR[product.value?.slug] ?? null);
+
+  function marcarPlanificador() {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({ event: 'planner_promo_click', event_category: 'Planificador', ubicacion: `producto_${product.value.slug}`, rack_type: rackPlanificador.value });
   }
 
   function openQuoteModal(product) {

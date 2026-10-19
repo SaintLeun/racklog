@@ -225,6 +225,8 @@ useSeoMeta({
 });
 
 const GUARDADO = 'racklog-planificador-v1';
+const route = useRoute();
+const router = useRouter();
 
 const bodega = reactive<{ ancho: number; largo: number; forma: Punto[] | null }>({ ancho: 20, largo: 30, forma: null });
 const bodegaEntrada = reactive({ ancho: bodega.ancho, largo: bodega.largo });
@@ -416,7 +418,13 @@ onMounted(() => {
       racks.value = g.racks.filter((r: RackPlano) => r && r.tipo in TIPOS).map((r: RackPlano) => dentroDeBodega(normalizar(r), bodega) as RackPlano);
     }
   } catch { /* sin almacenamiento: se empieza vacio */ }
-  marcar('planner_open', {});
+  // Desde la ficha de un producto (?rack=RS): ese rack ya puesto en la bodega
+  const pedido = route.query.rack;
+  if (typeof pedido === 'string' && pedido in TIPOS) {
+    agregar(pedido as RackPlano['tipo']);
+    router.replace({ query: {} });   // al recargar no se vuelve a agregar
+  }
+  marcar('planner_open', { desde_producto: typeof pedido === 'string' ? pedido : '' });
 });
 
 watch([racks, () => ({ ...bodega })], () => {

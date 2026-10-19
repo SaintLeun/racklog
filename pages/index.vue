@@ -1,5 +1,6 @@
 <template>
   <HeroVariantNew />
+  <PlanificadorPromo />
   <LandingCards />
   <Cta />
   <ProductsSection />

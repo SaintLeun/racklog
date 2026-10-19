@@ -342,7 +342,8 @@ onMounted(() => {
   }
 
   setTimeout(() => {
-    if (consentState.value === 'unset' || isContactModalOpen.value) return;
+    // En el planificador ya hay un boton para cotizar; abrirlo encima interrumpe el diseno
+    if (consentState.value === 'unset' || isContactModalOpen.value || route.path.startsWith('/planificador')) return;
     openContactModal();
     try {
       sessionStorage.setItem('contactModalShown', 'true');

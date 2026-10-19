@@ -31,6 +31,17 @@
       <!-- Contenido principal -->
       <div class="flex flex-1 items-center py-20 sm:py-24 lg:py-28">
         <div class="max-w-3xl">
+          <NuxtLink
+            to="/planificador"
+            class="group mb-6 inline-flex items-center gap-2.5 rounded-full bg-white/10 py-1.5 pl-1.5 pr-4 text-sm font-medium text-neutral-100 ring-1 ring-white/15 ring-inset backdrop-blur transition hover:bg-white/15"
+            @click="marcarPlanificador"
+          >
+            <span class="rounded-full bg-brand-700 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide text-white">Nuevo</span>
+            Diseña tu bodega en 3D, gratis
+            <svg class="h-4 w-4 text-brand-300 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </NuxtLink>
           <h1 class="text-4xl font-bold leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl" style="letter-spacing: -0.035em;">
             Transformamos tu espacio en <span class="text-brand-400">eficiencia</span>
           </h1>
@@ -176,6 +187,11 @@ onMounted(() => {
     window.addEventListener('load', schedule, { once: true });
   }
 });
+
+function marcarPlanificador() {
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event: 'planner_promo_click', event_category: 'Planificador', ubicacion: 'portada_aviso' });
+}
 
 function openContactModal() {
   isContactModalOpen.value = true;
