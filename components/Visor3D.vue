@@ -118,6 +118,9 @@ onMounted(async () => {
 const claveModelo = () => JSON.stringify([props.producto, props.config, props.bodega, props.racks]);
 watch(claveModelo, construirModelo);
 
+// El planificador la usa para poner la vista 3D en el PDF
+defineExpose({ captura: () => (visor && estado.value === 'listo' ? visor.captura() : null) });
+
 onBeforeUnmount(() => {
   visor?.destruir();
   visor = null;

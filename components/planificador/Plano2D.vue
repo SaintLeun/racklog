@@ -3,7 +3,7 @@
     ref="svgRef"
     class="h-full w-full select-none"
     :class="dibujando ? 'cursor-crosshair' : ''"
-    :viewBox="`${marco.x0 - MARGEN} ${marco.y0 - MARGEN} ${marco.x1 - marco.x0 + MARGEN * 2} ${marco.y1 - marco.y0 + MARGEN * 2}`"
+    :viewBox="`${marco.x0 - MARGEN * k} ${marco.y0 - MARGEN * k} ${marco.x1 - marco.x0 + MARGEN * k * 2} ${marco.y1 - marco.y0 + MARGEN * k * 2}`"
     preserveAspectRatio="xMidYMid meet"
     role="application"
     aria-roledescription="plano de bodega"
@@ -44,6 +44,12 @@
         @pointerdown.stop="i === 0 && puntosDibujo.length >= 3 ? emit('cerrar-contorno') : clicDibujo($event)"
       />
       <circle v-if="cursor" :cx="cursor.x" :cy="cursor.y" r="0.18" fill="#ea580c" pointer-events="none" />
+      <!-- Largo de cada muro mientras se dibuja (el ultimo hasta el cursor) -->
+      <text
+        v-for="(m, i) in murosDibujo" :key="`md${i}`"
+        :x="m.tx" :y="m.ty" :transform="`rotate(${m.ang} ${m.tx} ${m.ty})`"
+        v-bind="TEXTO_COTA" text-anchor="middle" dominant-baseline="central"
+      >{{ formatoM(m.largo) }} m</text>
     </template>
 
     <template v-else>
@@ -102,6 +108,33 @@
         </template>
       </g>
 
+      <!-- Racks mas altos que la altura libre: borde ambar punteado -->
+      <rect
+        v-for="r in racks.filter((q) => altos?.has(q.id) && !conflictos.has(q.id))" :key="`alto-${r.id}`"
+        v-bind="rectDe(r)" fill="none" stroke="#b45309" stroke-width="0.14" stroke-dasharray="0.35 0.2" pointer-events="none"
+      />
+
+      <!-- Largo de cada muro -->
+      <text
+        v-for="(m, i) in muros" :key="`m${i}`"
+        :x="m.tx" :y="m.ty" :transform="`rotate(${m.ang} ${m.tx} ${m.ty})`"
+        v-bind="TEXTO_COTA" :font-size="0.42 * k" fill="#0f172a" text-anchor="middle" dominant-baseline="central"
+      >{{ formatoM(m.largo) }} m</text>
+
+      <!-- Cotas: medidas del rack y distancia a muros o al rack vecino (pasillo) -->
+      <g v-for="(c, i) in cotas" :key="`c${i}`" pointer-events="none">
+        <line :x1="c.x1" :y1="c.y1" :x2="c.x2" :y2="c.y2" :stroke="c.a === 'rack' ? '#0f766e' : '#64748b'" stroke-width="0.04" stroke-dasharray="0.18 0.1" />
+        <text
+          v-bind="TEXTO_COTA" :fill="c.a === 'rack' ? '#0f766e' : '#334155'" dominant-baseline="central"
+          :x="posCota(c).x" :y="posCota(c).y" :transform="posCota(c).rot" :text-anchor="posCota(c).anchor"
+        >{{ c.a === 'rack' ? 'pasillo ' : '' }}{{ formatoM(c.valor) }} m</text>
+      </g>
+      <!-- Medidas del rack en planta, sobre su esquina (lejos de las cotas, que salen del centro de cada lado) -->
+      <text
+        v-for="(d, i) in medidasRacks" :key="`d${i}`"
+        :x="d.x0" :y="d.y0 - 0.3 * k" v-bind="TEXTO_COTA" fill="#0f172a" text-anchor="start"
+      >{{ formatoM(d.ancho) }} × {{ formatoM(d.alto) }} m</text>
+
       <!-- Esquinas de una bodega de forma libre: se arrastran para ajustarla -->
       <template v-if="editarContorno">
         <circle
@@ -119,7 +152,7 @@
 
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
-import { rectangulo, medidasRack, describir, contorno, caja, PASO, PASO_MURO } from '~/lib/rack3d/planificador.js';
+import { rectangulo, medidasRack, describir, contorno, caja, cotasRack, formatoM, PASO, PASO_MURO } from '~/lib/rack3d/planificador.js';
 
 export interface RackPlano {
   id: string;
@@ -142,6 +175,10 @@ const props = defineProps<{
   dibujando?: boolean;
   puntosDibujo?: Punto[];
   editarContorno?: boolean;
+  // Racks mas altos que la altura libre (borde ambar)
+  altos?: Set<string>;
+  // Cotas de todos los racks (para el plano que se exporta); si no, solo las del seleccionado
+  cotasTodas?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -154,7 +191,7 @@ const emit = defineEmits<{
   'mover-vertice': [i: number, p: Punto];
 }>();
 
-const MARGEN = 1;
+const MARGEN = 1.8;   // deja lugar a las medidas de los muros
 const COLOR = {
   RS: { fondo: '#ffedd5', borde: '#ea580c', linea: '#fb923c' },
   DI: { fondo: '#fef3c7', borde: '#d97706', linea: '#f59e0b' },
@@ -178,6 +215,64 @@ const marco = computed(() => {
   if (!props.dibujando) return c;
   return { x0: 0, y0: 0, x1: props.bodega.ancho, y1: props.bodega.largo };
 });
+// Medida de cada lado de un poligono, escrita por fuera y siempre legible (sin quedar de cabeza)
+function medidasLados(pts: Punto[], cerrado: boolean) {
+  const n = pts.length, cx = pts.reduce((t, p) => t + p.x, 0) / n, cy = pts.reduce((t, p) => t + p.y, 0) / n;
+  const out = [];
+  for (let i = 0; i < (cerrado ? n : n - 1); i++) {
+    const a = pts[i], b = pts[(i + 1) % n];
+    const largo = Math.hypot(b.x - a.x, b.y - a.y);
+    if (largo < 0.3) continue;
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    let nx = -(b.y - a.y) / largo, ny = (b.x - a.x) / largo;
+    if (nx * (mx - cx) + ny * (my - cy) < 0) { nx = -nx; ny = -ny; }   // hacia afuera
+    let ang = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+    if (ang > 90) ang -= 180; else if (ang < -90) ang += 180;
+    out.push({ largo, tx: mx + nx * 0.75 * k.value, ty: my + ny * 0.75 * k.value, ang: +ang.toFixed(2) });
+  }
+  return out;
+}
+const muros = computed(() => medidasLados(contorno(props.bodega), true));
+const murosDibujo = computed(() => {
+  const pts = [...puntosDibujo.value, ...(cursor.value ? [cursor.value] : [])];
+  return pts.length >= 2 ? medidasLados(pts, false) : [];
+});
+
+// Estilo de las cotas como atributos (no CSS): el plano se exporta copiando el SVG
+// Crece con la bodega para que se lea igual en una de 10 m que en una de 80 m
+const k = computed(() => { const c = marco.value; return Math.max(1, Math.max(c.x1 - c.x0, c.y1 - c.y0) / 25); });
+const TEXTO_COTA = computed(() => ({
+  'font-size': +(0.36 * k.value).toFixed(3), 'font-weight': 600, 'font-family': 'Inter, Arial, sans-serif', fill: '#334155',
+  'paint-order': 'stroke', stroke: '#fff', 'stroke-width': +(0.12 * k.value).toFixed(3), 'stroke-linejoin': 'round', 'pointer-events': 'none',
+}));
+
+// Donde va el numero de una cota: al centro de la linea, o al costado si la linea es corta
+function posCota(c: { x1: number; y1: number; x2: number; y2: number; valor: number }) {
+  const mx = (c.x1 + c.x2) / 2, my = (c.y1 + c.y2) / 2, horizontal = c.y1 === c.y2;
+  const corta = c.valor < 2.6 * k.value;
+  if (corta) return horizontal ? { x: mx, y: my - 0.3 * k.value, rot: '', anchor: 'middle' } : { x: mx + 0.25 * k.value, y: my, rot: '', anchor: 'start' };
+  return { x: mx, y: my, rot: horizontal ? '' : `rotate(-90 ${mx} ${my})`, anchor: 'middle' };
+}
+
+const rectDe = (r: RackPlano) => { const p = rectangulo(r); return { x: p.x0, y: p.y0, width: p.ancho, height: p.alto }; };
+
+// Racks con cotas: el seleccionado o, al exportar, todos (sin repetir la misma cota entre vecinos)
+const conCotas = computed(() => (props.cotasTodas ? props.racks : props.racks.filter((r) => r.id === props.seleccion)));
+const cotas = computed(() => {
+  if (props.dibujando) return [];
+  const vistas = new Set<string>();
+  return conCotas.value.flatMap((r) => cotasRack(r, props.racks, props.bodega)).filter((c) => {
+    const k = [c.x1, c.y1, c.x2, c.y2].map((v) => v.toFixed(2)).sort().join();
+    if (vistas.has(k)) return false;
+    vistas.add(k);
+    return true;
+  });
+});
+const medidasRacks = computed(() => (props.dibujando ? [] : conCotas.value.map((r) => {
+  const p = rectangulo(r);
+  return { x0: p.x0, y0: p.y0, ancho: p.ancho, alto: p.alto, x: p.x0 + p.ancho / 2, y: p.y0 + p.alto / 2 };
+})));
+
 const trazo = computed(() => contorno(props.bodega).map((p, i) => `${i ? 'L' : 'M'}${p.x} ${p.y}`).join(' ') + ' Z');
 
 function figura(r: RackPlano) {
@@ -266,3 +361,4 @@ function teclado(e: KeyboardEvent, r: RackPlano) {
   }
 }
 </script>
+

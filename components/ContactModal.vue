@@ -37,12 +37,12 @@
                   </svg>
                 </span>
                 <div>
-                  <p class="text-xs font-semibold uppercase tracking-wider text-orange-700">Cotización sin compromiso</p>
+                  <p class="text-xs font-semibold uppercase tracking-wider text-orange-700">{{ encabezado?.etiqueta ?? 'Cotización sin compromiso' }}</p>
                   <h2 :id="`${uid}-title`" class="mt-1 text-2xl font-bold tracking-tight text-neutral-900">
-                    Solicita tu cotización
+                    {{ encabezado?.titulo ?? 'Solicita tu cotización' }}
                   </h2>
                   <p :id="`${uid}-desc`" class="mt-1.5 text-sm text-neutral-600">
-                    Te respondemos en menos de 24 horas con una propuesta a medida.
+                    {{ encabezado?.texto ?? 'Te respondemos en menos de 24 horas con una propuesta a medida.' }}
                   </p>
                 </div>
               </div>
@@ -449,6 +449,11 @@ const props = defineProps({
     type: Array as PropType<File[]>,
     default: () => []
   },
+  // Encabezado propio (p. ej. "Descarga tu plano" del planificador); sin el, el de cotizacion
+  encabezado: {
+    type: Object as PropType<{ etiqueta: string; titulo: string; texto: string } | null>,
+    default: null
+  },
   // Lead de proyecto (planificador): telefono, comuna y fecha obligatorios para cotizar sin llamar
   requireProject: {
     type: Boolean,
@@ -458,7 +463,8 @@ const props = defineProps({
 
 const PLAZOS = ['Lo antes posible', 'En 1 a 3 meses', 'En 3 a 6 meses', 'En más de 6 meses o evaluando'];
 
-const emit = defineEmits(['close']);
+// sent: envio exitoso (el planificador entrega el PDF del plano solo despues de esto)
+const emit = defineEmits(['close', 'sent']);
 
 // Ids unicos: el modal se monta en varios lugares de la misma pagina
 const uid = useId();
@@ -881,6 +887,7 @@ async function submitForm() {
     }
 
     formStatus.success = true;
+    emit('sent', { reference: data.reference || '', name: form.name.trim(), email: form.email.trim(), company: form.company.trim(), rut: formatRut(form.rut), comuna: form.comuna.trim() });
     formStatus.message = '¡Gracias! Tu mensaje ha sido enviado correctamente. Nos pondremos en contacto contigo pronto.';
 
     // Conversion para GTM (GA4 y Google Ads): un lead, no una compra
