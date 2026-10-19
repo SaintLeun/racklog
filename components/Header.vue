@@ -67,7 +67,6 @@
         <NuxtLink to="/" class="nav-link" @click="closeAllMenus">Inicio</NuxtLink>
         <NuxtLink to="/nosotros" class="nav-link" @click="closeAllMenus">Nosotros</NuxtLink>
         <NuxtLink to="/blog" class="nav-link" @click="closeAllMenus">Proyectos recientes</NuxtLink>
-        <NuxtLink to="/planificador" class="nav-link" @click="closeAllMenus">Planificador 3D</NuxtLink>
 
         <!-- Productos -->
         <div class="relative dropdown-container">
@@ -178,7 +177,14 @@
 
       <!-- Acciones -->
       <div class="flex items-center gap-1 sm:gap-2">
-        <button type="button" class="btn btn-primary btn-sm hidden sm:inline-flex min-h-10 px-4" @click="openContactModal">
+        <!-- El planificador va como boton, junto a Cotizar, para que se vea -->
+        <NuxtLink to="/planificador" class="btn btn-primary btn-sm hidden sm:inline-flex min-h-10 whitespace-nowrap px-4" @click="closeAllMenus">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+          </svg>
+          Planificador 3D
+        </NuxtLink>
+        <button type="button" class="btn btn-primary btn-sm hidden sm:inline-flex min-h-10 whitespace-nowrap px-4" @click="openContactModal">
           Cotizar
         </button>
 
@@ -212,7 +218,6 @@
           <li><NuxtLink to="/" @click="closeAllMenus" class="mobile-link">Inicio</NuxtLink></li>
           <li><NuxtLink to="/nosotros" @click="closeAllMenus" class="mobile-link">Nosotros</NuxtLink></li>
           <li><NuxtLink to="/blog" @click="closeAllMenus" class="mobile-link">Proyectos recientes</NuxtLink></li>
-          <li><NuxtLink to="/planificador" @click="closeAllMenus" class="mobile-link">Planificador 3D</NuxtLink></li>
 
           <!-- Productos -->
           <li>
@@ -284,7 +289,13 @@
           </li>
         </ul>
 
-        <div class="mt-4 grid border-t border-neutral-200 pt-4">
+        <div class="mt-4 grid grid-cols-2 gap-3 border-t border-neutral-200 pt-4">
+          <NuxtLink to="/planificador" class="btn btn-primary px-3" @click="closeAllMenus">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+            </svg>
+            Planificador 3D
+          </NuxtLink>
           <button type="button" class="btn btn-primary" @click="openContactModal">Cotizar</button>
         </div>
 
@@ -416,12 +427,18 @@ watch(
   align-items: center;
   gap: 0.25rem;
   min-height: 2.75rem;
-  padding: 0 0.875rem;
+  padding: 0 0.625rem;
   border-radius: 0.75rem;
   font-size: 0.9375rem;
+  white-space: nowrap;
   font-weight: 500;
   color: #404040;
   transition: color 0.15s ease, background-color 0.15s ease;
+}
+@media (min-width: 1280px) {
+  .nav-link {
+    padding: 0 0.875rem;
+  }
 }
 .nav-link:hover,
 .dropdown-container:hover > .nav-link,
