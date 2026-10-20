@@ -321,10 +321,10 @@
                     <div class="grid grid-cols-2 gap-3">
                       <label class="block text-sm font-medium text-neutral-700">
                         <span class="flex items-center">Sobrante de marco
-                          <PlanificadorAyuda titulo="sobrante de marco">Lo que sube el marco sobre la última viga. Mínimo 300 mm. Si el pallet de arriba es más alto, sobresale del marco.</PlanificadorAyuda>
+                          <PlanificadorAyuda titulo="sobrante de marco">Lo que sube el marco sobre la última viga: entre 300 y 1.000 mm. Si el pallet de arriba es más alto, sobresale del marco.</PlanificadorAyuda>
                         </span>
                         <select :value="rackSel.sobrante ?? 0.3" class="plan-input mt-1 !h-10" @change="cambiar({ sobrante: Number(($event.target as HTMLSelectElement).value) })">
-                          <option v-for="v in [0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.5]" :key="v" :value="v">{{ Math.round(v * 1000) }} mm</option>
+                          <option v-for="v in [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]" :key="v" :value="v">{{ Math.round(v * 1000) }} mm</option>
                         </select>
                       </label>
                       <div class="text-xs text-neutral-600">
