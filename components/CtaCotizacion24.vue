@@ -8,7 +8,7 @@
         </span>
         <div class="min-w-0 flex-1 leading-tight">
           <p class="text-sm font-semibold">{{ titulo }}</p>
-          <p class="truncate text-xs text-neutral-400">Nuestro equipo comercial te responde en 24 horas hábiles.</p>
+          <p class="truncate text-xs text-neutral-400">Nuestro equipo comercial te responde en máximo 24 horas.</p>
         </div>
         <button type="button" class="btn btn-primary h-11 flex-shrink-0 px-5 text-sm" :disabled="deshabilitado" @click="emit('cotizar')">
           {{ boton }}
@@ -20,7 +20,7 @@
 
 <script lang="ts" setup>
 withDefaults(defineProps<{ visible?: boolean; titulo?: string; boton?: string; deshabilitado?: boolean }>(), {
-  visible: true, titulo: 'Tu cotización en 24 horas', boton: 'Cotizar ahora', deshabilitado: false,
+  visible: true, titulo: 'Tu cotización en máximo 24 horas', boton: 'Cotizar ahora', deshabilitado: false,
 });
 const emit = defineEmits<{ cotizar: [] }>();
 </script>

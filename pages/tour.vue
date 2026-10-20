@@ -202,7 +202,7 @@
     />
     <ContactModal
       :is-visible="cotizando"
-      :encabezado="{ etiqueta: 'Respuesta en 24 horas', titulo: 'Recibe tu cotización en 24 horas', texto: 'Nuestro equipo comercial revisa lo que armaste en el tour y te envía la cotización en 24 horas hábiles.' }"
+      :encabezado="{ etiqueta: 'Respuesta en máximo 24 h', titulo: 'Recibe tu cotización en máximo 24 horas', texto: 'Nuestro equipo comercial revisa lo que armaste en el tour y te envía la cotización en máximo 24 horas.' }"
       :quote-item="itemCotizacion"
       :prefill="{ name: lead.nombre, phone: lead.telefono, email: lead.correo, company: lead.empresa, rut: lead.rut }"
       @close="cotizando = false"

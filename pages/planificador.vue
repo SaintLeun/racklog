@@ -653,11 +653,11 @@
                   {{ preparando && modo === 'pdf' ? 'Preparando…' : 'Descargar plano PDF' }}
                 </button>
                 <button type="button" class="btn btn-primary h-12 px-6" :disabled="!racks.length || preparando || dibujando" @click="pedir('cotizar')">
-                  {{ preparando && modo === 'cotizar' ? 'Preparando…' : 'Cotizar · respuesta en 24 h' }}
+                  {{ preparando && modo === 'cotizar' ? 'Preparando…' : 'Cotizar · máximo 24 h' }}
                 </button>
               </div>
             </div>
-            <p class="mt-2 text-center text-xs text-neutral-500">Nuestro equipo comercial te envía la cotización en 24 horas hábiles. Sin costo ni compromiso.</p>
+            <p class="mt-2 text-center text-xs text-neutral-500">Nuestro equipo comercial te envía la cotización en máximo 24 horas. Sin costo ni compromiso.</p>
           </div>
         </div>
       </div>
@@ -665,12 +665,12 @@
 
     <CtaCotizacion24
       :visible="racks.length > 0 && !formularioAbierto"
-      :titulo="`Tu cotización en 24 horas · ${total.pallets ? `${total.pallets} posiciones` : `${racks.length} racks`}`"
+      :titulo="`Tu cotización en máximo 24 horas · ${total.pallets ? `${total.pallets} posiciones` : `${racks.length} racks`}`"
       :deshabilitado="preparando || dibujando" @cotizar="pedir('cotizar')"
     />
     <ContactModal
       :is-visible="formularioAbierto"
-:encabezado="modo === 'pdf' ? { etiqueta: 'Gratis', titulo: 'Descarga tu plano', texto: 'Déjanos tus datos y el PDF se descarga al enviar. Un ejecutivo revisa tu diseño sin costo.' } : { etiqueta: 'Respuesta en 24 horas', titulo: 'Recibe tu cotización en 24 horas', texto: 'Nuestro equipo comercial revisa tu diseño y te envía la cotización en 24 horas hábiles.' }"
+:encabezado="modo === 'pdf' ? { etiqueta: 'Gratis', titulo: 'Descarga tu plano', texto: 'Déjanos tus datos y el PDF se descarga al enviar. Un ejecutivo revisa tu diseño sin costo.' } : { etiqueta: 'Respuesta en máximo 24 h', titulo: 'Recibe tu cotización en máximo 24 horas', texto: 'Nuestro equipo comercial revisa tu diseño y te envía la cotización en máximo 24 horas.' }"
       :quote-item="itemCotizacion"
       :initial-files="archivosPlano"
       require-project
