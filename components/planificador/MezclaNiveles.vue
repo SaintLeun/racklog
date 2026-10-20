@@ -52,7 +52,7 @@ const emit = defineEmits<{ asignar: [mezcla: (string | null)[]]; todos: [altura:
 const sel = ref(0);
 const H = 190;
 const m = computed(() => medidasRack(props.rack) as any);
-const y = (v: number) => H - 6 - (v / Math.max(m.value.alto, 1)) * (H - 14);
+const y = (v: number) => H - 6 - (v / Math.max(m.value.altoConCarga ?? m.value.alto, 1)) * (H - 14);
 const fm = (v: number) => formatoM(v);
 const porId = computed(() => new Map(props.tipos.map((t) => [t.id, t])));
 

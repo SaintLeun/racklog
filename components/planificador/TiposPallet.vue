@@ -18,6 +18,14 @@
           <label class="tp-lb">Peso (kg)<input :value="t.peso" type="number" min="1" step="50" class="tp-in" @change="set(i, { peso: num($event, t.peso) })"></label>
           <label class="tp-lb">Cantidad<input :value="t.cantidad" type="number" min="0" step="1" class="tp-in" @change="set(i, { cantidad: num($event, 0) })"></label>
         </div>
+        <div class="mt-1.5 grid grid-cols-2 gap-1.5">
+          <label class="flex items-center gap-1.5 text-[11px] font-semibold text-neutral-600">
+            <input type="checkbox" class="h-4 w-4 accent-orange-600" :checked="!!t.sinPallet" @change="set(i, { sinPallet: ($event.target as HTMLInputElement).checked })">
+            Cajas sin pallet
+          </label>
+          <label class="tp-lb !flex items-center gap-1">Sobresale (cm)<input :value="t.sobresale ?? 0" type="number" min="0" max="40" step="1" class="tp-in w-14" @change="set(i, { sobresale: num($event, 0) })"></label>
+        </div>
+        <p v-if="t.sinPallet || t.sobresale" class="mt-1 text-[11px] text-sky-800">Necesita plano de carga en los niveles donde lo pongas (se agrega solo).</p>
         <div class="mt-1.5 grid grid-cols-3 gap-1 rounded-lg bg-neutral-100 p-0.5">
           <button
             v-for="(r, k) in ROTACION" :key="k" type="button"

@@ -304,6 +304,82 @@
                     >{{ op.t }}</button>
                   </div>
 
+                  <template v-if="rackSel.tipo === 'RS'">
+                    <p class="-mb-2 flex items-center text-sm font-medium text-neutral-700">
+                      Pallets por nivel
+                      <PlanificadorAyuda titulo="pallets por nivel">Cuántos pallets van uno al lado del otro en cada nivel de un cuerpo. Más pallets por nivel = viga más larga y más gruesa, y menos marcos.</PlanificadorAyuda>
+                    </p>
+                    <div role="group" aria-label="Pallets por nivel" class="grid grid-cols-3 gap-1 rounded-xl bg-neutral-100 p-1">
+                      <button
+                        v-for="n in [1, 2, 3]" :key="n" type="button" :aria-pressed="(rackSel.porViga ?? 2) === n"
+                        :class="['h-10 rounded-lg text-sm font-semibold transition', (rackSel.porViga ?? 2) === n ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600 hover:text-neutral-900']"
+                        @click="cambiar({ porViga: n })"
+                      >{{ n }} pallet{{ n > 1 ? 's' : '' }}</button>
+                    </div>
+                    <p class="-mt-2 text-xs text-neutral-500">Viga de {{ formatoM(medSel.viga) }} m · perfil ~{{ Math.round(medSel.altoViga * 1000) }} mm (referencial)</p>
+
+                    <div class="grid grid-cols-2 gap-3">
+                      <label class="block text-sm font-medium text-neutral-700">
+                        <span class="flex items-center">Sobrante de marco
+                          <PlanificadorAyuda titulo="sobrante de marco">Lo que sube el marco sobre la última viga. Mínimo 300 mm. Si el pallet de arriba es más alto, sobresale del marco.</PlanificadorAyuda>
+                        </span>
+                        <select :value="rackSel.sobrante ?? 0.3" class="plan-input mt-1 !h-10" @change="cambiar({ sobrante: Number(($event.target as HTMLSelectElement).value) })">
+                          <option v-for="v in [0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.5]" :key="v" :value="v">{{ Math.round(v * 1000) }} mm</option>
+                        </select>
+                      </label>
+                      <div class="text-xs text-neutral-600">
+                        <p class="mt-6">Marco de <b>{{ formatoM(medSel.alto) }} m</b></p>
+                        <p v-if="medSel.sobresaleCarga > 0">La carga de arriba sobresale {{ formatoM(medSel.sobresaleCarga) }} m</p>
+                      </div>
+                    </div>
+
+                    <div class="rounded-xl bg-neutral-50 p-3 ring-1 ring-neutral-200">
+                      <p class="flex items-center text-sm font-semibold text-neutral-900">Planos de carga
+                        <PlanificadorAyuda titulo="planos de carga">Una superficie sobre las vigas para dejar cajas sin pallet o pallets cuya carga sobresale. Se pone por nivel.</PlanificadorAyuda>
+                      </p>
+                      <div class="mt-2 space-y-1.5">
+                        <div v-for="i in rackSel.niveles" :key="i" class="flex items-center justify-between gap-2 text-xs">
+                          <span class="font-medium text-neutral-700">Nivel {{ rackSel.niveles + 1 - i }}</span>
+                          <select :value="medSel.planos?.[rackSel.niveles + 1 - i] ?? ''" class="h-8 rounded-md border border-neutral-200 bg-white px-1.5 text-xs" @change="cambiarPlano(rackSel.niveles + 1 - i, ($event.target as HTMLSelectElement).value || null)">
+                            <option value="">Sin plano</option>
+                            <option value="malla">Malla electrosoldada</option>
+                            <option value="madera">Madera (terciado)</option>
+                            <option value="metal">Bandeja metálica</option>
+                          </select>
+                        </div>
+                      </div>
+                      <button type="button" class="mt-2 w-full rounded-md py-1 text-[11px] font-semibold text-brand-800 hover:bg-brand-50" @click="cambiar({ planos: Array.from({ length: rackSel.niveles + 1 }, (_, j) => (j > 0 ? 'malla' : null)) })">Malla en todos los niveles</button>
+                    </div>
+
+                    <div class="rounded-xl bg-sky-50/60 p-3 ring-1 ring-sky-200">
+                      <label class="flex items-center justify-between gap-3 text-sm font-semibold text-neutral-900">
+                        <span class="flex items-center">Cuerpo túnel
+                          <PlanificadorAyuda titulo="cuerpo túnel">Un cuerpo sin pallets abajo para que pase la grúa o la gente de un pasillo a otro. Su primera viga queda sobre el paso libre y es más gruesa.</PlanificadorAyuda>
+                        </span>
+                        <input type="checkbox" class="h-5 w-5 accent-orange-600" :checked="!!rackSel.tunel" @change="cambiar({ tunel: ($event.target as HTMLInputElement).checked ? { cuerpo: Math.floor(rackSel.cuerpos / 2), altoLibre: 2.5 } : null })">
+                      </label>
+                      <div v-if="rackSel.tunel" class="mt-2 grid grid-cols-2 gap-2">
+                        <label class="block text-xs font-medium text-neutral-700">¿Qué cuerpo?
+                          <select :value="rackSel.tunel.cuerpo" class="plan-input mt-1 !h-9" @change="cambiar({ tunel: { ...rackSel.tunel, cuerpo: Number(($event.target as HTMLSelectElement).value) } })">
+                            <option v-for="i in rackSel.cuerpos" :key="i" :value="i - 1">Cuerpo {{ i }}</option>
+                          </select>
+                        </label>
+                        <label class="block text-xs font-medium text-neutral-700">Paso libre (m)
+                          <select :value="rackSel.tunel.altoLibre" class="plan-input mt-1 !h-9" @change="cambiar({ tunel: { ...rackSel.tunel, altoLibre: Number(($event.target as HTMLSelectElement).value) } })">
+                            <option :value="2.2">2,2 · personas</option>
+                            <option :value="2.5">2,5 · personas y carro</option>
+                            <option :value="3.5">3,5 · grúa</option>
+                            <option :value="4.5">4,5 · grúa con carga</option>
+                          </select>
+                        </label>
+                        <p v-if="medSel.tunel" class="col-span-2 text-xs text-neutral-600">
+                          Quita {{ medSel.tunel.quitadas }} altura{{ medSel.tunel.quitadas > 1 ? 's' : '' }} de ese cuerpo ({{ medSel.tunel.quitadas * medSel.palletsPorViga * (rackSel.doble ? 2 : 1) }} posiciones).
+                          Paso real bajo la viga: <b>{{ medSel.tunel.libreReal != null ? `${formatoM(medSel.tunel.libreReal)} m` : 'todo el alto' }}</b>.
+                        </p>
+                      </div>
+                    </div>
+                  </template>
+
                   <div v-for="(def, campo) in TIPOS[rackSel.tipo].campos" :key="campo" class="flex items-center justify-between gap-3">
                     <span class="flex items-center text-sm font-medium text-neutral-700">
                       {{ def[0] }}
@@ -577,18 +653,24 @@
                   {{ preparando && modo === 'pdf' ? 'Preparando…' : 'Descargar plano PDF' }}
                 </button>
                 <button type="button" class="btn btn-primary h-12 px-6" :disabled="!racks.length || preparando || dibujando" @click="pedir('cotizar')">
-                  {{ preparando && modo === 'cotizar' ? 'Preparando…' : 'Solicitar cotización' }}
+                  {{ preparando && modo === 'cotizar' ? 'Preparando…' : 'Cotizar · respuesta en 24 h' }}
                 </button>
               </div>
             </div>
+            <p class="mt-2 text-center text-xs text-neutral-500">Nuestro equipo comercial te envía la cotización en 24 horas hábiles. Sin costo ni compromiso.</p>
           </div>
         </div>
       </div>
     </section>
 
+    <CtaCotizacion24
+      :visible="racks.length > 0 && !formularioAbierto"
+      :titulo="`Tu cotización en 24 horas · ${total.pallets ? `${total.pallets} posiciones` : `${racks.length} racks`}`"
+      :deshabilitado="preparando || dibujando" @cotizar="pedir('cotizar')"
+    />
     <ContactModal
       :is-visible="formularioAbierto"
-      :encabezado="modo === 'pdf' ? { etiqueta: 'Gratis', titulo: 'Descarga tu plano', texto: 'Déjanos tus datos y el PDF se descarga al enviar. Un ejecutivo revisa tu diseño sin costo.' } : null"
+:encabezado="modo === 'pdf' ? { etiqueta: 'Gratis', titulo: 'Descarga tu plano', texto: 'Déjanos tus datos y el PDF se descarga al enviar. Un ejecutivo revisa tu diseño sin costo.' } : { etiqueta: 'Respuesta en 24 horas', titulo: 'Recibe tu cotización en 24 horas', texto: 'Nuestro equipo comercial revisa tu diseño y te envía la cotización en 24 horas hábiles.' }"
       :quote-item="itemCotizacion"
       :initial-files="archivosPlano"
       require-project
@@ -1119,6 +1201,22 @@ function actualizar(id: string, cambio: Partial<RackPlano>) {
 
 // ─── Pallets mezclados por nivel (selectivo) ───
 const ubic = computed(() => ubicados(racks.value, bodega.pallets));
+const medSel = computed(() => (rackSel.value ? medidasRack(rackSel.value) as any : {}));
+// Planos de carga para la cotización: uno por cuerpo y nivel (por fila)
+const planosTotales = computed(() => {
+  const c: Record<string, number> = {};
+  racks.value.filter((r: any) => r.tipo === 'RS' && !r.existente).forEach((r: any) => {
+    (medidasRack(r) as any).planos?.forEach((t: string | null) => { if (t) c[t] = (c[t] ?? 0) + r.cuerpos * (r.doble ? 2 : 1); });
+  });
+  const nombre: Record<string, string> = { malla: 'malla electrosoldada', madera: 'madera', metal: 'bandeja metálica' };
+  return Object.entries(c).map(([t, n]) => `${n} de ${nombre[t]}`).join(', ');
+});
+function cambiarPlano(i: number, tipo: string | null) {
+  const r = rackSel.value as any;
+  if (!r) return;
+  const planos = Array.from({ length: r.niveles + 1 }, (_, j) => (j === i ? tipo : r.planos?.[j] ?? null));
+  cambiar({ planos } as any);
+}
 // Alto y color de cada altura salen del catálogo de tipos
 function conMezcla(r: any) {
   if (r.tipo !== 'RS' || !r.mezcla) return r;
@@ -1186,6 +1284,7 @@ const itemCotizacion = computed<QuoteItem>(() => ({
     'Operación': `${gruaActual.value.nombre}${bodega.pesoPallet ? ` · pallet de ${bodega.pesoPallet.toLocaleString('es-CL')} kg` : ''}${bodega.pesoBandeja ? ` · bandeja de ${bodega.pesoBandeja} kg` : ''}`,
     ...(perfil.value ? { 'Perfil': PERFILES.find((p) => p.v === perfil.value)?.t ?? perfil.value } : {}),
     ...(resumenEvaluacion.value ? { 'Evaluación': resumenEvaluacion.value } : {}),
+    ...(planosTotales.value ? { 'Planos de carga': planosTotales.value } : {}),
     ...(kpi.value.global.existente.racks ? { 'Existente / nuevo': `${kpi.value.global.existente.posiciones} posiciones que ya tiene + ${kpi.value.global.nuevo.posiciones} nuevas = ${kpi.value.global.total.posiciones}` } : {}),
     'Solicitud': modo.value === 'pdf' ? 'Descargó el plano en PDF' : 'Cotización',
   },

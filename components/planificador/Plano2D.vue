@@ -150,6 +150,7 @@
             :stroke-dasharray="r.existente ? '0.25 0.15' : undefined"
             :stroke-width="seleccion === r.id ? 0.12 : 0.06"
           />
+          <path v-if="f.tunel" :d="f.tunel" fill="#e0f2fe" stroke="#0284c7" stroke-width="0.03" pointer-events="none" />
           <!-- Divisiones (cuerpos, calles o filas) -->
           <line
             v-for="(l, j) in f.lineas" :key="j"
@@ -261,6 +262,10 @@ export interface RackPlano {
   niveles: number;
   doble: boolean;
   existente?: boolean;
+  porViga?: number;
+  sobrante?: number;
+  planos?: (string | null)[];
+  tunel?: { cuerpo: number; altoLibre: number } | null;
   mezcla?: (string | null)[];
   altos?: (number | null)[];
   colores?: (string | null)[];
@@ -537,7 +542,19 @@ function figura(r: RackPlano) {
   const n = r.cuerpos, pasoCuerpo = L / n;
   for (let j = 1; j < n; j++) lineas.push(seg(j * pasoCuerpo, 0, j * pasoCuerpo, F));
   if (r.doble) lineas.push(seg(0, F / 2, L, F / 2));
-  return { ...p, lineas, entrada, clave: `${r.id}-${m.tipo}` };
+  // Cuerpo túnel: rayado y flecha de paso de lado a lado
+  let tunel = '';
+  if (m.tunel) {
+    const u0 = m.tunel.indice * pasoCuerpo, u1 = u0 + pasoCuerpo;
+    const pt = (u: number, v: number) => aPlanoLocal(u, v).join(' ');
+    tunel = `M${pt(u0, 0)}L${pt(u1, 0)}L${pt(u1, F)}L${pt(u0, F)}Z`;
+    for (let k = 0.3; k < pasoCuerpo + F; k += 0.35) {
+      const ua = u0 + Math.min(k, pasoCuerpo), va = Math.max(0, k - pasoCuerpo);
+      const ub = u0 + Math.max(0, k - F), vb = Math.min(k, F);
+      tunel += `M${pt(ua, va)}L${pt(ub, vb)}`;
+    }
+  }
+  return { ...p, lineas, entrada, tunel, clave: `${r.id}-${m.tipo}` };
 }
 
 // Coordenadas del puntero en metros de la bodega

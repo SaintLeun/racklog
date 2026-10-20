@@ -19,12 +19,26 @@
       <p class="max-w-xs text-sm text-neutral-600">Tu navegador no puede mostrar la vista 3D. Los detalles del producto están disponibles a continuación.</p>
     </div>
 
-    <p
-      v-else-if="estado === 'listo'"
-      class="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white/85 px-3 py-1 text-xs font-medium text-neutral-600 shadow-sm ring-1 ring-black/5"
-    >
-      {{ bodega ? 'Arrastra un rack para moverlo · arrastra el piso para girar' : 'Arrastra para girar · rueda o pellizca para acercar' }}
-    </p>
+    <template v-else-if="estado === 'listo'">
+      <p
+        class="pointer-events-none absolute bottom-3 left-1/2 max-w-[calc(100%-1.5rem)] -translate-x-1/2 truncate rounded-full bg-white/85 px-3 py-1 text-xs font-medium text-neutral-600 shadow-sm ring-1 ring-black/5"
+      >
+        {{ bodega
+          ? 'Arrastra un rack para moverlo · arrastra el piso para girar · rueda o clic derecho para acercar y desplazar'
+          : 'Arrastra para girar · rueda o pellizca para acercar' }}
+      </p>
+      <button
+        type="button"
+        class="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-lg bg-white/90 px-2.5 py-1.5 text-xs font-medium text-neutral-700 shadow-sm ring-1 ring-black/10 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+        title="Volver a la vista inicial (doble clic en un punto para acercarte a él)"
+        @click="visor?.centrar()"
+      >
+        <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+          <path d="M3 7V3h4M17 7V3h-4M3 13v4h4M17 13v4h-4" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+        Centrar vista
+      </button>
+    </template>
   </div>
 </template>
 
@@ -116,12 +130,21 @@ onMounted(async () => {
 });
 
 const claveModelo = () => JSON.stringify([props.producto, props.config, props.bodega, props.racks]);
-watch(claveModelo, construirModelo);
+// Varios cambios seguidos (p. ej. editar varios campos) se juntan en una sola reconstruccion por cuadro
+let reconstruir = 0;
+watch(claveModelo, () => {
+  if (reconstruir) return;
+  reconstruir = requestAnimationFrame(() => {
+    reconstruir = 0;
+    construirModelo();
+  });
+});
 
 // El planificador la usa para poner la vista 3D en el PDF
 defineExpose({ captura: () => (visor && estado.value === 'listo' ? visor.captura() : null) });
 
 onBeforeUnmount(() => {
+  if (reconstruir) cancelAnimationFrame(reconstruir);
   visor?.destruir();
   visor = null;
 });

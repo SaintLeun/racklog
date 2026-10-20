@@ -184,7 +184,7 @@
               <h2 class="mt-1 text-2xl font-bold">{{ sistema === 'AR' ? 'Arma tu repisa' : 'Arma tu pallet' }}</h2>
               <p class="mt-1 text-sm text-neutral-600">{{ sistema === 'AR' ? 'Cuéntanos cómo es tu caja y te decimos cuántas caben y cuánto pesa cada repisa.' : 'Cuéntanos cómo es tu caja: armamos el pallet y con eso calculamos la altura de cada nivel de tu rack.' }}</p>
               <div class="mt-5">
-                <TourArmaPallet :modo="sistema === 'AR' ? 'bandeja' : 'pallet'" :equipo="respuestas.equipo" :perfil="lead.perfil" />
+                <TourArmaPallet ref="armaPallet" :modo="sistema === 'AR' ? 'bandeja' : 'pallet'" :equipo="respuestas.equipo" :perfil="lead.perfil" />
               </div>
               <div class="mt-6 flex flex-col-reverse justify-between gap-3 sm:flex-row">
                 <button type="button" class="btn btn-secondary" @click="ir(volverDesdePallet)">Atrás</button>
@@ -195,6 +195,18 @@
         </div>
       </div>
     </section>
+
+    <CtaCotizacion24
+      :visible="['elegir', 'resultado', 'pallet'].includes(paso) && !cotizando"
+      @cotizar="cotizando = true"
+    />
+    <ContactModal
+      :is-visible="cotizando"
+      :encabezado="{ etiqueta: 'Respuesta en 24 horas', titulo: 'Recibe tu cotización en 24 horas', texto: 'Nuestro equipo comercial revisa lo que armaste en el tour y te envía la cotización en 24 horas hábiles.' }"
+      :quote-item="itemCotizacion"
+      :prefill="{ name: lead.nombre, phone: lead.telefono, email: lead.correo, company: lead.empresa, rut: lead.rut }"
+      @close="cotizando = false"
+    />
   </div>
 </template>
 
@@ -224,6 +236,29 @@ const respuestas = reactive<Record<string, string>>({});
 const indice = ref(0);
 const elegido = ref<Tipo | null>(null);
 const sistema = ref<Tipo>('RS');
+const cotizando = ref(false);
+const armaPallet = ref<any>(null);
+// Lo que armó el cliente en el tour, para el vendedor
+const itemCotizacion = computed(() => {
+  const sis = paso.value === 'resultado' && rec.value ? rec.value.sistema : (paso.value === 'elegir' ? elegido.value : sistema.value) ?? 'RS';
+  const config: Record<string, string | number> = {
+    'Origen': 'Tour logístico web',
+    'Sistema': TIPOS[sis as Tipo]?.nombre ?? 'Por definir',
+    'Rol': PERFILES.find((p) => p.v === lead.perfil)?.t ?? '',
+    'Industria': lead.industria,
+  };
+  if (rec.value) config['Recomendación'] = rec.value.porque.join(' ');
+  const ap = armaPallet.value;
+  if (paso.value === 'pallet' && ap?.items) {
+    ap.items.forEach((it: any, i: number) => {
+      config[`Producto ${i + 1}`] = `${it.nombre || 'Sin nombre'} · caja ${it.largo}×${it.ancho}×${it.alto} cm, ${it.peso} kg, apila ${it.apilable}`;
+    });
+    if (ap.pallet?.cajas) config['Pallet'] = `${ap.pallet.cajas} cajas · ${Math.round(ap.pallet.alto * 100)} cm · ${Math.round(ap.pallet.peso)} kg`;
+    if (ap.modulacion?.cuerpos) config['Necesita'] = `${ap.modulacion.cuerpos} cuerpos · ${ap.modulacion.alturas} alturas · ${ap.modulacion.porCuerpo} pallets por cuerpo`;
+  }
+  if (flagsLead.value.length) config['Flags'] = flagsLead.value.join(', ');
+  return { name: 'Tour logístico', config, analytics: { lead_origin: 'tour_logistico', sistema: sis, perfil: lead.perfil } };
+});
 const volverDesdePallet = ref<Paso>('elegir');
 function irPallet(t: Tipo) {
   sistema.value = t;

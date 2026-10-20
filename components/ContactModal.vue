@@ -463,6 +463,11 @@ const props = defineProps({
   configExtra: {
     type: Function as PropType<(datos: { plazo: string; telefono: string }) => Record<string, string | number>>,
     default: null
+  },
+  // Datos que el cliente ya dio (p. ej. en el registro del tour): se precargan si el campo está vacío
+  prefill: {
+    type: Object as PropType<Partial<{ name: string; phone: string; email: string; company: string; rut: string }> | null>,
+    default: null
   }
 });
 
@@ -563,6 +568,11 @@ watch(() => props.isVisible, (newVal) => {
   if (newVal) {
     document.body.style.overflow = 'hidden';
     if (props.initialFiles.length && !attachments.value.length) addFiles(props.initialFiles);
+    if (props.prefill) {
+      for (const [k, v] of Object.entries(props.prefill)) {
+        if (v && k in form && !(form as Record<string, unknown>)[k]) (form as Record<string, unknown>)[k] = v;
+      }
+    }
 
     // Inicio del embudo: el usuario abrio el formulario
     window.dataLayer = window.dataLayer || [];

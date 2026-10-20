@@ -14,8 +14,8 @@
         <text v-if="holgura > 0.2" :x="x0 + ancho + 6" :y="(y(altura) + y(alto)) / 2 + 3" font-size="10" :fill="holgura < holguraMin ? '#b45309' : '#0369a1'">{{ formatoM(holgura) }} m libres</text>
       </template>
       <!-- Pilares del rack -->
-      <rect :x="x0" :y="y(alto)" width="4" :height="y(0) - y(alto)" fill="#94a3b8" />
-      <rect :x="x0 + ancho - 4" :y="y(alto)" width="4" :height="y(0) - y(alto)" fill="#94a3b8" />
+      <rect :x="x0" :y="y(altoMarco)" width="4" :height="y(0) - y(altoMarco)" fill="#94a3b8" />
+      <rect :x="x0 + ancho - 4" :y="y(altoMarco)" width="4" :height="y(0) - y(altoMarco)" fill="#94a3b8" />
       <!-- Niveles con su carga -->
       <g v-for="(n, i) in niveles" :key="i">
         <rect v-if="n.viga" :x="x0" :y="y(n.y) - 2" :width="ancho" height="4" :fill="tipo === 'AR' ? '#60a5fa' : '#f97316'" />
@@ -43,7 +43,8 @@ const props = defineProps<{ rack: Record<string, any>; altura: number | null }>(
 const W = 260, H = 150, x0 = 70, ancho = 110;
 const m = computed(() => medidasRack(props.rack) as Record<string, any>);
 const tipo = computed(() => props.rack.tipo);
-const alto = computed(() => m.value.alto);
+const alto = computed(() => m.value.altoConCarga ?? m.value.alto);
+const altoMarco = computed(() => m.value.alto);
 const altura = computed(() => (props.altura && props.altura > 0 ? props.altura : null));
 const tope = computed(() => Math.max(alto.value, altura.value ?? 0) * 1.08);
 const y = (v: number) => H - 8 - (v / tope.value) * (H - 18);
@@ -64,7 +65,7 @@ const sugerencia = computed(() => {
   if (!altura.value || tipo.value === 'AR') return '';
   const mas = normalizar({ ...props.rack, niveles: props.rack.niveles + 1 });
   if (mas.niveles === props.rack.niveles) return '';
-  return medidasRack(mas).alto + holguraMin <= altura.value ? 'Te cabe un nivel más bajo el techo.' : '';
+  return ((medidasRack(mas) as any).altoConCarga ?? medidasRack(mas).alto) + holguraMin <= altura.value ? 'Te cabe un nivel más bajo el techo.' : '';
 });
 
 const descripcion = computed(() => `Corte del rack: ${formatoM(alto.value)} m de alto${altura.value ? `, techo a ${formatoM(altura.value)} m` : ''}`);
