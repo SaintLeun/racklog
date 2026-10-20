@@ -106,19 +106,25 @@
         @keydown="tecladoElemento($event, el)"
         @focus="emit('seleccionar-elemento', el.id)"
       >
-        <rect
-          v-bind="rectSvg(el)"
-          :fill="ELEMENTOS[el.clase].relleno" :fill-opacity="el.clase === 'pilar' ? 1 : 0.75"
-          :stroke="elementoSel === el.id ? '#0f172a' : ELEMENTOS[el.clase].color"
-          :stroke-width="elementoSel === el.id ? 0.12 : 0.06"
-          :stroke-dasharray="el.clase === 'zona' ? '0.3 0.15' : undefined"
-        />
-        <line v-if="el.clase === 'zona'" v-bind="diagonal(el)" :stroke="ELEMENTOS.zona.color" stroke-width="0.04" pointer-events="none" />
-        <text
-          v-if="el.clase !== 'pilar' && Math.min(el.ancho, el.alto) >= 0.5"
-          :x="el.x" :y="el.y" v-bind="TEXTO_COTA" :font-size="Math.min(0.4 * k, el.alto * 0.45, el.ancho * 0.18)"
-          :fill="ELEMENTOS[el.clase].color" text-anchor="middle" dominant-baseline="central"
-        >{{ ELEMENTOS[el.clase].nombre }}</text>
+        <template v-for="d in [dibujoElemento(el)]" :key="d.clave">
+          <!-- Base -->
+          <rect
+            v-bind="rectSvg(el)"
+            :fill="d.relleno" :fill-opacity="d.opacidad"
+            :stroke="elementoSel === el.id ? '#0f172a' : d.borde"
+            :stroke-width="elementoSel === el.id ? 0.12 : d.grosor"
+            :stroke-dasharray="d.punteado"
+          />
+          <!-- Detalle por clase -->
+          <path v-if="d.trazo" :d="d.trazo" :stroke="d.borde" :stroke-width="d.grosorTrazo" fill="none" pointer-events="none" :stroke-dasharray="d.trazoPunteado" />
+          <path v-if="d.relleno2" :d="d.relleno2" :fill="d.color2" pointer-events="none" />
+          <text
+            v-if="d.etiqueta && Math.min(el.ancho, el.alto) >= 0.5"
+            :x="el.x" :y="el.y" v-bind="TEXTO_COTA" :font-size="Math.min(0.36 * k, Math.min(el.alto, el.ancho) * 0.35, Math.max(el.ancho, el.alto) * 0.14)"
+            :fill="d.borde" text-anchor="middle" dominant-baseline="central"
+            :transform="el.alto > el.ancho * 1.6 ? `rotate(-90 ${el.x} ${el.y})` : undefined"
+          >{{ d.etiqueta }}</text>
+        </template>
       </g>
 
       <!-- Racks -->
@@ -139,8 +145,9 @@
         <template v-for="f in [figura(r)]" :key="f.clave">
           <rect
             :x="f.x0" :y="f.y0" :width="f.ancho" :height="f.alto"
-            :fill="conflictos.has(r.id) ? '#fee2e2' : COLOR[r.tipo].fondo"
-            :stroke="conflictos.has(r.id) ? '#dc2626' : (seleccion === r.id ? '#0f172a' : COLOR[r.tipo].borde)"
+            :fill="conflictos.has(r.id) ? '#fee2e2' : (r.existente ? '#f1f5f9' : COLOR[r.tipo].fondo)"
+            :stroke="conflictos.has(r.id) ? '#dc2626' : (seleccion === r.id ? '#0f172a' : (r.existente ? '#94a3b8' : COLOR[r.tipo].borde))"
+            :stroke-dasharray="r.existente ? '0.25 0.15' : undefined"
             :stroke-width="seleccion === r.id ? 0.12 : 0.06"
           />
           <!-- Divisiones (cuerpos, calles o filas) -->
@@ -194,7 +201,7 @@
         <text
           v-bind="TEXTO_COTA" :fill="colorCota(c)" dominant-baseline="central"
           :x="posCota(c).x" :y="posCota(c).y" :transform="posCota(c).rot" :text-anchor="posCota(c).anchor"
-        >{{ c.a === 'rack' ? 'pasillo ' : '' }}{{ formatoM(c.valor) }} m</text>
+        >{{ c.a === 'rack' ? 'pasillo ' : c.a === 'elemento' ? 'libre ' : '' }}{{ formatoM(c.valor) }} m</text>
       </g>
       <!-- Medidas del rack en planta, sobre su esquina (lejos de las cotas, que salen del centro de cada lado) -->
       <text
@@ -242,7 +249,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
-import { rectangulo, rectElemento, medidasRack, describir, contorno, caja, cotasRack, formatoM, PASO, ELEMENTOS } from '~/lib/rack3d/planificador.js';
+import { rectangulo, rectElemento, medidasRack, describir, contorno, caja, cotasRack, cotasElemento, formatoM, PASO, ELEMENTOS } from '~/lib/rack3d/planificador.js';
 
 export interface RackPlano {
   id: string;
@@ -253,10 +260,17 @@ export interface RackPlano {
   cuerpos: number;
   niveles: number;
   doble: boolean;
+  existente?: boolean;
+  mezcla?: (string | null)[];
+  altos?: (number | null)[];
+  colores?: (string | null)[];
+  techoGrua?: number | null;
+  mastilGrua?: number | null;
+  anchoGrua?: number | null;
   fondos?: number;
 }
 export interface Punto { x: number; y: number }
-export interface Elemento { id: string; clase: 'pilar' | 'porton' | 'anden' | 'oficina' | 'zona'; x: number; y: number; ancho: number; alto: number }
+export interface Elemento { id: string; clase: 'pilar' | 'porton' | 'anden' | 'oficina' | 'zona' | 'pasilloGrua' | 'pasilloPeatonal' | 'grua'; x: number; y: number; ancho: number; alto: number; modelo?: string; nombre?: string }
 
 const props = defineProps<{
   bodega: { ancho: number; largo: number; forma: Punto[] | null; elementos?: Elemento[] };
@@ -411,10 +425,76 @@ function posCota(c: { x1: number; y1: number; x2: number; y2: number; valor: num
   return { x: mx, y: my, rot: horizontal ? '' : `rotate(-90 ${mx} ${my})`, anchor: 'middle' };
 }
 
+// Símbolo de cada elemento en planta (en metros, como el resto del plano)
+const MODELOS: Record<string, string> = { transpaleta: 'Transpaleta', apiladora: 'Apiladora', contrapeso: 'Contrapeso', retractil: 'Retráctil' };
+function dibujoElemento(el: Elemento) {
+  const p = rectElemento(el), def = ELEMENTOS[el.clase];
+  const x0 = p.x0, y0 = p.y0, x1 = p.x0 + p.ancho, y1 = p.y0 + p.alto, w = p.ancho, h = p.alto;
+  const base = { clave: el.clase, relleno: def.relleno, opacidad: 0.8, borde: def.color, grosor: 0.06, punteado: undefined as string | undefined,
+    trazo: '', grosorTrazo: 0.04, trazoPunteado: undefined as string | undefined, relleno2: '', color2: '', etiqueta: el.nombre || def.nombre };
+  const largoV = h >= w;   // eje largo vertical
+  switch (el.clase) {
+    case 'pilar':
+      // Símbolo estructural: sección llena con cruz
+      return { ...base, relleno: '#475569', opacidad: 1, borde: '#1e293b', trazo: `M${x0} ${y0}L${x1} ${y1}M${x1} ${y0}L${x0} ${y1}`, grosorTrazo: 0.03, etiqueta: '' };
+    case 'oficina': {
+      // Muros dobles y puerta con su abatimiento en el lado de abajo
+      const t = 0.15, pw = Math.min(0.9, w * 0.3), px = x0 + w * 0.25;
+      return { ...base, opacidad: 0.6, grosor: 0.05,
+        trazo: `M${x0 + t} ${y0 + t}H${x1 - t}V${y1 - t}H${px + pw}M${px} ${y1 - t}H${x0 + t}Z` +
+          `M${px} ${y1}L${px} ${y1 - pw}A${pw} ${pw} 0 0 1 ${px + pw} ${y1}`,
+        grosorTrazo: 0.035,
+        relleno2: `M${px} ${y1 - 0.02}h${pw}v${-t + 0.02}h${-pw}Z`, color2: '#ffffff' };
+    }
+    case 'anden': {
+      // Plataforma con nivelador (rectángulo interior) y borde de seguridad hacia el lado de abajo
+      const s2 = 0.25, nx = x0 + w * 0.2, nw = w * 0.6, ny = y1 - h * 0.45;
+      const franjas = Array.from({ length: Math.max(2, Math.floor(w / 0.35)) }, (_, i) => {
+        const fx = x0 + i * 0.35;
+        return `M${fx} ${y1}l${Math.min(0.2, x1 - fx)} ${-s2}h0.12l${-Math.min(0.2, x1 - fx)} ${s2}Z`;
+      }).join('');
+      return { ...base, opacidad: 0.7, trazo: `M${nx} ${ny}h${nw}v${h * 0.45 - s2}h${-nw}Z M${el.x} ${ny - 0.6}l-0.35 0.4m0.35 -0.4l0.35 0.4m-0.35 -0.4v1.1`, grosorTrazo: 0.04,
+        relleno2: franjas, color2: '#111827' };
+    }
+    case 'porton':
+      return { ...base, opacidad: 0.9, trazo: largoV ? `M${el.x} ${y0}V${y1}` : `M${x0} ${el.y}H${x1}`, grosorTrazo: 0.06, trazoPunteado: '0.4 0.2' };
+    case 'zona':
+      return { ...base, punteado: '0.3 0.15', trazo: `M${x0} ${y0}L${x1} ${y1}M${x1} ${y0}L${x0} ${y1}` };
+    case 'pasilloGrua': {
+      // Líneas de borde amarillas y flechas de sentido por el centro
+      const n = Math.max(1, Math.floor((largoV ? h : w) / 3));
+      const flechas = Array.from({ length: n }, (_, i) => {
+        const t = (i + 0.5) / n;
+        return largoV ? `M${el.x - 0.35} ${y0 + t * h - 0.2}l0.35 0.4l0.35 -0.4` : `M${x0 + t * w - 0.2} ${el.y - 0.35}l0.4 0.35l-0.4 0.35`;
+      }).join('');
+      const bordes = largoV ? `M${x0 + 0.08} ${y0}V${y1}M${x1 - 0.08} ${y0}V${y1}` : `M${x0} ${y0 + 0.08}H${x1}M${x0} ${y1 - 0.08}H${x1}`;
+      return { ...base, opacidad: 0.45, grosor: 0, trazo: bordes + flechas, grosorTrazo: 0.1 };
+    }
+    case 'pasilloPeatonal': {
+      // Cebra perpendicular al sentido de marcha
+      const paso = 0.5, n = Math.floor((largoV ? h : w) / paso);
+      const cebra = Array.from({ length: n }, (_, i) => (i % 2 ? '' : largoV
+        ? `M${x0} ${y0 + i * paso}h${w}v${paso}h${-w}Z` : `M${x0 + i * paso} ${y0}v${h}h${paso}v${-h}Z`)).join('');
+      return { ...base, opacidad: 0.5, grosor: 0.05, relleno2: cebra, color2: '#86efac' };
+    }
+    case 'grua': {
+      // Silueta: chasis, contrapeso y horquillas hacia arriba (o hacia la izquierda si está acostada)
+      const fl = largoV ? h * 0.3 : w * 0.3;
+      const horq = largoV
+        ? `M${x0 + w * 0.25} ${y0}v${fl}M${x1 - w * 0.25} ${y0}v${fl}M${x0 + w * 0.1} ${y0 + fl}h${w * 0.8}`
+        : `M${x0} ${y0 + h * 0.25}h${fl}M${x0} ${y1 - h * 0.25}h${fl}M${x0 + fl} ${y0 + h * 0.1}v${h * 0.8}`;
+      const cuerpo = largoV ? `M${x0} ${y0 + fl}h${w}v${h - fl}h${-w}Z` : `M${x0 + fl} ${y0}h${w - fl}v${h}h${-(w - fl)}Z`;
+      return { ...base, relleno: 'transparent', opacidad: 1, grosor: 0, trazo: horq, grosorTrazo: 0.08,
+        relleno2: cuerpo, color2: '#fbbf24', etiqueta: MODELOS[el.modelo ?? 'contrapeso'] ?? 'Grúa' };
+    }
+  }
+  return base;
+}
+
 const rectSvg = (el: Elemento) => { const p = rectElemento(el); return { x: p.x0, y: p.y0, width: p.ancho, height: p.alto }; };
 const diagonal = (el: Elemento) => { const p = rectElemento(el); return { x1: p.x0, y1: p.y0, x2: p.x0 + p.ancho, y2: p.y0 + p.alto }; };
 
-const colorCota = (c: { a: string; valor: number }) => (c.a !== 'rack' ? '#334155' : props.pasilloMin && c.valor < props.pasilloMin - 1e-6 ? '#dc2626' : '#0f766e');
+const colorCota = (c: { a: string; valor: number }) => (c.a === 'elemento' ? '#0369a1' : c.a !== 'rack' ? '#334155' : props.pasilloMin && c.valor < props.pasilloMin - 1e-6 ? '#dc2626' : '#0f766e');
 
 const rectDe = (r: RackPlano) => { const p = rectangulo(r); return { x: p.x0, y: p.y0, width: p.ancho, height: p.alto }; };
 
@@ -423,7 +503,8 @@ const conCotas = computed(() => (props.cotasTodas ? props.racks : props.racks.fi
 const cotas = computed(() => {
   if (props.dibujando) return [];
   const vistas = new Set<string>();
-  return conCotas.value.flatMap((r) => cotasRack(r, props.racks, props.bodega)).filter((c) => {
+  const sel = props.cotasTodas ? [] : (props.bodega.elementos ?? []).filter((e: Elemento) => e.id === props.elementoSel);
+  return [...conCotas.value.flatMap((r) => cotasRack(r, props.racks, props.bodega)), ...sel.flatMap((e: Elemento) => cotasElemento(e, props.bodega))].filter((c) => {
     const clave = [c.x1, c.y1, c.x2, c.y2].map((v) => v.toFixed(2)).sort().join();
     if (vistas.has(clave)) return false;
     vistas.add(clave);

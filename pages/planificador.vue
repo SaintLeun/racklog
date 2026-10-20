@@ -148,15 +148,25 @@
                   Pilares, portones y zonas
                   <PlanificadorAyuda titulo="elementos de la bodega">Marca lo que no se puede mover: pilares, portones, andenes, oficinas o zonas que deben quedar libres. Si un rack queda encima, se pone rojo.</PlanificadorAyuda>
                 </p>
-                <div class="mt-2 grid grid-cols-3 gap-1.5">
-                  <button v-for="(def, cl) in ELEMENTOS" :key="cl" type="button" class="plan-accion h-9 px-1 text-xs" @click="agregarElemento(cl)">+ {{ def.nombre }}</button>
+                <div v-for="g in GRUPOS_ELEMENTOS" :key="g.t" class="mt-2">
+                  <p class="text-[11px] font-semibold uppercase tracking-wider text-neutral-500">{{ g.t }}</p>
+                  <div class="mt-1 grid grid-cols-2 gap-1.5">
+                    <button v-for="cl in g.clases" :key="cl" type="button" class="plan-accion h-9 px-1 text-xs" @click="agregarElemento(cl)">+ {{ ELEMENTOS[cl].nombre }}</button>
+                  </div>
                 </div>
-                <form class="mt-2 flex items-center gap-2 text-xs text-neutral-600" @submit.prevent="ponerGrillaPilares">
-                  <label for="plan-grilla-pilares">Grilla de pilares cada</label>
-                  <input id="plan-grilla-pilares" v-model.number="pasoPilares" type="number" min="3" max="30" step="0.5" class="plan-input !h-8 w-16 !px-2 text-sm">
-                  <span>m</span>
-                  <button type="submit" class="plan-accion h-8 px-2.5 text-xs">Poner</button>
-                </form>
+                <details class="mt-3 rounded-lg bg-white ring-1 ring-neutral-200">
+                  <summary class="cursor-pointer px-2.5 py-2 text-xs font-semibold text-neutral-800">Grilla de pilares de la bodega</summary>
+                  <form class="grid grid-cols-2 gap-2 px-2.5 pb-2.5 text-xs text-neutral-600" @submit.prevent="ponerGrillaPilares">
+                    <label>Entre ejes, a lo ancho (m)<input v-model.number="gp.pasoX" type="number" min="2" max="40" step="0.5" class="plan-input mt-0.5 !h-8 !px-2 text-sm"></label>
+                    <label>Entre ejes, a lo largo (m)<input v-model.number="gp.pasoY" type="number" min="2" max="40" step="0.5" class="plan-input mt-0.5 !h-8 !px-2 text-sm"></label>
+                    <label>Primer eje desde muro izq. (m)<input v-model.number="gp.offX" type="number" min="0" max="40" step="0.5" class="plan-input mt-0.5 !h-8 !px-2 text-sm"></label>
+                    <label>Primer eje desde muro sup. (m)<input v-model.number="gp.offY" type="number" min="0" max="40" step="0.5" class="plan-input mt-0.5 !h-8 !px-2 text-sm"></label>
+                    <label>Pilar frente (cm)<input v-model.number="gp.ancho" type="number" min="10" max="150" step="5" class="plan-input mt-0.5 !h-8 !px-2 text-sm"></label>
+                    <label>Pilar fondo (cm)<input v-model.number="gp.fondo" type="number" min="10" max="150" step="5" class="plan-input mt-0.5 !h-8 !px-2 text-sm"></label>
+                    <p class="col-span-2 text-[11px] text-neutral-500">Mide de centro a centro de pilar (ejes). Reemplaza los pilares que ya pusiste.</p>
+                    <button type="submit" class="plan-accion col-span-2 h-8 text-xs">Poner {{ vistaPreviaGrilla }} pilares</button>
+                  </form>
+                </details>
               </div>
 
               <!-- Calcar un plano o foto -->
@@ -198,6 +208,12 @@
               <p class="mt-3 text-xs text-neutral-500">{{ Math.round(area(contorno(bodega))) }} m² · cuadrícula de {{ formatoM(grilla) }} m</p>
             </div>
 
+            <!-- Tipos de pallet del cliente (mezcla por nivel en selectivo) -->
+            <PlanificadorTiposPallet
+              v-model:tipos="bodega.pallets" :por-tipo="ubic.porTipo" :libres="ubic.libres"
+              :hay-r-s="racks.some((r) => r.tipo === 'RS')" @acomodar="acomodarPallets"
+            />
+
             <!-- 2. Agregar racks -->
             <div :class="['card p-5 transition', resaltar(1)]">
               <h2 class="text-sm font-semibold uppercase tracking-wider text-neutral-600">2. Agrega racks</h2>
@@ -230,6 +246,25 @@
               <h2 class="text-sm font-semibold uppercase tracking-wider text-neutral-600">3. Ajusta el rack</h2>
               <template v-if="elementoActual">
                 <p class="mt-3 font-semibold text-neutral-900">{{ ELEMENTOS[elementoActual.clase].nombre }}</p>
+                <label v-if="['oficina', 'zona', 'anden', 'porton'].includes(elementoActual.clase)" class="mt-3 block text-sm font-medium text-neutral-700">Nombre
+                  <input :value="elementoActual.nombre ?? ''" type="text" :placeholder="ELEMENTOS[elementoActual.clase].nombre" class="plan-input mt-1 !h-10" @change="cambiarElemento({ nombre: ($event.target as HTMLInputElement).value.trim() || undefined })">
+                </label>
+                <label v-if="elementoActual.clase === 'grua'" class="mt-3 block text-sm font-medium text-neutral-700">Tipo de equipo
+                  <select :value="elementoActual.modelo ?? 'contrapeso'" class="plan-input mt-1 !h-10" @change="cambiarModeloGrua(($event.target as HTMLSelectElement).value)">
+                    <option v-for="(g, k) in GRUAS" :key="k" :value="k">{{ g.nombre }}</option>
+                  </select>
+                </label>
+                <p v-if="elementoActual.clase === 'grua'" class="mt-1 text-xs text-neutral-500">Pasillo que necesita: ~{{ formatoM(GRUAS[(elementoActual.modelo ?? 'contrapeso') as keyof typeof GRUAS].pasillo) }} m. Agrega un "Pasillo de grúa" para reservarlo.</p>
+                <p class="mt-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">Ubicación (desde los muros)</p>
+                <div class="mt-1.5 grid grid-cols-2 gap-3">
+                  <label class="block text-sm font-medium text-neutral-700">Desde la izquierda (m)
+                    <input :value="formatoM(posElemento.izq).replace(',', '.')" type="number" step="0.05" class="plan-input mt-1 !h-10" @change="moverElementoA('x', Number(($event.target as HTMLInputElement).value))">
+                  </label>
+                  <label class="block text-sm font-medium text-neutral-700">Desde arriba (m)
+                    <input :value="formatoM(posElemento.arriba).replace(',', '.')" type="number" step="0.05" class="plan-input mt-1 !h-10" @change="moverElementoA('y', Number(($event.target as HTMLInputElement).value))">
+                  </label>
+                </div>
+                <p class="mt-1 text-xs text-neutral-500">Las cotas azules del plano muestran la distancia libre al muro o al elemento vecino.</p>
                 <div class="mt-3 grid grid-cols-2 gap-3">
                   <label class="block text-sm font-medium text-neutral-700">Ancho (m)
                     <input :value="elementoActual.ancho" type="number" min="0.1" step="0.1" class="plan-input mt-1 !h-10" @change="cambiarElemento({ ancho: Number(($event.target as HTMLInputElement).value) })">
@@ -248,6 +283,14 @@
                   {{ indiceSel + 1 }}. {{ NOMBRE[rackSel.tipo] }}
                 </p>
                 <div class="mt-4 space-y-4">
+                  <div role="group" aria-label="Estado del rack" class="grid grid-cols-2 gap-1 rounded-xl bg-neutral-100 p-1">
+                    <button
+                      v-for="op in [{ v: false, t: 'Nuevo (a cotizar)' }, { v: true, t: 'Ya lo tengo' }]" :key="op.t"
+                      type="button" :aria-pressed="!!rackSel.existente === op.v"
+                      :class="['h-10 rounded-lg text-sm font-semibold transition', !!rackSel.existente === op.v ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600 hover:text-neutral-900']"
+                      @click="cambiar({ existente: op.v })"
+                    >{{ op.t }}</button>
+                  </div>
                   <p v-if="TIPOS[rackSel.tipo].doble" class="-mb-2 flex items-center text-sm font-medium text-neutral-700">
                     Tipo
                     <PlanificadorAyuda titulo="simple o doble">Doble son dos racks espalda con espalda: se carga por ambos lados y ahorra un pasillo.</PlanificadorAyuda>
@@ -273,6 +316,8 @@
                     </div>
                   </div>
 
+                  <PlanificadorGruaDriveIn v-if="rackSel.tipo === 'DI'" :rack="rackSel" :abierto="true" @cambio="cambiar" />
+
                   <p class="text-xs text-neutral-500">
                     {{ formatoM(rectSel.ancho) }} × {{ formatoM(rectSel.alto) }} m en planta · {{ formatoM(altoRack(rackSel)) }} m de alto
                     <span v-if="altos.has(rackSel.id)" class="font-semibold text-amber-700">· más alto que la bodega</span>
@@ -287,6 +332,10 @@
                     El nivel más alto ({{ formatoM(alturaUltimoNivel(rackSel)) }} m) supera lo que alcanza tu equipo (~{{ formatoM(avisos.levanteMax) }} m).
                   </p>
 
+                  <PlanificadorMezclaNiveles
+                    v-if="rackSel.tipo === 'RS'" :rack="rackSel" :tipos="bodega.pallets"
+                    @asignar="(mz) => cambiar({ mezcla: mz })" @todos="aplicarAlturaATodos"
+                  />
                   <PlanificadorCorteRack :rack="rackSel" :altura="bodega.altura" />
 
                   <details class="rounded-xl bg-neutral-50 text-sm ring-1 ring-neutral-200">
@@ -348,6 +397,39 @@
                   <dd class="font-semibold text-neutral-900">{{ ind.usoAltura === null ? 'indica la altura libre' : porcentaje(ind.usoAltura) }}</dd>
                 </div>
               </dl>
+
+              <!-- KPI por sistema: lo que ya tiene + lo nuevo = total -->
+              <div v-if="racks.length" class="overflow-x-auto border-b border-neutral-100 px-4 py-3">
+                <table class="w-full min-w-[520px] text-xs">
+                  <thead>
+                    <tr class="text-left text-neutral-500">
+                      <th class="pb-1.5 font-medium">Sistema</th>
+                      <th class="pb-1.5 font-medium">Indicador</th>
+                      <th class="pb-1.5 text-right font-medium">Ya tienes</th>
+                      <th class="pb-1.5 text-right font-medium">Nuevo</th>
+                      <th class="pb-1.5 text-right font-semibold text-neutral-900">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template v-for="(s, k) in kpi.porSistema" :key="k">
+                      <tr v-for="(f, i) in filasKpi(String(k), s)" :key="f.t" :class="i === 0 ? 'border-t border-neutral-200' : ''">
+                        <td class="py-1 font-semibold text-neutral-900">{{ i === 0 ? s.nombre : '' }}</td>
+                        <td class="py-1 text-neutral-600">{{ f.t }}</td>
+                        <td class="py-1 text-right tabular-nums text-neutral-500">{{ f.e }}</td>
+                        <td class="py-1 text-right tabular-nums text-brand-800">{{ f.n }}</td>
+                        <td class="py-1 text-right font-semibold tabular-nums text-neutral-900">{{ f.tt }}</td>
+                      </tr>
+                    </template>
+                    <tr v-if="Object.keys(kpi.porSistema).length > 1" class="border-t-2 border-neutral-300 font-semibold text-neutral-900">
+                      <td class="py-1.5">Global</td><td class="py-1.5">Posiciones de pallet</td>
+                      <td class="py-1.5 text-right tabular-nums">{{ n(kpi.global.existente.posiciones) }}</td>
+                      <td class="py-1.5 text-right tabular-nums text-brand-800">{{ n(kpi.global.nuevo.posiciones) }}</td>
+                      <td class="py-1.5 text-right tabular-nums">{{ n(kpi.global.total.posiciones) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p class="mt-1.5 text-[11px] text-neutral-500">Marca cada rack como "Ya lo tengo" o "Nuevo" en "Ajusta el rack". Solo lo nuevo va a la cotización.</p>
+              </div>
 
               <!-- Herramientas del plano -->
               <div v-show="vista === '2d'" class="flex flex-wrap gap-1.5 border-b border-neutral-100 bg-neutral-50 px-3 py-2" role="toolbar" aria-label="Herramientas del plano">
@@ -521,9 +603,11 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import {
   LIMITES, NOMBRE, TIPOS, PERFILES, dentroDeBodega, conflictos, lugarLibre, totales, resumenCotizacion, normalizar, contorno, area, caja,
-  altoRack, indicadores, rectangulo, medidasRack, describir, formatoM, ELEMENTOS, grillaPilares,
+  altoRack, indicadores, rectangulo, medidasRack, describir, formatoM, ELEMENTOS, grillaPilares, grillaPilaresXY, rectElemento,
 } from '~/lib/rack3d/planificador.js';
 import { capacidad } from '~/lib/rack3d/medidas.js';
+import { kpisPorSistema, derivados } from '~/lib/rack3d/kpis.js';
+import { ubicados, resolverMezcla, acomodar } from '~/lib/rack3d/mezcla.js';
 import { GRUAS, DISTANCIAS, esProvisorio } from '~/lib/rack3d/parametrosTecnicos.js';
 import {
   gruaDe, avisosOperacion, semaforoCarga, racksSinHolgura, filaParalela, llenarBodega, recorridoPromedio, puntajeLead, materiales, alturaUltimoNivel,
@@ -544,8 +628,8 @@ const router = useRouter();
 
 const bodega = reactive<{
   ancho: number; largo: number; forma: Punto[] | null; altura: number | null; elementos: Elemento[];
-  grua: keyof typeof GRUAS; pesoPallet: number | null; pesoBandeja: number | null;
-}>({ ancho: 20, largo: 30, forma: null, altura: null, elementos: [], grua: 'contrapeso', pesoPallet: null, pesoBandeja: null });
+  grua: keyof typeof GRUAS; pesoPallet: number | null; pesoBandeja: number | null; pallets: any[];
+}>({ ancho: 20, largo: 30, forma: null, altura: null, elementos: [], grua: 'contrapeso', pesoPallet: null, pesoBandeja: null, pallets: [] });
 const alturaEntrada = ref<number | null>(null);
 const bodegaEntrada = reactive({ ancho: bodega.ancho, largo: bodega.largo });
 const formaLibre = computed(() => !!bodega.forma || dibujando.value);
@@ -605,6 +689,33 @@ function configAlEnviar({ plazo, telefono }: { plazo: string; telefono: string }
   };
 }
 const ind = computed(() => indicadores(bodega, racks.value));
+const kpi = computed(() => kpisPorSistema(racks.value));
+const n = (v: number) => Math.round(v).toLocaleString('es-CL');
+const pct = (v: number | null) => (v === null ? '—' : `${Math.round(v * 100)}%`);
+const d2 = (v: number) => v.toLocaleString('es-CL', { maximumFractionDigits: 2 });
+// Filas de KPI según el sistema (existente / nuevo / total)
+function filasKpi(tipo: string, s: any) {
+  const g = ['existente', 'nuevo', 'total'].map((k) => ({ ...s[k], ...derivados(s[k]) }));
+  const fila = (t: string, f: (x: any) => string) => ({ t, e: f(g[0]), n: f(g[1]), tt: f(g[2]) });
+  if (tipo === 'AR') return [
+    fila('Bandejas', (x) => n(x.bandejas)),
+    fila('Cuerpos', (x) => n(x.cuerpos)),
+    fila('Carga total (kg)', (x) => n(x.kg)),
+  ];
+  if (tipo === 'DI') return [
+    fila('Posiciones de pallet', (x) => n(x.posiciones)),
+    fila('Calles', (x) => n(x.calles)),
+    fila('Pallets por calle', (x) => (x.palletsPorCalle ? d2(x.palletsPorCalle) : '—')),
+    fila('Acceso directo', (x) => pct(x.selectividad)),
+    fila('Posiciones por m² de rack', (x) => d2(x.posicionesM2Piso)),
+  ];
+  return [
+    fila('Posiciones de pallet', (x) => n(x.posiciones)),
+    fila('Cuerpos', (x) => n(x.cuerpos)),
+    fila('Acceso directo', (x) => pct(x.selectividad)),
+    fila('Posiciones por m² de rack', (x) => d2(x.posicionesM2Piso)),
+  ];
+}
 const porcentaje = (v: number) => `${Math.round(v * 100)} %`;
 
 // Altura libre (m): con ella se avisa si un rack no cabe y se calcula el uso de la altura
@@ -676,7 +787,6 @@ function agregarMuroTeclado() {
 // ─── Pilares, portones, andenes, oficinas y zonas bloqueadas ───
 const elementoSel = ref<string | null>(null);
 const elementoActual = computed(() => bodega.elementos.find((e) => e.id === elementoSel.value) ?? null);
-const pasoPilares = ref(6);
 
 function seleccionarElemento(id: string | null) {
   elementoSel.value = id;
@@ -689,7 +799,7 @@ function agregarElemento(clase: Elemento['clase']) {
   const junto = clase === 'porton' || clase === 'anden';
   const x = +((c.x0 + c.x1) / 2 + (n % 4) * 1.5).toFixed(1);
   const y = junto ? +(c.y1 - def.alto / 2).toFixed(2) : +((c.y0 + c.y1) / 2 + (n % 3) * 1.5).toFixed(1);
-  const el: Elemento = { id: nuevoId(), clase, x, y, ancho: def.ancho, alto: def.alto };
+  const el: Elemento = { id: nuevoId(), clase, x, y, ancho: def.ancho, alto: def.alto, ...(clase === 'grua' ? { modelo: bodega.grua } : {}) };
   bodega.elementos = [...bodega.elementos, el];
   seleccionarElemento(el.id);
   vista.value = '2d';
@@ -711,12 +821,42 @@ function eliminarElemento(id: string) {
   if (elementoSel.value === id) elementoSel.value = null;
 }
 
+const GRUPOS_ELEMENTOS = [
+  { t: 'Estructura y accesos', clases: ['pilar', 'porton', 'anden'] },
+  { t: 'Áreas', clases: ['oficina', 'zona'] },
+  { t: 'Circulación y equipos', clases: ['pasilloGrua', 'pasilloPeatonal', 'grua'] },
+] as const;
+const gp = reactive({ pasoX: 6, pasoY: 6, offX: 6, offY: 6, ancho: 40, fondo: 40 });
+const vistaPreviaGrilla = computed(() => (gp.pasoX >= 2 && gp.pasoY >= 2 ? grillaPilaresXY(bodega, gp).length : 0));
+
 function ponerGrillaPilares() {
-  const p = Number(pasoPilares.value);
-  if (!(p >= 3)) return;
-  const nuevos = grillaPilares(bodega, p).map((q: Punto) => ({ id: nuevoId(), clase: 'pilar' as const, x: q.x, y: q.y, ancho: ELEMENTOS.pilar.ancho, alto: ELEMENTOS.pilar.alto }));
+  if (!(gp.pasoX >= 2 && gp.pasoY >= 2)) return;
+  const nuevos = grillaPilaresXY(bodega, gp).map((q: Punto) => ({ id: nuevoId(), clase: 'pilar' as const, x: q.x, y: q.y, ancho: gp.ancho / 100, alto: gp.fondo / 100 }));
   bodega.elementos = [...bodega.elementos.filter((e) => e.clase !== 'pilar'), ...nuevos];
-  marcar('planner_pillar_grid', { paso: p, pilares: nuevos.length });
+  marcar('planner_pillar_grid', { paso_x: gp.pasoX, paso_y: gp.pasoY, pilares: nuevos.length });
+}
+
+// Posición del elemento seleccionado medida desde los muros (borde del elemento al muro)
+const posElemento = computed(() => {
+  const e = elementoActual.value;
+  if (!e) return { izq: 0, arriba: 0 };
+  const c = caja(contorno(bodega)), p = rectElemento(e);
+  return { izq: p.x0 - c.x0, arriba: p.y0 - c.y0 };
+});
+function moverElementoA(eje: 'x' | 'y', v: number) {
+  const e = elementoActual.value;
+  if (!e || !Number.isFinite(v)) return;
+  const c = caja(contorno(bodega));
+  if (eje === 'x') cambiarElemento({ x: +(c.x0 + v + e.ancho / 2).toFixed(3) });
+  else cambiarElemento({ y: +(c.y0 + v + e.alto / 2).toFixed(3) });
+}
+function cambiarModeloGrua(modelo: string) {
+  // La huella cambia con el equipo: transpaleta chica, retráctil más larga
+  const huellas: Record<string, [number, number]> = { transpaleta: [0.7, 1.9], apiladora: [0.9, 2.0], contrapeso: [1.2, 2.8], retractil: [1.3, 2.5] };
+  const [a, l] = huellas[modelo] ?? [1.2, 2.8];
+  const e = elementoActual.value!;
+  const acostada = e.ancho > e.alto;
+  cambiarElemento({ modelo, ancho: acostada ? l : a, alto: acostada ? a : l });
 }
 
 // ─── Calcar un plano o foto: se sube, se calibra con una medida conocida y se dibuja encima ───
@@ -974,8 +1114,33 @@ function agregar(tipo: RackPlano['tipo']) {
 }
 
 function actualizar(id: string, cambio: Partial<RackPlano>) {
-  racks.value = racks.value.map((r) => (r.id === id ? dentroDeBodega(normalizar({ ...r, ...cambio }), bodega) as RackPlano : r));
+  racks.value = racks.value.map((r) => (r.id === id ? dentroDeBodega(conMezcla(normalizar({ ...r, ...cambio })), bodega) as RackPlano : r));
 }
+
+// ─── Pallets mezclados por nivel (selectivo) ───
+const ubic = computed(() => ubicados(racks.value, bodega.pallets));
+// Alto y color de cada altura salen del catálogo de tipos
+function conMezcla(r: any) {
+  if (r.tipo !== 'RS' || !r.mezcla) return r;
+  return { ...r, ...resolverMezcla(r, bodega.pallets) };
+}
+function acomodarPallets() {
+  racks.value = acomodar(racks.value, bodega.pallets, bodega.altura).map((r: any) => dentroDeBodega(normalizar(r), bodega) as RackPlano);
+  marcar('planner_pallets_auto', { tipos: bodega.pallets.length });
+}
+function aplicarAlturaATodos(i: number, id: string | null) {
+  racks.value = racks.value.map((r: any) => {
+    if (r.tipo !== 'RS' || r.niveles < i) return r;
+    const mezcla = Array.from({ length: r.niveles + 1 }, (_, j) => (j === i ? id : r.mezcla?.[j] ?? null));
+    return dentroDeBodega(conMezcla({ ...r, mezcla }), bodega) as RackPlano;
+  });
+}
+// Si cambia un tipo (alto, color) o se borra, los racks se recalculan
+watch(() => bodega.pallets, () => {
+  const ids = new Set(bodega.pallets.map((t: any) => t.id));
+  racks.value = racks.value.map((r: any) => (r.tipo === 'RS' && r.mezcla
+    ? conMezcla({ ...r, mezcla: r.mezcla.map((id: string | null) => (id && ids.has(id) ? id : null)) }) : r));
+}, { deep: true });
 
 function cambiar(cambio: Partial<RackPlano>) {
   if (rackSel.value) actualizar(rackSel.value.id, cambio);
@@ -1021,6 +1186,7 @@ const itemCotizacion = computed<QuoteItem>(() => ({
     'Operación': `${gruaActual.value.nombre}${bodega.pesoPallet ? ` · pallet de ${bodega.pesoPallet.toLocaleString('es-CL')} kg` : ''}${bodega.pesoBandeja ? ` · bandeja de ${bodega.pesoBandeja} kg` : ''}`,
     ...(perfil.value ? { 'Perfil': PERFILES.find((p) => p.v === perfil.value)?.t ?? perfil.value } : {}),
     ...(resumenEvaluacion.value ? { 'Evaluación': resumenEvaluacion.value } : {}),
+    ...(kpi.value.global.existente.racks ? { 'Existente / nuevo': `${kpi.value.global.existente.posiciones} posiciones que ya tiene + ${kpi.value.global.nuevo.posiciones} nuevas = ${kpi.value.global.total.posiciones}` } : {}),
     'Solicitud': modo.value === 'pdf' ? 'Descargó el plano en PDF' : 'Cotización',
   },
   analytics: {
@@ -1174,6 +1340,7 @@ onMounted(() => {
       bodega.grua = g.bodega.grua in GRUAS ? g.bodega.grua : 'contrapeso';
       bodega.pesoPallet = Number(g.bodega.pesoPallet) > 0 ? Number(g.bodega.pesoPallet) : null;
       bodega.pesoBandeja = Number(g.bodega.pesoBandeja) > 0 ? Number(g.bodega.pesoBandeja) : null;
+      bodega.pallets = Array.isArray(g.bodega.pallets) ? g.bodega.pallets.filter((t: any) => t && t.id && Number(t.alto) > 0) : [];
       bodega.elementos = Array.isArray(g.bodega.elementos)
         ? g.bodega.elementos.filter((e: Elemento) => e && e.clase in ELEMENTOS && [e.x, e.y, e.ancho, e.alto].every(Number.isFinite))
         : [];

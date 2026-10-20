@@ -21,7 +21,7 @@
         <rect v-if="n.viga" :x="x0" :y="y(n.y) - 2" :width="ancho" height="4" :fill="tipo === 'AR' ? '#60a5fa' : '#f97316'" />
         <rect
           :x="x0 + 8" :y="y(n.y + n.carga)" :width="ancho - 16" :height="Math.max(1, y(n.y) - y(n.y + n.carga) - (n.viga ? 2 : 0))"
-          :fill="tipo === 'AR' ? '#dbeafe' : '#e7c9a0'" :stroke="tipo === 'AR' ? '#93c5fd' : '#b45309'" stroke-width="0.8"
+          :fill="n.color ?? (tipo === 'AR' ? '#dbeafe' : '#e7c9a0')" :stroke="tipo === 'AR' ? '#93c5fd' : '#b45309'" stroke-width="0.8"
         />
       </g>
       <text :x="x0 - 6" :y="y(alto) + 4" text-anchor="end" font-size="10" fill="#334155">{{ formatoM(alto) }} m</text>
@@ -56,7 +56,7 @@ const niveles = computed(() => {
   if (d.tipo === 'anra') return d.nivelesY.map((v: number, i: number) => ({ y: v, viga: true, carga: Math.min(0.28, (d.nivelesY[i + 1] ?? d.alto) - v - 0.04) }));
   const carga = d.pallet?.alto ?? 1.2;
   if (d.tipo === 'drivein') return [0, ...d.cartelasY].map((v: number, i: number) => ({ y: v, viga: i > 0, carga }));
-  return [0, ...d.nivelesY].map((v: number, i: number) => ({ y: v, viga: i > 0, carga }));
+  return [0, ...d.nivelesY].map((v: number, i: number) => ({ y: v, viga: i > 0, carga: d.altosCarga?.[i] ?? carga, color: d.coloresCarga?.[i] ?? null }));
 });
 
 // Si sobra altura para un nivel mas (con la holgura al techo), se sugiere
