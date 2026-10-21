@@ -88,13 +88,17 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 
 ## §R6 3D realista
 - ⛔ Grúas GLB realistas por tipo, optimizadas con `gltf-transform`, servidas desde R2 (faltan modelos y acceso al bucket).
-- ⬜ Nº de grúas = movimientos/hora ÷ productividad (dato a preguntar en el tour).
-- 🟡 Personas a escala con chaleco y casco (hay una; varias ⬜).
-- 🟡 Grúa que se mueve: hoy recorre un pasillo y carga/descarga. ⬜ Ruta A* por grafo de pasillos con radio de giro,
-  ciclo andén → rack → andén, varias grúas sin choques (reserva de tramos, prioridad en cruces, una vía),
-  sin atravesar racks/pilares/personas, test 2+ grúas 5 min → 0 choques.
-- 🟡 Pasillos demarcados ✅; protecciones y placas en 3D ⬜.
-- ⬜ Cámaras: planta, isométrica, altura de operador, recorrido automático y video exportable.
+  `equipos.js` deja `cargarGLB(url)` lista (no se usa sin URL); la grúa armada se mejoró (ruedas torneadas, luces, cilindros, luz azul).
+- 🟡 Nº de grúas: `numeroGruas(movimientosHora, tipo)` = ceil(mov/h ÷ PRODUCTIVIDAD) en `flota.js` (PRODUCTIVIDAD provisoria);
+  sin el dato: grúas dibujadas, o 2 si hay 2+ pasillos de carga, si no 1. ⬜ preguntar mov/h en el tour (`bodega.movimientosHora`).
+- ✅ Personas a escala con chaleco y casco caminando por cada pasillo peatonal (preferencia sobre las grúas); sin peatonal, una quieta fuera del alcance.
+- ✅ Flota (`rutas.js` + `flota.js`, sin three): grilla con holgura exacta, huella por orientación, giro solo con RADIO_GIRO (provisorio),
+  ciclo andén → pasillo → hueco → sube/deja (y saca en la vuelta siguiente) → andén; cada grúa con su calle (una vía), reserva en el tiempo
+  de lo compartido, prioridad al que planifica primero; no atraviesa racks, pilares, oficinas, barandas ni personas (peatonales solo se cruzan).
+  `pasillosSinGiro()` para marcar en rojo (⬜ falta pintarlo en 2D). Prueba 2 y 3 grúas, 5 min a 0,1 s, 24×16×8 y 40×30×10: 0 choques, 0 trabadas.
+- ✅ Pasillos demarcados; canilleras, protección de bastidor, barandas (ajuste en naranjo) y placas de capacidad en 3D.
+- ✅ Cámaras: Planta, Isométrica, Operador (1,6 m en un pasillo), Recorrido (~12 s) y Grabar video (webm/mp4, evento `video_3d`).
+  🟡 fps solo medidos en swiftshader (render por software): ver informe; falta medir en equipo real.
 
 ## §2 Landing y flujo
 - ✅ Landing `/planifica-tu-bodega` (§2.1) — ⬜ video del hero (no hay video).
@@ -141,9 +145,9 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 | Paso 2 con pallet en 3D y densidad | ✅ |
 | Vigas se arrastran (paso de perforación) y se valida la luz | ✅ 76,2 mm |
 | Pilares N × M equidistantes; portones y andenes editables; ningún rack sobre ellos | ✅ |
-| 2+ grúas 5 min → 0 choques; nº de grúas por movimientos | ⬜ (R6) |
+| 2+ grúas 5 min → 0 choques; nº de grúas por movimientos | ✅ prueba 2 y 3 grúas 0 choques/0 trabadas; `numeroGruas` ✅, dato mov/h en el tour ⬜ |
 | PDF con logo + imagen 3D compartible; CTA con sus números | ✅ (prueba entregables.mjs en 390 y 1400 px: descarga PDF e imagen, link decodifica sin lead, modal con plano y PDF adjuntos) |
-| Pasillo peatonal de 20 m → barandas a ambos lados con aberturas, en 2D, 3D y cotización | 🟡 2D y cotización ✅; 3D ⬜ |
+| Pasillo peatonal de 20 m → barandas a ambos lados con aberturas, en 2D, 3D y cotización | ✅ 2D, 3D (tubo 1,1 m, postes ~1,5 m, ajuste naranjo) y cotización |
 | Ningún "bloquea" se puede enviar; cada aviso con su arreglo | ✅ |
 | Usuario nuevo completa con valores por defecto < 5 min en celular | ✅ (~50 s en la prueba automática) |
 | `quote_sent` crea tarea en Kommo a 24 h | ✅ con Kommo falso (pruebas); falta verificar con el token real |
