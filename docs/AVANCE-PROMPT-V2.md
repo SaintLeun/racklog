@@ -67,24 +67,24 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 - ⬜ Revisar que cada pregunta alimente una regla y cada regla use datos preguntados; avisar vacíos.
 - ⬜ Tests: CASATEC + 3 casos (logística, minería, alimentos con vencimiento) con resultado esperado.
 
-## §R4 Arma tu rack
-- 🟡 Mover vigas dentro del bastidor: datos listos (`vigasY`, paso 76,2 mm, `luzLibre`); arrastre en la elevación ⬜; validar luz ≥ carga + holgura ⬜.
-- 🟡 Niveles con alturas distintas (picking abajo, reserva arriba): por mezcla de pallets sí; manual ⬜.
-- 🟡 Vista frontal y en planta acotadas ✅; vista lateral ⬜.
-- 🟡 Validar carga por par de vigas (paso 3) ✅ y por marco (solo en Revisa) — mostrar en paso 3 ⬜.
+## §R4 Arma tu rack — ✅ terminado
+- ✅ Mover vigas dentro del bastidor de a una perforación (76,2 mm), luz validada (carga + 100 mm).
+- ✅ Niveles con alturas distintas: por mezcla de pallets y moviendo vigas.
+- ✅ Vista frontal, lateral y en planta acotadas.
+- ✅ Carga por par de vigas y por marco en el paso 3.
 
 ## §R5 Tu bodega (planta)
 | Pedido | Estado |
 |---|---|
 | Repetir en fila (N cuerpos), repetir filas (N con pasillo X), espejo espalda con espalda | ✅ "Repetir en bloque" N × M y espalda con espalda |
-| Botón "Llenar mi bodega" | 🟡 se ubica solo y "Volver a ubicar"; nombre/animación ⬜ |
+| Botón "Llenar mi bodega" | ✅ racks que aparecen de a uno y contador que sube |
 | Pasillos tipificados (grúa con mínimo del equipo, peatonal, cruces) con validación en vivo en rojo | 🟡 grúa con ancho del equipo y aviso; cruces ⬜ |
-| Pasillos peatonales de varios tramos (clic-clic, en L/U), ancho por input y arrastrando el borde, extremos arrastrables, snap 0,05 m a racks/muros, aberturas con un clic, duplicar/girar/borrar, manillas ≥ 44 px | ⬜ (hoy: rectángulo con inputs y arrastre del centro) |
+| Pasillos peatonales de varios tramos (clic-clic, en L/U), ancho por input y arrastrando el borde, extremos arrastrables, snap 0,05 m a racks/muros, aberturas con un clic, duplicar/girar/borrar, manillas ≥ 44 px | ✅ |
 | Barandas automáticas donde colinda con grúas; en lista, 2D y 3D | 🟡 lista y 2D sí (módulos 6 m + ajuste); 3D ⬜; colindancia automática ⬜ |
-| Portones: ancho, alto, muro, distancia a esquina, zona libre delante | 🟡 ancho/largo/posición; alto, muro y zona libre ⬜ |
-| Pilares: sección y forma (cuadrado/circular/H), array N × M con ejes X/Y y offset al muro, editar o borrar uno | 🟡 array por paso X/Y; forma, sección y offset ⬜ |
-| Andenes: ancho, fondo, alto, cantidad en array, muro, zona de maniobra | ⬜ |
-| Racks no chocan con pilares ni tapan portones/andenes; layout entre pilares | 🟡 no chocan sí; zona libre de portón/andén ⬜ |
+| Portones: ancho, alto, muro, distancia a esquina, zona libre delante | ✅ (alto del portón en 3D: agente R6) |
+| Pilares: sección y forma (cuadrado/circular/H), array N × M con ejes X/Y y offset al muro, editar o borrar uno | ✅ (forma en 3D pendiente) |
+| Andenes: ancho, fondo, alto, cantidad en array, muro, zona de maniobra | ✅ |
+| Racks no chocan con pilares ni tapan portones/andenes; layout entre pilares | ✅ zona de maniobra como elemento hijo |
 | Todo en 3D con su altura real | 🟡 |
 
 ## §R6 3D realista
@@ -140,8 +140,8 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 | Toda recomendación con por qué y alternativa dibujada | ⛔ (R3) |
 | Cada input cambia el dibujo al instante; visual ≥ 60 % en cada paso | 🟡 (V2) |
 | Paso 2 con pallet en 3D y densidad | ✅ |
-| Vigas se arrastran (paso de perforación) y se valida la luz | ⬜ (R4; paso real 76,2 mm) |
-| Pilares N × M equidistantes; portones y andenes editables; ningún rack sobre ellos | 🟡 (R5) |
+| Vigas se arrastran (paso de perforación) y se valida la luz | ✅ 76,2 mm |
+| Pilares N × M equidistantes; portones y andenes editables; ningún rack sobre ellos | ✅ |
 | 2+ grúas 5 min → 0 choques; nº de grúas por movimientos | ⬜ (R6) |
 | PDF con logo + imagen 3D compartible; CTA con sus números | ⬜ (V7, V8) |
 | Pasillo peatonal de 20 m → barandas a ambos lados con aberturas, en 2D, 3D y cotización | 🟡 2D y cotización ✅; 3D ⬜ |

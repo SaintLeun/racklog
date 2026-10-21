@@ -2,7 +2,7 @@
   <svg
     ref="svgRef"
     class="h-full w-full select-none"
-    :class="dibujando || herramienta === 'medir' ? 'cursor-crosshair' : (paneo ? 'cursor-grabbing' : '')"
+    :class="dibujando || trazando || agregandoCruce || herramienta === 'medir' ? 'cursor-crosshair' : (paneo ? 'cursor-grabbing' : '')"
     :viewBox="`${vista.x} ${vista.y} ${vista.w} ${vista.h}`"
     preserveAspectRatio="xMidYMid meet"
     role="application"
@@ -109,7 +109,7 @@
         style="touch-action: none" tabindex="0" role="button"
         :aria-label="`${ELEMENTOS[el.clase].nombre} de ${formatoM(el.ancho)} × ${formatoM(el.alto)} m`"
         :aria-pressed="elementoSel === el.id"
-        @pointerdown.stop="herramienta === 'medir' ? presionarFondo($event) : iniciarArrastre($event, { tipo: 'elemento', id: el.id, x: el.x, y: el.y })"
+        @pointerdown.stop="herramienta === 'medir' || trazando ? presionarFondo($event) : agregandoCruce && el.clase === 'pasilloPeatonal' ? cruce($event, el) : iniciarArrastre($event, { tipo: 'elemento', id: el.id, x: el.x, y: el.y })"
         @keydown="tecladoElemento($event, el)"
         @focus="emit('seleccionar-elemento', el.id)"
       >
@@ -134,6 +134,20 @@
         </template>
       </g>
 
+      <!-- Cruces (aberturas) de los pasillos peatonales -->
+      <template v-for="el in (bodega.elementos ?? []).filter((e) => e.clase === 'pasilloPeatonal' && e.aberturas?.length)" :key="`ab-${el.id}`">
+        <rect v-for="(a, j) in el.aberturas" :key="j" v-bind="rectAbertura(el, a)" fill="#fff" fill-opacity="0.85" stroke="#16a34a" stroke-width="0.04" stroke-dasharray="0.15 0.1" pointer-events="none" />
+      </template>
+      <!-- Manillas del pasillo seleccionado: extremos (largo) y borde (ancho); grandes para el dedo -->
+      <g v-if="pasilloSel && !dibujando">
+        <circle
+          v-for="h in manillas(pasilloSel)" :key="h.tipo" :cx="h.x" :cy="h.y" :r="radioManilla"
+          :fill="h.tipo === 'ancho' ? '#0ea5e9' : '#16a34a'" fill-opacity="0.9" stroke="#fff" :stroke-width="radioManilla * 0.25"
+          class="cursor-grab" style="touch-action: none" role="slider" :aria-label="h.tipo === 'ancho' ? 'Ancho del pasillo' : 'Extremo del pasillo'"
+          @pointerdown.stop="tomarManilla($event, pasilloSel, h.tipo)"
+        />
+      </g>
+
       <!-- Racks -->
       <g
         v-for="(r, i) in racks"
@@ -144,7 +158,7 @@
         role="button"
         :aria-label="`${i + 1}: ${describir(r)}${conflictos.has(r.id) ? ', superpuesto o fuera de la bodega' : ''}`"
         :aria-pressed="seleccion === r.id"
-        @pointerdown.stop="herramienta === 'medir' ? presionarFondo($event) : iniciarArrastre($event, { tipo: 'rack', id: r.id, x: r.x, y: r.y })"
+        @pointerdown.stop="herramienta === 'medir' || trazando ? presionarFondo($event) : iniciarArrastre($event, { tipo: 'rack', id: r.id, x: r.x, y: r.y })"
         @keydown="teclado($event, r)"
         @focus="enfocar($event, r.id)"
         @blur="focoTeclado = null"
@@ -297,7 +311,7 @@ export interface RackPlano {
   fondos?: number;
 }
 export interface Punto { x: number; y: number }
-export interface Elemento { id: string; clase: 'pilar' | 'porton' | 'anden' | 'oficina' | 'zona' | 'pasilloGrua' | 'pasilloPeatonal' | 'grua'; x: number; y: number; ancho: number; alto: number; modelo?: string; nombre?: string }
+export interface Elemento { forma?: 'cuadrado' | 'circular' | 'H'; aberturas?: number[]; grupo?: string; muro?: string; altoPorton?: number; id: string; clase: 'pilar' | 'porton' | 'anden' | 'oficina' | 'zona' | 'pasilloGrua' | 'pasilloPeatonal' | 'grua'; x: number; y: number; ancho: number; alto: number; modelo?: string; nombre?: string }
 // Calculado por lib/rack3d/pasillos.js
 export interface Pasillo {
   id: string; x0: number; y0: number; x1: number; y1: number; eje: 'x' | 'y';
@@ -324,6 +338,9 @@ const props = defineProps<{
   muroSel?: number | null;
   // Pasillos frente a las caras de carga (los angostos se marcan en rojo)
   pasillos?: Pasillo[];
+  // Modos del flujo: trazar un pasillo peatonal por tramos (cada clic un punto) o agregar cruces
+  trazando?: boolean;
+  agregandoCruce?: boolean;
   // Accesorios a dibujar en planta (m)
   marcas?: Array<{ tipo: 'punto'; x: number; y: number } | { tipo: 'barra' | 'linea'; x1: number; y1: number; x2: number; y2: number }>;
   // Elemento seleccionado (pilar, porton, anden, oficina o zona)
@@ -349,6 +366,10 @@ const emit = defineEmits<{
   'punto-calibracion': [p: Punto];
   'seleccionar-elemento': [id: string | null];
   'mover-elemento': [id: string, x: number, y: number];
+  // Largo o ancho de un pasillo cambiado con sus manillas, o un punto al trazar/un cruce
+  'cambiar-elemento': [id: string, cambio: Partial<Elemento>];
+  'punto-trazo': [p: Punto];
+  'cruce-elemento': [id: string, pos: number];
   'eliminar-elemento': [id: string];
 }>();
 
@@ -461,6 +482,7 @@ function posCota(c: { x1: number; y1: number; x2: number; y2: number; valor: num
 
 // Símbolo de cada elemento en planta (en metros, como el resto del plano)
 const MODELOS: Record<string, string> = { transpaleta: 'Transpaleta', apiladora: 'Apiladora', contrapeso: 'Contrapeso', retractil: 'Retráctil' };
+const circulo = (cx: number, cy: number, r: number) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`;
 function dibujoElemento(el: Elemento) {
   const p = rectElemento(el), def = ELEMENTOS[el.clase];
   const x0 = p.x0, y0 = p.y0, x1 = p.x0 + p.ancho, y1 = p.y0 + p.alto, w = p.ancho, h = p.alto;
@@ -469,7 +491,12 @@ function dibujoElemento(el: Elemento) {
   const largoV = h >= w;   // eje largo vertical
   switch (el.clase) {
     case 'pilar':
-      // Símbolo estructural: sección llena con cruz
+      // Símbolo estructural: sección llena con cruz; circular o perfil H segun su forma
+      if (el.forma === 'circular') return { ...base, relleno: '#475569', opacidad: 0, borde: 'transparent', relleno2: circulo(el.x, el.y, Math.min(w, h) / 2), color2: '#475569', etiqueta: '' };
+      if (el.forma === 'H') {
+        const a = Math.min(w, h) * 0.18;
+        return { ...base, relleno: '#cbd5e1', opacidad: 0.25, borde: '#94a3b8', grosor: 0.01, relleno2: `M${x0} ${y0}h${w}v${a}h${-(w - a) / 2}v${h - 2 * a}h${(w - a) / 2}v${a}h${-w}v${-a}h${(w - a) / 2}v${-(h - 2 * a)}h${-(w - a) / 2}Z`, color2: '#475569', etiqueta: '' };
+      }
       return { ...base, relleno: '#475569', opacidad: 1, borde: '#1e293b', trazo: `M${x0} ${y0}L${x1} ${y1}M${x1} ${y0}L${x0} ${y1}`, grosorTrazo: 0.03, etiqueta: '' };
     case 'oficina': {
       // Muros dobles y puerta con su abatimiento en el lado de abajo
@@ -670,6 +697,11 @@ let paneoInicio: { x: number; y: number; c: Punto; puntero: number; movio: boole
 const paneo = ref(false);
 
 function presionarFondo(e: PointerEvent) {
+  if (props.trazando && e.button === 0) {
+    const q = aPlano(e);
+    emit('punto-trazo', ajustarBorde({ x: redondear(q.x, 0.05), y: redondear(q.y, 0.05) }));
+    return;
+  }
   if (e.button === 1 || (e.button === 0 && !props.dibujando && !props.calibrando && props.herramienta !== 'medir')) {
     // Arrastrar el piso desplaza el plano (con zoom); un clic sin mover deselecciona
     const v = vista.value;
@@ -689,6 +721,61 @@ function presionarFondo(e: PointerEvent) {
     return;
   }
   if (props.dibujando) emit('agregar-punto', ajustarDibujo(aPlano(e), e));
+}
+
+// ─── Pasillos editables: manillas, trazado por tramos y cruces ───
+const pasilloSel = computed(() => (props.bodega.elementos ?? []).find((e) => e.id === props.elementoSel && (e.clase === 'pasilloPeatonal' || e.clase === 'pasilloGrua')) ?? null);
+// Radio de ~22 px en pantalla (44 px de diametro para el dedo)
+const radioManilla = computed(() => {
+  const r = svgRef.value?.getBoundingClientRect(), v = vista.value;
+  return r && r.width ? Math.max(0.15, 22 * Math.max(v.w / r.width, v.h / r.height)) : 0.3;
+});
+const vertical = (el: Elemento) => el.alto >= el.ancho;
+function manillas(el: Elemento) {
+  const v = vertical(el), L = v ? el.alto : el.ancho, A = v ? el.ancho : el.alto;
+  return v
+    ? [{ tipo: 'ini', x: el.x, y: el.y - L / 2 }, { tipo: 'fin', x: el.x, y: el.y + L / 2 }, { tipo: 'ancho', x: el.x + A / 2, y: el.y }]
+    : [{ tipo: 'ini', x: el.x - L / 2, y: el.y }, { tipo: 'fin', x: el.x + L / 2, y: el.y }, { tipo: 'ancho', x: el.x, y: el.y + A / 2 }];
+}
+// Bordes de muros y racks cercanos (10 cm): el pasillo se pega a ellos
+function ajustarBorde(p: Punto): Punto {
+  const tol = 0.12, c = marco.value, xs = [c.x0, c.x1], ys = [c.y0, c.y1];
+  props.racks.forEach((r) => { const q = rectangulo(r); xs.push(q.x0, q.x0 + q.ancho); ys.push(q.y0, q.y0 + q.alto); });
+  const cerca = (v: number, lista: number[]) => lista.reduce((m, w) => (Math.abs(w - v) < Math.abs(m - v) ? w : m), v);
+  const x = cerca(p.x, xs), y = cerca(p.y, ys);
+  return { x: Math.abs(x - p.x) <= tol ? x : p.x, y: Math.abs(y - p.y) <= tol ? y : p.y };
+}
+let manilla: { id: string; tipo: string; puntero: number } | null = null;
+function tomarManilla(e: PointerEvent, el: Elemento, tipo: string) {
+  manilla = { id: el.id, tipo, puntero: e.pointerId };
+  svgRef.value?.setPointerCapture(e.pointerId);
+}
+function moverManilla(e: PointerEvent) {
+  const el = (props.bodega.elementos ?? []).find((x) => x.id === manilla!.id);
+  if (!el) return;
+  const q = aPlano(e), p = ajustarBorde({ x: redondear(q.x, 0.05), y: redondear(q.y, 0.05) });
+  const v = vertical(el), L = v ? el.alto : el.ancho;
+  if (manilla!.tipo === 'ancho') {
+    const A = Math.max(0.6, +(2 * Math.abs(v ? p.x - el.x : p.y - el.y)).toFixed(2));
+    emit('cambiar-elemento', el.id, v ? { ancho: A } : { alto: A });
+    return;
+  }
+  // Un extremo se mueve y el otro queda fijo
+  const fijo = (v ? el.y : el.x) + (manilla!.tipo === 'ini' ? L / 2 : -L / 2);
+  const movil = v ? p.y : p.x;
+  const largo = Math.max(1, +Math.abs(movil - fijo).toFixed(2)), centro = +((movil + fijo) / 2).toFixed(3);
+  emit('cambiar-elemento', el.id, v ? { alto: largo, y: centro } : { ancho: largo, x: centro });
+}
+function cruce(e: PointerEvent, el: Elemento) {
+  const q = aPlano(e), v = vertical(el), L = v ? el.alto : el.ancho;
+  const pos = +((v ? q.y - (el.y - L / 2) : q.x - (el.x - L / 2))).toFixed(2);
+  emit('cruce-elemento', el.id, Math.max(0, Math.min(L, pos)));
+}
+// Abertura de 1,2 m centrada en `pos` (a lo largo del pasillo), dibujada sobre sus dos bordes
+function rectAbertura(el: Elemento, pos: number) {
+  const v = vertical(el), L = v ? el.alto : el.ancho, A = v ? el.ancho : el.alto, ab = 1.2;
+  const a = (v ? el.y : el.x) - L / 2 + pos - ab / 2;
+  return v ? { x: el.x - A / 2 - 0.1, y: a, width: A + 0.2, height: ab } : { x: a, y: el.y - A / 2 - 0.1, width: ab, height: A + 0.2 };
 }
 
 function iniciarArrastre(e: PointerEvent, o: { tipo: 'rack' | 'vertice' | 'elemento'; id: string; x: number; y: number }) {
@@ -721,6 +808,7 @@ function moverPuntero(e: PointerEvent) {
     medicion.value = { ...medicion.value, b: ajustarMedida(p) };
     return;
   }
+  if (manilla && e.pointerId === manilla.puntero) { moverManilla(e); return; }
   if (!arrastre || e.pointerId !== arrastre.puntero) return;
   const destino = { x: p.x + arrastre.dx, y: p.y + arrastre.dy };
   if (arrastre.tipo === 'rack') emit('mover', arrastre.id, destino.x, destino.y);
@@ -735,8 +823,9 @@ function soltar(e: PointerEvent) {
     paneo.value = false;
     return;
   }
-  if (arrastre) emit('fin-cambio');
+  if (arrastre || manilla) emit('fin-cambio');
   arrastre = null;
+  manilla = null;
 }
 
 function teclado(e: KeyboardEvent, r: RackPlano) {
