@@ -4,6 +4,17 @@
       <div class="container-page py-3">
         <ClientOnly>
           <FlujoStepper :indice="p.indice" :alcanzado="p.alcanzado" @ir="ir" />
+          <!-- Continuar donde quede: el link a su diseño llega por correo -->
+          <div class="mt-2 flex justify-end">
+            <button v-if="!guardar.abierto" type="button" class="text-sm font-medium text-brand-700 underline underline-offset-2" @click="guardar.abierto = true">Guardar y seguir después</button>
+            <form v-else class="flex w-full flex-wrap items-center justify-end gap-2" @submit.prevent="enviarLink">
+              <label class="sr-only" for="fl-correo-guardar">Tu correo</label>
+              <input id="fl-correo-guardar" v-model.trim="guardar.correo" type="email" required placeholder="tu@empresa.cl" class="form-input !h-10 w-56 max-w-full">
+              <button type="submit" class="fl-btn !min-h-10 !px-4 !text-sm" :disabled="guardar.estado === 'enviando'">{{ guardar.estado === 'enviando' ? 'Enviando…' : 'Envíame el link' }}</button>
+              <span v-if="guardar.estado === 'ok'" class="text-sm text-green-700" role="status">Listo, revisa tu correo.</span>
+              <span v-else-if="guardar.estado === 'error'" class="text-sm text-red-700" role="status">No se pudo enviar. Copia el link: <a :href="guardar.link" class="underline">abrir</a></span>
+            </form>
+          </div>
           <template #fallback><div class="h-12" /></template>
         </ClientOnly>
       </div>
@@ -43,8 +54,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { conteoTotal } from '~/lib/flujo/calculos.js';
+import { diseñoDesdeUrl, aplicarDiseño, limpiarUrl, enlaceDiseño } from '~/lib/flujo/enlace.js';
 import { leerVariante } from '~/composables/useVariante';
 import { useProyecto, PASOS, type Paso } from '~/stores/proyecto';
 import {
@@ -101,8 +113,31 @@ function armarReloj() {
 watch(() => p.paso, () => { ayudaVista.value = false; armarReloj(); });
 
 const registroAlInicio = ref(false);
-onMounted(() => {
+// ─── Guardar y seguir despues (correo con el link al diseño) ───
+const guardar = reactive({ abierto: false, correo: '', estado: '' as '' | 'enviando' | 'ok' | 'error', link: '' });
+async function enviarLink() {
+  guardar.estado = 'enviando';
+  try {
+    guardar.link = await enlaceDiseño(p.$state);
+    if (!guardar.correo) guardar.correo = p.lead.correo;
+    const r = await fetch('https://api.racklog.cl/api/continuar-diseno', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: guardar.correo, nombre: p.lead.nombre, link: guardar.link }),
+    });
+    guardar.estado = r.ok ? 'ok' : 'error';
+    marcar('guardar_diseno', { ok: r.ok });
+  } catch {
+    guardar.estado = 'error';
+  }
+}
+onMounted(async () => {
   p.cargar();
+  // Link a un diseño (?d=...): se carga ese diseño (sin datos personales) y se limpia la URL
+  try {
+    const datos = await diseñoDesdeUrl();
+    if (datos) { aplicarDiseño(p, datos); limpiarUrl(); }
+  } catch { /* link dañado: sigue con lo guardado */ }
+  if (p.lead.correo) guardar.correo = p.lead.correo;
   registroAlInicio.value = leerVariante('registro') === 'inicio' && !p.registrado;
   aplicarDemo();
   p.$subscribe(() => p.persistir());
