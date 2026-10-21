@@ -8,7 +8,15 @@
 
     <template v-if="tipo === 'selectivo'">
       <g v-for="(n, i) in niveles" :key="`n${i}`">
-        <rect v-if="!n.piso" :x="x0" :y="y(n.y) - 3" :width="ancho" height="6" fill="#f97316" rx="1" />
+        <rect v-if="!n.piso" :x="x0" :y="y(n.y) - 3" :width="ancho" height="6" :fill="arrastre?.i === i - 1 ? '#c2410c' : '#f97316'" rx="1" />
+        <!-- Editable: la viga se toma y se arrastra; zona de toque amplia -->
+        <rect
+          v-if="!n.piso && editable" :x="x0 - 6" :y="y(n.y) - 11" :width="ancho + 12" height="22" fill="transparent" class="cursor-ns-resize"
+          role="slider" tabindex="0" :aria-label="`Viga del nivel ${i}`" :aria-valuenow="Math.round(n.y * 1000)" aria-valuemin="0" aria-valuemax="99999"
+          @pointerdown="tomar($event, i - 1)" @keydown.up.prevent="paso(i - 1, 1)" @keydown.down.prevent="paso(i - 1, -1)"
+        />
+        <!-- Luz libre bajo la viga (en rojo si no cabe la carga + 100 mm) -->
+        <text v-if="!n.piso && editable" :x="x0 + ancho + 4" :y="y(n.y) + 14" font-size="8" :fill="luzMala(i - 1) ? '#dc2626' : '#64748b'">luz {{ Math.round((m.luzLibre?.[i - 1] ?? 0) * 1000) }}</text>
         <g v-for="k in m.palletsPorViga" :key="k">
           <rect
             :x="x0 + hueco * k + anchoPallet * (k - 1)" :y="y(n.base + n.alto)"
@@ -37,9 +45,9 @@
       <line :x1="x0 - 22" :x2="x0 - 22" :y1="y(0)" :y2="y(m.alto)" stroke="#334155" stroke-width="0.8" marker-start="url(#fl-f)" marker-end="url(#fl-f)" />
       <text :x="x0 - 26" :y="(y(0) + y(m.alto)) / 2" text-anchor="middle" :transform="`rotate(-90 ${x0 - 26} ${(y(0) + y(m.alto)) / 2})`">alto {{ fm(m.alto) }} m</text>
       <!-- Distancia entre vigas (primer paso) a la derecha -->
-      <template v-if="paso">
-        <line :x1="x0 + ancho + 16" :x2="x0 + ancho + 16" :y1="y(paso.a)" :y2="y(paso.b)" stroke="#334155" stroke-width="0.8" marker-start="url(#fl-f)" marker-end="url(#fl-f)" />
-        <text :x="x0 + ancho + 21" :y="(y(paso.a) + y(paso.b)) / 2 + 3">{{ fm(paso.b - paso.a) }} m</text>
+      <template v-if="pasoCota && !editable">
+        <line :x1="x0 + ancho + 16" :x2="x0 + ancho + 16" :y1="y(pasoCota.a)" :y2="y(pasoCota.b)" stroke="#334155" stroke-width="0.8" marker-start="url(#fl-f)" marker-end="url(#fl-f)" />
+        <text :x="x0 + ancho + 21" :y="(y(pasoCota.a) + y(pasoCota.b)) / 2 + 3">{{ fm(pasoCota.b - pasoCota.a) }} m</text>
       </template>
       <!-- Largo de viga abajo -->
       <line :x1="x0" :x2="x0 + ancho" :y1="y(0) + 16" :y2="y(0) + 16" stroke="#334155" stroke-width="0.8" marker-start="url(#fl-f)" marker-end="url(#fl-f)" />
@@ -54,9 +62,11 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
+import { RACK } from '~/lib/rack3d/parametrosTecnicos.js';
 
-const props = defineProps<{ m: Record<string, any> }>();
+const props = defineProps<{ m: Record<string, any>; editable?: boolean }>();
+const emit = defineEmits<{ vigas: [nivelesY: number[]] }>();
 const W = 300, H = 280, x0 = 70, ancho = 170, arriba = 14, abajo = 40;
 const tipo = computed(() => props.m.tipo as 'selectivo' | 'drivein' | 'anra');
 const tope = computed(() => Math.max(props.m.altoConCarga ?? props.m.alto, props.m.alto) * 1.02);
@@ -88,10 +98,48 @@ const niveles = computed(() => {
   return [];
 });
 // Distancia entre la primera y la segunda viga (o del piso a la primera)
-const paso = computed(() => {
+const pasoCota = computed(() => {
   const ys = tipo.value === 'selectivo' ? props.m.nivelesY : tipo.value === 'drivein' ? props.m.cartelasY : props.m.nivelesY;
   if (!ys?.length) return null;
   return ys.length > 1 ? { a: ys[0], b: ys[1] } : { a: 0, b: ys[0] };
 });
+// ─── Vigas movibles (selectivo): de a una perforacion del pilar (3" = 76,2 mm) ───
+// La cara de arriba de la viga calza en la perforacion: 48,2 mm + k × 76,2 mm desde el piso
+const arrastre = ref<{ i: number } | null>(null);
+const PERF = RACK.pasoPerforado.valor, PERF0 = 0.0482;
+const aPerforacion = (t: number) => +(PERF0 + Math.round((t - PERF0) / PERF) * PERF).toFixed(4);
+// Limites de la cara de arriba de la viga i: sobre la carga de abajo + 100 mm y bajo la carga de arriba
+function limites(i: number) {
+  const m = props.m, av = m.altoViga, luz = RACK.luzVigas.valor;
+  const min = (i ? m.nivelesY[i - 1] + av / 2 : 0) + m.altosCarga[i] + luz + av;
+  const max = i < m.nivelesY.length - 1 ? m.nivelesY[i + 1] - av / 2 - m.altosCarga[i + 1] - luz : Infinity;
+  return { min, max };
+}
+const luzMala = (i: number) => (props.m.luzLibre?.[i] ?? 0) + 1e-6 < props.m.altosCarga[i] + RACK.luzVigas.valor;
+function mover(i: number, cara: number) {
+  const { min, max } = limites(i);
+  let t = aPerforacion(cara);
+  while (t < min - 1e-6) t = +(t + PERF).toFixed(4);
+  while (t > max + 1e-6) t = +(t - PERF).toFixed(4);
+  if (t < min - 1e-6) return;   // no cabe en ninguna perforacion
+  const ys = [...props.m.nivelesY];
+  ys[i] = +(t - props.m.altoViga / 2).toFixed(4);
+  if (Math.abs(ys[i] - props.m.nivelesY[i]) > 1e-4) emit('vigas', ys);
+}
+const paso = (i: number, s: number) => mover(i, props.m.nivelesY[i] + props.m.altoViga / 2 + s * PERF);
+function tomar(e: PointerEvent, i: number) {
+  e.preventDefault();
+  arrastre.value = { i };
+  const el = (e.target as SVGElement).ownerSVGElement!;
+  const alMover = (ev: PointerEvent) => {
+    const r = el.getBoundingClientRect(), py = ((ev.clientY - r.top) / r.height) * H;
+    const metros = ((H - abajo - py) / (H - abajo - arriba)) * tope.value;
+    mover(i, metros + props.m.altoViga / 2);
+  };
+  const soltar = () => { arrastre.value = null; window.removeEventListener('pointermove', alMover); window.removeEventListener('pointerup', soltar); };
+  window.addEventListener('pointermove', alMover);
+  window.addEventListener('pointerup', soltar);
+}
+
 const descripcion = computed(() => `Vista frontal: alto de marco ${fm(props.m.alto)} m, largo ${fm(largo.value)} m`);
 </script>
