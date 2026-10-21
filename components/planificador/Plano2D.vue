@@ -185,6 +185,19 @@
         </template>
       </g>
 
+      <!-- Accesorios propuestos (lib/rack3d/accesorios.js): canillera = punto amarillo, proteccion de
+           bastidor = barra amarilla y negra, baranda = linea amarilla gruesa -->
+      <g v-if="marcas?.length && !dibujando" pointer-events="none">
+        <template v-for="(mk, i) in marcas" :key="`mk-${i}`">
+          <circle v-if="mk.tipo === 'punto'" :cx="mk.x" :cy="mk.y" r="0.09" fill="#facc15" stroke="#854d0e" stroke-width="0.02" />
+          <g v-else-if="mk.tipo === 'barra'">
+            <line :x1="mk.x1" :y1="mk.y1" :x2="mk.x2" :y2="mk.y2" stroke="#facc15" stroke-width="0.16" />
+            <line :x1="mk.x1" :y1="mk.y1" :x2="mk.x2" :y2="mk.y2" stroke="#111827" stroke-width="0.16" stroke-dasharray="0.12 0.12" />
+          </g>
+          <line v-else :x1="mk.x1" :y1="mk.y1" :x2="mk.x2" :y2="mk.y2" stroke="#eab308" stroke-width="0.12" stroke-linecap="round" />
+        </template>
+      </g>
+
       <!-- Racks mas altos que la altura libre: borde ambar punteado -->
       <rect
         v-for="r in racks.filter((q) => altos?.has(q.id) && !conflictos.has(q.id))" :key="`alto-${r.id}`"
@@ -310,6 +323,8 @@ const props = defineProps<{
   muroSel?: number | null;
   // Pasillos frente a las caras de carga (los angostos se marcan en rojo)
   pasillos?: Pasillo[];
+  // Accesorios a dibujar en planta (m)
+  marcas?: Array<{ tipo: 'punto'; x: number; y: number } | { tipo: 'barra' | 'linea'; x1: number; y1: number; x2: number; y2: number }>;
   // Elemento seleccionado (pilar, porton, anden, oficina o zona)
   elementoSel?: string | null;
   // Plano o foto de referencia para calcar: url, tamano en px y metros por px
