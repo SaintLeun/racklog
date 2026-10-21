@@ -25,7 +25,7 @@ const prerenderRoutes = [
 
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
-  devtools: { enabled: process.env.NODE_ENV !== "production" },
+  devtools: { enabled: (globalThis as any).process?.env?.NODE_ENV !== "production" },
   css: ["~/assets/css/main.css"],
 
   // Contenido estatico: se renderiza en build (SSG) para que buscadores y

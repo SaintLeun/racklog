@@ -170,7 +170,7 @@
           </div>
 
           <ol class="grid grid-cols-2 gap-px border-t border-neutral-200 bg-neutral-200 text-sm sm:grid-cols-4">
-            <li v-if="it.modoStock === 'importacion'" class="ap-paso"><span>{{ it.nContenedores }} × {{ CONTENEDORES[it.contenedor].t }}{{ crecer.juntas > 1 ? ` × ${crecer.juntas} juntas` : '' }}</span><b>{{ crecer.cajas.toLocaleString('es-CL') }} cajas</b></li>
+            <li v-if="it.modoStock === 'importacion'" class="ap-paso"><span>{{ it.nContenedores }} × {{ (CONTENEDORES as Record<string, any>)[it.contenedor].t }}{{ crecer.juntas > 1 ? ` × ${crecer.juntas} juntas` : '' }}</span><b>{{ crecer.cajas.toLocaleString('es-CL') }} cajas</b></li>
             <li v-else-if="it.modoStock === 'cajas'" class="ap-paso"><span>Tu stock</span><b>{{ crecer.cajas.toLocaleString('es-CL') }} cajas</b></li>
             <li class="ap-paso"><span>{{ it.modoStock === 'pallets' ? 'Tu stock' : `÷ ${p.cajas} por pallet` }}</span><b>{{ crecer.pallets.toLocaleString('es-CL') }} pallets</b></li>
             <li class="ap-paso"><span>+ {{ Math.round(it.margen * 100) }}% margen</span><b>{{ crecer.necesarias.toLocaleString('es-CL') }} posiciones</b></li>

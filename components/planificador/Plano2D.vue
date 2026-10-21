@@ -467,7 +467,7 @@ const murosDibujo = computed(() => {
 });
 
 // Estilo de las cotas como atributos (no CSS): el plano se exporta copiando el SVG
-const TEXTO_COTA = computed(() => ({
+const TEXTO_COTA = computed((): Record<string, any> => ({
   'font-size': +(0.36 * k.value).toFixed(3), 'font-weight': 600, 'font-family': 'Inter, Arial, sans-serif', fill: '#334155',
   'paint-order': 'stroke', stroke: '#fff', 'stroke-width': +(0.12 * k.value).toFixed(3), 'stroke-linejoin': 'round', 'pointer-events': 'none',
 }));
@@ -575,7 +575,8 @@ const cotas = computed(() => {
   if (props.dibujando) return [];
   const vistas = new Set<string>();
   const sel = props.cotasTodas ? [] : (props.bodega.elementos ?? []).filter((e: Elemento) => e.id === props.elementoSel);
-  return [...conCotas.value.flatMap((r) => cotasRack(r, props.racks, props.bodega)), ...sel.flatMap((e: Elemento) => cotasElemento(e, props.bodega))].filter((c) => {
+  return [...conCotas.value.flatMap((r) => cotasRack(r, props.racks, props.bodega)), ...sel.flatMap((e: Elemento) => cotasElemento(e, props.bodega))].filter((c): c is NonNullable<typeof c> => {
+    if (!c) return false;
     const clave = [c.x1, c.y1, c.x2, c.y2].map((v) => v.toFixed(2)).sort().join();
     if (vistas.has(clave)) return false;
     vistas.add(clave);
@@ -587,7 +588,7 @@ const medidasRacks = computed(() => (props.dibujando ? [] : conCotas.value.map((
   return { x0: p.x0, y0: p.y0, ancho: p.ancho, alto: p.alto, x: p.x0 + p.ancho / 2, y: p.y0 + p.alto / 2 };
 })));
 
-const trazo = computed(() => contorno(props.bodega).map((p, i) => `${i ? 'L' : 'M'}${p.x} ${p.y}`).join(' ') + ' Z');
+const trazo = computed(() => contorno(props.bodega).map((p: Punto, i: number) => `${i ? 'L' : 'M'}${p.x} ${p.y}`).join(' ') + ' Z');
 
 function figura(r: RackPlano) {
   const p = rectangulo(r);

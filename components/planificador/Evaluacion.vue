@@ -29,7 +29,7 @@
       <section>
         <h3 class="text-sm font-semibold text-neutral-900">Hoy vs. tu diseño</h3>
         <label class="plan-eval-campo mt-2">Pallets que guardas hoy (en piso o racks)<input v-model.number="e.palletsHoy" type="number" min="0" class="plan-input !h-10" placeholder="250"></label>
-        <p v-if="e.palletsHoy > 0" class="mt-2 rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-800" role="status">
+        <p v-if="(e.palletsHoy ?? 0) > 0" class="mt-2 rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-800" role="status">
           <template v-if="ganadas >= 0">Ganas <strong>{{ ganadas }}</strong> posiciones ({{ e.palletsHoy ? `+${Math.round((ganadas / e.palletsHoy) * 100)} %` : '' }}).</template>
           <template v-else>Tu diseño tiene {{ -ganadas }} posiciones menos que hoy.</template>
         </p>

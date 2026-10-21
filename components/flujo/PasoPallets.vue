@@ -247,7 +247,7 @@ function sabe(t: TipoPallet, campo: string) {
 }
 
 // ─── Pallet armado desde la caja (se guarda en el proyecto: t.caja) ───
-const CAJA_TIPICA = { largo: 0.6, ancho: 0.4, alto: 0.3, peso: 15, apilable: 5, orientacion: 'auto' };
+const CAJA_TIPICA = { largo: 0.6, ancho: 0.4, alto: 0.3, peso: 15, apilable: 5, orientacion: 'auto' as const };
 function armado(t: TipoPallet) {
   const c = t.caja;
   if (!c || !(c.largo > 0 && c.ancho > 0 && c.alto > 0)) return null;

@@ -60,7 +60,7 @@
         <!-- Elemento seleccionado -->
         <section v-if="elementoActual" class="fl-card ring-2 ring-brand-200" aria-live="polite">
           <div class="flex items-center justify-between">
-            <p class="fl-leyenda">{{ ELEMENTOS[elementoActual.clase].nombre }}</p>
+            <p class="fl-leyenda">{{ (ELEMENTOS as Record<string, any>)[elementoActual.clase].nombre }}</p>
             <button type="button" class="text-sm text-neutral-500" @click="elementoSel = null">Cerrar</button>
           </div>
           <div v-if="elementoActual.clase === 'pasilloGrua'" class="mt-3">

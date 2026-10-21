@@ -167,7 +167,7 @@
           <div class="flex items-center justify-between gap-2">
             <p class="fl-leyenda">Tu {{ TIPOS[mod.tipo].nombre.toLowerCase() }}</p>
             <div class="flex gap-1 rounded-lg bg-neutral-100 p-0.5" role="tablist" aria-label="Vista del rack">
-              <button v-for="v in VISTAS_RACK" :key="v.v" type="button" role="tab" :aria-selected="vistaRack === v.v" :class="['rounded-md px-2 py-1.5 text-sm font-medium', vistaRack === v.v ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="vistaRack = v.v">{{ v.t }}</button>
+              <button v-for="v in VISTAS_RACK" :key="v.v" type="button" role="tab" :aria-selected="vistaRack === v.v" :class="['rounded-md px-2 py-1.5 text-sm font-medium', vistaRack === v.v ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="vistaRack = v.v as typeof vistaRack">{{ v.t }}</button>
             </div>
           </div>
           <FlujoElevacion v-if="vistaRack === 'frente'" :m="res.m" :editable="mod.tipo === 'RS'" class="mt-3 touch-none" @vigas="cambiar({ vigasY: $event })" />

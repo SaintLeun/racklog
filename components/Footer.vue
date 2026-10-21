@@ -167,7 +167,7 @@ const productCategories = [
 const featuredProducts = computed(() => {
   const allProducts = Object.values(products.value);
   // First try to get featured products
-  const featured = allProducts.filter(product => product.featured);
+  const featured = allProducts.filter((product: any) => product.featured);
   
   // If we have featured products, show them (up to 6)
   if (featured.length > 0) {

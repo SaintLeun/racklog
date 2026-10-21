@@ -84,8 +84,8 @@ function loadLinkedIn(id: string) {
 function forwardDataLayer(meta: boolean, linkedinConversion: string) {
   const w = window as any;
   const dl: any[] = (w.dataLayer = w.dataLayer || []);
-  if (dl.__pixeles) return;
-  dl.__pixeles = true;
+  if ((dl as any).__pixeles) return;
+  (dl as any).__pixeles = true;
   const enviar = (item: any) => {
     const evento = item && typeof item === 'object' ? item.event : undefined;
     if (typeof evento !== 'string') return;
@@ -149,7 +149,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   // Navegacion interna (SPA): PageView de Meta en cada pagina nueva
   if (metaId) {
     let ultima = location.pathname;
-    nuxtApp.$router.afterEach((to) => {
+    (nuxtApp.$router as any).afterEach((to: any) => {
       // La carga inicial ya conto su PageView en loadMetaPixel; solo los cambios de ruta suman
       if (to.path === ultima) return;
       ultima = to.path;

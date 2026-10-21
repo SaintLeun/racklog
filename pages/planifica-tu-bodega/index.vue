@@ -385,7 +385,7 @@ const calculo = computed<Modulacion>(() => {
     palletsPorViga: 2,
     totalPallets: Math.round(limitar(demo.cantidad, 1, 20000, 120)),
   });
-  return { niveles: r.niveles, alturas: r.alturas, porCuerpo: r.porCuerpo, cuerpos: r.cuerpos ?? 0, limitadoPor: r.limitadoPor };
+  return { niveles: r.niveles, alturas: r.alturas, porCuerpo: r.porCuerpo, cuerpos: r.cuerpos ?? 0, limitadoPor: r.limitadoPor } as Modulacion;
 });
 
 const datosDemo = computed(() => ({
