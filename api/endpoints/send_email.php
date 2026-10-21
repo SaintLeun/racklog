@@ -118,6 +118,20 @@ function handleSendEmail(string $method): void {
     $leadResult = createLead($data, $type, $ref);
     $leadOk = $leadResult['error'] === null && $leadResult['status'] >= 200 && $leadResult['status'] < 300;
 
+    // Tour "Planifica tu bodega": nota con UTM/rol/puntaje, tarea a 24 h y plano adjunto en Kommo.
+    // Un fallo aqui solo se registra: el correo y el lead ya estan.
+    $tourResult = null;
+    if ($leadOk) {
+        try {
+            $tourResult = procesarLeadTour($data, $type, $ref, $leadResult, $attachments);
+        } catch (Throwable $e) {
+            $tourResult = ['errores' => ['excepcion: ' . $e->getMessage()]];
+        }
+        if ($tourResult !== null && !empty($tourResult['errores'])) {
+            logEvent('error', 'kommo_tour', ['ref' => $ref, 'kommo_lead_id' => $leadResult['id'] ?? null] + $tourResult);
+        }
+    }
+
     $intranetLead = buildIntranetLead($data, $type, $ref, $leadResult);
     $intranetResult = sendLeadToIntranet($intranetLead);
     $intranetOk = $intranetResult['error'] === null;
@@ -170,6 +184,8 @@ function handleSendEmail(string $method): void {
         'kommo_status' => $leadResult['status'],
         'kommo_error' => $leadResult['error'],
         'kommo_lead_id' => $leadResult['id'] ?? null,
+        'kommo_tarea' => $tourResult['tarea'] ?? null,
+        'kommo_archivos' => $tourResult['archivos'] ?? null,
         'intranet_saved' => $intranetOk,
         'intranet_status' => $intranetResult['status'],
         'intranet_error' => $intranetResult['error'],

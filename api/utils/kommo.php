@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/kommo_tour.php';
+
 function kommoConfigured(): bool {
     global $BEARER_TOKEN;
     return is_string($BEARER_TOKEN) && strlen($BEARER_TOKEN) > 20
@@ -124,6 +126,18 @@ function createLead(array $data, string $tipo, string $referencia, ?int $recibid
             ]
         ]
     ];
+
+    // Tour "Planifica tu bodega": etiqueta tour-logistico y campos propios configurados (kommo_tour.php)
+    $tour = extrasLeadTour($data, $tipoNormalizado);
+    if ($tour['tags']) {
+        $payload[0]['_embedded'] = ['tags' => $tour['tags']];
+    }
+    foreach ($tour['campos'] as $campo) {
+        $payload[0]['custom_fields_values'][] = $campo;
+    }
+    if ($tour['responsable'] !== null) {
+        $payload[0]['responsible_user_id'] = $tour['responsable'];
+    }
 
     $ch = curl_init($apiUrl);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
