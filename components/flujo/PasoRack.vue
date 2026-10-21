@@ -156,8 +156,14 @@
       <!-- 4. Resultado inmediato -->
       <aside class="lg:sticky lg:top-24 lg:self-start">
         <div class="fl-card">
-          <p class="fl-leyenda">Tu {{ TIPOS[mod.tipo].nombre.toLowerCase() }}</p>
-          <FlujoElevacion :m="res.m" class="mt-3" />
+          <div class="flex items-center justify-between gap-2">
+            <p class="fl-leyenda">Tu {{ TIPOS[mod.tipo].nombre.toLowerCase() }}</p>
+            <div class="flex gap-1 rounded-lg bg-neutral-100 p-0.5" role="tablist" aria-label="Vista del rack">
+              <button v-for="v in (['frente', 'planta'] as const)" :key="v" type="button" role="tab" :aria-selected="vistaRack === v" :class="['rounded-md px-2.5 py-1.5 text-sm font-medium', vistaRack === v ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="vistaRack = v">{{ v === 'frente' ? 'De frente' : 'En planta' }}</button>
+            </div>
+          </div>
+          <FlujoElevacion v-if="vistaRack === 'frente'" :m="res.m" class="mt-3" />
+          <FlujoPlantaRack v-else :m="res.m" class="mt-3" />
           <dl class="mt-4 grid grid-cols-2 gap-3">
             <div class="fl-dato"><dt>{{ mod.tipo === 'AR' ? 'Bandejas' : 'Posiciones' }} por {{ mod.tipo === 'DI' ? 'calle' : 'cuerpo' }}</dt><dd><FlujoContador :valor="res.porCuerpo" /></dd></div>
             <div class="fl-dato"><dt>{{ mod.tipo === 'DI' ? 'Calles' : 'Cuerpos' }} que necesitas</dt><dd><FlujoContador :valor="res.cuerpos" /></dd></div>
@@ -186,13 +192,14 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useProyecto, type Sistema, type Modelo } from '~/stores/proyecto';
 import { TIPOS } from '~/lib/rack3d/planificador.js';
 import { resultadoModelo, nivelesMaximos, mezclaPorDefecto } from '~/lib/flujo/calculos.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();
+const vistaRack = ref<'frente' | 'planta'>('frente');
 const SEMAFORO = { verde: 'bg-green-50 text-green-900', amarillo: 'bg-amber-50 text-amber-900', rojo: 'bg-red-50 text-red-900' } as const;
 const fm = (v: number) => (+(+v).toFixed(2)).toLocaleString('es-CL');
 const cm = (v: number) => Math.round(v * 100);

@@ -15,14 +15,34 @@
           <input v-model.trim="t.nombre" class="fl-input-titulo" :aria-label="`Nombre del pallet ${i + 1}`">
           <button v-if="p.pallets.length > 1" type="button" class="fl-quitar" :aria-label="`Quitar ${t.nombre}`" @click="p.pallets.splice(i, 1)">Quitar</button>
         </div>
+        <!-- Medida: frente (lo que se ve desde el pasillo) y fondo (lo que entra al rack) -->
+        <div class="mt-4 grid items-center gap-4 sm:grid-cols-[1fr_220px]">
+          <div>
+            <p class="text-[15px] font-medium text-neutral-700">Medida del pallet</p>
+            <div class="mt-2 grid grid-cols-2 gap-2">
+              <button
+                v-for="b in MEDIDAS" :key="b.t" type="button"
+                :class="['fl-chip !min-h-10 !text-sm', t.frente === b.frente && t.fondo === b.fondo && 'fl-chip--sel']"
+                :aria-pressed="t.frente === b.frente && t.fondo === b.fondo"
+                @click="t.frente = b.frente; t.fondo = b.fondo"
+              >{{ b.t }}</button>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-3">
+              <label class="fl-campo">
+                <span>Frente (m) <FlujoInfo>El lado que ves desde el pasillo: por ahí entran las horquillas.</FlujoInfo></span>
+                <input v-model.number="t.frente" type="number" min="0.6" max="1.6" step="0.05" inputmode="decimal" class="form-input" :class="err(t).frente && 'fl-error'">
+              </label>
+              <label class="fl-campo">
+                <span>Fondo (m) <FlujoInfo>Lo que el pallet entra hacia adentro del rack. Define el fondo del marco.</FlujoInfo></span>
+                <input v-model.number="t.fondo" type="number" min="0.6" max="1.6" step="0.05" inputmode="decimal" class="form-input" :class="err(t).fondo && 'fl-error'">
+              </label>
+            </div>
+            <small v-if="err(t).frente || err(t).fondo" class="fl-msg">{{ err(t).frente || err(t).fondo }}</small>
+          </div>
+          <FlujoPalletPlanta :frente="t.frente" :fondo="t.fondo" class="mx-auto" />
+        </div>
         <div class="mt-4 grid gap-4 sm:grid-cols-2">
-          <label class="fl-campo">
-            <span>Medida del pallet</span>
-            <select :value="base(t)" class="form-input" @change="cambiarBase(t, ($event.target as HTMLSelectElement).value)">
-              <option v-for="b in BASES" :key="b.v" :value="b.v">{{ b.t }}</option>
-            </select>
-          </label>
-          <label class="fl-campo">
+          <label class="fl-campo sm:col-span-2">
             <span>¿Cuántos tienes?</span>
             <input v-model.number="t.cantidad" type="number" min="1" step="1" inputmode="numeric" class="form-input" :class="err(t).cantidad && 'fl-error'">
             <small v-if="err(t).cantidad" class="fl-msg">{{ err(t).cantidad }}</small>
@@ -116,7 +136,7 @@
 import { ref, computed, reactive, onMounted } from 'vue';
 import { useProyecto, type TipoPallet } from '~/stores/proyecto';
 import { ROTACION } from '~/lib/rack3d/mezcla.js';
-import { BASES, armarPallet } from '~/lib/tour/pallet.js';
+import { armarPallet } from '~/lib/tour/pallet.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();
@@ -132,12 +152,13 @@ onMounted(() => {
 const fm = (v: number) => v.toFixed(2).replace('.', ',');
 const cm = (v: number) => Math.round(v * 100);
 const mts = (e: Event) => Math.max(0.05, Number((e.target as HTMLInputElement).value) / 100 || 0.05);
-const base = (t: TipoPallet) => BASES.find((b) => b.frente === t.frente && b.fondo === t.fondo)?.v ?? BASES[0].v;
-function cambiarBase(t: TipoPallet, v: string) {
-  const b = BASES.find((x) => x.v === v)!;
-  t.frente = b.frente;
-  t.fondo = b.fondo;
-}
+// Medidas tipicas: frente × fondo (el frente es el lado del pasillo)
+const MEDIDAS = [
+  { t: '1,0 frente × 1,2 fondo', frente: 1.0, fondo: 1.2 },
+  { t: '1,2 frente × 1,0 fondo', frente: 1.2, fondo: 1.0 },
+  { t: '0,8 frente × 1,2 fondo', frente: 0.8, fondo: 1.2 },
+  { t: '1,0 × 1,0', frente: 1.0, fondo: 1.0 },
+];
 function noSe(t: TipoPallet, campo: 'alto' | 'peso', tipico: number) {
   t[campo] = tipico;
   t.noSe = [...new Set([...(t.noSe ?? []), campo])];
@@ -170,6 +191,8 @@ function err(t: TipoPallet) {
   if (!(t.alto >= 0.3 && t.alto <= 2.5)) e.alto = 'Entre 0,3 y 2,5 m.';
   if (!(t.peso > 0 && t.peso <= 2000)) e.peso = 'Entre 1 y 2.000 kg.';
   if (!(t.cantidad >= 1)) e.cantidad = 'Al menos 1.';
+  if (!(t.frente >= 0.6 && t.frente <= 1.6)) e.frente = 'El frente va entre 0,6 y 1,6 m.';
+  if (!(t.fondo >= 0.6 && t.fondo <= 1.6)) e.fondo = 'El fondo va entre 0,6 y 1,6 m.';
   return e;
 }
 const valido = computed(() => (conCajas.value
