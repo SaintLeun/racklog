@@ -27,7 +27,7 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 | V1 | Mostrar, no preguntar: cada dato cambia algo visible al instante | 🟡 pasos 3 y 5 sí; pasos 1, 2 y 4 no |
 | V2 | Pantalla dividida, dibujo/3D ≥ 60 % (arriba en celular) en **todos** los pasos | 🟡 pasos 5 y 6 sí; paso 3 parcial; 1, 2, 4, 7 no |
 | V3 | Su bodega: nombre de su producto, su logo/empresa en plano y PDF | 🟡 nombre de producto sí; logo/empresa ⬜ |
-| V4a | Paso 2: pallet que se arma caja por caja en 3D | ⬜ |
+| V4a | Paso 2: pallet que se arma caja por caja en 3D | ✅ |
 | V4b | Paso 3: rack que se levanta nivel por nivel | ⬜ |
 | V4c | Paso 5: "Llenar mi bodega" con racks repitiéndose entre pilares y contador que sube | 🟡 ubicación automática sí; animación y contador ⬜ |
 | V4d | Paso 6: recorrido 3D (planta → altura de operador), grúas y personas; antes/después (+X %) | ⬜ (grúa opera, cámara a la grúa: 🟡) |
@@ -37,17 +37,17 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 | V8 | CTA con contexto ("Cotizar mis 312 posiciones") | ⬜ |
 | V9 | Eventos en cada momento "wow" | 🟡 eventos base sí; por momento wow ⬜ |
 
-## §R1 Regresiones (volver a lo que traía el patch, sin simplificar)
+## §R1 Regresiones (volver a lo que traía el patch, sin simplificar) — ✅ terminado
 | Pedido | Estado |
 |---|---|
-| Paso 2 con "Arma tu pallet" en **3D**: caja (medidas, peso, cuántas apiladas), 2 orientaciones, camas, alto, peso total, **densidad kg/m³**; una tipología por mercadería | 🟡 cálculo caja→pallet sí (sin 3D, sin densidad) |
+| Paso 2 con "Arma tu pallet" en **3D**: caja (medidas, peso, cuántas apiladas), 2 orientaciones, camas, alto, peso total, **densidad kg/m³**; una tipología por mercadería | ✅ pallet se arma caja por caja en 3D; + cantidad desde importaciones (1 y 2 años) |
 | Catálogo "Tus pallets" (alto, peso, cantidad, rotación) pasa por `useProyecto` al paso 3 | ✅ |
-| Mezcla de niveles / "Acomodar solo" con los componentes del patch (`MezclaNiveles`, `TiposPallet`) | 🟡 funciona con UI propia; reutilizar componentes del patch ⬜ |
-| `CorteRack`, `GruaDriveIn` dentro del stepper | 🟡 GruaDriveIn sí; CorteRack ⬜ |
+| Mezcla de niveles / "Acomodar solo" con los componentes del patch (`MezclaNiveles`) | ✅ (`TiposPallet` reemplazado por el paso 2 con cajas) |
+| `CorteRack`, `GruaDriveIn` dentro del stepper | ✅ |
 | Grilla de pilares, pasillo de grúa, peatonal, grúas | ✅ paso 5 |
 | Volver a cualquier paso sin perder nada (incluido el 3D) | ✅ stepper + 3D en paso 5 |
 
-## §R2 Bugs de cálculo — ✅ terminado
+## §R2 Bugs de cálculo — ✅ terminado (y medidas iguales al cotizador de la intranet: prueba-intranet)
 - ✅ Una sola cuenta (cuerpo = vano de un lado) en pasos 3, 5, 6 y cotización (`conteoRack`).
 - ✅ Frente y fondo del pallet como inputs, presets, "Girar pallet", dibujo con viga y marco, cálculo a la vista.
 - ✅ Fondo de marco y viga con fórmulas del cotizador (CA22/CA29/CA30/CA23).
@@ -131,7 +131,7 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 |---|---|
 | Flujo completo en 390 px sin scroll horizontal, CTA a mano | ✅ |
 | CASATEC → selectivo, drive-in alternativa calculada, revisar_asesor | ⛔ (R3) |
-| Caso importación (1.500 cajas, 75 pallets, 83 hoy, 43 a crecer) | ⬜ verificar en el flujo nuevo |
+| Caso importación (1.500 cajas, 75 pallets, 83 hoy, 43 a crecer) | ✅ (prueba-importacion) |
 | Pallets mezclados → 1,2 m piso y niveles 1–2; 1,7 m nivel 3 | ✅ (prueba) |
 | Sobrante siempre 300–1.000 mm; techo con punta de la carga | ✅ (ver pregunta: cotizador usa 200) |
 | Protecciones de bastidor en doble de 3 filas | ✅ con regla del dueño (12 de 1.000 mm, una por bastidor) |
@@ -139,7 +139,7 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 | Pallet 1,2 × 1,0 frente 1,0 → viga 2,3; girado → 2,7, y cambia el marco | ✅ (prueba) |
 | Toda recomendación con por qué y alternativa dibujada | ⛔ (R3) |
 | Cada input cambia el dibujo al instante; visual ≥ 60 % en cada paso | 🟡 (V2) |
-| Paso 2 con pallet en 3D y densidad | ⬜ (R1) |
+| Paso 2 con pallet en 3D y densidad | ✅ |
 | Vigas se arrastran (paso de perforación) y se valida la luz | ⬜ (R4; paso real 76,2 mm) |
 | Pilares N × M equidistantes; portones y andenes editables; ningún rack sobre ellos | 🟡 (R5) |
 | 2+ grúas 5 min → 0 choques; nº de grúas por movimientos | ⬜ (R6) |
@@ -153,6 +153,7 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 | Lighthouse móvil ≥ 85 / ≥ 95 en la landing | ⬜ |
 
 ## Preguntas abiertas al dueño
+0. Medidas: fondo de marco = pallet − 200 (CA22), viga por W (AS2), alturas CA23, drive-in del cotizador DI: ✅ aplicado.
 1. Sobrante de marco: el cotizador usa 200 mm por defecto; el v2 pide 300–1.000. ¿Mínimo 200 o 300?
 2. Luz entre marcos dobles: catálogo 0/200/300, motor 0 por defecto; con pallets que sobresalen 100 mm, 0 hace chocar los pallets. Hoy 200. ¿Correcto?
 3. Falta `docs/LOGICA-SELECCION-RACKS.md` (R3).

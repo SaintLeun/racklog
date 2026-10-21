@@ -28,6 +28,8 @@ export interface TipoPallet {
   // Armado desde la caja (paso 2): medidas en m, kg por caja, cuantas aguanta apiladas y orientacion
   desdeCaja?: boolean;
   caja?: { largo: number; ancho: number; alto: number; peso: number; apilable: number; orientacion: 'auto' | 'largo' | 'ancho' };
+  // Cantidad desde importaciones (contenedor, cuantos por llegada, semanas entre llegadas y en bodega)
+  importacion?: { contenedor: string; n: number; entre: number; bodega: number; actuales: number; margen: number; crecimiento: number };
   // Campos que el cliente dejo en "No sé": se usa el valor tipico y el ejecutivo lo confirma
   noSe?: string[];
 }

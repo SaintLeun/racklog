@@ -95,6 +95,33 @@
                 </div>
               </div>
             </div>
+            <!-- Cuantos pallets: desde las importaciones (contenedores que llegan y lo que tardan en salir) -->
+            <details class="fl-mas rounded-xl bg-neutral-50 px-3" :open="!!t.importacion">
+              <summary @click="t.importacion ??= { contenedor: 'c40', n: 1, entre: 8, bodega: 8, actuales: 0, margen: 0.1, crecimiento: 0.2 }">¿No sabes cuántos pallets? Calcúlalo desde tus importaciones</summary>
+              <div v-if="t.importacion" class="space-y-3 pb-3">
+                <div class="grid grid-cols-3 gap-2">
+                  <button v-for="(c, k) in CONTENEDORES" :key="k" type="button" :class="['fl-chip !min-h-10 !text-sm', t.importacion.contenedor === k && 'fl-chip--sel']" @click="t.importacion.contenedor = k">{{ c.t }}</button>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="fl-campo"><span class="!text-sm">Contenedores por llegada</span><input v-model.number="t.importacion.n" type="number" min="1" class="form-input"></label>
+                  <label class="fl-campo"><span class="!text-sm">Llegan cada</span>
+                    <select v-model.number="t.importacion.entre" class="form-input"><option v-for="s in SEMANAS" :key="s.v" :value="s.v">{{ s.t }}</option></select>
+                  </label>
+                  <label class="fl-campo"><span class="!text-sm">Tarda en salir</span>
+                    <select v-model.number="t.importacion.bodega" class="form-input"><option v-for="s in SEMANAS" :key="s.v" :value="s.v">{{ s.t }}</option></select>
+                  </label>
+                  <label class="fl-campo"><span class="!text-sm">Posiciones que ya tienes</span><input v-model.number="t.importacion.actuales" type="number" min="0" class="form-input"></label>
+                  <label class="fl-campo"><span class="!text-sm">Margen (%)</span><input :value="Math.round(t.importacion.margen * 100)" type="number" min="0" max="100" class="form-input" @input="t.importacion.margen = (Number(($event.target as HTMLInputElement).value) || 0) / 100"></label>
+                  <label class="fl-campo"><span class="!text-sm">Crecimiento anual (%)</span><input :value="Math.round(t.importacion.crecimiento * 100)" type="number" min="0" max="200" class="form-input" @input="t.importacion.crecimiento = (Number(($event.target as HTMLInputElement).value) || 0) / 100"></label>
+                </div>
+                <div v-if="demanda(t)" class="rounded-lg bg-white p-3 text-sm text-neutral-700 ring-1 ring-neutral-200">
+                  <p>{{ n(demanda(t)!.cajas) }} cajas en bodega · {{ n(demanda(t)!.pallets) }} pallets</p>
+                  <p class="mt-1 font-semibold text-neutral-900">Necesitas {{ n(demanda(t)!.necesarias) }} posiciones hoy: te faltan {{ n(demanda(t)!.aCrecer) }}</p>
+                  <p class="mt-1 text-neutral-500">En 1 año: {{ n(demanda(t)!.en1) }} · en 2 años: {{ n(demanda(t)!.en2) }}</p>
+                  <button type="button" class="fl-btn mt-3 !min-h-10 w-full !text-sm" @click="t.cantidad = Math.max(1, demanda(t)!.aCrecer)">Usar las {{ n(demanda(t)!.aCrecer) }} que faltan</button>
+                </div>
+              </div>
+            </details>
             <fieldset>
               <legend class="text-[15px] font-medium text-neutral-700">Cómo van en el pallet</legend>
               <div class="mt-2 grid grid-cols-2 gap-2">
@@ -183,7 +210,7 @@
 import { ref, computed, watch, watchEffect, onMounted } from 'vue';
 import { useProyecto, type TipoPallet } from '~/stores/proyecto';
 import { ROTACION } from '~/lib/rack3d/mezcla.js';
-import { armarPallet, orientaciones } from '~/lib/tour/pallet.js';
+import { armarPallet, orientaciones, demandaImportacion, CONTENEDORES } from '~/lib/tour/pallet.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();
@@ -223,6 +250,12 @@ function armado(t: TipoPallet) {
   const largoEnFrente = c.orientacion === 'largo' ? true : c.orientacion === 'ancho' ? false : undefined;
   const r = armarPallet({ base: { frente: t.frente, fondo: t.fondo }, caja: c, pesoCaja: c.peso || 0, apilable: c.apilable || 1, largoEnFrente });
   return r.cajas > 0 ? r : null;
+}
+const SEMANAS = [{ v: 1, t: '1 semana' }, { v: 2, t: '2 semanas' }, { v: 4, t: '1 mes' }, { v: 8, t: '2 meses' }, { v: 13, t: '3 meses' }, { v: 26, t: '6 meses' }, { v: 52, t: '1 año' }];
+function demanda(t: TipoPallet) {
+  const a = armado(t), i = t.importacion;
+  if (!a || !i || !t.caja) return null;
+  return demandaImportacion({ contenedor: i.contenedor, nContenedores: i.n, caja: t.caja, pesoCaja: t.caja.peso, apilable: t.caja.apilable, semanasEntre: i.entre, semanasBodega: i.bodega, cajasPorPallet: a.cajas, actuales: i.actuales, margen: i.margen, crecimiento: i.crecimiento });
 }
 function usarCajas(t: TipoPallet) {
   t.caja ??= { ...CAJA_TIPICA };

@@ -100,17 +100,11 @@
           <!-- Tipo de pallet por nivel (selectivo con mas de un tipo) -->
           <div v-if="mod.tipo === 'RS' && tiposModelo.length > 1" class="mt-6 border-t border-neutral-100 pt-5">
             <div class="flex items-center justify-between gap-3">
-              <p class="fl-sub">Qué pallet va en cada nivel</p>
+              <span />
               <button type="button" class="text-sm font-semibold text-brand-700" @click="acomodar">Acomodar solo</button>
             </div>
-            <ol class="mt-3 space-y-2">
-              <li v-for="(id, i) in [...res.r.mezcla].reverse()" :key="i" class="flex items-center gap-3">
-                <span class="w-16 flex-shrink-0 text-sm text-neutral-600">{{ alturaNombre(res.r.mezcla.length - 1 - i) }}</span>
-                <select :value="id" class="form-input" @change="asignar(res.r.mezcla.length - 1 - i, ($event.target as HTMLSelectElement).value)">
-                  <option v-for="t in tiposModelo" :key="t.id" :value="t.id">{{ t.nombre }} · {{ fm(t.alto) }} m</option>
-                </select>
-              </li>
-            </ol>
+            <!-- Componente del planificador: elevacion clickeable y "aplicar a todos los selectivos" -->
+            <PlanificadorMezclaNiveles class="mt-3" :rack="res.r" :tipos="tiposModelo" @asignar="cambiar({ mezcla: $event })" @todos="aplicarATodos" />
             <p class="mt-2 text-sm text-neutral-500">"Acomodar solo": lo que sale más seguido va abajo; lo alto y lento, arriba.</p>
           </div>
 
@@ -178,7 +172,7 @@
           <!-- La cuenta a la vista: de donde salen viga y marco -->
           <p v-if="mod.tipo === 'RS'" class="mt-3 rounded-lg bg-neutral-50 px-3 py-2 text-sm leading-relaxed text-neutral-600">
             Viga = {{ res.m.palletsPorViga }} × {{ fm(res.m.pallet.frente) }} + {{ res.m.palletsPorViga + 1 }} × {{ fm(RACK.holguraViga.valor) }} = <b class="text-neutral-800">{{ fm(res.m.viga) }} m</b><br>
-            Fondo del marco = {{ fm(res.m.pallet.fondo) }} − 2 × {{ fm(RACK.voladizoPallet.valor) }} = <b class="text-neutral-800">{{ fm(res.m.fondo) }} m</b>
+            Fondo del marco = {{ fm(res.m.pallet.fondo) }} − 2 × {{ fm(RACK.voladizoPallet.valor) }} = <b class="text-neutral-800">{{ fm(res.m.fondo) }} m</b><br>
             Viga {{ res.m.vigaModelo }} ({{ Math.round(res.m.altoViga * 1000) }} mm) para {{ n(res.m.kgPallet) }} kg por pallet
             <span class="block text-xs text-neutral-500">Mismas fórmulas del cotizador Racklog. El pallet sobresale {{ Math.round(RACK.voladizoPallet.valor * 1000) }} mm por lado.</span>
           </p>
@@ -187,6 +181,8 @@
             {{ n(res.carga.kg) }} de {{ n(res.carga.capacidad) }} kg ({{ Math.round(res.carga.uso * 100) }} %)
             <span class="block text-xs opacity-80">Capacidad referencial: la confirma Técnica Racklog.</span>
           </div>
+          <!-- Corte contra el techo: holgura y si cabe un nivel mas (componente del planificador) -->
+          <PlanificadorCorteRack v-if="mod.tipo !== 'AR'" :rack="res.r" :altura="p.bodega.altura" class="mt-4" />
           <ul v-if="res.avisos.length" class="mt-3 space-y-1.5 text-sm text-amber-900">
             <li v-for="(a, i) in res.avisos" :key="i" class="rounded-lg bg-amber-50 px-3 py-2">{{ a }}</li>
           </ul>
@@ -289,6 +285,13 @@ function asignar(i: number, id: string) {
 function acomodar() {
   if (!mod.value) return;
   cambiar({ mezcla: mezclaPorDefecto({ ...mod.value, mezcla: [] }, p.pallets) });
+}
+// "Aplicar a todos": esa altura con ese tipo en todos los selectivos del proyecto
+function aplicarATodos(i: number, id: string | null) {
+  p.modelos.filter((m) => m.tipo === 'RS' && m.niveles >= i).forEach((m) => {
+    const actual = resultadoModelo(m, { pallets: p.pallets }).r.mezcla as (string | null)[];
+    p.cambiarModelo(m.id, { mezcla: actual.map((x, j) => (j === i ? id : x)) });
+  });
 }
 function plano(i: number, tipo: string) {
   const planos = Array.from({ length: (mod.value?.niveles ?? 0) + 1 }, (_, j) => (j === i ? tipo || null : res.value.r.planos?.[j] ?? null));
