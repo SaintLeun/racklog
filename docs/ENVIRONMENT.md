@@ -25,6 +25,18 @@
 ## Valores públicos en el frontend (no son secretos, pero quedan visibles en el bundle)
 - Google Tag Manager ID: [plugins/gtag.client.ts](plugins/gtag.client.ts)
 - Microsoft Clarity tag ID: [nuxt.config.ts](nuxt.config.ts)
+- Meta Pixel y LinkedIn Insight Tag: [plugins/analytics.client.ts](../plugins/analytics.client.ts). Vacíos por defecto
+  (no se carga nada). Igual que GTM y Clarity, solo se cargan después de aceptar las cookies de analítica.
+  Dos formas de activarlos:
+  1. Poner el ID en las constantes `META_PIXEL_ID`, `LINKEDIN_PARTNER_ID` y `LINKEDIN_CONVERSION_ID` del plugin, o
+  2. declarar en `nuxt.config.ts` → `runtimeConfig.public` las claves `metaPixelId`, `linkedinPartnerId` y
+     `linkedinConversionId` (con valor `''`) y definir al generar el sitio `NUXT_PUBLIC_META_PIXEL_ID`,
+     `NUXT_PUBLIC_LINKEDIN_PARTNER_ID` y `NUXT_PUBLIC_LINKEDIN_CONVERSION_ID` (el sitio es estático: el valor queda
+     fijo en el build).
+  Eventos que se reenvían desde el `dataLayer`: `quote_sent` → Meta `Lead` y conversión de LinkedIn
+  (`LINKEDIN_CONVERSION_ID`); `registro_ok` → `CompleteRegistration`; `whatsapp_click` → `Contact`;
+  `quote_open`, `tour_start`, `recomendacion`, `kpi_view`, `pdf_download` → eventos personalizados de Meta.
+  Cada cambio de ruta suma un `PageView` de Meta.
 
 ## Recomendaciones
 - Rotar cualquier token si se comparte el repositorio con terceros.
