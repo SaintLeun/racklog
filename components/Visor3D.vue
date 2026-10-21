@@ -43,6 +43,18 @@
         </svg>
         Centrar vista
       </button>
+      <button
+        v-if="hayOperacion"
+        type="button"
+        class="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-lg bg-white/90 px-2.5 py-1.5 text-xs font-medium text-neutral-700 shadow-sm ring-1 ring-black/10 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+        :aria-pressed="operando"
+        title="La grúa recorre un pasillo que cumple, deja un pallet en un nivel que alcanza y lo vuelve a sacar"
+        @click="alternarOperacion"
+      >
+        <svg v-if="operando" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6 4h3v12H6zM11 4h3v12h-3z" /></svg>
+        <svg v-else class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6 4l10 6-10 6z" /></svg>
+        {{ operando ? 'Pausar grúa' : 'Ver grúa operando' }}
+      </button>
     </template>
   </div>
 </template>
@@ -80,6 +92,15 @@ let visor: ReturnType<Modulos['visor']['crearVisor']> | null = null;
 
 let ultimaBodega = '';
 
+// Grua operando (solo planificador, si hay un pasillo que cumple): parte encendida salvo que el
+// usuario pida menos movimiento
+const hayOperacion = ref(false);
+const operando = ref(typeof window !== 'undefined' && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+function alternarOperacion() {
+  operando.value = !operando.value;
+  visor?.operar(operando.value);
+}
+
 function construirModelo() {
   if (!mods || !visor) return;
   const { construir, medidas, bodega } = mods;
@@ -88,6 +109,7 @@ function construirModelo() {
     const clave = JSON.stringify([props.bodega.ancho, props.bodega.largo, props.bodega.forma ?? null]);
     visor.mostrar(bodega.construirBodega(props.bodega, props.racks ?? []), { reencuadrar: clave !== ultimaBodega, direccion: [0.25, 1.1, 1], margen: 0.95 });
     ultimaBodega = clave;
+    hayOperacion.value = visor.operar(operando.value);
     return;
   }
   const c = (props.config ?? {}) as Record<string, any>;
