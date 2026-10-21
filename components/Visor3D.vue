@@ -36,7 +36,7 @@
         type="button"
         class="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-lg bg-white/90 px-2.5 py-1.5 text-xs font-medium text-neutral-700 shadow-sm ring-1 ring-black/10 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
         title="Volver a la vista inicial (doble clic en un punto para acercarte a él)"
-        @click="visor?.centrar()"
+        @click="vistaActiva = ''; visor?.centrar()"
       >
         <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
           <path d="M3 7V3h4M17 7V3h-4M3 13v4h4M17 13v4h-4" stroke-linecap="round" stroke-linejoin="round" />
@@ -48,12 +48,12 @@
         type="button"
         class="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-lg bg-white/90 px-2.5 py-1.5 text-xs font-medium text-neutral-700 shadow-sm ring-1 ring-black/10 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
         :aria-pressed="operando"
-        title="La grúa recorre un pasillo que cumple, deja un pallet en un nivel que alcanza y lo vuelve a sacar"
+        title="Cada grúa va del andén a su pasillo, deja un pallet en un nivel que alcanza y en la vuelta siguiente lo saca, sin cruzarse con las otras ni con las personas"
         @click="alternarOperacion"
       >
         <svg v-if="operando" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6 4h3v12H6zM11 4h3v12h-3z" /></svg>
         <svg v-else class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6 4l10 6-10 6z" /></svg>
-        {{ operando ? 'Pausar grúa' : 'Ver grúa operando' }}
+        {{ operando ? (gruas > 1 ? `Pausar ${gruas} grúas` : 'Pausar grúa') : (gruas > 1 ? `Ver ${gruas} grúas operando` : 'Ver grúa operando') }}
       </button>
       <button
         v-if="hayOperacion"
@@ -61,6 +61,44 @@
         class="absolute left-3 top-12 inline-flex items-center gap-1.5 rounded-lg bg-white/90 px-2.5 py-1.5 text-xs font-medium text-neutral-700 shadow-sm ring-1 ring-black/10 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
         @click="verGrua"
       >Ver la grúa de cerca</button>
+      <div v-if="bodega" class="absolute right-3 top-12 flex max-w-[60%] flex-col items-end gap-1.5">
+        <div class="inline-flex overflow-hidden rounded-lg bg-white/90 text-xs font-medium text-neutral-700 shadow-sm ring-1 ring-black/10" role="group" aria-label="Vistas de la cámara">
+          <button
+            v-for="v in VISTAS"
+            :key="v.id"
+            type="button"
+            class="px-2.5 py-1.5 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-600"
+            :class="vistaActiva === v.id ? 'bg-brand-50 text-brand-700' : ''"
+            :aria-pressed="vistaActiva === v.id"
+            :title="v.titulo"
+            @click="verVista(v.id)"
+          >{{ v.nombre }}</button>
+        </div>
+        <div class="flex gap-1.5">
+          <button
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-lg bg-white/90 px-2.5 py-1.5 text-xs font-medium text-neutral-700 shadow-sm ring-1 ring-black/10 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 disabled:opacity-60"
+            :disabled="grabando"
+            title="Vuelo de la planta a la altura de un operador, pasando por la grúa (unos 12 s)"
+            @click="recorrer"
+          >
+            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 15c3-8 11-8 14-2" stroke-linecap="round" /><path d="M14 10l3 3-4 1" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            Recorrido
+          </button>
+          <button
+            v-if="puedeGrabar"
+            type="button"
+            class="inline-flex items-center gap-1.5 rounded-lg bg-white/90 px-2.5 py-1.5 text-xs font-medium text-neutral-700 shadow-sm ring-1 ring-black/10 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 disabled:opacity-60"
+            :disabled="grabando"
+            :aria-busy="grabando"
+            title="Graba el recorrido y lo descarga como video"
+            @click="grabar"
+          >
+            <span class="h-2.5 w-2.5 rounded-full" :class="grabando ? 'animate-pulse bg-red-600' : 'bg-red-500'" aria-hidden="true" />
+            {{ grabando ? 'Grabando…' : 'Grabar video' }}
+          </button>
+        </div>
+      </div>
     </template>
   </div>
 </template>
@@ -76,6 +114,9 @@ const props = defineProps<{
   bodega?: { ancho: number; largo: number; forma?: Array<{ x: number; y: number }> | null };
   racks?: Array<Record<string, unknown>>;
   etiqueta?: string;
+  // Paso 4: lo que el cliente quito o cambio de los accesorios propuestos (sin esto se ven todos)
+  accesorios?: { quitados?: string[]; cantidades?: Record<string, number> };
+  pallets?: Array<Record<string, unknown>>;
 }>();
 
 // Planificador: los racks se pueden arrastrar en 3D
@@ -108,7 +149,56 @@ function alternarOperacion() {
 }
 function verGrua() {
   if (!operando.value) alternarOperacion();
+  vistaActiva.value = '';
   visor?.mirarOperacion();
+}
+const gruas = ref(0);
+
+// Camaras: planta, isometrica, altura de operador; recorrido automatico y video
+const VISTAS = [
+  { id: 'planta', nombre: 'Planta', titulo: 'Vista desde arriba, como el plano' },
+  { id: 'isometrica', nombre: 'Isométrica', titulo: 'Vista en diagonal desde arriba' },
+  { id: 'operador', nombre: 'Operador', titulo: 'A 1,6 m del piso, dentro de un pasillo' },
+] as const;
+const vistaActiva = ref('');
+const grabando = ref(false);
+const puedeGrabar = ref(false);
+function verVista(id: string) {
+  vistaActiva.value = id;
+  visor?.vista(id);
+}
+async function recorrer() {
+  if (!visor) return;
+  if (!operando.value) alternarOperacion();
+  vistaActiva.value = '';
+  await visor.recorrido();
+  vistaActiva.value = 'operador';
+}
+async function grabar() {
+  if (!visor || grabando.value) return;
+  if (!operando.value) alternarOperacion();
+  grabando.value = true;
+  vistaActiva.value = '';
+  try {
+    const r = await visor.grabarRecorrido();
+    if (!r || !r.blob.size) return;
+    const url = URL.createObjectURL(r.blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `recorrido-bodega-racklog.${r.extension}`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    const w = window as unknown as { dataLayer?: unknown[] };
+    w.dataLayer = w.dataLayer || [];
+    w.dataLayer.push({ event: 'video_3d', event_category: 'Planificador', formato: r.extension });
+  } catch (e) {
+    console.warn('Video 3D:', e);
+  } finally {
+    grabando.value = false;
+    vistaActiva.value = 'operador';
+  }
 }
 
 function construirModelo() {
@@ -119,9 +209,12 @@ function construirModelo() {
     const clave = JSON.stringify([props.bodega.ancho, props.bodega.largo, props.bodega.forma ?? null]);
     const reencuadrar = clave !== ultimaBodega;
     // Tres cuartos desde la esquina de abajo a la derecha del plano, cerca (la bodega llena el cuadro)
-    visor.mostrar(bodega.construirBodega(props.bodega, props.racks ?? []), { reencuadrar, direccion: [0.7, 0.75, 1], margen: 0.78 });
+    const opciones = { accesorios: props.accesorios, pallets: props.pallets };
+    visor.mostrar(bodega.construirBodega(props.bodega, props.racks ?? [], opciones), { reencuadrar, direccion: [0.7, 0.75, 1], margen: 0.78 });
     ultimaBodega = clave;
     hayOperacion.value = visor.operar(operando.value);
+    gruas.value = visor.gruasOperando;
+    puedeGrabar.value = visor.puedeGrabar;
     return;
   }
   const c = (props.config ?? {}) as Record<string, any>;
@@ -186,7 +279,7 @@ async function montar() {
 
 onMounted(iniciar);
 
-const claveModelo = () => JSON.stringify([props.producto, props.config, props.bodega, props.racks]);
+const claveModelo = () => JSON.stringify([props.producto, props.config, props.bodega, props.racks, props.accesorios ?? null, props.pallets ?? null]);
 // Varios cambios seguidos (p. ej. editar varios campos) se juntan en una sola reconstruccion por cuadro
 let reconstruir = 0;
 watch(claveModelo, () => {
