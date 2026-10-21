@@ -1,24 +1,8 @@
 <template>
   <div>
     <Transition name="fl-sub" mode="out-in">
-      <!-- ¿Sabes que cotizar? -->
-      <section v-if="vista === 'sabe'" key="sabe">
-        <h1 class="fl-titulo">¿Sabes qué rack necesitas?</h1>
-        <p class="fl-bajada">Si no estás seguro, te hacemos unas preguntas cortas y te recomendamos.</p>
-        <div class="mt-6 grid gap-3 sm:grid-cols-2">
-          <button type="button" class="fl-opcion" @click="p.sabe = true">
-            <span class="text-lg font-semibold text-neutral-900">Sí, ya sé</span>
-            <span class="text-neutral-600">Elijo el sistema y sigo.</span>
-          </button>
-          <button type="button" class="fl-opcion" @click="empezarPreguntas">
-            <span class="text-lg font-semibold text-neutral-900">No, ayúdame a elegir</span>
-            <span class="text-neutral-600">{{ preguntas.length }} preguntas, una por pantalla.</span>
-          </button>
-        </div>
-      </section>
-
       <!-- Si sabe: elige sistema y equipo -->
-      <section v-else-if="vista === 'elegir'" key="elegir">
+      <section v-if="vista === 'elegir'" key="elegir">
         <h1 class="fl-titulo">¿Qué quieres cotizar?</h1>
         <div class="mt-6 grid gap-3 sm:grid-cols-3">
           <button
@@ -44,12 +28,15 @@
             >{{ o.t }}</button>
           </div>
         </fieldset>
-        <FlujoAcciones :deshabilitado="!p.sistema" motivo="Elige un sistema para seguir." @atras="p.sabe = null" @siguiente="confirmarEleccion" />
+        <FlujoAcciones :deshabilitado="!p.sistema" motivo="Elige un sistema para seguir." @atras="p.sabe = false" @siguiente="confirmarEleccion" />
       </section>
 
       <!-- Preguntas, una por pantalla -->
       <section v-else-if="vista === 'pregunta' && actual" :key="`q-${actual.clave}`">
-        <p class="text-sm font-medium text-neutral-500">Pregunta {{ p.pregunta + 1 }} de {{ preguntas.length }}</p>
+        <div class="flex items-center justify-between gap-3">
+          <p class="text-sm font-medium text-neutral-500">Pregunta {{ p.pregunta + 1 }} de {{ preguntas.length }}</p>
+          <button type="button" class="text-sm font-medium text-brand-700 underline underline-offset-2" @click="p.sabe = true">Ya sé lo que quiero</button>
+        </div>
         <h1 class="fl-titulo mt-1">{{ actual.texto }}</h1>
         <div class="mt-6 grid gap-2">
           <button
@@ -91,6 +78,7 @@
         <button v-else type="button" class="mt-4 text-sm font-medium text-brand-700 underline underline-offset-2" @click="p.sabe = true">
           Elegir otro sistema
         </button>
+        <p class="mt-4 rounded-xl bg-neutral-100 px-3 py-2 text-sm text-neutral-600">Es una primera recomendación. En el paso 3 la afinamos producto por producto con tus pallets.</p>
         <FlujoAcciones texto="Seguir con mis pallets" @atras="volverPregunta" @siguiente="emit('siguiente')" />
       </section>
     </Transition>
@@ -98,13 +86,15 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useProyecto, type Sistema } from '~/stores/proyecto';
 import { TIPOS } from '~/lib/rack3d/planificador.js';
 import { preguntasActivas, recomendar } from '~/lib/tour/reglas.js';
 
 const emit = defineEmits<{ siguiente: [] }>();
 const p = useProyecto();
+if (p.sabe === null) p.sabe = false;
+onMounted(() => { if (!p.pregunta && !p.sabe) marcar('tour_start', {}); });
 
 // Respuesta tipica cuando el cliente no sabe (queda marcada para que el ejecutivo la confirme)
 const TIPICO: Record<string, string> = {
@@ -121,17 +111,12 @@ const EQUIPOS = [
 const preguntas = computed(() => preguntasActivas(p.respuestas));
 const actual = computed(() => preguntas.value[p.pregunta] ?? null);
 const rec = computed(() => (p.sabe === false && p.pregunta >= preguntas.value.length ? recomendar(p.respuestas) : null));
+// Empieza por las preguntas; "Ya sé lo que quiero" es el atajo a elegir el sistema
 const vista = computed(() => {
-  if (p.sabe === null) return 'sabe';
   if (p.sabe) return 'elegir';
   return p.pregunta < preguntas.value.length ? 'pregunta' : 'resultado';
 });
 
-function empezarPreguntas() {
-  p.sabe = false;
-  p.pregunta = 0;
-  marcar('tour_start', {});
-}
 function responder(v: string, noSe = false) {
   const clave = actual.value!.clave;
   p.respuestas[clave] = v;
@@ -144,7 +129,6 @@ function responder(v: string, noSe = false) {
 }
 function volverPregunta() {
   if (p.pregunta > 0) p.pregunta--;
-  else p.sabe = null;
 }
 function aplicarRecomendacion() {
   const r = recomendar(p.respuestas);

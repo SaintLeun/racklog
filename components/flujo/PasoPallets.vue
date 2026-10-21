@@ -45,6 +45,10 @@
           </div>
         </div>
         <label class="fl-campo mt-4">
+          <span>¿Cuántos productos distintos (SKU) van en este tipo de pallet? <FlujoInfo>Si son 120 pallets de 4 sabores distintos, son 4 productos. Sirve para saber si conviene guardarlos uno detrás de otro.</FlujoInfo></span>
+          <input v-model.number="t.skus" type="number" min="1" step="1" inputmode="numeric" placeholder="1" class="form-input">
+        </label>
+        <label class="fl-campo mt-4">
           <span>¿Cuántos pallets de este tipo tienes?</span>
           <input v-model.number="t.cantidad" type="number" min="1" step="1" inputmode="numeric" class="form-input" :class="err(t).cantidad && 'fl-error'">
           <small v-if="err(t).cantidad" class="fl-msg">{{ err(t).cantidad }}</small>

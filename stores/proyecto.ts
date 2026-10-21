@@ -25,6 +25,8 @@ export interface TipoPallet {
   id: string; nombre: string; frente: number; fondo: number; alto: number; peso: number;
   cantidad: number; rotacion: 'alta' | 'media' | 'baja'; color: string;
   sinPallet?: boolean; sobresale?: number;
+  // Productos distintos (SKU) que comparten este tipo de pallet (pallets por SKU = cantidad / skus)
+  skus?: number;
   // Armado desde la caja (paso 2): medidas en m, kg por caja, cuantas aguanta apiladas y orientacion
   desdeCaja?: boolean;
   caja?: { largo: number; ancho: number; alto: number; peso: number; apilable: number; orientacion: 'auto' | 'largo' | 'ancho' };

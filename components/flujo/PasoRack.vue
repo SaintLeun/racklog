@@ -3,6 +3,12 @@
     <h1 class="fl-titulo">Arma tu rack</h1>
     <p class="fl-bajada">Define cómo es tu rack. En el paso 5 lo ubicamos en tu bodega.</p>
 
+    <!-- Recomendacion por producto con la alternativa dibujada (R3) -->
+    <details v-if="rec.productos.length" class="fl-mas mt-5" :open="!recAplicada">
+      <summary>{{ recAplicada ? 'Ver la recomendación para tus productos' : 'Recomendación para tus productos' }}</summary>
+      <FlujoRecomendacion :rec="rec" class="mt-2" @usar="usarRecomendacion" />
+    </details>
+
     <!-- Modelos (si tiene mas de uno) -->
     <div v-if="p.modelos.length > 1" class="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="Modelos de rack">
       <button
@@ -31,7 +37,7 @@
           <div class="mt-3 grid grid-cols-3 gap-2">
             <button v-for="(t, k) in TIPOS" :key="k" type="button" :class="['fl-chip !text-sm', mod.tipo === k && 'fl-chip--sel']" :aria-pressed="mod.tipo === k" @click="cambiarSistema(k as Sistema)">{{ t.nombre }}</button>
           </div>
-          <p v-if="p.sistema && mod.tipo !== p.sistema" class="mt-2 text-sm text-neutral-500">Te recomendamos {{ TIPOS[p.sistema].nombre.toLowerCase() }}.</p>
+          <p v-if="sistemaSugerido && mod.tipo !== sistemaSugerido" class="mt-2 text-sm text-neutral-500">Para estos productos te recomendamos {{ TIPOS[sistemaSugerido].nombre.toLowerCase() }}.</p>
         </fieldset>
 
         <!-- 2. Que va en este modelo -->
@@ -213,6 +219,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useProyecto, type Sistema, type Modelo } from '~/stores/proyecto';
 import { TIPOS } from '~/lib/rack3d/planificador.js';
 import { resultadoModelo, nivelesMaximos, mezclaPorDefecto } from '~/lib/flujo/calculos.js';
+import { recomendarProductos } from '~/lib/flujo/recomendacion.js';
 import { RACK } from '~/lib/rack3d/parametrosTecnicos.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
@@ -224,7 +231,37 @@ const fm = (v: number) => (+(+v).toFixed(2)).toLocaleString('es-CL');
 const cm = (v: number) => Math.round(v * 100);
 const n = (v: number) => Math.round(v).toLocaleString('es-CL');
 
+// Recomendacion por producto (lib/flujo/recomendacion.js)
+const rec = computed(() => recomendarProductos({ pallets: p.pallets, cajas: p.cajas, respuestas: p.respuestas, bodega: p.bodega, flags: p.flags }) as any);
+const recAplicada = ref(false);
+// Sistema recomendado para los productos de este modelo (el mas repetido), o el del paso 1
+const sistemaSugerido = computed(() => {
+  const ids = Object.entries(mod.value?.cantidades ?? {}).filter(([, v]) => v > 0).map(([k]) => k);
+  const votos = rec.value.productos.filter((x: any) => ids.includes(x.id)).map((x: any) => x.sistema);
+  if (!votos.length) return mod.value?.tipo === 'AR' ? null : p.sistema;
+  return ['RS', 'DI'].sort((a, b) => votos.filter((v: string) => v === b).length - votos.filter((v: string) => v === a).length)[0] as 'RS' | 'DI';
+});
+function usarRecomendacion(modelos: any[]) {
+  const id = () => 'm' + Math.random().toString(36).slice(2, 9);
+  p.modelos = modelos.map((m) => ({ ...JSON.parse(JSON.stringify(m)), id: id() }));
+  p.modeloSel = p.modelos[0]?.id ?? null;
+  p.racks = [];
+  p.flags = [...new Set([...p.flags, ...rec.value.flags])];
+  recAplicada.value = true;
+  sincronizarCantidades();
+  marcar('recomendacion', { sistemas: p.modelos.map((m) => m.tipo).join(','), por_producto: true });
+}
+function marcar(event: string, datos: Record<string, unknown>) {
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event, event_category: 'Planifica tu bodega', ...datos });
+}
+
 onMounted(() => {
+  // Llega sin racks armados: parte con la mezcla recomendada para sus productos (si la hay)
+  if (!p.modelos.length && p.respuestas && Object.keys(p.respuestas).length && rec.value.modelos.length && !p.sabe) {
+    usarRecomendacion(rec.value.modelos);
+    recAplicada.value = false;
+  }
   if (!p.modelos.length) {
     p.agregarModelo(p.sistema ?? 'RS');
     // Si tambien guarda cajas, un ángulo ranurado aparte

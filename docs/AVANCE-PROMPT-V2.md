@@ -18,8 +18,7 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 ## §0 Forma de trabajo
 - ✅ Probar como cliente (Playwright 390 px y escritorio, capturas revisadas) — se hace en cada etapa.
 - 🟡 Calidad antes que rapidez: decir explícitamente lo que no se puede hacer bien (ver R6).
-- ✅ Sin regresiones: pruebas en `scratchpad` (prueba-intranet, prueba-r2, prueba-libs, prueba-bloques,
-  prueba-flujo, prueba-baranda). ⬜ Pasarlas a una carpeta `tests/` del repo.
+- ✅ Sin regresiones: pruebas en `tests/flujo/` (correr con `bash tests/flujo/correr.sh`).
 
 ## §V Norte: visual y conversión
 | # | Pedido | Estado |
@@ -56,16 +55,16 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 - ✅ Planta: pasillo = franja que pide el equipo; lo demás "área libre".
 - ✅ Sin pantalla en blanco al cambiar de paso.
 
-## §R3 Recomendación con base — ⛔ falta `docs/LOGICA-SELECCION-RACKS.md`
-- ⛔ Reemplazar `recomendar()` por la lógica del documento: por SKU, filtros duros (FIFO/vencimiento/lotes,
-  apilabilidad, calles vs nº productos, alcance y pasillo del equipo), mapa pallets/SKU × rotación, mezcla.
-- ⬜ Paso 1 empieza con las preguntas; "Ya sé lo que quiero" como atajo.
-- ⬜ Cada recomendación: producto y números del cliente, sistema y configuración concreta, por qué y
-  qué ganó a la alternativa, qué falta confirmar. Prohibido texto genérico.
-- ⬜ Recomendación y alternativa **dibujadas lado a lado** con sus posiciones.
-- ⬜ Solo preguntas/avisos que aplican al sistema en evaluación.
-- ⬜ Revisar que cada pregunta alimente una regla y cada regla use datos preguntados; avisar vacíos.
-- ⬜ Tests: CASATEC + 3 casos (logística, minería, alimentos con vencimiento) con resultado esperado.
+## §R3 Recomendación con base — ✅ hecho con un BORRADOR de la lógica (por confirmar)
+- 🟡 `docs/LOGICA-SELECCION-RACKS.md` original no llegó: se redactó un **borrador** (reglas ⚠ por confirmar) y
+  el motor `lib/flujo/recomendacion.js` lo sigue (umbrales en `UMBRALES`). Si llega el original, se reemplaza.
+- ✅ Por producto: filtros duros (FIFO/lote, apilador manual, calles vs pallets por SKU), mapa pallets/SKU ×
+  rotación, mezcla de sistemas (selectivo + drive-in por alto + ángulo para cajas).
+- ✅ Paso 1 empieza con las preguntas; "Ya sé lo que quiero" como atajo.
+- ✅ Cada recomendación: producto y números, configuración concreta, por qué, qué ganó a la alternativa, qué confirmar.
+- ✅ Recomendado y alternativa dibujados lado a lado con posiciones y m² (paso 3).
+- ✅ Tests: CASATEC + logística + minería + alimentos con vencimiento + mezcla (`tests/flujo/prueba-r3.mjs`).
+- ✅ Pallets por SKU: campo por tipo de pallet; si falta, se estima desde el paso 1 y queda "a confirmar".
 
 ## §R4 Arma tu rack — ✅ terminado
 - ✅ Mover vigas dentro del bastidor de a una perforación (76,2 mm), luz validada (carga + 100 mm).
@@ -130,14 +129,14 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 | Criterio | Estado |
 |---|---|
 | Flujo completo en 390 px sin scroll horizontal, CTA a mano | ✅ |
-| CASATEC → selectivo, drive-in alternativa calculada, revisar_asesor | ⛔ (R3) |
+| CASATEC → selectivo, drive-in alternativa calculada, revisar_asesor | ✅ (prueba-r3, con lógica borrador) |
 | Caso importación (1.500 cajas, 75 pallets, 83 hoy, 43 a crecer) | ✅ (prueba-importacion) |
 | Pallets mezclados → 1,2 m piso y niveles 1–2; 1,7 m nivel 3 | ✅ (prueba) |
 | Sobrante siempre 300–1.000 mm; techo con punta de la carga | ✅ (ver pregunta: cotizador usa 200) |
 | Protecciones de bastidor en doble de 3 filas | ✅ con regla del dueño (12 de 1.000 mm, una por bastidor) |
 | Mismos datos → mismos cuerpos, posiciones y marcos en 3, 5, 6 y cotización | ✅ (prueba) |
 | Pallet 1,2 × 1,0 frente 1,0 → viga 2,3; girado → 2,7, y cambia el marco | ✅ (prueba) |
-| Toda recomendación con por qué y alternativa dibujada | ⛔ (R3) |
+| Toda recomendación con por qué y alternativa dibujada | ✅ |
 | Cada input cambia el dibujo al instante; visual ≥ 60 % en cada paso | 🟡 (V2) |
 | Paso 2 con pallet en 3D y densidad | ✅ |
 | Vigas se arrastran (paso de perforación) y se valida la luz | ✅ 76,2 mm |
@@ -156,6 +155,6 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 0. Medidas: fondo de marco = pallet − 200 (CA22), viga por W (AS2), alturas CA23, drive-in del cotizador DI: ✅ aplicado.
 1. Sobrante de marco: el cotizador usa 200 mm por defecto; el v2 pide 300–1.000. ¿Mínimo 200 o 300?
 2. Luz entre marcos dobles: catálogo 0/200/300, motor 0 por defecto; con pallets que sobresalen 100 mm, 0 hace chocar los pallets. Hoy 200. ¿Correcto?
-3. Falta `docs/LOGICA-SELECCION-RACKS.md` (R3).
+3. Revisar y corregir el borrador `docs/LOGICA-SELECCION-RACKS.md` (reglas ⚠).
 4. R6: modelos GLB de grúas (comprar/encargar) y acceso al bucket R2.
 5. Productividad (mov/h) y radio de giro por tipo de grúa (§7).
