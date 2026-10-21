@@ -99,6 +99,7 @@ const operando = ref(typeof window !== 'undefined' && !window.matchMedia?.('(pre
 function alternarOperacion() {
   operando.value = !operando.value;
   visor?.operar(operando.value);
+  if (operando.value) visor?.mirarOperacion();
 }
 
 function construirModelo() {
@@ -107,9 +108,13 @@ function construirModelo() {
   if (props.bodega) {
     // Mover o editar un rack no mueve la camara; cambiar la bodega si la reencuadra
     const clave = JSON.stringify([props.bodega.ancho, props.bodega.largo, props.bodega.forma ?? null]);
-    visor.mostrar(bodega.construirBodega(props.bodega, props.racks ?? []), { reencuadrar: clave !== ultimaBodega, direccion: [0.25, 1.1, 1], margen: 0.95 });
+    const reencuadrar = clave !== ultimaBodega;
+    visor.mostrar(bodega.construirBodega(props.bodega, props.racks ?? []), { reencuadrar, direccion: [0.25, 1.1, 1], margen: 0.95 });
     ultimaBodega = clave;
+    const habia = hayOperacion.value;
     hayOperacion.value = visor.operar(operando.value);
+    // La primera vez que hay grua operando, la camara va a mirarla (Centrar vista vuelve a la general)
+    if (hayOperacion.value && operando.value && (reencuadrar || !habia)) visor.mirarOperacion();
     return;
   }
   const c = (props.config ?? {}) as Record<string, any>;
