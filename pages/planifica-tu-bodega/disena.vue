@@ -12,7 +12,9 @@
     <main :class="['container-page pt-8', ANCHO[p.paso]]">
       <ClientOnly>
         <Transition name="fl-paso" mode="out-in">
-          <component :is="COMPONENTES[p.paso]" :key="p.paso" @siguiente="siguiente" @atras="atras" />
+          <!-- A/B 'registro': con la variante "inicio" el registro va antes de la primera pregunta -->
+          <FlujoRegistro v-if="registroAlInicio && p.paso === 'operacion' && !p.registrado" key="registro" @listo="registroAlInicio = false" />
+          <component :is="COMPONENTES[p.paso]" v-else :key="p.paso" @siguiente="siguiente" @atras="atras" />
         </Transition>
         <template #fallback>
           <div class="space-y-4" aria-hidden="true">
@@ -43,6 +45,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { conteoTotal } from '~/lib/flujo/calculos.js';
+import { leerVariante } from '~/composables/useVariante';
 import { useProyecto, PASOS, type Paso } from '~/stores/proyecto';
 import {
   FlujoPasoOperacion, FlujoPasoPallets, FlujoPasoRack, FlujoPasoAccesorios, FlujoPasoBodega, FlujoPasoRevisa, FlujoPasoCotiza,
@@ -97,8 +100,10 @@ function armarReloj() {
 }
 watch(() => p.paso, () => { ayudaVista.value = false; armarReloj(); });
 
+const registroAlInicio = ref(false);
 onMounted(() => {
   p.cargar();
+  registroAlInicio.value = leerVariante('registro') === 'inicio' && !p.registrado;
   aplicarDemo();
   p.$subscribe(() => p.persistir());
   armarReloj();
