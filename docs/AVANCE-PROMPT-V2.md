@@ -118,12 +118,12 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 - ⬜ Exportables: PDF con plano, 3D, "qué cotizar" y KPI por rol; link único con aperturas en Kommo.
 
 ## §5 Conversión y medición
-- 🟡 Eventos: landing_view, cta_click, tour_start, tour_step, registro_ok, recomendacion, pallet_armado, rack_add, kpi_view, quote_open, quote_sent, whatsapp_click ✅; pdf_download ⬜; Meta Pixel y LinkedIn Insight ⬜.
+- 🟡 Eventos: landing_view, cta_click, tour_start, tour_step, registro_ok, recomendacion, pallet_armado, rack_add, kpi_view, quote_open, quote_sent, whatsapp_click ✅; pdf_download ⬜; Meta Pixel y LinkedIn Insight ✅ (solo con consentimiento, apagados hasta poner los IDs: docs/ENVIRONMENT.md; quote_sent → Lead / conversión LinkedIn).
 - ✅ UTM y fbclid/li_fat_id guardados y enviados con el lead (en el resumen).
-- ⬜ Kommo: etiqueta, rol, industria, flags, puntaje como campos; tarea con vencimiento 24 h al vendedor.
-- ⬜ A/B (registro al inicio vs antes del resultado, título, CTA).
-- 🟡 SEO: usePageSeo ✅; OG propia 1200×630 por red ⬜; noindex en el flujo ✅.
-- ⬜ Lighthouse móvil ≥ 85 rendimiento / ≥ 95 accesibilidad.
+- ✅ Kommo (api/utils/kommo_tour.php, pruebas `php api/tests/kommo_tour_test.php` contra Kommo falso): etiqueta tour-logistico; rol, industria, flags, puntaje y UTM en nota y como campos si se configuran los IDs (`$KOMMO_CAMPOS_TOUR`); tarea "Enviar cotización (promesa máximo 24 horas)" a 24 h para el responsable del lead; adjuntos subidos al Drive de Kommo y vinculados al lead. Falta probarlo con el token real.
+- 🟡 A/B listos y apagados (composables/useVariante.ts): título y CTA conectados en la landing; `?v=` fuerza variante con noindex; registro: falta conectarlo en el flujo con `leerVariante('registro')`.
+- ✅ SEO: usePageSeo ✅; OG propia 1200×630 (og-planifica-tu-bodega.png) con og:description y twitter:description propios ✅; noindex en el flujo y en `?v=` ✅.
+- 🟡 Lighthouse móvil (build estático): accesibilidad 100 ✅; rendimiento 93–94 con CPU calibrada a la máquina (codespace cargado, benchmarkIndex ~200–370) y 62–68 con el 4× estándar (la portada da 56 en las mismas condiciones). Confirmar con PageSpeed Insights tras el deploy.
 
 ## §6 Criterios de aceptación
 | Criterio | Estado |
@@ -146,10 +146,10 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 | Pasillo peatonal de 20 m → barandas a ambos lados con aberturas, en 2D, 3D y cotización | 🟡 2D y cotización ✅; 3D ⬜ |
 | Ningún "bloquea" se puede enviar; cada aviso con su arreglo | ✅ |
 | Usuario nuevo completa con valores por defecto < 5 min en celular | ✅ (~50 s en la prueba automática) |
-| `quote_sent` crea tarea en Kommo a 24 h | ⬜ |
-| `quote_sent` llega a Kommo con UTM, rol, resumen y plano adjunto | 🟡 resumen y UTM en el texto; plano adjunto ⬜ |
+| `quote_sent` crea tarea en Kommo a 24 h | ✅ con Kommo falso (pruebas); falta verificar con el token real |
+| `quote_sent` llega a Kommo con UTM, rol, resumen y plano adjunto | 🟡 UTM, rol, industria, puntaje (nota/campos), etiqueta y archivos al Drive del lead ✅ en API; falta que el flujo adjunte el plano (`initial-files` de ContactModal) |
 | Sin errores en consola; `npx nuxi typecheck` limpio | 🟡 consola ✅; typecheck ⬜ (falta instalar vue-tsc) |
-| Lighthouse móvil ≥ 85 / ≥ 95 en la landing | ⬜ |
+| Lighthouse móvil ≥ 85 / ≥ 95 en la landing | 🟡 a11y 100; rendimiento 93–94 calibrado / 62–68 con 4× en codespace cargado; confirmar con PageSpeed en producción |
 
 ## Preguntas abiertas al dueño
 0. Medidas: fondo de marco = pallet − 200 (CA22), viga por W (AS2), alturas CA23, drive-in del cotizador DI: ✅ aplicado.
