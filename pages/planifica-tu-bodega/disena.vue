@@ -176,8 +176,9 @@ function marcar(event: string, datos: Record<string, unknown>) {
 .fl-paso-btn { width: 2.75rem; height: 2.75rem; font-size: 1.25rem; font-weight: 600; color: #404040; }
 .fl-paso-btn:disabled { color: #d4d4d4; }
 
-/* Transiciones: fade + 10 px, 220 ms */
-.fl-paso-enter-active, .fl-paso-leave-active, .fl-sub-enter-active, .fl-sub-leave-active { transition: opacity .22s cubic-bezier(.2, .8, .2, 1), transform .22s cubic-bezier(.2, .8, .2, 1); }
+/* Transiciones: fade + 10 px, 220 ms. El paso que sale se va de inmediato (sin pantalla en blanco) */
+.fl-paso-leave-active { transition: none; }
+.fl-paso-enter-active, .fl-sub-enter-active, .fl-sub-leave-active { transition: opacity .22s cubic-bezier(.2, .8, .2, 1), transform .22s cubic-bezier(.2, .8, .2, 1); }
 .fl-paso-enter-from, .fl-sub-enter-from { opacity: 0; transform: translateY(10px); }
 .fl-paso-leave-to, .fl-sub-leave-to { opacity: 0; transform: translateY(-6px); }
 .fl-lista-enter-active, .fl-lista-leave-active { transition: opacity .2s, transform .2s; }

@@ -7,9 +7,9 @@
     </p>
 
     <TransitionGroup tag="ul" name="fl-lista" class="mt-6 space-y-3">
-      <li v-for="a in lista" :key="a.id" :class="['fl-card flex gap-4', !a.incluido && 'opacity-60']">
-        <span class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600" aria-hidden="true">
-          <svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path :d="ICONO[a.id] ?? ICONO.otro" /></svg>
+      <li v-for="a in lista" :key="a.id" :class="['fl-card flex flex-col gap-4 sm:flex-row', !a.incluido && 'opacity-60']">
+        <span class="mx-auto w-full max-w-[220px] flex-shrink-0 rounded-xl bg-neutral-50 p-1.5 sm:mx-0 sm:w-40">
+          <FlujoDibujoAccesorio :a="a" :m="mRack" />
         </span>
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-baseline justify-between gap-x-3">
@@ -43,32 +43,22 @@ import { computed } from 'vue';
 import { useProyecto } from '~/stores/proyecto';
 import { proponerAccesorios, aplicarAjustes } from '~/lib/rack3d/accesorios.js';
 import { resultadoModelo, ubicarModelos } from '~/lib/flujo/calculos.js';
+import { medidasRack } from '~/lib/rack3d/planificador.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();
-
-// Iconos de linea (un solo set)
-const ICONO: Record<string, string> = {
-  canilleras: 'M8 21h8M9 21V9a3 3 0 016 0v12M9 13h6',
-  proteccionBastidor: 'M4 7h16M4 17h16M6 7l4 10M10 7l4 10M14 7l4 10',
-  barandas: 'M3 8h18M3 14h18M5 8v10M12 8v10M19 8v10',
-  planosCarga: 'M3 10h18v4H3zM6 10v4M10 10v4M14 10v4M18 10v4',
-  separadores: 'M8 4v16M16 4v16M8 9h8M8 15h8',
-  topes: 'M4 15h16M7 15V9h10v6',
-  placaCapacidad: 'M5 5h14v14H5zM8 9h8M8 13h5',
-  mallaAnticaida: 'M4 4h16v16H4zM4 9h16M4 14h16M9 4v16M14 4v16',
-  otro: 'M12 3l8 4v6c0 4-3.5 7-8 8-4.5-1-8-4-8-8V7z',
-};
 
 // Sin racks ubicados todavia: se estiman en una bodega amplia (cabeceras libres, como suele quedar)
 const estimado = computed(() => !p.racks.length);
 const racksBase = computed(() => {
   if (p.racks.length) return p.racks;
   const amplia = { ...p.bodega, ancho: 200, largo: 200, forma: null, elementos: [] };
-  const cuerpos = Object.fromEntries(p.modelos.map((m) => [m.id, resultadoModelo(m, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua }).cuerpos]));
+  const cuerpos = Object.fromEntries(p.modelos.map((m) => [m.id, resultadoModelo(m, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua }).modulos]));
   let k = 0;
   return ubicarModelos(amplia, p.modelos, cuerpos, { pallets: p.pallets, nuevoId: () => `e${k++}` }).racks;
 });
+// Medidas del rack que se dibujan en los accesorios (el primer selectivo nuevo)
+const mRack = computed(() => { const r = racksBase.value.find((x: any) => x.tipo === 'RS' && !x.existente) ?? racksBase.value[0]; return r ? medidasRack(r) as any : null; });
 const lista = computed(() => aplicarAjustes(proponerAccesorios({ bodega: p.bodega, racks: racksBase.value, pallets: p.pallets }), p.accesorios) as any[]);
 
 function alternar(id: string) {

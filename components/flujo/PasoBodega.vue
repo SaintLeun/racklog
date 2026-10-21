@@ -166,11 +166,11 @@
 import { ref, computed, reactive, watch, onMounted } from 'vue';
 import { useProyecto } from '~/stores/proyecto';
 import {
-  ELEMENTOS, conflictos, totales, contorno, caja, normalizar, dentroDeBodega, grillaPilaresXY, lugarLibre, formatoM, NOMBRE,
+  ELEMENTOS, conflictos, contorno, caja, normalizar, dentroDeBodega, grillaPilaresXY, lugarLibre, formatoM, NOMBRE,
 } from '~/lib/rack3d/planificador.js';
 import { GRUAS } from '~/lib/rack3d/parametrosTecnicos.js';
 import { pasillos } from '~/lib/rack3d/pasillos.js';
-import { resultadoModelo, ubicarModelos, repetirBloque } from '~/lib/flujo/calculos.js';
+import { resultadoModelo, ubicarModelos, repetirBloque, conteoTotal } from '~/lib/flujo/calculos.js';
 import { proponerAccesorios, aplicarAjustes } from '~/lib/rack3d/accesorios.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
@@ -190,12 +190,15 @@ const bloque = reactive({ largo: 2, profundidad: 2, espalda: false });
 const avisoBloque = ref('');
 
 const grua = computed(() => (GRUAS as any)[p.bodega.grua] ?? GRUAS.contrapeso);
-const necesarios = computed(() => Object.fromEntries(p.modelos.map((m) => [m.id, resultadoModelo(m, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua }).cuerpos])));
-const ubicados = (id: string) => p.racks.filter((r) => r.modelo === id).reduce((t, r) => t + r.cuerpos, 0);
+// Misma cuenta que el paso 3 y la cotizacion (lib/flujo/calculos.js): cuerpo = vano de un lado
+const resultados = computed(() => Object.fromEntries(p.modelos.map((m) => [m.id, resultadoModelo(m, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua })])));
+const necesarios = computed(() => Object.fromEntries(p.modelos.map((m) => [m.id, resultados.value[m.id].cuerpos])));
+const modulos = computed(() => Object.fromEntries(p.modelos.map((m) => [m.id, resultados.value[m.id].modulos])));
+const ubicados = (id: string) => conteoTotal(p.racks.filter((r) => r.modelo === id)).cuerpos;
 const malos = computed(() => conflictos(p.racks, p.bodega) as Set<string>);
 const listaPasillos = computed(() => pasillos(p.racks, p.bodega) as any[]);
 const angostos = computed(() => listaPasillos.value.some((x) => !x.ok));
-const total = computed(() => totales(p.racks.filter((r) => !r.existente)) as { pallets: number; bandejas: number });
+const total = computed(() => { const c = conteoTotal(p.racks.filter((r) => !r.existente)); return { pallets: c.posiciones, bandejas: c.bandejas }; });
 const rackSel = computed(() => p.racks.find((r) => r.id === sel.value) ?? null);
 const elementoActual = computed(() => p.bodega.elementos.find((e: any) => e.id === elementoSel.value) ?? null);
 const hayPilares = computed(() => p.bodega.elementos.some((e: any) => e.clase === 'pilar'));
@@ -234,7 +237,7 @@ onMounted(() => {
 
 function ubicar(manual: boolean) {
   const existentes = p.racks.filter((r) => r.existente);
-  const r = ubicarModelos(p.bodega, p.modelos, necesarios.value, { pallets: p.pallets, nuevoId, existentes });
+  const r = ubicarModelos(p.bodega, p.modelos, modulos.value, { pallets: p.pallets, nuevoId, existentes });
   p.racks = [...existentes, ...r.racks];
   faltan.value = r.faltan;
   sel.value = null;

@@ -9,12 +9,15 @@
     <template v-if="tipo === 'selectivo'">
       <g v-for="(n, i) in niveles" :key="`n${i}`">
         <rect v-if="!n.piso" :x="x0" :y="y(n.y) - 3" :width="ancho" height="6" fill="#f97316" rx="1" />
-        <rect
-          v-for="k in m.palletsPorViga" :key="k"
-          :x="x0 + hueco * k + anchoPallet * (k - 1)" :y="y(n.base + n.alto)"
-          :width="anchoPallet" :height="y(n.base) - y(n.base + n.alto)"
-          :fill="n.color || '#d6b37a'" fill-opacity="0.85" stroke="#8a6a3b" stroke-width="0.6" rx="1.5"
-        />
+        <g v-for="k in m.palletsPorViga" :key="k">
+          <rect
+            :x="x0 + hueco * k + anchoPallet * (k - 1)" :y="y(n.base + n.alto)"
+            :width="anchoPallet" :height="y(n.base) - y(n.base + n.alto)"
+            fill="#e2c08c" stroke="#8a6a3b" stroke-width="0.6" rx="1.5"
+          />
+          <!-- Tipo de pallet: franja de su color (como en el 3D) -->
+          <rect v-if="n.color" :x="x0 + hueco * k + anchoPallet * (k - 1)" :y="y(n.base + n.alto) + 2" :width="anchoPallet" height="4" :fill="n.color" />
+        </g>
       </g>
     </template>
     <template v-else-if="tipo === 'drivein'">

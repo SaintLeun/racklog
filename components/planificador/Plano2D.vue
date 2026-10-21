@@ -97,8 +97,8 @@
 
       <!-- Pasillos: el espacio frente a cada cara de carga; en rojo si es mas angosto de lo que pide -->
       <rect
-        v-for="p in dibujando ? [] : (pasillos ?? [])" :key="`p-${p.id}`"
-        :x="p.x0" :y="p.y0" :width="p.x1 - p.x0" :height="p.y1 - p.y0"
+        v-for="p in dibujando ? [] : franjas" :key="`p-${p.id}`"
+        :x="p.f.x0" :y="p.f.y0" :width="p.f.x1 - p.f.x0" :height="p.f.y1 - p.f.y0"
         :fill="p.ok ? '#14b8a6' : '#ef4444'" :fill-opacity="p.ok ? 0.08 : 0.16" pointer-events="none"
       />
 
@@ -223,7 +223,7 @@
         <text
           v-bind="TEXTO_COTA" :fill="colorCota(c)" dominant-baseline="central"
           :x="posCota(c).x" :y="posCota(c).y" :transform="posCota(c).rot" :text-anchor="posCota(c).anchor"
-        >{{ pasilloDe(c) ? 'pasillo ' : c.a === 'elemento' ? 'libre ' : '' }}{{ formatoM(c.valor) }} m</text>
+        >{{ pasilloDe(c) ? (esLibre(c) ? 'área libre ' : 'pasillo ') : c.a === 'elemento' ? 'libre ' : '' }}{{ formatoM(c.valor) }} m</text>
       </g>
       <!-- Medidas del rack en planta, sobre su esquina (lejos de las cotas, que salen del centro de cada lado) -->
       <text
@@ -272,7 +272,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
 import { rectangulo, rectElemento, medidasRack, describir, contorno, caja, cotasRack, cotasElemento, formatoM, PASO, ELEMENTOS } from '~/lib/rack3d/planificador.js';
-import { pasilloEn } from '~/lib/rack3d/pasillos.js';
+import { pasilloEn, franjaPasillo } from '~/lib/rack3d/pasillos.js';
 
 export interface RackPlano {
   id: string;
@@ -531,10 +531,13 @@ const diagonal = (el: Elemento) => { const p = rectElemento(el); return { x1: p.
 // Una cota es de pasillo si cae dentro de uno (las de costado o espalda no lo son)
 type Cota = { a: string; x1: number; y1: number; x2: number; y2: number };
 const pasilloDe = (c: Cota) => (c.a !== 'elemento' && props.pasillos ? pasilloEn(props.pasillos, (c.x1 + c.x2) / 2, (c.y1 + c.y2) / 2) as Pasillo | null : null);
+// Pasillo dibujado solo en el ancho que pide el equipo; lo demas hasta el muro es area libre
+const franjas = computed(() => (props.pasillos ?? []).map((p) => ({ ...p, f: franjaPasillo(p) })));
+const esLibre = (c: Cota) => (franjaPasillo(pasilloDe(c) as any).libreSobrante ?? 0) > 0.01;
 const colorCota = (c: Cota) => {
   if (c.a === 'elemento') return '#0369a1';
   const p = pasilloDe(c);
-  return !p ? '#334155' : p.ok ? '#0f766e' : '#dc2626';
+  return !p ? '#334155' : !p.ok ? '#dc2626' : esLibre(c) ? '#64748b' : '#0f766e';
 };
 
 const rectDe = (r: RackPlano) => { const p = rectangulo(r); return { x: p.x0, y: p.y0, width: p.ancho, height: p.alto }; };

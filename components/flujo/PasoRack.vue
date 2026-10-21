@@ -154,7 +154,8 @@
       </div>
 
       <!-- 4. Resultado inmediato -->
-      <aside class="lg:sticky lg:top-24 lg:self-start">
+      <!-- En celular el dibujo va primero (visual antes que controles) -->
+      <aside class="order-first lg:order-none lg:sticky lg:top-36 lg:self-start">
         <div class="fl-card">
           <div class="flex items-center justify-between gap-2">
             <p class="fl-leyenda">Tu {{ TIPOS[mod.tipo].nombre.toLowerCase() }}</p>
@@ -166,10 +167,20 @@
           <FlujoPlantaRack v-else :m="res.m" class="mt-3" />
           <dl class="mt-4 grid grid-cols-2 gap-3">
             <div class="fl-dato"><dt>{{ mod.tipo === 'AR' ? 'Bandejas' : 'Posiciones' }} por {{ mod.tipo === 'DI' ? 'calle' : 'cuerpo' }}</dt><dd><FlujoContador :valor="res.porCuerpo" /></dd></div>
-            <div class="fl-dato"><dt>{{ mod.tipo === 'DI' ? 'Calles' : 'Cuerpos' }} que necesitas</dt><dd><FlujoContador :valor="res.cuerpos" /></dd></div>
+            <div class="fl-dato">
+              <dt>{{ mod.tipo === 'DI' ? 'Calles' : 'Cuerpos' }} que necesitas</dt>
+              <dd><FlujoContador :valor="res.cuerpos" /></dd>
+              <p v-if="mod.tipo !== 'DI' && mod.doble" class="text-xs text-neutral-500">{{ res.modulos }} por lado</p>
+            </div>
             <div class="fl-dato"><dt>Alto total</dt><dd>{{ fm(res.alto) }} m</dd></div>
-            <div class="fl-dato"><dt>Para</dt><dd>{{ n(res.total) }} {{ res.totalUnidad }}</dd></div>
+            <div class="fl-dato"><dt>Guardas</dt><dd><FlujoContador :valor="res.capacidad" /> <span class="text-sm font-normal text-neutral-500">{{ res.unidad }}</span></dd><p class="text-xs text-neutral-500">Necesitas {{ n(res.total) }} {{ res.totalUnidad }}</p></div>
           </dl>
+          <!-- La cuenta a la vista: de donde salen viga y marco -->
+          <p v-if="mod.tipo === 'RS'" class="mt-3 rounded-lg bg-neutral-50 px-3 py-2 text-sm leading-relaxed text-neutral-600">
+            Viga = {{ res.m.palletsPorViga }} × {{ fm(res.m.pallet.frente) }} + {{ res.m.palletsPorViga + 1 }} × {{ fm(RACK.holguraViga.valor) }} = <b class="text-neutral-800">{{ fm(res.m.viga) }} m</b><br>
+            Fondo del marco = {{ fm(res.m.pallet.fondo) }} − 2 × {{ fm(RACK.voladizoPallet.valor) }} = <b class="text-neutral-800">{{ fm(res.m.fondo) }} m</b>
+            <span class="block text-xs text-neutral-500">El pallet sobresale {{ Math.round(RACK.voladizoPallet.valor * 1000) }} mm por lado (referencial).</span>
+          </p>
           <div v-if="res.carga" :class="['mt-4 rounded-xl px-3 py-2.5 text-sm', SEMAFORO[res.carga.color as keyof typeof SEMAFORO]]">
             <b>{{ mod.tipo === 'RS' ? 'Carga por par de vigas' : mod.tipo === 'DI' ? 'Carga por pallet' : 'Carga por bandeja' }}:</b>
             {{ n(res.carga.kg) }} de {{ n(res.carga.capacidad) }} kg ({{ Math.round(res.carga.uso * 100) }} %)
@@ -196,6 +207,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useProyecto, type Sistema, type Modelo } from '~/stores/proyecto';
 import { TIPOS } from '~/lib/rack3d/planificador.js';
 import { resultadoModelo, nivelesMaximos, mezclaPorDefecto } from '~/lib/flujo/calculos.js';
+import { RACK } from '~/lib/rack3d/parametrosTecnicos.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();

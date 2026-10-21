@@ -39,7 +39,10 @@
             </div>
             <small v-if="err(t).frente || err(t).fondo" class="fl-msg">{{ err(t).frente || err(t).fondo }}</small>
           </div>
-          <FlujoPalletPlanta :frente="t.frente" :fondo="t.fondo" class="mx-auto" />
+          <div class="flex flex-col items-center gap-2">
+            <FlujoPalletPlanta :frente="t.frente" :fondo="t.fondo" />
+            <button type="button" class="fl-chip !min-h-10 !w-auto !px-4 !text-sm" @click="[t.frente, t.fondo] = [t.fondo, t.frente]">↻ Girar pallet</button>
+          </div>
         </div>
         <div class="mt-4 grid gap-4 sm:grid-cols-2">
           <label class="fl-campo sm:col-span-2">

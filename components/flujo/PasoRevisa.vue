@@ -93,7 +93,7 @@ import { kpisPorSistema } from '~/lib/rack3d/kpis.js';
 import { alturaUltimoNivel } from '~/lib/rack3d/operacion.js';
 import { revisarDiseno, resumenViabilidad, aplicarArreglo } from '~/lib/rack3d/viabilidad.js';
 import { proponerAccesorios, aplicarAjustes, textoAccesorios } from '~/lib/rack3d/accesorios.js';
-import { queCotizar } from '~/lib/flujo/calculos.js';
+import { queCotizar, conteoTotal } from '~/lib/flujo/calculos.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();
@@ -109,7 +109,8 @@ const avisos = computed(() => (revisarDiseno({ bodega: p.bodega, racks: p.racks,
   .sort((a, b) => (a.nivel === b.nivel ? 0 : a.nivel === 'bloquea' ? -1 : 1)));
 const resumen = computed(() => resumenViabilidad(avisos.value) as { viable: boolean; bloquea: number; advierte: number });
 
-const k = computed(() => kpisPorSistema(p.racks).global.nuevo as any);
+// Misma cuenta que los pasos 3 y 5 y la cotizacion; piso ocupado desde los KPI
+const k = computed(() => ({ ...conteoTotal(p.racks.filter((r) => !r.existente)), piso: (kpisPorSistema(p.racks).global.nuevo as any).piso, calles: 0 }));
 const m2 = computed(() => area(contorno(p.bodega)));
 const necesidad = computed(() => p.pallets.reduce((t, x) => t + (x.cantidad || 0), 0));
 const holgura = computed(() => (necesidad.value ? `${Math.round(((k.value.posiciones - necesidad.value) / necesidad.value) * 100)} %` : '—'));
