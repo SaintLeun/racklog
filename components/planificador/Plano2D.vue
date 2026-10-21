@@ -194,7 +194,8 @@
             <line :x1="mk.x1" :y1="mk.y1" :x2="mk.x2" :y2="mk.y2" stroke="#facc15" stroke-width="0.16" />
             <line :x1="mk.x1" :y1="mk.y1" :x2="mk.x2" :y2="mk.y2" stroke="#111827" stroke-width="0.16" stroke-dasharray="0.12 0.12" />
           </g>
-          <line v-else :x1="mk.x1" :y1="mk.y1" :x2="mk.x2" :y2="mk.y2" stroke="#eab308" stroke-width="0.12" stroke-linecap="round" />
+          <!-- Baranda: una linea por pieza; el ajuste en naranjo -->
+          <line v-else :x1="mk.x1" :y1="mk.y1" :x2="mk.x2" :y2="mk.y2" :stroke="(mk as any).ajuste ? '#ea580c' : '#eab308'" stroke-width="0.12" stroke-linecap="butt" />
         </template>
       </g>
 
