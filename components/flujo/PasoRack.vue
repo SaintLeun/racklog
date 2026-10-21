@@ -179,7 +179,8 @@
           <p v-if="mod.tipo === 'RS'" class="mt-3 rounded-lg bg-neutral-50 px-3 py-2 text-sm leading-relaxed text-neutral-600">
             Viga = {{ res.m.palletsPorViga }} × {{ fm(res.m.pallet.frente) }} + {{ res.m.palletsPorViga + 1 }} × {{ fm(RACK.holguraViga.valor) }} = <b class="text-neutral-800">{{ fm(res.m.viga) }} m</b><br>
             Fondo del marco = {{ fm(res.m.pallet.fondo) }} − 2 × {{ fm(RACK.voladizoPallet.valor) }} = <b class="text-neutral-800">{{ fm(res.m.fondo) }} m</b>
-            <span class="block text-xs text-neutral-500">El pallet sobresale {{ Math.round(RACK.voladizoPallet.valor * 1000) }} mm por lado (referencial).</span>
+            Viga {{ res.m.vigaModelo }} ({{ Math.round(res.m.altoViga * 1000) }} mm) para {{ n(res.m.kgPallet) }} kg por pallet
+            <span class="block text-xs text-neutral-500">Mismas fórmulas del cotizador Racklog. El pallet sobresale {{ Math.round(RACK.voladizoPallet.valor * 1000) }} mm por lado.</span>
           </p>
           <div v-if="res.carga" :class="['mt-4 rounded-xl px-3 py-2.5 text-sm', SEMAFORO[res.carga.color as keyof typeof SEMAFORO]]">
             <b>{{ mod.tipo === 'RS' ? 'Carga por par de vigas' : mod.tipo === 'DI' ? 'Carga por pallet' : 'Carga por bandeja' }}:</b>
