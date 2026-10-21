@@ -32,7 +32,19 @@
       </section>
 
       <!-- Preguntas, una por pantalla -->
-      <section v-else-if="vista === 'pregunta' && actual" :key="`q-${actual.clave}`">
+      <section v-else-if="vista === 'pregunta' && actual" :key="`q-${actual.clave}`" class="grid gap-6 lg:grid-cols-[1fr_minmax(280px,40%)]">
+        <!-- Lo que se va perfilando con sus respuestas (primero en celular) -->
+        <aside class="order-first lg:order-last">
+          <div class="fl-card !p-0 overflow-hidden">
+            <img :src="TIPOS[previa].imagen" alt="" class="aspect-[4/3] w-full object-cover transition-opacity duration-300" loading="lazy">
+            <div class="p-4">
+              <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Con lo que llevas</p>
+              <p class="text-lg font-bold text-neutral-900">{{ TIPOS[previa].nombre }}</p>
+              <p class="text-sm text-neutral-600">{{ TIPOS[previa].asesoria.sirve }}</p>
+            </div>
+          </div>
+        </aside>
+        <div>
         <div class="flex items-center justify-between gap-3">
           <p class="text-sm font-medium text-neutral-500">Pregunta {{ p.pregunta + 1 }} de {{ preguntas.length }}</p>
           <button type="button" class="text-sm font-medium text-brand-700 underline underline-offset-2" @click="p.sabe = true">Ya sé lo que quiero</button>
@@ -54,6 +66,7 @@
           <p>{{ actual.tip }}</p>
         </details>
         <FlujoAcciones :texto="'Saltar'" @atras="volverPregunta" @siguiente="responder(TIPICO[actual.clave], true)" />
+        </div>
       </section>
 
       <!-- Recomendacion -->
@@ -110,6 +123,8 @@ const EQUIPOS = [
 
 const preguntas = computed(() => preguntasActivas(p.respuestas));
 const actual = computed(() => preguntas.value[p.pregunta] ?? null);
+// Sistema que se va perfilando con las respuestas que lleva (cambia al instante)
+const previa = computed(() => (recomendar({ ...TIPICO, ...p.respuestas }).sistema as Sistema));
 const rec = computed(() => (p.sabe === false && p.pregunta >= preguntas.value.length ? recomendar(p.respuestas) : null));
 // Empieza por las preguntas; "Ya sé lo que quiero" es el atajo a elegir el sistema
 const vista = computed(() => {

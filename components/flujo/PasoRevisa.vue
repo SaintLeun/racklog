@@ -14,6 +14,7 @@
             ? (resumen.advierte ? `Se puede fabricar y montar. Revisa ${resumen.advierte} ${resumen.advierte === 1 ? 'sugerencia' : 'sugerencias'}.` : 'Se puede fabricar y montar tal como está.')
             : 'Resuélvelos con un toque para poder cotizar.' }}
         </p>
+        <p v-if="resumen.viable" class="mt-1 text-sm text-green-800">Revisado por un ingeniero Racklog antes de cotizar · Diseño sísmico NCh2369.</p>
         <TransitionGroup tag="ul" name="fl-lista" class="mt-4 space-y-2">
           <li v-for="a in avisos" :key="a.id" class="flex flex-col gap-2 rounded-xl bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
             <span class="flex gap-2 text-neutral-800">
@@ -24,6 +25,27 @@
             <span v-else-if="a.comoArreglar" class="text-sm text-neutral-500">{{ a.comoArreglar }}</span>
           </li>
         </TransitionGroup>
+      </section>
+
+      <!-- Lo que gana, en palabras simples, y antes / despues -->
+      <section class="mt-6 rounded-2xl bg-white p-5 ring-1 ring-neutral-200">
+        <p class="text-[22px] font-bold leading-snug text-neutral-900">
+          Guardas <FlujoContador :valor="conRacklog" /> pallets<template v-if="hoy && conRacklog > hoy">, {{ mas }} % más que hoy</template>{{ resumen.viable ? `, y tu ${grua.nombre.toLowerCase()} opera sin problema` : '' }}.
+        </p>
+        <div class="mt-4 grid grid-cols-2 gap-3">
+          <div class="rounded-xl bg-neutral-50 p-3">
+            <p class="text-sm text-neutral-500">Tu bodega hoy</p>
+            <p v-if="hoy" class="text-2xl font-bold text-neutral-700">{{ n(hoy) }} <span class="text-sm font-normal">posiciones</span></p>
+            <label v-else class="mt-1 block text-sm text-neutral-600">¿Cuántas posiciones tienes hoy?
+              <input type="number" min="0" class="form-input mt-1 !h-10" @change="p.posicionesHoy = Math.max(0, Number(($event.target as HTMLInputElement).value) || 0)">
+            </label>
+          </div>
+          <div class="rounded-xl bg-brand-50 p-3 ring-1 ring-brand-200">
+            <p class="text-sm text-brand-800">Con Racklog</p>
+            <p class="text-2xl font-bold text-brand-800"><FlujoContador :valor="conRacklog" /> <span class="text-sm font-normal">posiciones</span></p>
+            <p v-if="hoy && conRacklog > hoy" class="text-sm font-semibold text-green-700">+{{ mas }} %</p>
+          </div>
+        </div>
       </section>
 
       <!-- Vista 3D grande: la bodega con sus racks y la grua operando -->
@@ -117,6 +139,12 @@ const holgura = computed(() => (necesidad.value ? `${Math.round(((k.value.posici
 const lp = computed(() => pasillos(p.racks, p.bodega) as any[]);
 const minPasillo = computed(() => (lp.value.length ? Math.min(...lp.value.map((x) => x.libre)) : 0));
 const grua = computed(() => (GRUAS as any)[p.bodega.grua] ?? GRUAS.contrapeso);
+// Posiciones que ya tiene hoy (lo que dijo, sus importaciones o sus racks existentes) y con Racklog
+// (las nuevas mas las de los racks que conserva)
+const existentes = computed(() => conteoTotal(p.racks.filter((r) => r.existente)).posiciones);
+const hoy = computed(() => p.posicionesHoy || p.pallets.reduce((t, x: any) => t + (x.importacion?.actuales || 0), 0) || existentes.value);
+const conRacklog = computed(() => k.value.posiciones + existentes.value);
+const mas = computed(() => Math.round(((conRacklog.value - hoy.value) / Math.max(1, hoy.value)) * 100));
 const altoMax = computed(() => Math.max(0, ...p.racks.filter((r) => r.tipo !== 'AR').map((r) => alturaUltimoNivel(r))));
 const cotizar = computed(() => queCotizar(p.modelos, p.racks) as any[]);
 

@@ -35,13 +35,14 @@
           </div>
         </div>
       </Transition>
-      <CtaCotizacion24 v-if="p.paso !== 'cotiza' && p.indice >= 2" @cotizar="cotizarYa" />
+      <CtaCotizacion24 v-if="p.paso !== 'cotiza' && p.indice >= 2" :boton="botonCta" @cotizar="cotizarYa" />
     </ClientOnly>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
+import { conteoTotal } from '~/lib/flujo/calculos.js';
 import { useProyecto, PASOS, type Paso } from '~/stores/proyecto';
 import {
   FlujoPasoOperacion, FlujoPasoPallets, FlujoPasoRack, FlujoPasoAccesorios, FlujoPasoBodega, FlujoPasoRevisa, FlujoPasoCotiza,
@@ -69,6 +70,11 @@ function ir(paso: Paso) {
   marcar('tour_step', { n: p.indice + 1, paso });
   if (import.meta.client) window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
+// CTA con sus numeros: "Cotizar mis 312 posiciones"
+const botonCta = computed(() => {
+  const c = conteoTotal(p.racks.filter((r) => !r.existente));
+  return c.posiciones ? `Cotizar mis ${c.posiciones.toLocaleString('es-CL')} posiciones` : c.bandejas ? `Cotizar mis ${c.bandejas.toLocaleString('es-CL')} bandejas` : 'Cotizar ahora';
+});
 const siguiente = () => ir(PASOS[Math.min(PASOS.length - 1, p.indice + 1)].k);
 const atras = () => ir(PASOS[Math.max(0, p.indice - 1)].k);
 // El CTA fijo lleva a cotizar; si falta definir el rack o la bodega, al paso que falta

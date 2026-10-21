@@ -91,6 +91,8 @@ function inicial() {
       pallets: [] as any[],
     },
     racks: [] as any[],
+    // Posiciones que el cliente ya tiene hoy (para el antes / despues)
+    posicionesHoy: 0,
     // Medicion
     inicio: Date.now(),
     tiempos: {} as Record<string, number>,

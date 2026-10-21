@@ -7,7 +7,8 @@
     <rect v-for="(xp, i) in pilares" :key="`p${i}`" :x="xp - 3" :y="y(m.alto)" width="6" :height="y(0) - y(m.alto)" fill="#9ca3af" rx="1" />
 
     <template v-if="tipo === 'selectivo'">
-      <g v-for="(n, i) in niveles" :key="`n${i}`">
+      <!-- El rack se levanta nivel por nivel cuando cambia (la clave reinicia la animacion) -->
+      <g v-for="(n, i) in niveles" :key="`n${i}-${firma}`" class="fl-nivel" :style="{ '--i': i }">
         <rect v-if="!n.piso" :x="x0" :y="y(n.y) - 3" :width="ancho" height="6" :fill="arrastre?.i === i - 1 ? '#c2410c' : '#f97316'" rx="1" />
         <!-- Editable: la viga se toma y se arrastra; zona de toque amplia -->
         <rect
@@ -141,5 +142,12 @@ function tomar(e: PointerEvent, i: number) {
   window.addEventListener('pointerup', soltar);
 }
 
+const firma = computed(() => [props.m.palletsPorViga, props.m.nivelesY.length, props.m.altosCarga?.join()].join('|'));
 const descripcion = computed(() => `Vista frontal: alto de marco ${fm(props.m.alto)} m, largo ${fm(largo.value)} m`);
 </script>
+
+<style scoped>
+.fl-nivel { animation: fl-subir .38s cubic-bezier(.2, .8, .2, 1) both; animation-delay: calc(var(--i) * 110ms); transform-box: fill-box; }
+@keyframes fl-subir { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .fl-nivel { animation: none; } }
+</style>
