@@ -21,10 +21,13 @@
       </div>
 
       <FlujoAcciones
-        texto="Recibir mi cotización en máximo 24 h" :deshabilitado="!resumen.viable || !p.registrado"
+        :texto="preparando ? 'Preparando tu diseño…' : textoCta" :deshabilitado="!resumen.viable || !p.registrado"
         :motivo="!p.registrado ? 'Completa tus datos en el paso anterior.' : 'Resuelve los puntos en rojo para cotizar.'"
         @atras="emit('atras')" @siguiente="abrir"
       />
+      <p v-if="cifra.n && resumen.viable && p.registrado" class="mt-2 text-right text-sm text-neutral-500">Te respondemos en máximo 24 horas.</p>
+
+      <FlujoEntregables ref="entregables" @registrarse="emit('atras')" />
     </template>
 
     <!-- Enviado -->
@@ -37,6 +40,7 @@
         <button type="button" class="fl-btn-sec" @click="p.enviado = false">Ver mi diseño</button>
       </div>
     </section>
+    <FlujoEntregables v-if="p.enviado" @registrarse="emit('atras')" />
 
     <ContactModal
       :is-visible="abierto"
@@ -44,6 +48,7 @@
       :quote-item="item"
       :prefill="{ name: p.lead.nombre, phone: p.lead.telefono, email: p.lead.correo, company: p.lead.empresa, rut: p.lead.rut }"
       :config-extra="extra"
+      :initial-files="adjuntos"
       @close="abierto = false"
       @sent="enviado"
     />
@@ -59,6 +64,7 @@ import { revisarDiseno, resumenViabilidad } from '~/lib/rack3d/viabilidad.js';
 import { proponerAccesorios, aplicarAjustes, textoAccesorios } from '~/lib/rack3d/accesorios.js';
 import { puntajeLead } from '~/lib/rack3d/operacion.js';
 import { queCotizar } from '~/lib/flujo/calculos.js';
+import { cifraPrincipal, porConfirmar } from '~/lib/flujo/exportar.js';
 import type { QuoteItem } from '~/components/QuoteModal/ProductConfig';
 
 const emit = defineEmits<{ atras: [] }>();
@@ -70,13 +76,12 @@ const primerNombre = computed(() => p.lead.nombre.split(' ')[0] || '');
 const avisos = computed(() => revisarDiseno({ bodega: p.bodega, racks: p.racks, pallets: p.pallets, accesorios: p.accesorios }) as any[]);
 const resumen = computed(() => resumenViabilidad(avisos.value) as { viable: boolean; bloquea: number; advierte: number });
 const cotizar = computed(() => queCotizar(p.modelos, p.racks) as any[]);
+// CTA con sus numeros: "Cotizar mis 312 posiciones" (solo racks nuevos)
+const cifra = computed(() => cifraPrincipal(p.racks) as { n: number; unidad: string });
+const textoCta = computed(() => (cifra.value.n ? `Cotizar mis ${n(cifra.value.n)} ${cifra.value.unidad}` : 'Recibir mi cotización en máximo 24 h'));
 const textoAcc = computed(() => textoAccesorios(aplicarAjustes(proponerAccesorios({ bodega: p.bodega, racks: p.racks, pallets: p.pallets }), p.accesorios)) as string);
-// Datos que el cliente dejo en "No sé"
-const NOMBRES: Record<string, string> = { alto: 'alto de pallet', peso: 'peso de pallet', altura: 'altura libre', equipo: 'equipo', rotacion: 'rotación', pallets_sku: 'pallets por producto' };
-const noSe = computed(() => [...new Set([
-  ...p.flags.filter((f) => f.startsWith('no_se:')).map((f) => NOMBRES[f.slice(6)] ?? f.slice(6)),
-  ...p.pallets.flatMap((t) => (t.noSe ?? []).map((c) => NOMBRES[c] ?? c)),
-])]);
+// Datos que el cliente dejo en "No sé" (en palabras simples)
+const noSe = computed(() => porConfirmar(p) as string[]);
 
 const item = computed<QuoteItem>(() => {
   const config: Record<string, string | number> = {
@@ -92,7 +97,8 @@ const item = computed<QuoteItem>(() => {
   p.cajas.forEach((c) => { config[`Caja ${c.nombre}`] = `${c.cantidad} u · ${Math.round(c.largo * 100)}×${Math.round(c.ancho * 100)}×${Math.round(c.alto * 100)} cm · ${c.peso} kg`; });
   config['Viabilidad'] = resumen.value.viable ? `Viable${resumen.value.advierte ? ` (${resumen.value.advierte} sugerencias)` : ''}` : 'Con puntos por resolver';
   if (noSe.value.length) config['Confirmar con el cliente'] = noSe.value.join(', ');
-  if (p.flags.length) config['Flags'] = p.flags.filter((f) => !f.startsWith('no_se:')).join(', ');
+  const flags = p.flags.filter((f) => !f.startsWith('no_se:'));
+  if (flags.length) config['Flags'] = flags.join(', ');
   if (Object.keys(p.utm).length) config['Campaña'] = Object.entries(p.utm).map(([k, v]) => `${k}=${v}`).join(' · ');
   config['Etiqueta'] = 'tour-logistico';
   return {
@@ -114,7 +120,24 @@ function extra({ plazo, telefono }: { plazo: string; telefono: string }) {
   const pesoPallet = Math.max(0, ...p.pallets.map((t) => t.peso || 0));
   return { 'Puntaje del lead': `${puntajeLead({ racks: p.racks, bodega: { ...p.bodega, pesoPallet }, perfil: p.lead.perfil, plazo, telefono })}/100` };
 }
-function abrir() {
+// El plano (PNG) y el PDF del diseño van adjuntos a la cotizacion; si tardan o fallan, el formulario
+// se abre igual (maximo ~9 s esperando)
+const entregables = ref<{ archivos: () => Promise<File[]> } | null>(null);
+const adjuntos = ref<File[]>([]);
+const preparando = ref(false);
+async function abrir() {
+  if (preparando.value) return;
+  preparando.value = true;
+  try {
+    adjuntos.value = await Promise.race([
+      entregables.value?.archivos() ?? Promise.resolve([]),
+      new Promise<File[]>((ok) => setTimeout(() => ok([]), 9000)),
+    ]);
+  } catch {
+    adjuntos.value = [];
+  } finally {
+    preparando.value = false;
+  }
   abierto.value = true;
   marcar('quote_open', {});
 }

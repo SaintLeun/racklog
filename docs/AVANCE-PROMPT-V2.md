@@ -25,15 +25,15 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 |---|---|---|
 | V1 | Mostrar, no preguntar: cada dato cambia algo visible al instante | 🟡 pasos 3 y 5 sí; pasos 1, 2 y 4 no |
 | V2 | Pantalla dividida, dibujo/3D ≥ 60 % (arriba en celular) en **todos** los pasos | 🟡 pasos 5 y 6 sí; paso 3 parcial; 1, 2, 4, 7 no |
-| V3 | Su bodega: nombre de su producto, su logo/empresa en plano y PDF | 🟡 nombre de producto sí; logo/empresa ⬜ |
+| V3 | Su bodega: nombre de su producto, su logo/empresa en plano y PDF | 🟡 nombre de producto sí; empresa y logo (opcional, se sube en el paso 7) en PDF e imagen ✅; logo dentro del plano 2D en pantalla ⬜ |
 | V4a | Paso 2: pallet que se arma caja por caja en 3D | ✅ |
 | V4b | Paso 3: rack que se levanta nivel por nivel | ⬜ |
 | V4c | Paso 5: "Llenar mi bodega" con racks repitiéndose entre pilares y contador que sube | 🟡 ubicación automática sí; animación y contador ⬜ |
 | V4d | Paso 6: recorrido 3D (planta → altura de operador), grúas y personas; antes/después (+X %) | ⬜ (grúa opera, cámara a la grúa: 🟡) |
 | V5 | Lenguaje de beneficio ("Guardas 312 pallets, 38 % más…") | 🟡 "Guardas X" en paso 3; resto ⬜ |
 | V6 | Confianza: "Tu diseño es viable ✓", "Revisado por un ingeniero Racklog", NCh2369 | 🟡 viable ✓ y NCh2369 en landing; sello de ingeniero ⬜ |
-| V7 | Premio: PDF con su logo, imagen 3D compartible, link a su diseño | ⬜ |
-| V8 | CTA con contexto ("Cotizar mis 312 posiciones") | ⬜ |
+| V7 | Premio: PDF con su logo, imagen 3D compartible, link a su diseño | 🟡 tarjeta "Llévate tu diseño" en paso 7 (antes y después de enviar): PDF 3 págs. (portada 3D + sello, plano + KPI por rol, qué cotizar + accesorios), PNG 1200×630 con Descargar/Compartir, "Copiar link" (`lib/flujo/enlace.js`) ✅; abrir el link carga el diseño: falta conectarlo en `disena.vue` |
+| V8 | CTA con contexto ("Cotizar mis 312 posiciones") | ✅ paso 7 ("Cotizar mis N posiciones/bandejas", racks nuevos); el formulario lleva adjuntos el plano PNG y el PDF |
 | V9 | Eventos en cada momento "wow" | 🟡 eventos base sí; por momento wow ⬜ |
 
 ## §R1 Regresiones (volver a lo que traía el patch, sin simplificar) — ✅ terminado
@@ -115,7 +115,7 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 - 🟡 Ángulo ranurado con cajas: cajas por bandeja, 250 kg, aviso de escalera ✅; pasillo por carro (ancho + 0,3) ⬜; altura entre repisas según la caja ⬜.
 - ✅ Drive-in: un solo alto de pallet por bloque (aviso).
 - 🟡 Viga por carga ✅ (motor); pilar por carga → medida real del pilar → largo exacto de fila ⬜ (falta tabla de pilares).
-- ⬜ Exportables: PDF con plano, 3D, "qué cotizar" y KPI por rol; link único con aperturas en Kommo.
+- 🟡 Exportables: PDF con plano, 3D, "qué cotizar" y KPI por rol ✅ (eventos pdf_download, compartir_3d, link_diseno); link al diseño en la URL ✅; aperturas del link en Kommo ⬜.
 
 ## §5 Conversión y medición
 - 🟡 Eventos: landing_view, cta_click, tour_start, tour_step, registro_ok, recomendacion, pallet_armado, rack_add, kpi_view, quote_open, quote_sent, whatsapp_click ✅; pdf_download ⬜; Meta Pixel y LinkedIn Insight ✅ (solo con consentimiento, apagados hasta poner los IDs: docs/ENVIRONMENT.md; quote_sent → Lead / conversión LinkedIn).
@@ -142,7 +142,7 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 | Vigas se arrastran (paso de perforación) y se valida la luz | ✅ 76,2 mm |
 | Pilares N × M equidistantes; portones y andenes editables; ningún rack sobre ellos | ✅ |
 | 2+ grúas 5 min → 0 choques; nº de grúas por movimientos | ⬜ (R6) |
-| PDF con logo + imagen 3D compartible; CTA con sus números | ⬜ (V7, V8) |
+| PDF con logo + imagen 3D compartible; CTA con sus números | ✅ (prueba entregables.mjs en 390 y 1400 px: descarga PDF e imagen, link decodifica sin lead, modal con plano y PDF adjuntos) |
 | Pasillo peatonal de 20 m → barandas a ambos lados con aberturas, en 2D, 3D y cotización | 🟡 2D y cotización ✅; 3D ⬜ |
 | Ningún "bloquea" se puede enviar; cada aviso con su arreglo | ✅ |
 | Usuario nuevo completa con valores por defecto < 5 min en celular | ✅ (~50 s en la prueba automática) |
