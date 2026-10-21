@@ -38,7 +38,7 @@
 
             <!-- Invitacion al planificador: con el rack ya puesto si el planificador lo tiene -->
             <NuxtLink
-              :to="rackPlanificador ? `/planificador?rack=${rackPlanificador}` : '/planificador'"
+              :to="rackPlanificador ? `/planifica-tu-bodega/disena?rack=${rackPlanificador}` : '/planifica-tu-bodega'"
               class="group mt-5 flex items-center gap-4 rounded-2xl bg-brand-50 p-4 ring-1 ring-brand-100 transition hover:ring-brand-300"
               @click="marcarPlanificador"
             >

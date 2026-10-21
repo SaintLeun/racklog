@@ -32,7 +32,7 @@
       <div class="flex flex-1 items-center py-20 sm:py-24 lg:py-28">
         <div class="max-w-3xl">
           <NuxtLink
-            to="/planificador"
+            to="/planifica-tu-bodega"
             class="group mb-6 inline-flex items-center gap-2.5 rounded-full bg-white/10 py-1.5 pl-1.5 pr-4 text-sm font-medium text-neutral-100 ring-1 ring-white/15 ring-inset backdrop-blur transition hover:bg-white/15"
             @click="marcarPlanificador"
           >

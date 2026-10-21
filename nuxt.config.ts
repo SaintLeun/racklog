@@ -10,6 +10,8 @@ const prerenderRoutes = [
   "/",
   "/nosotros",
   "/planificador",
+  "/planifica-tu-bodega",
+  "/planifica-tu-bodega/disena",
   "/productos",
   "/blog",
   "/politica-privacidad",
@@ -67,6 +69,11 @@ export default defineNuxtConfig({
       ],
       link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
     },
+  },
+
+  // El tour quedo dentro del flujo "Planifica tu bodega" (paso 1)
+  routeRules: {
+    "/tour": { redirect: "/planifica-tu-bodega/disena" },
   },
 
   nitro: {
