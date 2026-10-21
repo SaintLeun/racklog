@@ -55,6 +55,12 @@
         <svg v-else class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6 4l10 6-10 6z" /></svg>
         {{ operando ? 'Pausar grúa' : 'Ver grúa operando' }}
       </button>
+      <button
+        v-if="hayOperacion"
+        type="button"
+        class="absolute left-3 top-12 inline-flex items-center gap-1.5 rounded-lg bg-white/90 px-2.5 py-1.5 text-xs font-medium text-neutral-700 shadow-sm ring-1 ring-black/10 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+        @click="verGrua"
+      >Ver la grúa de cerca</button>
     </template>
   </div>
 </template>
@@ -99,7 +105,10 @@ const operando = ref(typeof window !== 'undefined' && !window.matchMedia?.('(pre
 function alternarOperacion() {
   operando.value = !operando.value;
   visor?.operar(operando.value);
-  if (operando.value) visor?.mirarOperacion();
+}
+function verGrua() {
+  if (!operando.value) alternarOperacion();
+  visor?.mirarOperacion();
 }
 
 function construirModelo() {
@@ -109,12 +118,10 @@ function construirModelo() {
     // Mover o editar un rack no mueve la camara; cambiar la bodega si la reencuadra
     const clave = JSON.stringify([props.bodega.ancho, props.bodega.largo, props.bodega.forma ?? null]);
     const reencuadrar = clave !== ultimaBodega;
-    visor.mostrar(bodega.construirBodega(props.bodega, props.racks ?? []), { reencuadrar, direccion: [0.25, 1.1, 1], margen: 0.95 });
+    // Tres cuartos desde la esquina de abajo a la derecha del plano, cerca (la bodega llena el cuadro)
+    visor.mostrar(bodega.construirBodega(props.bodega, props.racks ?? []), { reencuadrar, direccion: [0.7, 0.75, 1], margen: 0.78 });
     ultimaBodega = clave;
-    const habia = hayOperacion.value;
     hayOperacion.value = visor.operar(operando.value);
-    // La primera vez que hay grua operando, la camara va a mirarla (Centrar vista vuelve a la general)
-    if (hayOperacion.value && operando.value && (reencuadrar || !habia)) visor.mirarOperacion();
     return;
   }
   const c = (props.config ?? {}) as Record<string, any>;

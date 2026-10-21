@@ -26,16 +26,25 @@
         </TransitionGroup>
       </section>
 
+      <!-- Vista 3D grande: la bodega con sus racks y la grua operando -->
+      <div class="fl-card mt-6 !p-0 overflow-hidden">
+        <div class="h-[60vh] min-h-[380px]">
+          <ClientOnly>
+            <Visor3D :bodega="p.bodega" :racks="p.racks" etiqueta="Vista 3D de tu bodega" />
+          </ClientOnly>
+        </div>
+      </div>
+
       <!-- Vista por rol -->
       <div class="mt-8 flex gap-1 rounded-xl bg-neutral-100 p-1" role="tablist" aria-label="Ver resultados como">
         <button v-for="r in ROLES" :key="r.v" type="button" role="tab" :aria-selected="rol === r.v" :class="['flex-1 rounded-lg px-2 py-2.5 text-sm font-semibold transition', rol === r.v ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="rol = r.v">{{ r.t }}</button>
       </div>
 
-      <div class="mt-4 grid gap-6 lg:grid-cols-[1fr_1fr]">
+      <div class="mt-4">
         <div class="fl-card">
           <template v-if="rol === 'supply'">
             <p class="fl-leyenda">Capacidad y crecimiento</p>
-            <dl class="mt-3 grid grid-cols-2 gap-3">
+            <dl class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
               <div class="fl-dato"><dt>Posiciones nuevas</dt><dd><FlujoContador :valor="k.posiciones" /></dd></div>
               <div class="fl-dato"><dt>Pallets que necesitas hoy</dt><dd><FlujoContador :valor="necesidad" /></dd></div>
               <div class="fl-dato"><dt>Holgura para crecer</dt><dd>{{ holgura }}</dd></div>
@@ -46,7 +55,7 @@
           </template>
           <template v-else-if="rol === 'bodega'">
             <p class="fl-leyenda">Operación</p>
-            <dl class="mt-3 grid grid-cols-2 gap-3">
+            <dl class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
               <div class="fl-dato"><dt>Posiciones</dt><dd><FlujoContador :valor="k.posiciones" /></dd></div>
               <div class="fl-dato"><dt>Cuerpos / calles</dt><dd>{{ k.cuerpos + k.calles }}</dd></div>
               <div class="fl-dato"><dt>Pasillos</dt><dd>{{ lp.length }} · mín. {{ fm(minPasillo) }} m</dd></div>
@@ -63,11 +72,6 @@
             </div>
             <p v-if="textoAcc" class="mt-4 border-t border-neutral-100 pt-3 text-neutral-700"><b>Accesorios:</b> {{ textoAcc }}</p>
           </template>
-        </div>
-        <div class="fl-card !p-0 overflow-hidden">
-          <ClientOnly>
-            <Visor3D :bodega="p.bodega" :racks="p.racks" etiqueta="Vista 3D de tu bodega" class="!aspect-[4/3]" />
-          </ClientOnly>
         </div>
       </div>
 
