@@ -5,7 +5,7 @@
       <div class="absolute inset-0 -z-10 border-b border-neutral-200/80 bg-white/85 backdrop-blur-md supports-[backdrop-filter]:bg-white/75" aria-hidden="true"></div>
       <div class="container-page flex h-16 items-center justify-between gap-3">
         <NuxtLink to="/" class="flex flex-shrink-0 items-center">
-          <img src="/assets/images/logo.webp" alt="Racklog - inicio" width="709" height="184" fetchpriority="high" class="h-8 w-auto sm:h-9" />
+          <img src="/assets/images/logo.webp" srcset="/assets/images/logo-280.webp 280w, /assets/images/logo.webp 709w" sizes="139px" alt="Racklog - inicio" width="709" height="184" class="h-8 w-auto sm:h-9" />
         </NuxtLink>
         <nav aria-label="Landing" class="flex items-center gap-1 sm:gap-3">
           <NuxtLink to="/productos" class="inline-flex min-h-11 items-center rounded-lg px-2.5 text-[15px] font-medium text-neutral-700 transition-colors hover:text-neutral-950 sm:px-3">

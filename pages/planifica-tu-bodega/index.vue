@@ -3,7 +3,8 @@
     <!-- ─── 1. Hero ─── -->
     <section ref="hero" class="relative overflow-hidden bg-ink-950">
       <div class="pointer-events-none absolute inset-0 opacity-60" aria-hidden="true">
-        <div class="absolute -right-32 -top-40 h-[28rem] w-[28rem] rounded-full bg-brand-600/25 blur-3xl"></div>
+        <!-- Degradado radial en vez de blur(): mismo halo sin el costo de pintar un filtro grande -->
+        <div class="halo absolute -right-56 -top-64 h-[44rem] w-[44rem]"></div>
       </div>
       <div class="container-page relative grid items-center gap-10 py-12 sm:py-16 lg:grid-cols-2 lg:gap-14 lg:py-20">
         <div>
@@ -42,8 +43,10 @@
                  </video> -->
             <img
               src="/assets/images/planificador-3d.webp"
+              srcset="/assets/images/planificador-3d-480.webp 480w, /assets/images/planificador-3d.webp 832w"
+              sizes="(min-width: 1024px) 560px, calc(100vw - 2rem)"
               alt="Vista 3D de una bodega con racks diseñada en el planificador Racklog"
-              width="832" height="624" fetchpriority="high" decoding="async"
+              width="832" height="624" fetchpriority="high"
               class="h-full w-full object-cover"
             />
           </div>
@@ -272,6 +275,8 @@
 
 <script lang="ts" setup>
 import { modularSelectivo } from '~/lib/tour/pallet.js';
+// Misma URL (con hash) que usa main.css: precargarla evita que el titulo cambie de alto al llegar la fuente (CLS)
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 
 definePageMeta({ layout: 'landing' });
 
@@ -283,6 +288,8 @@ usePageSeo({
   image: '/assets/images/og-planifica-tu-bodega.png',
   imageAlt: 'Diseña tu bodega y recibe tu cotización en máximo 24 horas: planificador 3D de Racklog',
 });
+
+useHead({ link: [{ rel: 'preload', as: 'font', type: 'font/woff2', href: interLatin, crossorigin: '' }] });
 
 // ─── A/B (composables/useVariante.ts; apagado por defecto) ───
 const varTitulo = useVariante('titulo');
@@ -447,17 +454,24 @@ onMounted(() => {
 
     // Aparición suave de bloques al entrar en pantalla (solo los que aún no se ven)
     if (!reducido) {
+      // Sin getBoundingClientRect (forzaba un reflow al montar): la primera entrega del observer ya trae
+      // la posicion; se ocultan solo los bloques que estan bajo la pantalla y se muestran al llegar
+      const vistos = new WeakSet<Element>();
       obsAparece = new IntersectionObserver((entradas) => {
         for (const en of entradas) {
-          if (en.isIntersecting) { en.target.classList.remove('aparece-oculto'); obsAparece?.unobserve(en.target); }
+          const primera = !vistos.has(en.target);
+          vistos.add(en.target);
+          if (en.isIntersecting) {
+            en.target.classList.remove('aparece-oculto');
+            obsAparece?.unobserve(en.target);
+          } else if (primera && en.boundingClientRect.top > (en.rootBounds?.height ?? window.innerHeight)) {
+            en.target.classList.add('aparece-oculto');
+          } else if (primera) {
+            obsAparece?.unobserve(en.target);
+          }
         }
       }, { rootMargin: '0px 0px -8% 0px' });
-      document.querySelectorAll<HTMLElement>('[data-aparece]').forEach((el) => {
-        if (el.getBoundingClientRect().top > window.innerHeight) {
-          el.classList.add('aparece-oculto');
-          obsAparece!.observe(el);
-        }
-      });
+      document.querySelectorAll<HTMLElement>('[data-aparece]').forEach((el) => obsAparece!.observe(el));
     }
   }
 });
@@ -470,6 +484,9 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+.halo {
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-brand-600) 25%, transparent), transparent);
+}
 .titulo-seccion {
   font-size: 1.625rem; /* 26 px */
   line-height: 1.2;
