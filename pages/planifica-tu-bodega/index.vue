@@ -9,14 +9,15 @@
         <div>
           <span class="eyebrow !bg-white/5 !text-brand-300 !ring-white/10">Planificador de bodegas gratis</span>
           <h1 class="mt-4 text-[32px] font-bold leading-tight tracking-tight text-white sm:text-5xl sm:leading-[1.1]">
-            Diseña tu bodega en 5 minutos y recibe tu cotización en <span class="text-brand-400">máximo 24 horas</span>
+            <template v-if="varTitulo === 'costo'">Descubre cuánto cuesta equipar tu bodega y recibe tu cotización en <span class="text-brand-400">máximo 24 horas</span></template>
+            <template v-else>Diseña tu bodega en 5 minutos y recibe tu cotización en <span class="text-brand-400">máximo 24 horas</span></template>
           </h1>
           <p class="mt-5 max-w-xl text-lg leading-relaxed text-neutral-300">
             Gratis y sin instalar nada. Un ingeniero de Racklog revisa tu diseño antes de cotizar.
           </p>
           <div class="mt-8 flex flex-col gap-3 sm:flex-row">
             <NuxtLink to="/planifica-tu-bodega/disena" class="btn btn-primary btn-lg" @click="marcar('cta_click', { ubicacion: 'hero' })">
-              Empezar gratis
+              {{ textoCta }}
               <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </NuxtLink>
             <a :href="WHATSAPP" target="_blank" rel="noopener noreferrer" class="btn btn-ghost-light btn-lg active:scale-[.98]" @click="marcar('whatsapp_click', { ubicacion: 'hero' })">
@@ -256,7 +257,7 @@
         <p class="mx-auto mt-5 max-w-xl text-lg text-neutral-300">Gratis, desde el celular, y con un ingeniero revisando tu diseño.</p>
         <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <NuxtLink to="/planifica-tu-bodega/disena" class="btn btn-primary btn-lg w-full sm:w-auto" @click="marcar('cta_click', { ubicacion: 'final' })">
-            Empezar gratis
+            {{ textoCta }}
           </NuxtLink>
           <a :href="WHATSAPP" target="_blank" rel="noopener noreferrer" class="btn btn-ghost-light btn-lg w-full active:scale-[.98] sm:w-auto" @click="marcar('whatsapp_click', { ubicacion: 'final' })">
             Hablar por WhatsApp
@@ -265,7 +266,7 @@
       </div>
     </section>
 
-    <CtaCotizacion24 :visible="ctaVisible" boton="Empezar gratis" @cotizar="cotizarDesdeBarra" />
+    <CtaCotizacion24 :visible="ctaVisible" :boton="textoCta" @cotizar="cotizarDesdeBarra" />
   </div>
 </template>
 
@@ -277,8 +278,19 @@ definePageMeta({ layout: 'landing' });
 usePageSeo({
   title: 'Planifica tu bodega gratis',
   description: 'Diseña tu bodega en 5 minutos con el planificador de Racklog y recibe tu cotización de racks en máximo 24 horas. Gratis y revisado por un ingeniero.',
-  image: '/assets/images/og-racklog.jpg',
+  ogDescription: 'Dibuja tu bodega, arma tus pallets y mira tus racks en 2D y 3D. Un ingeniero de Racklog lo revisa y te cotiza en máximo 24 horas.',
+  twitterDescription: 'Planificador de bodegas gratis: racks en 2D y 3D desde el celular y cotización en máximo 24 horas.',
+  image: '/assets/images/og-planifica-tu-bodega.png',
+  imageAlt: 'Diseña tu bodega y recibe tu cotización en máximo 24 horas: planificador 3D de Racklog',
 });
+
+// ─── A/B (composables/useVariante.ts; apagado por defecto) ───
+const varTitulo = useVariante('titulo');
+const varCta = useVariante('cta');
+const textoCta = computed(() => varCta.value === 'recibir' ? 'Recibir mi cotización' : varCta.value === 'cotizar' ? 'Cotizar mi bodega gratis' : 'Empezar gratis');
+// Las URLs con ?v= (variantes forzadas para avisos) no se indexan; el canonical ya apunta a la URL sin parámetros
+const conVariante = usaVarianteEnUrl();
+useHead(() => (conVariante.value ? { meta: [{ name: 'robots', content: 'noindex, follow' }] } : {}));
 
 const WHATSAPP = 'https://wa.me/56932403819';
 const ICONO_WA = 'M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z';
