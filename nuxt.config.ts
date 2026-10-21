@@ -96,6 +96,7 @@ export default defineNuxtConfig({
         "three/examples/jsm/controls/OrbitControls.js",
         "three/examples/jsm/environments/RoomEnvironment.js",
         "three/examples/jsm/utils/BufferGeometryUtils.js",
+        "three/examples/jsm/geometries/RoundedBoxGeometry.js",
         "jspdf",
       ],
     },
