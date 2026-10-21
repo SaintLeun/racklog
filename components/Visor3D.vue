@@ -19,6 +19,11 @@
       <p class="max-w-xs text-sm text-neutral-600">Tu navegador no puede mostrar la vista 3D. Los detalles del producto están disponibles a continuación.</p>
     </div>
 
+    <div v-else-if="estado === 'error'" class="absolute inset-0 flex flex-col items-center justify-center px-6 text-center" role="alert">
+      <p class="max-w-xs text-sm text-neutral-600">No se pudo cargar la vista 3D. Revisa tu conexión e inténtalo de nuevo.</p>
+      <button type="button" class="mt-3 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm ring-1 ring-neutral-200 hover:bg-neutral-50" @click="iniciar">Reintentar</button>
+    </div>
+
     <template v-else-if="estado === 'listo'">
       <p
         class="pointer-events-none absolute bottom-3 left-1/2 max-w-[calc(100%-1.5rem)] -translate-x-1/2 truncate rounded-full bg-white/85 px-3 py-1 text-xs font-medium text-neutral-600 shadow-sm ring-1 ring-black/5"
@@ -62,7 +67,7 @@ const emit = defineEmits<{
 }>();
 
 const lienzoRef = ref<HTMLElement | null>(null);
-const estado = ref<'cargando' | 'listo' | 'sin-webgl'>('cargando');
+const estado = ref<'cargando' | 'listo' | 'sin-webgl' | 'error'>('cargando');
 
 type Modulos = {
   visor: typeof import('~/lib/rack3d/visor.js');
@@ -94,7 +99,21 @@ function construirModelo() {
   visor.mostrar(grupo);
 }
 
-onMounted(async () => {
+// Si falla la descarga de three.js o el armado de la escena se muestra el error con "Reintentar":
+// antes el aviso "Cargando vista 3D…" quedaba girando para siempre
+async function iniciar() {
+  estado.value = 'cargando';
+  try {
+    await montar();
+  } catch (e) {
+    console.error('Vista 3D:', e);
+    visor?.destruir();
+    visor = null;
+    if (lienzoRef.value) estado.value = 'error';
+  }
+}
+
+async function montar() {
   // three.js se descarga solo cuando hay un visor en pantalla
   const [visorMod, construir, medidas, bodega] = await Promise.all([
     import('~/lib/rack3d/visor.js'),
@@ -126,8 +145,12 @@ onMounted(async () => {
     });
   }
   construirModelo();
-  estado.value = 'listo';
-});
+  // "Listo" cuando ya hay un cuadro dibujado (una bodega llena tarda en el primero)
+  await new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok)));
+  if (visor) estado.value = 'listo';
+}
+
+onMounted(iniciar);
 
 const claveModelo = () => JSON.stringify([props.producto, props.config, props.bodega, props.racks]);
 // Varios cambios seguidos (p. ej. editar varios campos) se juntan en una sola reconstruccion por cuadro
@@ -136,7 +159,12 @@ watch(claveModelo, () => {
   if (reconstruir) return;
   reconstruir = requestAnimationFrame(() => {
     reconstruir = 0;
-    construirModelo();
+    try {
+      construirModelo();
+    } catch (e) {
+      console.error('Vista 3D:', e);
+      estado.value = 'error';
+    }
   });
 });
 

@@ -80,5 +80,17 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    // three y jsPDF se cargan recien al abrir la vista 3D o descargar el PDF. Sin esto, en dev
+    // Vite los descubre en ese momento, los optimiza y recarga la pagina: la vista 3D parecia
+    // quedar en un bucle y la descarga del PDF se perdia.
+    optimizeDeps: {
+      include: [
+        "three",
+        "three/examples/jsm/controls/OrbitControls.js",
+        "three/examples/jsm/environments/RoomEnvironment.js",
+        "three/examples/jsm/utils/BufferGeometryUtils.js",
+        "jspdf",
+      ],
+    },
   },
 });

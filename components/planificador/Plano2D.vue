@@ -95,6 +95,13 @@
         stroke="#0ea5e9" stroke-width="0.35" stroke-linecap="round" pointer-events="none"
       />
 
+      <!-- Pasillos: el espacio frente a cada cara de carga; en rojo si es mas angosto de lo que pide -->
+      <rect
+        v-for="p in dibujando ? [] : (pasillos ?? [])" :key="`p-${p.id}`"
+        :x="p.x0" :y="p.y0" :width="p.x1 - p.x0" :height="p.y1 - p.y0"
+        :fill="p.ok ? '#14b8a6' : '#ef4444'" :fill-opacity="p.ok ? 0.08 : 0.16" pointer-events="none"
+      />
+
       <!-- Pilares, portones, andenes, oficinas y zonas bloqueadas -->
       <g
         v-for="el in bodega.elementos ?? []" :key="el.id"
@@ -202,7 +209,7 @@
         <text
           v-bind="TEXTO_COTA" :fill="colorCota(c)" dominant-baseline="central"
           :x="posCota(c).x" :y="posCota(c).y" :transform="posCota(c).rot" :text-anchor="posCota(c).anchor"
-        >{{ c.a === 'rack' ? 'pasillo ' : c.a === 'elemento' ? 'libre ' : '' }}{{ formatoM(c.valor) }} m</text>
+        >{{ pasilloDe(c) ? 'pasillo ' : c.a === 'elemento' ? 'libre ' : '' }}{{ formatoM(c.valor) }} m</text>
       </g>
       <!-- Medidas del rack en planta, sobre su esquina (lejos de las cotas, que salen del centro de cada lado) -->
       <text
@@ -251,6 +258,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
 import { rectangulo, rectElemento, medidasRack, describir, contorno, caja, cotasRack, cotasElemento, formatoM, PASO, ELEMENTOS } from '~/lib/rack3d/planificador.js';
+import { pasilloEn } from '~/lib/rack3d/pasillos.js';
 
 export interface RackPlano {
   id: string;
@@ -276,6 +284,11 @@ export interface RackPlano {
 }
 export interface Punto { x: number; y: number }
 export interface Elemento { id: string; clase: 'pilar' | 'porton' | 'anden' | 'oficina' | 'zona' | 'pasilloGrua' | 'pasilloPeatonal' | 'grua'; x: number; y: number; ancho: number; alto: number; modelo?: string; nombre?: string }
+// Calculado por lib/rack3d/pasillos.js
+export interface Pasillo {
+  id: string; x0: number; y0: number; x1: number; y1: number; eje: 'x' | 'y';
+  libre: number; minimo: number; ok: boolean; racks: string[]; vecino: string | null;
+}
 
 const props = defineProps<{
   bodega: { ancho: number; largo: number; forma: Punto[] | null; elementos?: Elemento[] };
@@ -295,8 +308,8 @@ const props = defineProps<{
   herramienta?: 'mover' | 'medir';
   // Muro seleccionado (indice del lado del contorno) para editar su largo
   muroSel?: number | null;
-  // Pasillo minimo de la grua (m): un pasillo entre racks mas angosto se marca en rojo
-  pasilloMin?: number;
+  // Pasillos frente a las caras de carga (los angostos se marcan en rojo)
+  pasillos?: Pasillo[];
   // Elemento seleccionado (pilar, porton, anden, oficina o zona)
   elementoSel?: string | null;
   // Plano o foto de referencia para calcar: url, tamano en px y metros por px
@@ -499,7 +512,14 @@ function dibujoElemento(el: Elemento) {
 const rectSvg = (el: Elemento) => { const p = rectElemento(el); return { x: p.x0, y: p.y0, width: p.ancho, height: p.alto }; };
 const diagonal = (el: Elemento) => { const p = rectElemento(el); return { x1: p.x0, y1: p.y0, x2: p.x0 + p.ancho, y2: p.y0 + p.alto }; };
 
-const colorCota = (c: { a: string; valor: number }) => (c.a === 'elemento' ? '#0369a1' : c.a !== 'rack' ? '#334155' : props.pasilloMin && c.valor < props.pasilloMin - 1e-6 ? '#dc2626' : '#0f766e');
+// Una cota es de pasillo si cae dentro de uno (las de costado o espalda no lo son)
+type Cota = { a: string; x1: number; y1: number; x2: number; y2: number };
+const pasilloDe = (c: Cota) => (c.a !== 'elemento' && props.pasillos ? pasilloEn(props.pasillos, (c.x1 + c.x2) / 2, (c.y1 + c.y2) / 2) as Pasillo | null : null);
+const colorCota = (c: Cota) => {
+  if (c.a === 'elemento') return '#0369a1';
+  const p = pasilloDe(c);
+  return !p ? '#334155' : p.ok ? '#0f766e' : '#dc2626';
+};
 
 const rectDe = (r: RackPlano) => { const p = rectangulo(r); return { x: p.x0, y: p.y0, width: p.ancho, height: p.alto }; };
 

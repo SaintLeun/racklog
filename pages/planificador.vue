@@ -427,7 +427,7 @@
                   <div class="grid grid-cols-2 gap-2">
                     <button type="button" class="plan-accion" @click="girar(rackSel.id)">Girar</button>
                     <button type="button" class="plan-accion" @click="duplicar(rackSel.id)">Duplicar</button>
-                    <button type="button" class="plan-accion" :title="`Copia separada por un pasillo de ${formatoM(rackSel.tipo === 'AR' ? 1.2 : avisos.pasilloMin)} m`" @click="filaParalelaSel">Fila paralela</button>
+                    <button type="button" class="plan-accion" :title="`Copia separada por un pasillo de ${formatoM(pasilloRequerido(rackSel, bodega))} m`" @click="filaParalelaSel">Fila paralela</button>
                     <button type="button" class="plan-accion text-red-700 hover:bg-red-50" @click="eliminar(rackSel.id)">Eliminar</button>
                   </div>
                   <p v-if="avisoFila" class="text-xs text-amber-800" role="status">{{ avisoFila }}</p>
@@ -561,7 +561,7 @@
                   :puntos-calibracion="puntosCalibracion"
                   class="p-3"
                   :elemento-sel="elementoSel"
-                  :pasillo-min="avisos.pasilloMin"
+                  :pasillos="avisos.pasillos"
                   @seleccionar-elemento="seleccionarElemento"
                   @mover-elemento="(id, x, y) => cambiarElemento({ x, y }, id)"
                   @eliminar-elemento="eliminarElemento"
@@ -590,14 +590,14 @@
               <div v-if="altos.size" class="border-t border-amber-100 bg-amber-50 px-4 py-2.5 text-sm text-amber-900" role="status">
                 {{ altos.size === 1 ? 'Un rack queda' : `${altos.size} racks quedan` }} sin los {{ formatoM(DISTANCIAS.holguraTecho.valor) }} m libres bajo el techo ({{ formatoM(bodega.altura || 0) }} m), marcados con borde ámbar. Quítales niveles o revisa la altura.
               </div>
-              <div v-if="avisos.pasillos.length" class="border-t border-amber-100 bg-amber-50 px-4 py-2.5 text-sm text-amber-900" role="status">
-                {{ avisos.pasillos.length === 1 ? 'Hay un pasillo más angosto' : `Hay ${avisos.pasillos.length} pasillos más angostos` }} que los ~{{ formatoM(avisos.pasilloMin) }} m que necesita tu {{ gruaActual.nombre.toLowerCase() }}
-                ({{ avisos.pasillos.map((p) => `${numeroRack(p.a)}–${numeroRack(p.b)}: ${formatoM(p.ancho)} m`).join(', ') }}). Usa "Fila paralela" para separarlos al pasillo justo.
+              <div v-if="avisos.angostos.length" class="border-t border-amber-100 bg-amber-50 px-4 py-2.5 text-sm text-amber-900" role="status">
+                {{ avisos.angostos.length === 1 ? 'Hay un pasillo más angosto' : `Hay ${avisos.angostos.length} pasillos más angostos` }} de lo que se necesita para cargar los racks
+                ({{ avisos.angostos.map(textoPasillo).join(', ') }}). Usa "Fila paralela" para separarlos al pasillo justo.
               </div>
               <div v-if="avisos.levante.size" class="border-t border-amber-100 bg-amber-50 px-4 py-2.5 text-sm text-amber-900" role="status">
                 {{ avisos.levante.size === 1 ? 'Un rack tiene' : `${avisos.levante.size} racks tienen` }} el nivel más alto sobre lo que alcanza tu equipo (~{{ formatoM(avisos.levanteMax) }} m).
               </div>
-              <p v-if="!malos.size && !altos.size && !avisos.pasillos.length && !avisos.levante.size && vista === '2d' && racks.length" class="border-t border-neutral-100 px-4 py-2.5 text-xs text-neutral-500">
+              <p v-if="!malos.size && !altos.size && !avisos.angostos.length && !avisos.levante.size && vista === '2d' && racks.length" class="border-t border-neutral-100 px-4 py-2.5 text-xs text-neutral-500">
                 Arrastra los racks para moverlos. Con teclado: flechas para mover, R para girar y Suprimir para eliminar.
               </p>
             </div>
@@ -694,7 +694,8 @@ import { GRUAS, DISTANCIAS, esProvisorio } from '~/lib/rack3d/parametrosTecnicos
 import {
   gruaDe, avisosOperacion, semaforoCarga, racksSinHolgura, filaParalela, llenarBodega, recorridoPromedio, puntajeLead, materiales, alturaUltimoNivel,
 } from '~/lib/rack3d/operacion.js';
-import type { RackPlano, Punto, Elemento } from '~/components/planificador/Plano2D.vue';
+import { pasilloRequerido } from '~/lib/rack3d/pasillos.js';
+import type { RackPlano, Punto, Elemento, Pasillo } from '~/components/planificador/Plano2D.vue';
 import type { QuoteItem } from '~/components/QuoteModal/ProductConfig';
 
 usePageSeo({
@@ -736,11 +737,13 @@ const rectSel = computed(() => (rackSel.value ? rectangulo(rackSel.value) : { an
 // Sin la holgura al techo (incluye los que derechamente no caben)
 const altos = computed(() => racksSinHolgura(racks.value, bodega.altura) as Set<string>);
 const gruaActual = computed(() => gruaDe(bodega));
-const avisos = computed(() => avisosOperacion(racks.value, bodega) as { pasillos: { a: string; b: string; ancho: number }[]; levante: Set<string>; pasilloMin: number; levanteMax: number });
+const avisos = computed(() => avisosOperacion(racks.value, bodega) as { pasillos: Pasillo[]; angostos: Pasillo[]; levante: Set<string>; pasilloMin: number; levanteMax: number });
 const recorrido = computed(() => recorridoPromedio(racks.value, bodega) as number | null);
 const SEMAFORO = { verde: 'bg-green-50 text-green-900', amarillo: 'bg-amber-50 text-amber-900', rojo: 'bg-red-50 text-red-900' } as const;
 const semaforoSel = computed(() => (rackSel.value ? semaforoCarga(rackSel.value, bodega.pesoPallet, bodega.pesoBandeja) as { uso: number; carga: number; capacidad: number; color: keyof typeof SEMAFORO } | null : null));
 const numeroRack = (id: string) => racks.value.findIndex((r) => r.id === id) + 1;
+// "3–4: 2,8 de 3,5 m" o, frente a un muro, "3–muro: …"
+const textoPasillo = (p: Pasillo) => `${p.racks.map(numeroRack).join('–')}${p.racks.length === 1 ? `–${p.vecino ? numeroRack(p.vecino) : 'muro'}` : ''}: ${formatoM(p.libre)} de ${formatoM(p.minimo)} m`;
 const avisoFila = ref('');
 
 function filaParalelaSel() {
