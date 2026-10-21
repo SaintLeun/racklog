@@ -48,6 +48,8 @@ export interface Modelo {
   tunel?: { cuerpo: number; altoLibre: number } | null;
   fondos?: number; techoGrua?: number | null; mastilGrua?: number | null; anchoGrua?: number | null;
   bandeja?: number; frente?: number;
+  // Angulo ranurado: cajas apiladas por repisa (define la altura entre repisas) y carro de carga (m)
+  camasRepisa?: number; altoEntre?: number | null; anchoCarro?: number | null;
   // Vigas movidas a mano (m, centro de cada viga; selectivo)
   vigasY?: number[] | null;
   // Cuantos de cada tipo (pallet o caja) van en este modelo

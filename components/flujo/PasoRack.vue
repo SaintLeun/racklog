@@ -96,6 +96,13 @@
               <div class="mt-2 grid grid-cols-4 gap-2">
                 <button v-for="f in [0.3, 0.4, 0.5, 0.6]" :key="f" type="button" :class="['fl-chip !text-sm', (mod.bandeja ?? 0.4) === f && 'fl-chip--sel']" @click="cambiar({ bandeja: f })">{{ f * 1000 }} mm</button>
               </div>
+              <p class="fl-sub mt-4">Cajas apiladas por repisa</p>
+              <FlujoNumero :valor="mod.camasRepisa ?? 1" :min="1" :max="6" etiqueta="cajas por repisa" @cambio="cambiar({ camasRepisa: $event })" />
+              <p class="mt-1.5 text-sm text-neutral-500">Entre repisas: {{ Math.round((res.m.altoEntre ?? 0) * 100) }} cm según tu caja · estantería de {{ fm(res.m.alto) }} m</p>
+              <label class="fl-campo mt-4">
+                <span>Ancho del carro de carga (cm) <FlujoInfo>El pasillo es el ancho del carro + 30 cm (mínimo 1,2 m).</FlujoInfo></span>
+                <input :value="mod.anchoCarro ? Math.round(mod.anchoCarro * 100) : ''" type="number" min="30" max="200" step="any" placeholder="Sin carro" class="form-input" @change="cambiar({ anchoCarro: Number(($event.target as HTMLInputElement).value) / 100 || null })">
+              </label>
               <p class="fl-sub mt-4">Largo de la bandeja</p>
               <div class="mt-2 grid grid-cols-2 gap-2">
                 <button v-for="f in [0.92, 1.2]" :key="f" type="button" :class="['fl-chip !text-sm', (mod.frente ?? 0.92) === f && 'fl-chip--sel']" @click="cambiar({ frente: f })">{{ fm(f) }} m</button>
