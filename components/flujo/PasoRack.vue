@@ -154,7 +154,7 @@
           <div class="flex items-center justify-between gap-2">
             <p class="fl-leyenda">Tu {{ TIPOS[mod.tipo].nombre.toLowerCase() }}</p>
             <div class="flex gap-1 rounded-lg bg-neutral-100 p-0.5" role="tablist" aria-label="Vista del rack">
-              <button v-for="v in (['frente', 'planta'] as const)" :key="v" type="button" role="tab" :aria-selected="vistaRack === v" :class="['rounded-md px-2.5 py-1.5 text-sm font-medium', vistaRack === v ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="vistaRack = v">{{ v === 'frente' ? 'De frente' : 'En planta' }}</button>
+              <button v-for="v in VISTAS_RACK" :key="v.v" type="button" role="tab" :aria-selected="vistaRack === v.v" :class="['rounded-md px-2 py-1.5 text-sm font-medium', vistaRack === v.v ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="vistaRack = v.v">{{ v.t }}</button>
             </div>
           </div>
           <FlujoElevacion v-if="vistaRack === 'frente'" :m="res.m" :editable="mod.tipo === 'RS'" class="mt-3 touch-none" @vigas="cambiar({ vigasY: $event })" />
@@ -162,6 +162,7 @@
             Arrastra una viga (o usa las flechas) para subirla o bajarla de a una perforación (76,2 mm).
             <button v-if="mod.vigasY?.length" type="button" class="font-semibold text-brand-700 underline" @click="cambiar({ vigasY: null })">Volver a las alturas calculadas</button>
           </p>
+          <FlujoLateralRack v-else-if="vistaRack === 'lado' && mod.tipo === 'RS'" :m="res.m" class="mt-3" />
           <FlujoPlantaRack v-else :m="res.m" class="mt-3" />
           <dl class="mt-4 grid grid-cols-2 gap-3">
             <div class="fl-dato"><dt>{{ mod.tipo === 'AR' ? 'Bandejas' : 'Posiciones' }} por {{ mod.tipo === 'DI' ? 'calle' : 'cuerpo' }}</dt><dd><FlujoContador :valor="res.porCuerpo" /></dd></div>
@@ -187,6 +188,10 @@
           </div>
           <!-- Corte contra el techo: holgura y si cabe un nivel mas (componente del planificador) -->
           <PlanificadorCorteRack v-if="mod.tipo !== 'AR'" :rack="res.r" :altura="p.bodega.altura" class="mt-4" />
+          <div v-if="res.cargaMarco" :class="['mt-2 rounded-xl px-3 py-2.5 text-sm', SEMAFORO[res.cargaMarco.color as keyof typeof SEMAFORO]]">
+            <b>Carga por marco:</b> {{ n(res.cargaMarco.kg) }} de {{ n(res.cargaMarco.capacidad) }} kg ({{ Math.round(res.cargaMarco.uso * 100) }} %)
+            <span class="block text-xs opacity-80">Capacidad referencial hasta tener la tabla de pilares de Racklog.</span>
+          </div>
           <ul v-if="res.avisos.length" class="mt-3 space-y-1.5 text-sm text-amber-900">
             <li v-for="(a, i) in res.avisos" :key="i" class="rounded-lg bg-amber-50 px-3 py-2">{{ a }}</li>
           </ul>
@@ -212,7 +217,8 @@ import { RACK } from '~/lib/rack3d/parametrosTecnicos.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();
-const vistaRack = ref<'frente' | 'planta'>('frente');
+const vistaRack = ref<'frente' | 'lado' | 'planta'>('frente');
+const VISTAS_RACK = computed(() => [{ v: 'frente', t: 'Frente' }, ...(mod.value?.tipo === 'RS' ? [{ v: 'lado', t: 'Lado' }] : []), { v: 'planta', t: 'Planta' }] as const);
 const SEMAFORO = { verde: 'bg-green-50 text-green-900', amarillo: 'bg-amber-50 text-amber-900', rojo: 'bg-red-50 text-red-900' } as const;
 const fm = (v: number) => (+(+v).toFixed(2)).toLocaleString('es-CL');
 const cm = (v: number) => Math.round(v * 100);
