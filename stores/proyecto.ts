@@ -25,6 +25,9 @@ export interface TipoPallet {
   id: string; nombre: string; frente: number; fondo: number; alto: number; peso: number;
   cantidad: number; rotacion: 'alta' | 'media' | 'baja'; color: string;
   sinPallet?: boolean; sobresale?: number;
+  // Armado desde la caja (paso 2): medidas en m, kg por caja, cuantas aguanta apiladas y orientacion
+  desdeCaja?: boolean;
+  caja?: { largo: number; ancho: number; alto: number; peso: number; apilable: number; orientacion: 'auto' | 'largo' | 'ancho' };
   // Campos que el cliente dejo en "No sé": se usa el valor tipico y el ejecutivo lo confirma
   noSe?: string[];
 }
@@ -132,7 +135,11 @@ export const useProyecto = defineStore('proyecto', {
     },
     // ─── Paso 2 ───
     agregarPallet(base: Partial<TipoPallet> = {}) {
-      const t = { ...nuevoTipo(this.pallets.length), frente: 1.0, fondo: 1.2, alto: 1.2, peso: 800, cantidad: 100, ...base } as TipoPallet;
+      // Por defecto se arma desde una caja tipica (60 × 40 × 30 cm, 15 kg, aguanta 5 apiladas)
+      const t = {
+        ...nuevoTipo(this.pallets.length), frente: 1.0, fondo: 1.2, alto: 1.2, peso: 800, cantidad: 100,
+        desdeCaja: true, caja: { largo: 0.6, ancho: 0.4, alto: 0.3, peso: 15, apilable: 5, orientacion: 'auto' }, ...base,
+      } as TipoPallet;
       this.pallets.push(t);
       return t;
     },

@@ -113,7 +113,7 @@ function aplicarDemo() {
   const alto = Number(q.get('alto')), cant = Number(q.get('pallets')), altura = Number(q.get('altura')), eq = q.get('equipo');
   if (eq && EQ[eq]) { p.bodega.grua = EQ[eq][0]; p.respuestas.equipo = EQ[eq][1]; }
   if (altura >= 2.5 && altura <= 40) p.bodega.altura = altura;
-  if (!p.pallets.length && alto >= 0.3 && alto <= 2.5) p.agregarPallet({ nombre: 'Pallet 1', alto, cantidad: cant >= 1 ? Math.round(cant) : 100 });
+  if (!p.pallets.length && alto >= 0.3 && alto <= 2.5) p.agregarPallet({ nombre: 'Pallet 1', alto, cantidad: cant >= 1 ? Math.round(cant) : 100, desdeCaja: false });
 }
 
 function marcar(event: string, datos: Record<string, unknown>) {
