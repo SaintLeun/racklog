@@ -13,7 +13,7 @@
       </div>
       <!-- La grúa limita la altura del rack: hasta dónde sube y cuánto levanta allá arriba (capacidad residual) -->
       <div v-if="conGruaRack" class="flex w-full flex-wrap items-center gap-x-3 gap-y-2 border-t border-neutral-100 pt-2">
-        <span class="flex-1 text-[15px] font-medium text-neutral-700">Tu grúa levanta <FlujoInfo>Está en la placa de la grúa: altura máxima de horquilla y kg. Mientras más alto sube, menos peso levanta; usamos la curva típica de una {{ eqTipico.nombre.toLowerCase() }} si no los sabes.</FlujoInfo></span>
+        <span class="flex-1 text-[15px] font-medium text-neutral-700">Tu grúa levanta<FlujoReferencial v-if="!(p.bodega as any).gruaKg" :de="eqTipico" /> <FlujoInfo>Está en la placa de la grúa: altura máxima de horquilla y kg. Mientras más alto sube, menos peso levanta; usamos la curva típica de una {{ eqTipico.nombre.toLowerCase() }} si no los sabes.</FlujoInfo></span>
         <label class="flex items-center gap-1.5 text-sm text-neutral-600"><span class="sr-only">Altura máxima de la grúa</span><input :value="(p.bodega as any).gruaLevante ?? ''" type="number" min="1" max="15" step="0.1" inputmode="decimal" class="form-input !h-10 !w-20" :placeholder="String(eqTipico.levante).replace('.', ',')" @change="placa('gruaLevante', $event)">m</label>
         <label class="flex items-center gap-1.5 text-sm text-neutral-600"><span class="sr-only">Capacidad de la grúa</span><input :value="(p.bodega as any).gruaKg ?? ''" type="number" min="300" max="10000" step="50" inputmode="numeric" class="form-input !h-10 !w-24" :placeholder="eqTipico.kg.toLocaleString('es-CL')" @change="placa('gruaKg', $event)">kg</label>
       </div>
@@ -215,7 +215,7 @@
             <div class="fl-dato"><dt>Guardas</dt><dd><FlujoContador :valor="res.capacidadCajas" /> <span class="text-sm font-normal text-neutral-500">cajas</span></dd><p class="text-xs text-neutral-500">Necesitas {{ n(res.total) }} cajas</p></div>
           </dl>
           <dl v-else class="mt-3 grid grid-cols-2 gap-2">
-            <div class="fl-dato"><dt>{{ mod.tipo === 'AR' ? 'Bandejas' : 'Pallets' }} por {{ mod.tipo === 'DI' ? 'calle' : 'cuerpo' }} <FlujoInfo v-if="mod.tipo === 'DI'">Calle: el pasillo interno donde entra la grúa.</FlujoInfo><FlujoInfo v-else>Cuerpo: el espacio entre dos marcos, con sus niveles.</FlujoInfo></dt><dd><FlujoContador :valor="res.porCuerpo" /></dd></div>
+            <div class="fl-dato"><dt>Pallets por {{ mod.tipo === 'DI' ? 'calle' : 'cuerpo' }} <FlujoInfo v-if="mod.tipo === 'DI'">Calle: el pasillo interno donde entra la grúa.</FlujoInfo><FlujoInfo v-else>Cuerpo: el espacio entre dos marcos, con sus niveles.</FlujoInfo></dt><dd><FlujoContador :valor="res.porCuerpo" /></dd></div>
             <div class="fl-dato">
               <dt>{{ mod.tipo === 'DI' ? 'Calles' : 'Cuerpos' }} que necesitas</dt>
               <dd><FlujoContador :valor="res.cuerpos" /></dd>
@@ -238,13 +238,12 @@
             </p>
             <div v-if="res.carga" :class="['mt-3 rounded-xl px-3 py-2.5 text-sm', SEMAFORO[res.carga.color as keyof typeof SEMAFORO]]">
               <b>{{ mod.tipo === 'RS' ? 'Carga por par de vigas' : mod.tipo === 'DI' ? 'Carga por pallet' : 'Carga por bandeja' }}:</b>
-              {{ n(res.carga.kg) }} de {{ n(res.carga.capacidad) }} kg ({{ Math.round(res.carga.uso * 100) }} %)
-              <span class="block text-xs opacity-80">Capacidad referencial: la confirma Técnica Racklog.</span>
+              {{ n(res.carga.kg) }} de {{ n(res.carga.capacidad) }} kg ({{ Math.round(res.carga.uso * 100) }} %)<FlujoReferencial :de="mod.tipo === 'RS' ? CAPACIDADES.selectivoParVigas : mod.tipo === 'DI' ? CAPACIDADES.driveInPallet : CAPACIDADES.bandejaAngulo" />
             </div>
             <!-- Corte contra el techo: holgura y si cabe un nivel mas (componente del planificador) -->
             <PlanificadorCorteRack v-if="mod.tipo !== 'AR'" :rack="res.r" :altura="p.bodega.altura" class="mt-3" />
             <div v-if="res.cargaMarco" :class="['mt-2 rounded-xl px-3 py-2.5 text-sm', SEMAFORO[res.cargaMarco.color as keyof typeof SEMAFORO]]">
-              <b>Carga por marco:</b> {{ n(res.cargaMarco.kg) }} de {{ n(res.cargaMarco.capacidad) }} kg ({{ Math.round(res.cargaMarco.uso * 100) }} %)
+              <b>Carga por marco:</b> {{ n(res.cargaMarco.kg) }} de {{ n(res.cargaMarco.capacidad) }} kg ({{ Math.round(res.cargaMarco.uso * 100) }} %)<FlujoReferencial />
               <span class="block text-xs opacity-80">Capacidad referencial hasta tener la tabla de pilares de Racklog.</span>
             </div>
           </details>
@@ -270,7 +269,7 @@ import { useProyecto, type Sistema, type Modelo } from '~/stores/proyecto';
 import { TIPOS, gruaDriveIn } from '~/lib/rack3d/planificador.js';
 import { resultadoModelo, nivelesMaximos, mezclaPorDefecto, mejorBandeja, firmaCajasAR } from '~/lib/flujo/calculos.js';
 import { recomendarProductos } from '~/lib/flujo/recomendacion.js';
-import { RACK, GRUAS } from '~/lib/rack3d/parametrosTecnicos.js';
+import { RACK, GRUAS, CAPACIDADES } from '~/lib/rack3d/parametrosTecnicos.js';
 import { ANRA_FRENTES, ANRA_FONDOS } from '~/lib/rack3d/medidas.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();

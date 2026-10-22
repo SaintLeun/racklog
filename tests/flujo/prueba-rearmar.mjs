@@ -27,4 +27,26 @@ assert.equal(pl.conflictos(racks, bod).size ?? pl.conflictos(racks, bod).length,
 const [a, bb] = k.partirRack(u.racks[1], id, { en: 4 });
 assert.equal(a.cuerpos + bb.cuerpos, u.racks[1].cuerpos);
 assert.ok(pl.rectangulo(bb).x0 - (pl.rectangulo(a).x0 + pl.rectangulo(a).ancho) > 1.1, 'separados');
+// Separacion por defecto = pasillo peatonal minimo (no 1,2 m fijo)
+const pt = await import(b + '/lib/rack3d/parametrosTecnicos.js');
+const gap = pl.rectangulo(bb).x0 - (pl.rectangulo(a).x0 + pl.rectangulo(a).ancho);
+assert.ok(Math.abs(gap - pt.DISTANCIAS.pasilloPersona.valor) < 0.01, 'separacion = pasillo peatonal');
+
+// Prompt v3 §3: un cambio de bodega nunca rehace el layout. Un pasillo nuevo que pisa un rack lo deja en
+// conflicto; "Reubicar solo los racks en conflicto" saca esos y ubica lo que falta sin mover el resto
+const victima = racks[0], qv = pl.rectangulo(victima);
+const bod2 = { ...bod, elementos: [{ id: 'p1', clase: 'zona', x: qv.x0 + qv.ancho / 2, y: qv.y0 + qv.alto / 2, ancho: 2, alto: 2 }] };
+const malos = pl.conflictos(racks, bod2);
+assert.ok(malos.has(victima.id), 'el rack pisado queda en conflicto');
+const quedan = racks.filter((r) => !malos.has(r.id));
+const re = k.ubicarFaltantes(bod2, [modelo], quedan, { pallets, nuevoId: id });
+const final = [...quedan.map((r) => re.alargados.find((x) => x.id === r.id) ?? r), ...re.racks];
+for (const r of quedan) {
+  const f2 = final.find((x) => x.id === r.id);
+  // Puede alargarse por un extremo, pero sus cuerpos siguen donde estaban
+  const a0 = pl.rectangulo(r), a1 = pl.rectangulo(f2);
+  assert.ok(f2.rot === r.rot && a1.x0 <= a0.x0 + 1e-6 && a1.y0 <= a0.y0 + 1e-6 && a1.x0 + a1.ancho >= a0.x0 + a0.ancho - 1e-6 && a1.y0 + a1.alto >= a0.y0 + a0.alto - 1e-6, 'lo puesto a mano no se mueve');
+}
+assert.equal(pl.conflictos(final, bod2).size, 0, 'sin conflictos tras reubicar');
+console.log('conflictos reubicados', malos.size, 'agregados', re.racks.length, 'faltan', JSON.stringify(k.faltantes({ racks: final, modelos: [modelo], pallets })));
 console.log('rearmar: ok');

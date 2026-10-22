@@ -184,10 +184,16 @@ async function enviarLink() {
   try {
     guardar.link = await enlaceDiseño(p.$state);
     if (!guardar.correo) guardar.correo = p.lead.correo;
-    const r = await fetch('https://api.racklog.cl/api/continuar-diseno', {
+    const enviar = () => fetch('https://api.racklog.cl/api/continuar-diseno', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: guardar.correo, nombre: p.lead.nombre, link: guardar.link }),
     });
+    // Un reintento si el servidor de correo falla (5xx o red); datos malos (4xx) no se reintentan
+    let r = await enviar().catch(() => null);
+    if (!r || r.status >= 500) {
+      await new Promise((ok) => setTimeout(ok, 1500));
+      r = await enviar();
+    }
     guardar.estado = r.ok ? 'ok' : 'error';
     marcar('guardar_diseno', { ok: r.ok });
   } catch {

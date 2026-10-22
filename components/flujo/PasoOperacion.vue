@@ -27,7 +27,7 @@
             :aria-pressed="p.sistema === k"
             @click="p.sistema = k as Sistema"
           >
-            <img :src="t.imagen" :alt="''" class="aspect-[4/3] w-full object-cover" loading="lazy">
+            <img :src="t.imagen" :alt="''" width="400" height="300" class="aspect-[4/3] w-full bg-neutral-100 object-cover" loading="lazy" @error="sinImagen">
             <span class="block px-4 pb-4 pt-3">
               <span class="block font-semibold text-neutral-900">{{ t.nombre }}</span>
               <span class="mt-1 block text-sm text-neutral-600">{{ t.asesoria.sirve }}</span>
@@ -56,7 +56,7 @@
              pregunta quede arriba en el celular (abajo de las opciones; al lado en escritorio) -->
         <aside v-if="respondidas >= 3" class="order-last">
           <div class="fl-card flex items-center gap-3 !p-2.5 lg:block lg:!p-0 lg:overflow-hidden">
-            <img :src="TIPOS[previa].imagen" alt="" class="h-16 w-20 flex-shrink-0 rounded-lg object-cover lg:aspect-[4/3] lg:h-auto lg:w-full lg:rounded-none" loading="lazy">
+            <img :src="TIPOS[previa].imagen" alt="" width="400" height="300" class="h-16 w-20 flex-shrink-0 rounded-lg bg-neutral-100 object-cover lg:aspect-[4/3] lg:h-auto lg:w-full lg:rounded-none" loading="lazy" @error="sinImagen">
             <div class="min-w-0 lg:p-4">
               <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Con lo que llevas</p>
               <p class="font-bold text-neutral-900 lg:text-lg">{{ TIPOS[previa].nombre }}</p>
@@ -94,7 +94,7 @@
         <p class="text-sm font-semibold uppercase tracking-wider text-brand-700">Te recomendamos</p>
         <h1 class="fl-titulo mt-1">{{ TIPOS[p.sistema!].nombre }}</h1>
         <div class="fl-card mt-5">
-          <img :src="TIPOS[p.sistema!].imagen" alt="" class="-mx-5 -mt-5 mb-4 aspect-[16/7] w-[calc(100%+2.5rem)] max-w-none rounded-t-2xl object-cover" loading="lazy">
+          <img :src="TIPOS[p.sistema!].imagen" alt="" width="800" height="350" class="-mx-5 -mt-5 mb-4 aspect-[16/7] w-[calc(100%+2.5rem)] max-w-none rounded-t-2xl bg-neutral-100 object-cover" loading="lazy" @error="sinImagen">
           <p v-if="supuestos.length >= MUCHOS_NO_SE" class="font-medium text-neutral-900">
             Como no sabías varias respuestas, partimos con lo más común en bodegas como la tuya: es el sistema más versátil y te deja sacar cualquier pallet. Lo afinamos con tus pallets en el paso 3.
           </p>
@@ -132,6 +132,12 @@ import { preguntasActivas, recomendar } from '~/lib/tour/reglas.js';
 const emit = defineEmits<{ siguiente: [] }>();
 const p = useProyecto();
 onMounted(() => { if (p.sabe === null) marcar('tour_start', {}); });
+// Si una foto no carga queda el fondo gris del mismo tamaño (nunca un ícono roto ni un salto)
+function sinImagen(e: Event) {
+  const img = e.target as HTMLImageElement;
+  if (!img.src.startsWith('data:')) img.src = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+}
+
 function empezar(sabe: boolean) {
   p.sabe = sabe;
   marcar('tour_entrada', { sabe });

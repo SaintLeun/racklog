@@ -28,7 +28,7 @@ prueba en celular (390 px) y escritorio con Playwright, revisando capturas, ante
 | V3 | Su bodega: nombre de su producto, su logo/empresa en plano y PDF | 🟡 nombre de producto sí; empresa y logo (opcional, se sube en el paso 7) en PDF e imagen ✅; logo dentro del plano 2D en pantalla ⬜ |
 | V4a | Paso 2: pallet que se arma caja por caja en 3D | ✅ |
 | V4b | Paso 3: rack que se levanta nivel por nivel | ⬜ |
-| V4c | Paso 5: "Llenar mi bodega" con racks repitiéndose entre pilares y contador que sube | 🟡 ubicación automática sí; animación y contador ⬜ |
+| V4c | Paso 5: "Llenar mi bodega" con racks repitiéndose entre pilares y contador que sube | ✅ racks que aparecen de a uno y contador que sube (ver "Botón Llenar mi bodega" más abajo); desde v3 es un atajo opcional con confirmación |
 | V4d | Paso 6: recorrido 3D (planta → altura de operador), grúas y personas; antes/después (+X %) | ⬜ (grúa opera, cámara a la grúa: 🟡) |
 | V5 | Lenguaje de beneficio ("Guardas 312 pallets, 38 % más…") | 🟡 "Guardas X" en paso 3; resto ⬜ |
 | V6 | Confianza: "Tu diseño es viable ✓", "Revisado por un ingeniero Racklog", NCh2369 | 🟡 viable ✓ y NCh2369 en landing; sello de ingeniero ⬜ |

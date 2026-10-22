@@ -44,7 +44,7 @@
             </span>
             <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-baseline justify-between gap-x-3">
-                <p class="font-semibold text-neutral-900">{{ a.nombre }}<span v-if="a.medida" class="font-normal text-neutral-500"> · {{ a.medida }}</span></p>
+                <p class="font-semibold text-neutral-900">{{ a.nombre }}<span v-if="a.medida" class="font-normal text-neutral-500"> · {{ a.medida }}</span><FlujoReferencial :de="REFERENCIAL[a.id] ?? []">Medidas y cantidades típicas: Racklog las confirma con su catálogo antes de cotizar.</FlujoReferencial></p>
                 <span v-if="a.obligatorio" class="text-xs font-semibold uppercase tracking-wide text-amber-700">Recomendado</span>
               </div>
               <p class="mt-0.5 text-neutral-600">{{ a.paraQue }}</p>
@@ -126,11 +126,21 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 // La unidad en palabras ('u' no se entiende)
 const UNIDAD: Record<string, string> = { u: 'unidades', m: 'metros' };
 import { useProyecto } from '~/stores/proyecto';
-import { proponerAccesorios, aplicarAjustes, mmTexto, numTexto, TIPOS_MANUALES } from '~/lib/rack3d/accesorios.js';
+import { proponerAccesorios, aplicarAjustes, mmTexto, numTexto, TIPOS_MANUALES, PARAMETROS_ACCESORIOS as PA } from '~/lib/rack3d/accesorios.js';
 import { RACK } from '~/lib/rack3d/parametrosTecnicos.js';
 import { resultadoModelo, ubicarModelos } from '~/lib/flujo/calculos.js';
 import { medidasRack, rectangulo } from '~/lib/rack3d/planificador.js';
 import { focoDiseño } from '~/lib/flujo/perfiles.js';
+
+// Parametros sin confirmar que usa cada accesorio (docs/VALORES-POR-CONFIRMAR.md): con alguno pendiente sale "referencial"
+const REFERENCIAL: Record<string, unknown[]> = {
+  canilleras: [PA.canillera, PA.cabeceraLibre],
+  proteccionBastidor: [PA.proteccionBastidor, PA.arcoBastidor, PA.cabeceraLibre],
+  barandas: [PA.moduloBaranda, PA.ajusteBaranda, PA.aberturaBaranda],
+  separadores: [PA.separadoresPorMarco],
+  topes: [PA.toposPorPosicion, PA.holguraTopes],
+  mallaAnticaida: [PA.mallaDistancia],
+};
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();

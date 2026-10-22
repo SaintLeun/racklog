@@ -62,7 +62,7 @@
             <select v-model="e.moneda" class="plan-input !h-10"><option value="UF">UF</option><option value="$">$</option></select>
           </label>
         </div>
-        <p v-if="e.valorM2 > 0 && posiciones" class="mt-2 rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-800" role="status">
+        <p v-if="(e.valorM2 ?? 0) > 0 && posiciones" class="mt-2 rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-800" role="status">
           <template v-if="arriendo.m2Evitados > 0">
             Para guardar {{ posiciones }} pallets en el piso necesitarías unos {{ Math.round(arriendo.m2Piso).toLocaleString('es-CL') }} m²:
             <strong>{{ Math.round(arriendo.m2Evitados).toLocaleString('es-CL') }} m² más</strong> que tu bodega. Eso son

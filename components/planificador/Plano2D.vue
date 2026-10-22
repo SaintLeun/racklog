@@ -397,6 +397,7 @@ export interface RackPlano {
   niveles: number;
   doble: boolean;
   existente?: boolean;
+  modelo?: string;
   porViga?: number;
   sobrante?: number;
   planos?: (string | null)[];

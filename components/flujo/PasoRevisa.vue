@@ -147,7 +147,7 @@
             </ul>
             <dl class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
               <div class="fl-dato"><dt>Pasillos</dt><dd>{{ bo.pasillos.n }}</dd><p class="text-xs text-neutral-500">de {{ bo.pasillos.anchos.join(' / ') || '—' }} m</p></div>
-              <div class="fl-dato"><dt>Tu equipo pide</dt><dd>{{ fm(bo.pasillos.pide) }} m</dd><p :class="['text-xs font-medium', bo.pasillos.angostos ? 'text-red-700' : 'text-green-700']">{{ bo.pasillos.angostos ? `${bo.pasillos.angostos} angosto(s)` : 'Todos los pasillos sirven ✓' }}</p></div>
+              <div class="fl-dato"><dt>Tu equipo pide<FlujoReferencial :de="GRUAS[p.bodega.grua as keyof typeof GRUAS] ?? GRUAS.contrapeso" /></dt><dd>{{ fm(bo.pasillos.pide) }} m</dd><p :class="['text-xs font-medium', bo.pasillos.angostos ? 'text-red-700' : 'text-green-700']">{{ bo.pasillos.angostos ? `${bo.pasillos.angostos} angosto(s)` : 'Todos los pasillos sirven ✓' }}</p></div>
               <div class="fl-dato"><dt>Nivel más alto</dt><dd>{{ fm(bo.nivelMax) }} m</dd><p :class="['text-xs font-medium', bo.alcanza ? 'text-green-700' : 'text-red-700']">{{ bo.alcanza ? `Tu ${bo.equipo.toLowerCase()} llega (${fm(bo.levante)} m) ✓` : `Tu equipo llega a ${fm(bo.levante)} m` }}</p></div>
             </dl>
             <p class="mt-3 text-sm text-neutral-500">En la vista 3D de arriba ves la grúa trabajando en tus pasillos.</p>
