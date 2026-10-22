@@ -1,8 +1,8 @@
 <template>
-  <!-- Comparación por producto (docs/LOGICA-SELECCION-RACKS.md). El sistema que el cliente eligió es el
-       protagonista: va primero y dibujado; nuestra sugerencia (si es otra) va al lado, como segunda opción -->
   <section>
     <article v-for="x in rec.productos" :key="x.id" class="mt-4 border-t border-neutral-100 pt-4 first-of-type:mt-0 first-of-type:border-0 first-of-type:pt-0">
+    <!-- Comparación por producto (docs/LOGICA-SELECCION-RACKS.md). El sistema que el cliente eligió es el
+         protagonista: va primero y dibujado; nuestra sugerencia (si es otra) va al lado, como segunda opción -->
       <p class="text-sm text-neutral-500">{{ x.datos }}</p>
       <!-- Una alternativa que rompe un filtro duro (FIFO, equipo) no se muestra como opción: queda solo el porqué -->
       <div :class="['mt-3 grid gap-3', lados(x).length > 1 && 'sm:grid-cols-2']">

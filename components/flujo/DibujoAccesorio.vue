@@ -1,7 +1,7 @@
 <template>
-  <!-- Dibujo de cada accesorio con la medida real del rack elegido (cota visible) -->
   <svg viewBox="0 0 160 110" class="h-auto w-full" role="img" :aria-label="`${a.nombre}${a.medida ? ': ' + a.medida : ''}`">
     <defs>
+    <!-- Dibujo de cada accesorio con la medida real del rack elegido (cota visible) -->
       <marker :id="`fl-${uid}`" viewBox="0 0 6 6" refX="3" refY="3" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 6 3 0 6z" fill="#334155" /></marker>
     </defs>
     <g font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="600" fill="#334155">

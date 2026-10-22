@@ -1,8 +1,8 @@
 <template>
-  <!-- Rack visto de lado (a lo largo de la fila): bastidor con diagonales, vigas en corte y el pallet
-       que sobresale; en doble, los dos bastidores con su separador. Cotas de fondo, voladizo y alto -->
   <svg :viewBox="`0 0 ${W} ${H}`" class="h-auto w-full" role="img" :aria-label="descripcion">
     <title>{{ descripcion }}</title>
+    <!-- Rack visto de lado (a lo largo de la fila): bastidor con diagonales, vigas en corte y el pallet
+         que sobresale; en doble, los dos bastidores con su separador. Cotas de fondo, voladizo y alto -->
     <line x1="0" :x2="W" :y1="y(0)" :y2="y(0)" stroke="#a3a3a3" />
     <!-- Pallets primero (sobresalen del bastidor); el bastidor de la punta de la fila queda delante -->
     <g v-for="(f, k) in filas" :key="`p${k}`">

@@ -1,7 +1,7 @@
 <template>
-  <!-- Pallet visto desde arriba sobre el par de vigas: el frente da al pasillo (abajo) -->
   <svg :viewBox="`0 0 ${W} ${H}`" class="h-auto w-full max-w-[220px]" role="img" :aria-label="`Pallet visto desde arriba: frente ${fm(frente)} m, fondo ${fm(fondo)} m`">
     <!-- Vigas delantera y trasera -->
+    <!-- Pallet visto desde arriba sobre el par de vigas: el frente da al pasillo (abajo) -->
     <rect :x="8" :y="y0 + 4" :width="W - 16" height="5" fill="#f97316" rx="1" />
     <rect :x="8" :y="y0 + alto - 9" :width="W - 16" height="5" fill="#f97316" rx="1" />
     <!-- Pallet (tablas) -->

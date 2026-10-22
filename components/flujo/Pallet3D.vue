@@ -1,7 +1,7 @@
 <template>
-  <!-- Pallet (o bandeja de angulo ranurado) armado caja por caja en 3D, con sus cotas. three.js se carga solo al mostrarse -->
   <div class="relative h-full w-full overflow-hidden rounded-xl bg-[#f6f7f9]">
     <div ref="lienzo" class="h-full w-full cursor-grab active:cursor-grabbing" role="img" :aria-label="etiqueta" />
+    <!-- Pallet (o bandeja de angulo ranurado) armado caja por caja en 3D, con sus cotas. three.js se carga solo al mostrarse -->
     <div v-if="cargando" class="absolute inset-0 animate-pulse bg-neutral-100" aria-hidden="true" />
     <template v-if="!cargando">
       <!-- Vistas: de lado (con perspectiva) o desde arriba -->

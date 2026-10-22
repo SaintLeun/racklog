@@ -1,7 +1,7 @@
 <template>
-  <!-- Rack visto desde arriba (hasta 3 cuerpos o calles): marcos, vigas, pallets y el pasillo de carga -->
   <svg :viewBox="`0 0 ${W} ${H}`" class="h-auto w-full" role="img" :aria-label="descripcion">
     <title>{{ descripcion }}</title>
+    <!-- Rack visto desde arriba (hasta 3 cuerpos o calles): marcos, vigas, pallets y el pasillo de carga -->
     <!-- Pasillos (frente abajo; atras tambien si es doble) -->
     <rect x="0" :y="H - 26" :width="W" height="26" fill="#ecfdf5" />
     <text :x="W / 2" :y="H - 9" text-anchor="middle" class="pl-txt" fill="#047857">↑ pasillo de carga (frente)</text>
