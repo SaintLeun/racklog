@@ -83,7 +83,7 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { diseñoDesdeUrl, aplicarDiseño, limpiarUrl, enlaceDiseño } from '~/lib/flujo/enlace.js';
 import { leerVariante } from '~/composables/useVariante';
-import { racksAlDia, resultadoModelo, ubicarModelos } from '~/lib/flujo/calculos.js';
+import { racksAlDia } from '~/lib/flujo/calculos.js';
 import { useProyecto, PASOS, type Paso } from '~/stores/proyecto';
 import {
   FlujoPasoOperacion, FlujoPasoPallets, FlujoPasoRack, FlujoPasoAccesorios, FlujoPasoBodega, FlujoPasoRevisa, FlujoPasoCotiza,
@@ -149,17 +149,11 @@ const EVENTOS_ACTIVIDAD = ['pointerdown', 'keydown', 'scroll', 'input'] as const
 watch(() => p.paso, () => { ayudaVista.value = false; ayuda.value = false; armarReloj(); });
 watch(() => p.sistema, () => { if (sobreResultado()) ayuda.value = false; });
 // Los racks del plano siguen a su modelo (pallets, niveles, equipo): el mismo alto de marco y las mismas vigas
-// en los pasos 3, 5, 6, 7, el PDF y Kommo. Si cambia lo que ocupan en planta, se vuelven a ubicar
+// en los pasos 3, 5, 6, 7, el PDF y Kommo. El layout es del cliente: aunque cambie lo que ocupan en planta,
+// quedan donde los puso (si ahora chocan, el paso 5 los marca en rojo); nunca se vuelven a ubicar solos
 function racksAlDiaConModelo() {
-  const opciones = { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua };
-  const { racks, huellaCambio } = racksAlDia(p.racks, p.modelos, opciones);
-  if (huellaCambio) {
-    const existentes = racks.filter((r: any) => r.existente);
-    const modulos = Object.fromEntries(p.modelos.map((m) => [m.id, (resultadoModelo(m, opciones) as any).modulos]));
-    let k = 0;
-    const u = ubicarModelos(p.bodega, p.modelos, modulos, { ...opciones, existentes, nuevoId: () => `r${Date.now().toString(36)}${k++}` });
-    p.racks = [...existentes, ...u.racks];
-  } else if (JSON.stringify(racks) !== JSON.stringify(p.racks)) p.racks = racks;
+  const { racks } = racksAlDia(p.racks, p.modelos, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua });
+  if (JSON.stringify(racks) !== JSON.stringify(p.racks)) p.racks = racks;
 }
 watch(() => JSON.stringify([p.modelos, p.pallets, p.cajas, p.bodega.grua]), racksAlDiaConModelo);
 

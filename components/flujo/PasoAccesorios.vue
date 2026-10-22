@@ -152,7 +152,7 @@ const estimado = computed(() => !p.racks.length);
 const estimacion = computed(() => {
   if (p.racks.length) return null;
   const amplia = { ...p.bodega, ancho: 200, largo: 200, forma: null, elementos: [] };
-  const cuerpos = Object.fromEntries(p.modelos.map((m) => [m.id, resultadoModelo(m, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua }).modulos]));
+  const cuerpos = Object.fromEntries(p.modelos.map((m) => [m.id, resultadoModelo(m, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua, ocupacion: p.bodega.ocupacion }).modulos]));
   let k = 0;
   const racks = ubicarModelos(amplia, p.modelos, cuerpos, { pallets: p.pallets, cajas: p.cajas, nuevoId: () => `e${k++}` }).racks as any[];
   if (!racks.length) return { bodega: { ...amplia, ancho: 12, largo: 10 }, racks };

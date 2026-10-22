@@ -1,7 +1,7 @@
 <template>
   <div>
     <h1 class="fl-titulo">Tu bodega</h1>
-    <p class="fl-bajada">Pon las medidas de tu bodega y arma tu layout: toca "Ubicar los que faltan" o arrastra tus racks. Lo que acomodes no se mueve solo.</p>
+    <p class="fl-bajada">Pon las medidas de tu bodega y arma tu layout lineal por lineal: agrega cada uno, arrástralo a su lugar y elige si va simple o doble. Nosotros no movemos nada.</p>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
       <div class="min-w-0 space-y-4">
@@ -187,15 +187,6 @@
           </ul>
           <!-- En celular el plano queda arriba: lo que se descontó se dice junto a los botones -->
           <p v-if="avisoFaltan" class="mt-2 rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-700 lg:hidden" aria-hidden="true">{{ avisoFaltan }}</p>
-          <template v-if="confirmarLlenar">
-            <p class="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-900" role="alert">Ya acomodaste {{ racksNuevos }} {{ racksNuevos === 1 ? 'rack' : 'racks' }}. "Llenar mi bodega" los vuelve a ubicar todos desde cero.</p>
-            <div class="mt-2 flex gap-2">
-              <button type="button" class="fl-btn-sec flex-1 !min-h-10 !text-sm" @click="confirmarLlenar = false">Conservar mi layout</button>
-              <button type="button" class="fl-btn-sec flex-1 !min-h-10 !text-sm !text-red-700" @click="confirmarLlenar = false; ubicar(true)">Sí, ubicar de nuevo</button>
-            </div>
-          </template>
-          <button v-else type="button" class="fl-btn-sec mt-3 w-full" @click="llenar">Llenar mi bodega</button>
-          <p class="mt-1.5 text-xs text-neutral-500">Atajo: ubicamos todos tus racks nuevos por ti (lo que ya tienes no se mueve).</p>
           <!-- Cobertura contra los pallets del paso 2: por modelo (cuerpos que faltan o sobran) y por producto -->
           <ul class="mt-4 space-y-3">
             <li v-for="m in cob.modelos" :key="m.id" class="text-neutral-800">
@@ -224,9 +215,6 @@
               </li>
             </ul>
           </div>
-          <p v-if="Object.keys(faltan).length" class="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-            No cabe todo en tu bodega. Opciones: subir un nivel en el paso 3, usar un rack doble o agrandar las medidas.
-          </p>
         </section>
       </div>
 
@@ -248,7 +236,10 @@
           <!-- Lo que pidió se va descontando con cada lineal que pone -->
           <span class="min-w-0 flex-1">
             <span class="block">
-              Pediste <b>{{ n(demanda.necesita) }} {{ demanda.unidadPos }}</b> · en el plano <b><FlujoContador :valor="demanda.posiciones" /></b>
+              <template v-if="demanda.unidad === 'pallets'">Pediste <b>{{ n(demanda.pidio) }} pallets</b> → necesitas <b>{{ n(demanda.necesita) }} posiciones</b>
+                <label class="inline-flex items-center gap-1 whitespace-nowrap">(ocupación <select :value="Math.round((p.bodega.ocupacion ?? 0.8) * 100)" class="rounded border border-current/20 bg-white/70 px-0.5 text-sm font-semibold" aria-label="Factor de ocupación" @change="p.bodega.ocupacion = Number(($event.target as HTMLSelectElement).value) / 100"><option v-for="v in [60, 65, 70, 75, 80, 85]" :key="v" :value="v">{{ v }} %</option></select><FlujoInfo>Nadie llena el 100 % de sus posiciones: entra y sale mercadería, hay lotes a medio usar y se necesita espacio para mover. Con 80 %, 100 pallets piden 125 posiciones.</FlujoInfo>)</label></template>
+              <template v-else>Pediste <b>{{ n(demanda.necesita) }} {{ demanda.unidadPos }}</b></template>
+              · en el plano <b><FlujoContador :valor="demanda.posiciones" /></b>
               <template v-if="porPoner > 0"> — <b>te faltan {{ n(porPoner) }}</b> <span class="opacity-75">(≈ {{ demanda.faltan || 1 }} {{ (demanda.faltan || 1) === 1 ? demanda.unidadCuerpo.replace(/s$/, '') : demanda.unidadCuerpo }})</span></template>
               <template v-else-if="demanda.faltan"> — <b>faltan {{ demanda.faltan }} {{ demanda.faltan === 1 ? demanda.unidadCuerpo.replace(/s$/, '') : demanda.unidadCuerpo }}</b> de un producto</template>
               <template v-else> ✓ cubre lo que pediste</template>
@@ -257,7 +248,6 @@
               <span :class="['block h-full rounded-full transition-all duration-300', demanda.faltan ? 'bg-amber-500' : 'bg-green-600']" :style="{ width: `${Math.min(100, (demanda.posiciones / Math.max(1, demanda.necesita)) * 100)}%` }" />
             </span>
           </span>
-          <button v-if="demanda.faltan" type="button" class="rounded-lg bg-amber-600 px-3 py-1 text-sm font-semibold text-white hover:bg-amber-700" @click="ubicarLosQueFaltan">Ubicar los que faltan</button>
         </div>
         <p v-if="avisoFaltan" class="border-b border-neutral-100 bg-white px-3 py-1.5 text-sm text-neutral-700 lg:px-4" role="status">{{ avisoFaltan }}</p>
         <!-- Espacio libre dicho como beneficio -->
@@ -569,8 +559,8 @@
           </div>
         </div>
         <p v-if="malos.size" class="border-t border-red-100 bg-red-50 px-4 py-2.5 text-sm text-red-800" role="status">
-          <span class="block">Hay racks superpuestos, sobre un pasillo, pilar o zona, o fuera de la bodega (en rojo). Muévelos o:</span>
-          <button type="button" class="mt-1.5 min-h-9 rounded-lg bg-red-700 px-3 text-sm font-semibold text-white hover:bg-red-800" @click="reubicarConflictos">Reubicar solo los racks en conflicto</button>
+          <span class="block">Hay racks superpuestos, sobre un pasillo, pilar o zona, o fuera de la bodega (en rojo). Arrástralos a un lugar libre, acórtalos o quítalos.</span>
+          <button type="button" class="mt-1.5 min-h-9 rounded-lg bg-red-700 px-3 text-sm font-semibold text-white hover:bg-red-800" @click="verConflicto">Ver el primero en rojo</button>
         </p>
         <p v-else-if="angostos" class="border-t border-amber-100 bg-amber-50 px-4 py-2.5 text-sm text-amber-900" role="status">
           Hay pasillos más angostos de lo que necesita tu equipo (en rojo). Lo revisamos en el paso siguiente.
@@ -592,7 +582,7 @@ import {
 import { GRUAS, DISTANCIAS } from '~/lib/rack3d/parametrosTecnicos.js';
 import { pasillos, pasilloRequerido } from '~/lib/rack3d/pasillos.js';
 import { huella } from '~/lib/rack3d/medidas.js';
-import { conCuerpos, conDoble, partirRack, ubicarFaltantes, resultadoModelo, rackDeModelo, conteoRack, ubicarModelos, repetirBloque, previaBloque, previaPasillos, textoMotivos, cobertura, conteoTotal, conManiobras, enMuro, muroDe } from '~/lib/flujo/calculos.js';
+import { conCuerpos, conDoble, partirRack, resultadoModelo, rackDeModelo, conteoRack, repetirBloque, previaBloque, previaPasillos, textoMotivos, cobertura, conteoTotal, conManiobras, enMuro, muroDe } from '~/lib/flujo/calculos.js';
 import { proponerAccesorios, aplicarAjustes } from '~/lib/rack3d/accesorios.js';
 import { areaOcupada } from '~/lib/flujo/perfiles.js';
 import { recorridosGrua, sugerirTuneles, tunelesAlineados, ALTOS_TUNEL, altoTunelGrua, tunelParaGrua, dimensiones, radioGiro } from '~/lib/rack3d/rutas.js';
@@ -616,7 +606,6 @@ const racksPlano = computed<any[]>({
 });
 // Muro elegido en el plano (forma de la bodega): el panel derecho deja cambiar su largo y sus esquinas
 const muroSel = ref<number | null>(null);
-const faltan = ref<Record<string, number>>({});
 const gp = reactive({ pasoX: 6, pasoY: 6, offX: 6, offY: 6, seccion: 40, forma: 'cuadrado' as 'cuadrado' | 'circular' | 'H' });
 // Trazado de un pasillo peatonal por tramos (arrastrar o tocar donde empieza y termina) y cruces con un clic
 type Pto = { x: number; y: number };
@@ -677,9 +666,8 @@ function agregarHoy() {
 
 const grua = computed(() => (GRUAS as any)[p.bodega.grua] ?? GRUAS.contrapeso);
 // Misma cuenta que el paso 3 y la cotizacion (lib/flujo/calculos.js): cuerpo = vano de un lado
-const resultados = computed(() => Object.fromEntries(p.modelos.map((m) => [m.id, resultadoModelo(m, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua })])));
+const resultados = computed(() => Object.fromEntries(p.modelos.map((m) => [m.id, resultadoModelo(m, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua, ocupacion: p.bodega.ocupacion })])));
 const necesarios = computed(() => Object.fromEntries(p.modelos.map((m) => [m.id, resultados.value[m.id].cuerpos])));
-const modulos = computed(() => Object.fromEntries(p.modelos.map((m) => [m.id, resultados.value[m.id].modulos])));
 const ubicados = (id: string) => conteoTotal(p.racks.filter((r) => r.modelo === id && !r.existente)).cuerpos;
 const posicionesDe = (id: string) => { const c = conteoTotal(p.racks.filter((r) => r.modelo === id && !r.existente)); return c.posiciones || c.bandejas; };
 // ─── "Ya lo tengo": racks que el cliente ya tiene (no se cotizan) ───
@@ -977,39 +965,9 @@ function moverElementoA(eje: 'x' | 'y', ev: Event) {
   cambiarElemento(eje === 'x' ? { x: +(c.x0 + v + e.ancho / 2).toFixed(2) } : { y: +(c.y0 + v + e.alto / 2).toFixed(2) });
 }
 
-// El layout es del cliente: al llegar al paso nada se ubica solo. La barra de demanda dice cuánto falta y
-// "Ubicar los que faltan" lo pone sin tocar lo que ya está (prompt v3 §3)
+// El layout es del cliente (dueño 22-10-2026): el sistema no propone ni ubica racks. El cliente agrega cada
+// lineal, lo arrastra y elige simple o doble; la barra de demanda le dice cuánto le falta
 
-let reveladoTimer: ReturnType<typeof setTimeout> | null = null;
-function ubicar(manual: boolean) {
-  const existentes = p.racks.filter((r) => r.existente);
-  const r = ubicarModelos(p.bodega, p.modelos, modulos.value, { pallets: p.pallets, cajas: p.cajas, nuevoId, existentes });
-  // El túnel propio de un rack se conserva si el rack queda en el mismo lugar
-  const conTunel = p.racks.filter((x) => !x.existente && x.tunelPropio);
-  if (conTunel.length) {
-    r.racks = r.racks.map((n: any) => {
-      const v = conTunel.find((x) => x.modelo === n.modelo && x.rot === n.rot && x.cuerpos === n.cuerpos && Math.abs(x.x - n.x) < 0.01 && Math.abs(x.y - n.y) < 0.01);
-      return v ? { ...n, tunelPropio: true, tunelRack: v.tunelRack ?? null, tunel: v.tunelRack ?? null } : n;
-    });
-  }
-  faltan.value = r.faltan;
-  sel.value = null;
-  if (reveladoTimer) clearTimeout(reveladoTimer);
-  // "Llenar mi bodega": los racks aparecen de a uno y el contador sube (sin animar si se pide menos movimiento)
-  const quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!manual || quieto || r.racks.length < 2) {
-    p.racks = [...existentes, ...r.racks];
-  } else {
-    p.racks = [...existentes];
-    const paso = Math.max(60, Math.min(220, 1600 / r.racks.length));
-    const poner = (i: number) => {
-      p.racks = [...existentes, ...r.racks.slice(0, i)];
-      if (i < r.racks.length) reveladoTimer = setTimeout(() => poner(i + 1), paso);
-    };
-    poner(1);
-  }
-  if (manual) marcar('rack_add', { tipo: 'llenar', racks: r.racks.length });
-}
 // Portones y andenes llevan su zona de maniobra (elemento hijo que se regenera)
 function sincronizarManiobras() {
   const nuevos = conManiobras(p.bodega);
@@ -1138,7 +1096,7 @@ function asignarModelo(r: any, modeloId: string) {
 function irAlPaso3() {
   p.ir('rack');
 }
-const cob = computed(() => cobertura({ racks: p.racks, modelos: p.modelos, pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua }) as any);
+const cob = computed(() => cobertura({ racks: p.racks, modelos: p.modelos, pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua, ocupacion: p.bodega.ocupacion }) as any);
 // Demanda (pasos 1–3) contra lo ubicado, sumando todos los modelos: lo que dice la barra sobre el plano
 const demanda = computed(() => {
   const ms = cob.value.modelos as any[];
@@ -1146,6 +1104,8 @@ const demanda = computed(() => {
   const soloDI = ms.length > 0 && ms.every((m) => m.tipo === 'DI');
   return {
     necesita: ms.reduce((t, m) => t + (m.necesita || 0), 0),
+    // Lo que pidió (pallets o bandejas), antes del factor de ocupación
+    pidio: soloAR ? ms.reduce((t, m) => t + (m.necesita || 0), 0) : ms.filter((m) => m.tipo !== 'AR').reduce((t, m) => t + (resultados.value[m.id]?.total || 0), 0),
     posiciones: ms.reduce((t, m) => t + (m.posiciones || 0), 0),
     necesarios: ms.reduce((t, m) => t + (m.necesarios || 0), 0),
     ubicados: ms.reduce((t, m) => t + (m.ubicados || 0), 0),
@@ -1189,31 +1149,10 @@ function cambiarDoble(r: any, doble: boolean) {
   avisoDescuento(`Pasaste el lineal a ${doble ? 'doble' : 'simple'}`, antes);
   marcar('rack_doble', { doble });
 }
-// "Llenar mi bodega" rehace todo el layout nuevo: si el cliente ya puso racks, se le pregunta antes
-const confirmarLlenar = ref(false);
-function llenar() {
-  if (racksNuevos.value) confirmarLlenar.value = true;
-  else ubicar(true);
-}
-// Tras un cambio de bodega o pasillos: solo los racks en rojo se sacan y se vuelven a poner donde quepan
-function reubicarConflictos() {
-  const fuera = new Set([...malos.value].filter((id) => !p.racks.find((r: any) => r.id === id)?.existente));
-  if (!fuera.size) return;
-  if (sel.value && fuera.has(sel.value)) sel.value = null;
-  p.racks = p.racks.filter((r: any) => !fuera.has(r.id));
-  ubicarLosQueFaltan();
-  marcar('rack_add', { tipo: 'conflictos', racks: fuera.size });
-}
-function ubicarLosQueFaltan() {
-  const r = ubicarFaltantes(p.bodega, p.modelos, p.racks.filter((x: any) => !x.existente), { pallets: p.pallets, cajas: p.cajas, nuevoId }) as { racks: any[]; alargados: any[]; faltan: Record<string, number> };
-  const largos = new Map((r.alargados ?? []).map((x: any) => [x.id, x]));
-  p.racks = [...p.racks.map((x: any) => largos.get(x.id) ?? x), ...r.racks];
-  const sin = Object.values(r.faltan ?? {}).reduce((t: number, v: any) => t + v, 0);
-  const partes = [largos.size && `alargamos ${largos.size} ${largos.size === 1 ? 'fila' : 'filas'}`, r.racks.length && `agregamos ${r.racks.length} ${r.racks.length === 1 ? 'fila nueva' : 'filas nuevas'}`].filter(Boolean);
-  avisoFaltan.value = partes.length
-    ? `Listo: ${partes.join(' y ')}. Nada de lo que acomodaste se movió de lugar.${sin ? ' No cupo todo: libera espacio o agranda la bodega.' : ''}`
-    : 'No hay espacio libre para lo que falta: acorta un pasillo, mueve un rack o agranda la bodega.';
-  marcar('rack_add', { tipo: 'faltantes', racks: r.racks.length });
+// Conflicto: se elige el primer rack en rojo para que el cliente lo mueva (no se reubica solo)
+function verConflicto() {
+  const id = [...malos.value][0];
+  if (id) { sel.value = id; elementoSel.value = null; }
 }
 // Largo de una fila y partirla en dos: el cliente arma su layout; la barra de demanda dice si sigue cubriendo
 function largoFila(r: any, n: number) {

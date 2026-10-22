@@ -339,7 +339,7 @@ onMounted(() => {
 const mod = computed(() => p.modeloActual as Modelo | null);
 const catalogo = computed(() => (mod.value?.tipo === 'AR' ? p.cajas : p.pallets) as any[]);
 const tiposModelo = computed(() => p.pallets.filter((t) => (mod.value?.cantidades[t.id] ?? 0) > 0));
-const res = computed(() => (mod.value ? resultadoModelo(mod.value, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua, gruaDatos: gruaDatos.value }) as any : null));
+const res = computed(() => (mod.value ? resultadoModelo(mod.value, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua, gruaDatos: gruaDatos.value, ocupacion: p.bodega.ocupacion }) as any : null));
 const maxNiveles = computed(() => (mod.value ? nivelesMaximos(mod.value, { pallets: p.pallets, altura: p.bodega.altura, grua: p.bodega.grua, gruaDatos: gruaDatos.value }) : 1));
 const limite = computed(() => (mod.value?.tipo === 'AR' ? 'altura de la estantería' : p.bodega.altura ? 'tu techo y lo que levanta tu grúa (altura y peso)' : 'lo que levanta tu grúa (altura y peso)'));
 // Grua del cliente: lo que dice su placa (si no la sabe, la típica de su tipo de equipo)

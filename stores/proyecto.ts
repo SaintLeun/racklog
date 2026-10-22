@@ -97,6 +97,8 @@ function inicial() {
       elementos: [] as any[], grua: 'contrapeso', pesoPallet: null as number | null,
       // Placa de su grúa (si la sabe): altura máxima de horquilla (m) y capacidad nominal (kg)
       gruaLevante: null as number | null, gruaKg: null as number | null, pesoBandeja: null as number | null,
+      // Factor de ocupación (60–85 %): posiciones necesarias = pallets ÷ factor (prompt v3 §6)
+      ocupacion: 0.8,
       pallets: [] as any[],
     },
     racks: [] as any[],
