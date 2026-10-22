@@ -172,6 +172,19 @@
           <div class="flex items-center justify-between gap-2">
             <p class="fl-leyenda">Tus racks en la bodega</p>
           </div>
+          <!-- Bandeja: el cliente arma su layout lineal por lineal y decide si cada uno va simple o doble -->
+          <p class="mt-2 text-sm text-neutral-600">Arma tu layout lineal por lineal: agrega uno, arrástralo a su lugar y elige si va simple o doble.</p>
+          <ul class="mt-2 space-y-2">
+            <li v-for="m in p.modelos" :key="m.id" class="flex flex-wrap items-center gap-2">
+              <span class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-[11px] font-bold text-white" :style="{ background: colorModelo(m.id).borde }">{{ letraModelo(m.id) }}</span>
+              <span class="mr-auto min-w-0 truncate text-sm font-medium text-neutral-800">{{ m.nombre }}</span>
+              <template v-if="m.tipo !== 'DI'">
+                <button type="button" class="fl-chip !min-h-9 !w-auto !px-3 !text-sm" @click="agregarLineal(m.id, false)">+ Lineal simple</button>
+                <button type="button" class="fl-chip !min-h-9 !w-auto !px-3 !text-sm" @click="agregarLineal(m.id, true)">+ Lineal doble</button>
+              </template>
+              <button v-else type="button" class="fl-chip !min-h-9 !w-auto !px-3 !text-sm" @click="agregarLineal(m.id, false)">+ Bloque</button>
+            </li>
+          </ul>
           <template v-if="confirmarLlenar">
             <p class="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-900" role="alert">Ya acomodaste {{ racksNuevos }} {{ racksNuevos === 1 ? 'rack' : 'racks' }}. "Llenar mi bodega" los vuelve a ubicar todos desde cero.</p>
             <div class="mt-2 flex gap-2">
@@ -386,6 +399,13 @@
                 <div v-if="!enHoy" class="grid grid-cols-2 gap-1 rounded-lg bg-neutral-100 p-1" role="group" aria-label="¿Es nuevo o ya lo tienes?">
                   <button v-for="op in [{ v: false, t: 'Nuevo, a cotizar' }, { v: true, t: 'Ya lo tengo' }]" :key="op.t" type="button" :aria-pressed="!!rackSel.existente === op.v" :class="['h-9 rounded-md text-sm font-semibold', !!rackSel.existente === op.v ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="marcarExistente(rackSel, op.v)">{{ op.t }}</button>
                 </div>
+                <!-- Simple o doble: lo decide el cliente en cada lineal -->
+                <template v-if="!enHoy && !rackSel.existente && rackSel.tipo !== 'DI'">
+                  <p class="fl-panel__sec">Este lineal</p>
+                  <div class="grid grid-cols-2 gap-1 rounded-lg bg-neutral-100 p-1" role="group" aria-label="Simple o doble">
+                    <button v-for="op in [{ v: false, t: 'Simple' }, { v: true, t: 'Doble' }]" :key="op.t" type="button" :aria-pressed="!!rackSel.doble === op.v" :class="['h-9 rounded-md text-sm font-semibold', !!rackSel.doble === op.v ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="cambiarDoble(rackSel, op.v)">{{ op.t }}</button>
+                  </div>
+                </template>
                 <!-- Configuraciones mixtas: qué modelo (y por lo tanto qué pallets y niveles) guarda este rack -->
                 <template v-if="!enHoy && !rackSel.existente">
                   <p class="fl-panel__sec">Configuración</p>
@@ -561,10 +581,10 @@ import {
   ELEMENTOS, conflictos, contorno, caja, normalizar, dentroDeBodega, grillaPilaresXY, lugarLibre, formatoM, NOMBRE,
   rectangulo, rectElemento, medidasRack, area as areaPoligono,
 } from '~/lib/rack3d/planificador.js';
-import { GRUAS } from '~/lib/rack3d/parametrosTecnicos.js';
+import { GRUAS, DISTANCIAS } from '~/lib/rack3d/parametrosTecnicos.js';
 import { pasillos, pasilloRequerido } from '~/lib/rack3d/pasillos.js';
 import { huella } from '~/lib/rack3d/medidas.js';
-import { conCuerpos, partirRack, ubicarFaltantes, resultadoModelo, rackDeModelo, conteoRack, ubicarModelos, repetirBloque, previaBloque, previaPasillos, textoMotivos, cobertura, conteoTotal, conManiobras, enMuro, muroDe } from '~/lib/flujo/calculos.js';
+import { conCuerpos, conDoble, partirRack, ubicarFaltantes, resultadoModelo, rackDeModelo, conteoRack, ubicarModelos, repetirBloque, previaBloque, previaPasillos, textoMotivos, cobertura, conteoTotal, conManiobras, enMuro, muroDe } from '~/lib/flujo/calculos.js';
 import { proponerAccesorios, aplicarAjustes } from '~/lib/rack3d/accesorios.js';
 import { areaOcupada } from '~/lib/flujo/perfiles.js';
 import { recorridosGrua, sugerirTuneles, tunelesAlineados, ALTOS_TUNEL, altoTunelGrua, tunelParaGrua, dimensiones, radioGiro } from '~/lib/rack3d/rutas.js';
@@ -1102,7 +1122,8 @@ function asignarModelo(r: any, modeloId: string) {
   if (!mo || r.modelo === modeloId) return;
   const base = rackDeModelo(mo, { pallets: p.pallets, cajas: p.cajas, cuerpos: r.cuerpos, grua: p.bodega.grua });
   const propio = r.tunelPropio ? { tunelPropio: true, tunelRack: r.tunelRack ?? null, tunel: r.tunelRack ?? null } : {};
-  const nuevo = dentroDeBodega(normalizar({ ...base, id: r.id, x: r.x, y: r.y, rot: r.rot, cuerpos: r.cuerpos, modelo: modeloId, ...propio }), p.bodega);
+  const lineal = mo.tipo !== 'DI' && typeof r.dobleLineal === 'boolean' ? { doble: r.dobleLineal, dobleLineal: r.dobleLineal } : {};
+  const nuevo = dentroDeBodega(normalizar({ ...base, id: r.id, x: r.x, y: r.y, rot: r.rot, cuerpos: r.cuerpos, modelo: modeloId, ...propio, ...lineal }), p.bodega);
   p.racks = p.racks.map((x) => (x.id === r.id ? nuevo : x));
   marcar('rack_modelo', { modelos: p.modelos.length });
 }
@@ -1125,6 +1146,23 @@ const demanda = computed(() => {
   };
 });
 const avisoFaltan = ref('');
+// Un lineal nuevo del modelo, simple o doble a elección, en el primer lugar libre; queda elegido para moverlo
+function agregarLineal(modeloId: string, doble: boolean) {
+  const mo = p.modelos.find((m) => m.id === modeloId);
+  if (!mo) return;
+  const base = rackDeModelo(mo, { pallets: p.pallets, cajas: p.cajas, cuerpos: mo.tipo === 'DI' ? 4 : 6, grua: p.bodega.grua });
+  const lineal = mo.tipo === 'DI' ? {} : { doble, dobleLineal: doble, rot: doble ? 0 : 180 };
+  // Cae a un pasillo de grua de lo que ya hay, para que se pueda cargar sin moverlo
+  const r = lugarLibre(normalizar({ ...base, id: nuevoId(), ...lineal }), p.racks, p.bodega, mo.tipo === 'AR' ? DISTANCIAS.pasilloPersona.valor : grua.value.pasillo);
+  p.racks = [...p.racks, r];
+  sel.value = r.id; elementoSel.value = null;
+  marcar('rack_add', { tipo: mo.tipo === 'DI' ? 'bloque' : doble ? 'lineal_doble' : 'lineal_simple' });
+}
+// Pasar un lineal a simple o doble: la espalda queda en su lugar; demanda y accesorios se recalculan solos
+function cambiarDoble(r: any, doble: boolean) {
+  racksPlano.value = racksPlano.value.map((x) => (x.id === r.id ? conDoble(x, doble) : x));
+  marcar('rack_doble', { doble });
+}
 // "Llenar mi bodega" rehace todo el layout nuevo: si el cliente ya puso racks, se le pregunta antes
 const confirmarLlenar = ref(false);
 function llenar() {

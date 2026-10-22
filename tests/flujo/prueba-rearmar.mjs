@@ -49,4 +49,28 @@ for (const r of quedan) {
 }
 assert.equal(pl.conflictos(final, bod2).size, 0, 'sin conflictos tras reubicar');
 console.log('conflictos reubicados', malos.size, 'agregados', re.racks.length, 'faltan', JSON.stringify(k.faltantes({ racks: final, modelos: [modelo], pallets })));
+// Simple o doble por lineal (lo decide el cliente): la espalda no se mueve, las posiciones se recalculan,
+// racksAlDia lo conserva y ubicarFaltantes descuenta 2 cuerpos por modulo solo en los dobles
+const simple = k.conDoble(final[0], false);
+assert.equal(simple.doble, false); assert.equal(simple.dobleLineal, false);
+assert.ok(k.conteoRack(simple).posiciones * 2 === k.conteoRack(final[0]).posiciones, 'simple = mitad de posiciones');
+const dobleOtra = k.conDoble(simple, true);
+assert.ok(Math.abs(pl.rectangulo(dobleOtra).y0 - pl.rectangulo(final[0]).y0) < 1e-6 || Math.abs(pl.rectangulo(dobleOtra).x0 - pl.rectangulo(final[0]).x0) < 1e-6, 'vuelve a su lugar');
+for (const rot of [0, 90, 180, 270]) {
+  const s0 = pl.normalizar({ ...final[0], doble: false, rot, x: 15, y: 20 });
+  const d0 = k.conDoble(s0, true), a = pl.rectangulo(s0), d = pl.rectangulo(d0);
+  const espalda = { 0: Math.abs((a.y0 + a.alto) - (d.y0 + d.alto)), 180: Math.abs(a.y0 - d.y0), 90: Math.abs(a.x0 - d.x0), 270: Math.abs((a.x0 + a.ancho) - (d.x0 + d.ancho)) }[rot];
+  assert.ok(espalda < 1e-6, `espalda fija en rot ${rot}`);
+}
+const mezcla = [simple, ...final.slice(1)];
+const alDia = k.racksAlDia(mezcla, [modelo], { pallets }).racks;
+assert.equal(alDia[0].doble, false, 'racksAlDia conserva el simple del cliente');
+assert.equal(alDia[1].doble, true, 'los demas siguen el modelo');
+const re2 = k.ubicarFaltantes(bod, [modelo], alDia, { pallets, nuevoId: id });
+const final2 = [...alDia.map((r) => re2.alargados.find((x) => x.id === r.id) ?? r), ...re2.racks];
+assert.deepEqual(k.faltantes({ racks: final2, modelos: [modelo], pallets }), {}, 'cubre la demanda con lineales mixtos');
+assert.equal(final2.find((r) => r.id === simple.id).doble, false, 'el simple sigue simple');
+const q = k.queCotizar([modelo], final2)[0].lineas[0];
+assert.match(q, /doble.*simple|simple/, 'cotización dice cuántos simples y dobles');
+console.log('lineales mixtos:', q);
 console.log('rearmar: ok');

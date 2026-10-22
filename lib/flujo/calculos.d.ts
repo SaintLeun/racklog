@@ -29,3 +29,4 @@ export function conCuerpos(r: Obj, n: number): any;
 export function partirRack(r: Obj, nuevoId: () => string, opciones?: { en?: number; separacion?: number }): [any, any];
 export function faltantes(datos: { racks?: Obj[]; modelos?: Obj[]; pallets?: Obj[]; cajas?: Obj[]; grua?: string; [k: string]: any }): Record<string, { cuerpos: number; modulos: number }>;
 export function ubicarFaltantes(bodega: Obj, modelos: Obj[], racks: Obj[], opciones?: Obj): { racks: any[]; alargados: any[]; faltan: Record<string, number> };
+export function conDoble(r: Obj, doble: boolean): any;
