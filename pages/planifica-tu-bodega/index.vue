@@ -86,7 +86,7 @@
           <span class="eyebrow">Cómo funciona</span>
           <h2 class="titulo-seccion mt-4">Tres pasos y listo</h2>
         </div>
-        <ol class="mt-10 grid gap-5 md:grid-cols-3">
+        <ol class="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           <li v-for="(p, i) in PASOS" :key="p.t" class="card relative p-6" data-aparece>
             <div class="flex items-center gap-3">
               <span class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-700 ring-1 ring-brand-600/15" aria-hidden="true">
@@ -320,7 +320,8 @@ const CLIENTES = [
 
 const PASOS = [
   { t: 'Dibuja tu bodega', d: 'Marca las medidas, pilares, portones y oficinas. Si no sabes algo, usamos lo típico.', icono: 'M4 4h16v16H4zM4 10h6v10M14 4v6h6' },
-  { t: 'Arma tus pallets', d: 'Dinos el alto, el peso y cuántos tienes. Calculamos niveles y cuerpos por ti.', icono: 'M3 18h18M5 18v2M12 18v2M19 18v2M6 6h12v12H6zM6 12h12M12 6v12' },
+  { t: 'Arma tus pallets y tu rack', d: 'Dinos el alto, el peso y cuántos tienes. Calculamos niveles y cuerpos por ti.', icono: 'M3 18h18M5 18v2M12 18v2M19 18v2M6 6h12v12H6zM6 12h12M12 6v12' },
+  { t: 'Arma tu layout', d: 'Pon tus racks lineal por lineal, simples o dobles, donde tú quieras. Te decimos cuánto te falta.', icono: 'M4 5h16M4 12h16M4 19h16M8 5v14' },
   { t: 'Recibe tu cotización en máximo 24 h', d: 'Un ingeniero revisa tu diseño y te enviamos la cotización por correo.', icono: 'M12 7v5l3 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
 ];
 

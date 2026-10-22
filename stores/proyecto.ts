@@ -1,15 +1,18 @@
 // Proyecto del flujo "Planifica tu bodega" (/planifica-tu-bodega/disena): un solo estado que recorren
-// los 7 pasos. Primero se define el rack (modelos) y despues se ubica en la bodega.
+// los pasos. Primero se dibuja la bodega, despues se define el rack (modelos) y el cliente lo ubica en ella.
 // Se guarda solo en este navegador (localStorage) con un id de sesion para "Continuar donde quede".
 import { defineStore } from 'pinia';
 import { nuevoTipo } from '~/lib/rack3d/mezcla.js';
 
 export const PASOS = [
+  // La bodega se dibuja primero (prompt v3 §1): todo lo que sigue se valida contra ella. Los accesorios van
+  // después del layout porque dependen de pasillos y cabeceras reales. 'bodega' es el layout (ubicar racks)
   { k: 'operacion', t: 'Tu operación', min: 1 },
+  { k: 'dibujo', t: 'Tu bodega', min: 1 },
   { k: 'pallets', t: 'Tus pallets', min: 1 },
   { k: 'rack', t: 'Arma tu rack', min: 1 },
+  { k: 'bodega', t: 'Arma tu layout', min: 1 },
   { k: 'accesorios', t: 'Accesorios y seguridad', min: 0.5 },
-  { k: 'bodega', t: 'Tu bodega', min: 1 },
   { k: 'revisa', t: 'Revisa', min: 0.5 },
   { k: 'cotiza', t: 'Cotiza', min: 0.5 },
 ] as const;

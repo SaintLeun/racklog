@@ -116,7 +116,7 @@
       </div>
     </div>
 
-    <FlujoAcciones texto="Ubicar en mi bodega" @atras="emit('atras')" @siguiente="emit('siguiente')" />
+    <FlujoAcciones texto="Revisar mi diseño" @atras="emit('atras')" @siguiente="emit('siguiente')" />
   </div>
 </template>
 

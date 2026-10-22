@@ -32,12 +32,12 @@ Plan: migrar a Nuxt 4 después de la salida a producción.
 
 | Punto | Estado | Notas |
 |---|---|---|
-| 1 Bodega primero (reordenar stepper) | ⬜ | |
+| 1 Bodega primero (reordenar stepper) | 🟡 | ✅ Orden: Operación → Tu bodega (dibujo, con altura) → Pallets → Rack → Arma tu layout → Accesorios → Revisa → Cotiza (8 pasos; falta fusionar Revisa y Cotiza). `PasoBodega` con `modo` dibujo/layout. Landing "Cómo funciona" con 4 pasos |
 | 2 Cuadrícula y cotas editables | ⬜ | |
-| 3 El cliente arma su layout | 🟡 | ✅ `ubicar()` ya no corre solo (ni al montar, ni al cambiar medidas, forma, muros, esquinas, pasillos, zonas o pilares); los racks se conservan y, en conflicto, quedan en rojo con "Reubicar solo los racks en conflicto". ✅ "Llenar mi bodega" es secundario y pide confirmación si hay racks puestos. ✅ Se eliminó la casilla "Volver a ubicar…". ⬜ bandeja de módulos arrastrable, conversión simple↔doble para racks nuevos |
+| 3 El cliente arma su layout | ✅ | **Dueño 22-10: el sistema no propone layout.** Fuera "Llenar mi bodega", "Ubicar los que faltan" y la reubicación automática (también al cambiar pallets/modelos). "+ Lineal simple/doble" por modelo con las posiciones que aporta, simple/doble por lineal, barra que descuenta lo pedido. Antes: | ✅ `ubicar()` ya no corre solo (ni al montar, ni al cambiar medidas, forma, muros, esquinas, pasillos, zonas o pilares); los racks se conservan y, en conflicto, quedan en rojo con "Reubicar solo los racks en conflicto". ✅ "Llenar mi bodega" es secundario y pide confirmación si hay racks puestos. ✅ Se eliminó la casilla "Volver a ubicar…". ⬜ bandeja de módulos arrastrable, conversión simple↔doble para racks nuevos |
 | 4 Snap y pasillos | ⬜ | |
 | 5 Geometría real (polígono, calco) | ⬜ | |
-| 6 Factor de ocupación | ⬜ | |
+| 6 Factor de ocupación | ✅ | 60–85 %, 80 % por defecto (`bodega.ocupacion`); pasos 3 y 5, auditoría y faltantes. Selector con tip en la barra de demanda. `prueba-ocupacion.mjs`. ⬜ el adelanto de Revisa todavía dice los pallets sin factor |
 | 7 Validación continua | ⬜ | |
 | 8 Nunca pantalla en blanco | ⬜ | |
 | 9 UX y móvil | ⬜ | |

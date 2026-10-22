@@ -36,7 +36,7 @@
           <FlujoCompartido v-if="compartido" key="compartido" :datos="compartido" @cotizar="cotizarCompartido" @propio="dejarCompartido" />
           <!-- A/B 'registro': con la variante "inicio" el registro va antes de la primera pregunta -->
           <FlujoRegistro v-else-if="registroAlInicio && p.paso === 'operacion' && !p.registrado" key="registro" @listo="registroAlInicio = false" />
-          <component :is="COMPONENTES[p.paso]" v-else :key="p.paso" class="fl-cascada" @siguiente="siguiente" @atras="atras" />
+          <component :is="COMPONENTES[p.paso]" v-else :key="p.paso" class="fl-cascada" v-bind="p.paso === 'dibujo' ? { modo: 'dibujo' } : {}" @siguiente="siguiente" @atras="atras" />
         </Transition>
         <!-- Mientras carga: esqueleto con la forma de un paso (título, bajada, dibujo y tarjetas) que aparece
              en cascada; así nunca se ve una pantalla en blanco -->
@@ -99,12 +99,12 @@ useHead({ meta: [{ name: 'robots', content: 'noindex' }] });
 
 const p = useProyecto();
 const COMPONENTES: Record<Paso, unknown> = {
-  operacion: FlujoPasoOperacion, pallets: FlujoPasoPallets, rack: FlujoPasoRack, accesorios: FlujoPasoAccesorios,
+  operacion: FlujoPasoOperacion, dibujo: FlujoPasoBodega, pallets: FlujoPasoPallets, rack: FlujoPasoRack, accesorios: FlujoPasoAccesorios,
   bodega: FlujoPasoBodega, revisa: FlujoPasoRevisa, cotiza: FlujoPasoCotiza,
 };
 // Los pasos con plano o 3D usan todo el ancho
 const ANCHO: Record<Paso, string> = {
-  operacion: 'max-w-2xl', pallets: 'max-w-6xl', rack: 'max-w-6xl', accesorios: 'max-w-3xl', bodega: 'max-w-[1560px]', revisa: 'max-w-6xl', cotiza: 'max-w-3xl',
+  operacion: 'max-w-2xl', dibujo: 'max-w-[1560px]', pallets: 'max-w-6xl', rack: 'max-w-6xl', accesorios: 'max-w-3xl', bodega: 'max-w-[1560px]', revisa: 'max-w-6xl', cotiza: 'max-w-3xl',
 };
 
 function ir(paso: Paso) {

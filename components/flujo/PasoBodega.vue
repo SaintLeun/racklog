@@ -1,14 +1,20 @@
 <template>
   <div>
-    <h1 class="fl-titulo">Tu bodega</h1>
-    <p class="fl-bajada">Pon las medidas de tu bodega y arma tu layout lineal por lineal: agrega cada uno, arrástralo a su lugar y elige si va simple o doble. Nosotros no movemos nada.</p>
+    <template v-if="modo === 'dibujo'">
+      <h1 class="fl-titulo">Tu bodega</h1>
+      <p class="fl-bajada">Dibuja tu bodega: medidas, forma, altura, pilares y portones. Todo lo que armes después se revisa contra ella.</p>
+    </template>
+    <template v-else>
+      <h1 class="fl-titulo">Arma tu layout</h1>
+      <p class="fl-bajada">Arma tu layout lineal por lineal: agrega cada uno, arrástralo a su lugar y elige si va simple o doble. Nosotros no movemos nada. <button type="button" class="font-medium text-brand-700 underline underline-offset-2" @click="p.ir('dibujo')">Cambiar mi bodega</button></p>
+    </template>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
       <div class="min-w-0 space-y-4">
         <!-- Controles en pestañas: en el celular el plano queda arriba y fijo, y esto debajo -->
         <!-- Pestañas en dos líneas si no caben (no se cortan ni se esconden en un scroll) -->
         <div class="flex flex-wrap gap-1 rounded-xl bg-neutral-100 p-1" role="tablist" aria-label="Datos de tu bodega">
-          <button v-for="t in PESTANAS" :key="t.k" type="button" role="tab" :aria-selected="pestana === t.k" :class="['min-h-10 flex-auto whitespace-nowrap rounded-lg px-2.5 text-sm font-semibold', pestana === t.k ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="pestana = t.k">{{ t.t }}</button>
+          <button v-for="t in PESTANAS" :key="t.k" type="button" role="tab" :aria-selected="pestana === t.k" :class="['min-h-10 flex-auto whitespace-nowrap rounded-lg px-2.5 text-sm font-semibold', pestana === t.k ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="pestana = modo === 'layout' && pestana === t.k ? '' : t.k">{{ t.t }}</button>
         </div>
         <!-- Medidas -->
         <section v-show="pestana === 'medidas'" class="fl-card">
@@ -63,7 +69,12 @@
             <label class="fl-campo"><span>{{ dibujo ? 'Área de dibujo: ancho (m)' : p.bodega.forma ? 'Ancho total (m)' : 'Ancho (m)' }}</span><input :value="fm2(cajaBodega.x1 - cajaBodega.x0)" type="number" min="4" max="200" step="0.5" inputmode="decimal" class="form-input" @change="medida('ancho', $event)"></label>
             <label class="fl-campo"><span>{{ dibujo ? 'Área de dibujo: largo (m)' : p.bodega.forma ? 'Largo total (m)' : 'Largo (m)' }}</span><input :value="fm2(cajaBodega.y1 - cajaBodega.y0)" type="number" min="4" max="200" step="0.5" inputmode="decimal" class="form-input" @change="medida('largo', $event)"></label>
           </div>
-          <p class="mt-3 text-sm text-neutral-500">Altura: {{ p.flags.includes('no_se:altura') ? `no la sabes (usamos ${fm(p.bodega.altura || 8)} m)` : p.bodega.altura ? `${fm(p.bodega.altura)} m` : 'sin dato' }} · {{ grua.nombre }}: pasillo de {{ fm(grua.pasillo) }} m entre racks<FlujoReferencial :de="grua" /></p>
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <label for="fl-altura-bodega" class="flex-1 text-sm font-medium text-neutral-700">Altura libre (m) <FlujoInfo>Desde el piso hasta lo más bajo del techo: una viga, una lámpara o un rociador. Si no sabes, usamos 8 m.</FlujoInfo></label>
+            <input id="fl-altura-bodega" :value="p.bodega.altura ?? ''" type="number" min="2.5" max="40" step="0.1" inputmode="decimal" class="form-input !h-10 !w-24" placeholder="8" @change="cambiarAltura($event)">
+            <button type="button" :class="['fl-nose', p.flags.includes('no_se:altura') && 'fl-nose--sel']" @click="alturaNoSe">No sé</button>
+          </div>
+          <p class="mt-3 text-sm text-neutral-500">{{ grua.nombre }}: pasillo de {{ fm(grua.pasillo) }} m entre racks<FlujoReferencial :de="grua" /></p>
         </section>
 
         <!-- Pasillos, zonas y grúas: en "Dibuja en el plano", junto al plano (se arrastran y se dibujan ahí) -->
@@ -168,7 +179,7 @@
         </section>
 
         <!-- Lo que cabe -->
-        <section :class="['fl-card', cob.productos.some((x: any) => !x.ok) || cob.modelos.some((x: any) => x.diferencia < 0) ? 'ring-2 ring-amber-300' : '']">
+        <section v-if="modo === 'layout'" :class="['fl-card', cob.productos.some((x: any) => !x.ok) || cob.modelos.some((x: any) => x.diferencia < 0) ? 'ring-2 ring-amber-300' : '']">
           <div class="flex items-center justify-between gap-2">
             <p class="fl-leyenda">Tus racks en la bodega</p>
           </div>
@@ -229,10 +240,10 @@
           </div>
           <span v-if="enHoy" class="text-sm text-neutral-600">Hoy: <b class="text-lg text-neutral-900">{{ n(comparacion.hoy.posiciones) }}</b> posiciones</span>
           <span v-else-if="hoy.posiciones" class="text-sm text-neutral-600">Hoy <b class="text-neutral-900">{{ n(hoy.posiciones) }}</b> · Nuevo <b class="text-neutral-900"><FlujoContador :valor="total.pallets" /></b> · Total <b class="text-lg text-neutral-900">{{ n(hoy.posiciones + total.pallets) }}</b> posiciones</span>
-          <span v-else class="text-sm text-neutral-600"><b class="text-neutral-900">{{ racksNuevos }}</b> {{ racksNuevos === 1 ? 'rack' : 'racks' }} · <b class="text-lg text-neutral-900"><FlujoContador :valor="total.pallets" /></b> posiciones{{ total.bandejas ? ` · ${n(total.bandejas)} bandejas` : '' }}</span>
+          <span v-else-if="modo === 'layout'" class="text-sm text-neutral-600"><b class="text-neutral-900">{{ racksNuevos }}</b> {{ racksNuevos === 1 ? 'rack' : 'racks' }} · <b class="text-lg text-neutral-900"><FlujoContador :valor="total.pallets" /></b> posiciones{{ total.bandejas ? ` · ${n(total.bandejas)} bandejas` : '' }}</span>
         </div>
         <!-- Demanda contra lo que hay en el plano: siempre a la vista mientras el cliente mueve, acorta o parte filas -->
-        <div v-if="!enHoy && demanda.necesita" :class="['flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b px-3 py-1.5 text-sm lg:px-4', demanda.faltan ? 'border-amber-100 bg-amber-50 text-amber-950' : 'border-green-100 bg-green-50 text-green-900']" role="status">
+        <div v-if="modo === 'layout' && !enHoy && demanda.necesita" :class="['flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b px-3 py-1.5 text-sm lg:px-4', demanda.faltan ? 'border-amber-100 bg-amber-50 text-amber-950' : 'border-green-100 bg-green-50 text-green-900']" role="status">
           <!-- Lo que pidió se va descontando con cada lineal que pone -->
           <span class="min-w-0 flex-1">
             <span class="block">
@@ -568,7 +579,8 @@
       </div>
     </div>
 
-    <FlujoAcciones :deshabilitado="!p.racks.length" motivo="Ubica al menos un rack." texto="Revisar mi diseño" @atras="emit('atras')" @siguiente="emit('siguiente')" />
+    <FlujoAcciones v-if="modo === 'dibujo'" texto="Continuar con esta bodega" @atras="emit('atras')" @siguiente="emit('siguiente')" />
+    <FlujoAcciones v-else :deshabilitado="!p.racks.length" motivo="Agrega al menos un lineal." texto="Seguir con accesorios" @atras="emit('atras')" @siguiente="emit('siguiente')" />
   </div>
 </template>
 
@@ -588,6 +600,18 @@ import { areaOcupada } from '~/lib/flujo/perfiles.js';
 import { recorridosGrua, sugerirTuneles, tunelesAlineados, ALTOS_TUNEL, altoTunelGrua, tunelParaGrua, dimensiones, radioGiro } from '~/lib/rack3d/rutas.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
+// 'dibujo' (paso 2): medidas, forma, altura, pilares y portones. 'layout' (paso 5): el cliente ubica sus lineales
+const props = withDefaults(defineProps<{ modo?: 'dibujo' | 'layout' }>(), { modo: 'layout' });
+const modo = computed(() => props.modo);
+function cambiarAltura(e: Event) {
+  const v = Number((e.target as HTMLInputElement).value);
+  p.bodega.altura = v >= 2.5 ? Math.min(40, v) : null;
+  p.flags = p.flags.filter((f) => f !== 'no_se:altura');
+}
+function alturaNoSe() {
+  p.bodega.altura = 8;
+  p.flags = [...new Set([...p.flags, 'no_se:altura'])];
+}
 const p = useProyecto();
 const fm = formatoM;
 const n = (v: number) => Math.round(v).toLocaleString('es-CL');
@@ -616,8 +640,11 @@ const MUROS = [{ v: 'abajo', t: 'Abajo' }, { v: 'arriba', t: 'Arriba' }, { v: 'i
 const bloque = reactive({ largo: 1, profundidad: 1, espalda: false });
 // Pasillos en serie (panel del pasillo elegido)
 const serie = reactive({ cantidad: 1, separacion: 6 });
-const PESTANAS = [{ k: 'medidas', t: 'Medidas' }, { k: 'pilares', t: 'Pilares' }, { k: 'accesos', t: 'Portones y andenes' }, { k: 'tengo', t: 'Lo que ya tengo' }, { k: 'hoy', t: 'Hoy vs propuesta' }] as const;
-const pestana = ref<typeof PESTANAS[number]['k']>('medidas');
+const PESTANAS_DIBUJO = [{ k: 'medidas', t: 'Medidas' }, { k: 'pilares', t: 'Pilares' }, { k: 'accesos', t: 'Portones y andenes' }] as const;
+const PESTANAS_LAYOUT = [{ k: 'tengo', t: 'Lo que ya tengo' }, { k: 'hoy', t: 'Hoy vs propuesta' }] as const;
+const PESTANAS = computed(() => (modo.value === 'dibujo' ? PESTANAS_DIBUJO : PESTANAS_LAYOUT));
+// En el dibujo parte en Medidas; en el layout las pestañas de lo que ya tiene van cerradas hasta que las toque
+const pestana = ref<string>(props.modo === 'dibujo' ? 'medidas' : '');
 // Encuadre a lo diseñado: los racks con su pasillo (y los accesos). Se calcula al ubicar, no en cada arrastre
 // El plano y el 3D muestran siempre toda la bodega; al soltar la selección el plano vuelve solo a encuadrarla
 const plano = ref<{ restablecerVista(): void; aPlanoCliente(x: number, y: number): Pto | null } | null>(null);
