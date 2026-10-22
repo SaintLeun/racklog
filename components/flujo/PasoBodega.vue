@@ -179,12 +179,14 @@
               <span class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-[11px] font-bold text-white" :style="{ background: colorModelo(m.id).borde }">{{ letraModelo(m.id) }}</span>
               <span class="mr-auto min-w-0 truncate text-sm font-medium text-neutral-800">{{ m.nombre }}</span>
               <template v-if="m.tipo !== 'DI'">
-                <button type="button" class="fl-chip !min-h-9 !w-auto !px-3 !text-sm" @click="agregarLineal(m.id, false)">+ Lineal simple</button>
-                <button type="button" class="fl-chip !min-h-9 !w-auto !px-3 !text-sm" @click="agregarLineal(m.id, true)">+ Lineal doble</button>
+                <button type="button" class="fl-chip !min-h-9 !w-auto !flex-col !gap-0 !px-3 !text-sm leading-tight" :aria-label="`Agregar lineal simple, ${aporteLineal(m, false)} posiciones`" @click="agregarLineal(m.id, false)">+ Lineal simple<span class="text-[11px] font-normal text-neutral-500">{{ n(aporteLineal(m, false)) }} {{ m.tipo === 'AR' ? 'bandejas' : 'posiciones' }}</span></button>
+                <button type="button" class="fl-chip !min-h-9 !w-auto !flex-col !gap-0 !px-3 !text-sm leading-tight" :aria-label="`Agregar lineal doble, ${aporteLineal(m, true)} posiciones`" @click="agregarLineal(m.id, true)">+ Lineal doble<span class="text-[11px] font-normal text-neutral-500">{{ n(aporteLineal(m, true)) }} {{ m.tipo === 'AR' ? 'bandejas' : 'posiciones' }}</span></button>
               </template>
-              <button v-else type="button" class="fl-chip !min-h-9 !w-auto !px-3 !text-sm" @click="agregarLineal(m.id, false)">+ Bloque</button>
+              <button v-else type="button" class="fl-chip !min-h-9 !w-auto !flex-col !gap-0 !px-3 !text-sm leading-tight" @click="agregarLineal(m.id, false)">+ Bloque<span class="text-[11px] font-normal text-neutral-500">{{ n(aporteLineal(m, false)) }} posiciones</span></button>
             </li>
           </ul>
+          <!-- En celular el plano queda arriba: lo que se descontó se dice junto a los botones -->
+          <p v-if="avisoFaltan" class="mt-2 rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-700 lg:hidden" aria-hidden="true">{{ avisoFaltan }}</p>
           <template v-if="confirmarLlenar">
             <p class="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-900" role="alert">Ya acomodaste {{ racksNuevos }} {{ racksNuevos === 1 ? 'rack' : 'racks' }}. "Llenar mi bodega" los vuelve a ubicar todos desde cero.</p>
             <div class="mt-2 flex gap-2">
@@ -229,7 +231,7 @@
       </div>
 
       <!-- Plano 2D o vista 3D -->
-      <div class="fl-card sticky top-[8.75rem] z-20 order-first self-start !p-0 overflow-hidden shadow-md lg:top-36 lg:order-none lg:shadow-none">
+      <div class="fl-card z-20 order-first self-start !p-0 overflow-hidden shadow-md lg:sticky lg:top-36 lg:order-none lg:shadow-none">
         <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-neutral-100 px-3 py-2 lg:px-4 lg:py-3">
           <div class="flex gap-1 rounded-lg bg-neutral-100 p-1" role="tablist" aria-label="Vista">
             <button v-for="v in (['2d', '3d'] as const)" :key="v" type="button" role="tab" :aria-selected="vista === v" :class="['rounded-md px-3 py-1.5 text-sm font-semibold lg:px-4 lg:py-2', vista === v ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="vista = v">{{ v === '2d' ? 'Plano 2D' : 'Vista 3D' }}</button>
@@ -243,11 +245,17 @@
         </div>
         <!-- Demanda contra lo que hay en el plano: siempre a la vista mientras el cliente mueve, acorta o parte filas -->
         <div v-if="!enHoy && demanda.necesita" :class="['flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b px-3 py-1.5 text-sm lg:px-4', demanda.faltan ? 'border-amber-100 bg-amber-50 text-amber-950' : 'border-green-100 bg-green-50 text-green-900']" role="status">
-          <span>
-            Tu demanda: <b>{{ n(demanda.necesita) }} {{ demanda.unidad }}</b> → <b>{{ n(demanda.necesarios) }} {{ demanda.unidadCuerpo }}</b> ·
-            en el plano: <b>{{ n(demanda.ubicados) }} {{ demanda.unidadCuerpo }}</b>, {{ n(demanda.posiciones) }} {{ demanda.unidadPos }}
-            <template v-if="demanda.faltan"> — <b>faltan {{ demanda.faltan }} {{ demanda.faltan === 1 ? demanda.unidadCuerpo.replace(/s$/, '') : demanda.unidadCuerpo }}</b></template>
-            <template v-else> ✓ cubre tu demanda</template>
+          <!-- Lo que pidió se va descontando con cada lineal que pone -->
+          <span class="min-w-0 flex-1">
+            <span class="block">
+              Pediste <b>{{ n(demanda.necesita) }} {{ demanda.unidadPos }}</b> · en el plano <b><FlujoContador :valor="demanda.posiciones" /></b>
+              <template v-if="porPoner > 0"> — <b>te faltan {{ n(porPoner) }}</b> <span class="opacity-75">(≈ {{ demanda.faltan || 1 }} {{ (demanda.faltan || 1) === 1 ? demanda.unidadCuerpo.replace(/s$/, '') : demanda.unidadCuerpo }})</span></template>
+              <template v-else-if="demanda.faltan"> — <b>faltan {{ demanda.faltan }} {{ demanda.faltan === 1 ? demanda.unidadCuerpo.replace(/s$/, '') : demanda.unidadCuerpo }}</b> de un producto</template>
+              <template v-else> ✓ cubre lo que pediste</template>
+            </span>
+            <span class="mt-1 block h-1.5 overflow-hidden rounded-full bg-black/10" aria-hidden="true">
+              <span :class="['block h-full rounded-full transition-all duration-300', demanda.faltan ? 'bg-amber-500' : 'bg-green-600']" :style="{ width: `${Math.min(100, (demanda.posiciones / Math.max(1, demanda.necesita)) * 100)}%` }" />
+            </span>
           </span>
           <button v-if="demanda.faltan" type="button" class="rounded-lg bg-amber-600 px-3 py-1 text-sm font-semibold text-white hover:bg-amber-700" @click="ubicarLosQueFaltan">Ubicar los que faltan</button>
         </div>
@@ -1146,6 +1154,14 @@ const demanda = computed(() => {
   };
 });
 const avisoFaltan = ref('');
+// Posiciones (o bandejas) que aún faltan contra lo que pidió
+const porPoner = computed(() => Math.max(0, demanda.value.necesita - demanda.value.posiciones));
+// Lo que aporta un lineal nuevo de cada modelo (6 cuerpos; drive-in 4 calles), para mostrarlo en el botón
+function aporteLineal(mo: any, doble: boolean) {
+  const base = rackDeModelo(mo, { pallets: p.pallets, cajas: p.cajas, cuerpos: mo.tipo === 'DI' ? 4 : 6, grua: p.bodega.grua });
+  const c = conteoRack(mo.tipo === 'DI' ? base : normalizar({ ...base, doble }));
+  return c.posiciones || c.bandejas;
+}
 // Un lineal nuevo del modelo, simple o doble a elección, en el primer lugar libre; queda elegido para moverlo
 function agregarLineal(modeloId: string, doble: boolean) {
   const mo = p.modelos.find((m) => m.id === modeloId);
@@ -1154,13 +1170,23 @@ function agregarLineal(modeloId: string, doble: boolean) {
   const lineal = mo.tipo === 'DI' ? {} : { doble, dobleLineal: doble, rot: doble ? 0 : 180 };
   // Cae a un pasillo de grua de lo que ya hay, para que se pueda cargar sin moverlo
   const r = lugarLibre(normalizar({ ...base, id: nuevoId(), ...lineal }), p.racks, p.bodega, mo.tipo === 'AR' ? DISTANCIAS.pasilloPersona.valor : grua.value.pasillo);
+  const antes = porPoner.value;
   p.racks = [...p.racks, r];
   sel.value = r.id; elementoSel.value = null;
+  avisoDescuento(`Agregaste un ${mo.tipo === 'DI' ? 'bloque' : doble ? 'lineal doble' : 'lineal simple'}`, antes);
   marcar('rack_add', { tipo: mo.tipo === 'DI' ? 'bloque' : doble ? 'lineal_doble' : 'lineal_simple' });
+}
+// "Agregaste un lineal simple: +48 posiciones. Te faltan 104" (lo que pidió se va descontando)
+function avisoDescuento(que: string, antes: number) {
+  const u = demanda.value.unidadPos, d = antes - porPoner.value, ahora = porPoner.value;
+  const cambio = d > 0 ? `descuenta ${n(d)} ${u}` : d < 0 ? `suma ${n(-d)} ${u} por poner` : 'tu demanda ya estaba cubierta';
+  avisoFaltan.value = `${que}: ${cambio}. ${ahora > 0 ? `Te faltan ${n(ahora)} ${u}.` : 'Ya cubres lo que pediste ✓'}`;
 }
 // Pasar un lineal a simple o doble: la espalda queda en su lugar; demanda y accesorios se recalculan solos
 function cambiarDoble(r: any, doble: boolean) {
+  const antes = porPoner.value;
   racksPlano.value = racksPlano.value.map((x) => (x.id === r.id ? conDoble(x, doble) : x));
+  avisoDescuento(`Pasaste el lineal a ${doble ? 'doble' : 'simple'}`, antes);
   marcar('rack_doble', { doble });
 }
 // "Llenar mi bodega" rehace todo el layout nuevo: si el cliente ya puso racks, se le pregunta antes
