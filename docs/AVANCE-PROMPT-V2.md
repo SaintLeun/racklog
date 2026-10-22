@@ -255,3 +255,9 @@ Pruebas: `bash tests/flujo/correr.sh` (nuevas: prueba-auditoria, prueba-angulo-c
 Preguntas abiertas nuevas:
 8. Ángulo ranurado: ¿la propuesta debe quedar a altura de mano (≤ 1,9 m) aunque use más cuerpos? Hoy minimiza piso y puede pedir escalera.
 9. Alturas de túnel por quién pasa (2,2 / 2,5 / 3,5 / 4,5 m) y que la grúa cruce solo con ≥ 3,5 m: provisorio, confirmar con Técnica.
+
+### Demanda y layout a gusto del cliente (22-10-2026)
+| Pedido | Estado |
+|---|---|
+| Cuántos módulos necesita para su demanda, siempre a la vista | ✅ barra sobre el plano: "Tu demanda: N pallets → M cuerpos · en el plano: X cuerpos, Y posiciones" (verde si cubre, ámbar con "faltan N") |
+| Mover los racks al layout que quiere el cliente sin perder la demanda | ✅ mover, girar, duplicar, quitar (ya estaban) + largo de la fila (cuerpos), "Partir en dos tramos" y "Ubicar los que faltan" (primero alarga sus filas, después filas nuevas; nada de lo puesto se mueve). `prueba-rearmar.mjs` |

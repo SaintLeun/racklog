@@ -1,0 +1,30 @@
+// Rearmar el layout (paso 5): largo de fila, partirla y ubicar solo lo que falta sin mover lo puesto
+// node tests/flujo/prueba-rearmar.mjs
+import assert from 'node:assert';
+const b = process.argv[2] || process.cwd();
+const k = await import(b + '/lib/flujo/calculos.js');
+const pl = await import(b + '/lib/rack3d/planificador.js');
+const pallets = [{ id: 'a', nombre: 'P', frente: 1, fondo: 1.2, alto: 1.35, peso: 700, cantidad: 300, rotacion: 'media', color: '#f59e0b' }];
+const modelo = { id: 'm1', nombre: 'Selectivo', tipo: 'RS', doble: true, niveles: 3, porViga: 2, sobrante: 0.3, mezcla: [], planos: [], cantidades: { a: 300 } };
+const bod = { ancho: 30, largo: 40, altura: 8, forma: null, grua: 'contrapeso', elementos: [] };
+let n = 0; const id = () => 'r' + (++n);
+const res = k.resultadoModelo(modelo, { pallets });
+const u = k.ubicarModelos(bod, [modelo], { m1: res.modulos }, { pallets, nuevoId: id });
+console.log('necesarios', res.cuerpos, 'ubicados', k.conteoTotal(u.racks).cuerpos, 'filas', u.racks.map((r) => r.cuerpos));
+const r0 = u.racks[0], q0 = pl.rectangulo(r0);
+const corto = k.conCuerpos(r0, r0.cuerpos - 3);
+assert.ok(Math.abs(pl.rectangulo(corto).x0 - q0.x0) < 1e-6, 'extremo izq fijo');
+let racks = [corto, ...u.racks.slice(1)];
+const f = k.faltantes({ racks, modelos: [modelo], pallets });
+console.log('faltan', JSON.stringify(f));
+assert.equal(f.m1.cuerpos, 6);
+const nuevos = k.ubicarFaltantes(bod, [modelo], racks, { pallets, nuevoId: id });
+racks = [...racks, ...nuevos.racks];
+racks = racks.map((r) => nuevos.alargados.find((x) => x.id === r.id) ?? r);
+console.log('alargados', nuevos.alargados.map((r) => r.cuerpos), 'agregados', nuevos.racks.map((r) => r.cuerpos), 'faltan ahora', JSON.stringify(k.faltantes({ racks, modelos: [modelo], pallets })));
+assert.deepEqual(k.faltantes({ racks, modelos: [modelo], pallets }), {});
+assert.equal(pl.conflictos(racks, bod).size ?? pl.conflictos(racks, bod).length, 0, 'sin choques');
+const [a, bb] = k.partirRack(u.racks[1], id, { en: 4 });
+assert.equal(a.cuerpos + bb.cuerpos, u.racks[1].cuerpos);
+assert.ok(pl.rectangulo(bb).x0 - (pl.rectangulo(a).x0 + pl.rectangulo(a).ancho) > 1.1, 'separados');
+console.log('rearmar: ok');

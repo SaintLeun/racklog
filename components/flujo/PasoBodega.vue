@@ -221,6 +221,17 @@
           <span v-else-if="hoy.posiciones" class="text-sm text-neutral-600">Hoy <b class="text-neutral-900">{{ n(hoy.posiciones) }}</b> · Nuevo <b class="text-neutral-900"><FlujoContador :valor="total.pallets" /></b> · Total <b class="text-lg text-neutral-900">{{ n(hoy.posiciones + total.pallets) }}</b> posiciones</span>
           <span v-else class="text-sm text-neutral-600"><b class="text-neutral-900">{{ racksNuevos }}</b> {{ racksNuevos === 1 ? 'rack' : 'racks' }} · <b class="text-lg text-neutral-900"><FlujoContador :valor="total.pallets" /></b> posiciones{{ total.bandejas ? ` · ${n(total.bandejas)} bandejas` : '' }}</span>
         </div>
+        <!-- Demanda contra lo que hay en el plano: siempre a la vista mientras el cliente mueve, acorta o parte filas -->
+        <div v-if="!enHoy && demanda.necesita" :class="['flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b px-3 py-1.5 text-sm lg:px-4', demanda.faltan ? 'border-amber-100 bg-amber-50 text-amber-950' : 'border-green-100 bg-green-50 text-green-900']" role="status">
+          <span>
+            Tu demanda: <b>{{ n(demanda.necesita) }} {{ demanda.unidad }}</b> → <b>{{ n(demanda.necesarios) }} {{ demanda.unidadCuerpo }}</b> ·
+            en el plano: <b>{{ n(demanda.ubicados) }} {{ demanda.unidadCuerpo }}</b>, {{ n(demanda.posiciones) }} {{ demanda.unidadPos }}
+            <template v-if="demanda.faltan"> — <b>faltan {{ demanda.faltan }} {{ demanda.faltan === 1 ? demanda.unidadCuerpo.replace(/s$/, '') : demanda.unidadCuerpo }}</b></template>
+            <template v-else> ✓ cubre tu demanda</template>
+          </span>
+          <button v-if="demanda.faltan" type="button" class="rounded-lg bg-amber-600 px-3 py-1 text-sm font-semibold text-white hover:bg-amber-700" @click="ubicarLosQueFaltan">Ubicar los que faltan</button>
+        </div>
+        <p v-if="avisoFaltan" class="border-b border-neutral-100 bg-white px-3 py-1.5 text-sm text-neutral-700 lg:px-4" role="status">{{ avisoFaltan }}</p>
         <!-- Espacio libre dicho como beneficio -->
         <p v-if="libre" class="border-b border-green-100 bg-green-50 px-3 py-1.5 text-sm font-medium text-green-900 lg:px-4">Te quedan {{ n(libre) }} m² libres para crecer.</p>
         <div class="flex flex-col lg:min-h-[500px] lg:flex-row">
@@ -387,6 +398,10 @@
                   </div>
                   <p class="mt-1.5 text-xs text-neutral-500">¿Otra mezcla de pallets o niveles? <button type="button" class="font-semibold text-brand-700 underline" @click="irAlPaso3">Crea otro modelo en el paso 3</button>.</p>
                   <p class="mt-2 text-sm text-neutral-700">Guarda: {{ contenidoRack(rackSel) }}</p>
+                  <!-- Largo de la fila: acortarla o alargarla sin perder de vista la demanda (barra de arriba) -->
+                  <p class="fl-panel__sec">Largo de la fila</p>
+                  <div class="fl-prop"><span>{{ rackSel.tipo === 'DI' ? 'Calles' : rackSel.doble ? 'Cuerpos por lado' : 'Cuerpos' }}</span><FlujoNumero :valor="rackSel.cuerpos" :min="1" :max="50" etiqueta="cuerpos" @cambio="largoFila(rackSel, $event)" /></div>
+                  <button v-if="rackSel.cuerpos >= 2" type="button" class="fl-chip mt-1 !min-h-9 !text-sm" @click="partir(rackSel)">Partir en dos tramos</button>
                 </template>
                 <!-- Cuerpo túnel de este rack (pisa el del modelo del paso 3) -->
                 <template v-if="!enHoy && !rackSel.existente && rackSel.tipo === 'RS'">
@@ -545,7 +560,7 @@ import {
 import { GRUAS } from '~/lib/rack3d/parametrosTecnicos.js';
 import { pasillos, pasilloRequerido } from '~/lib/rack3d/pasillos.js';
 import { huella } from '~/lib/rack3d/medidas.js';
-import { resultadoModelo, rackDeModelo, conteoRack, ubicarModelos, repetirBloque, previaBloque, previaPasillos, textoMotivos, cobertura, conteoTotal, conManiobras, enMuro, muroDe } from '~/lib/flujo/calculos.js';
+import { conCuerpos, partirRack, ubicarFaltantes, resultadoModelo, rackDeModelo, conteoRack, ubicarModelos, repetirBloque, previaBloque, previaPasillos, textoMotivos, cobertura, conteoTotal, conManiobras, enMuro, muroDe } from '~/lib/flujo/calculos.js';
 import { proponerAccesorios, aplicarAjustes } from '~/lib/rack3d/accesorios.js';
 import { areaOcupada } from '~/lib/flujo/perfiles.js';
 import { recorridosGrua, sugerirTuneles, tunelesAlineados, ALTOS_TUNEL, altoTunelGrua, tunelParaGrua, dimensiones, radioGiro } from '~/lib/rack3d/rutas.js';
@@ -1120,6 +1135,41 @@ function irAlPaso3() {
   p.ir('rack');
 }
 const cob = computed(() => cobertura({ racks: p.racks, modelos: p.modelos, pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua }) as any);
+// Demanda (pasos 1–3) contra lo ubicado, sumando todos los modelos: lo que dice la barra sobre el plano
+const demanda = computed(() => {
+  const ms = cob.value.modelos as any[];
+  const soloAR = ms.length > 0 && ms.every((m) => m.tipo === 'AR');
+  const soloDI = ms.length > 0 && ms.every((m) => m.tipo === 'DI');
+  return {
+    necesita: ms.reduce((t, m) => t + (m.necesita || 0), 0),
+    posiciones: ms.reduce((t, m) => t + (m.posiciones || 0), 0),
+    necesarios: ms.reduce((t, m) => t + (m.necesarios || 0), 0),
+    ubicados: ms.reduce((t, m) => t + (m.ubicados || 0), 0),
+    faltan: ms.reduce((t, m) => t + Math.max(0, -(m.diferencia || 0)), 0),
+    unidad: soloAR ? 'bandejas' : 'pallets', unidadPos: soloAR ? 'bandejas' : 'posiciones', unidadCuerpo: soloDI ? 'calles' : 'cuerpos',
+  };
+});
+const avisoFaltan = ref('');
+function ubicarLosQueFaltan() {
+  const r = ubicarFaltantes(p.bodega, p.modelos, p.racks.filter((x: any) => !x.existente), { pallets: p.pallets, cajas: p.cajas, nuevoId }) as { racks: any[]; alargados: any[]; faltan: Record<string, number> };
+  const largos = new Map((r.alargados ?? []).map((x: any) => [x.id, x]));
+  p.racks = [...p.racks.map((x: any) => largos.get(x.id) ?? x), ...r.racks];
+  const sin = Object.values(r.faltan ?? {}).reduce((t: number, v: any) => t + v, 0);
+  const partes = [largos.size && `alargamos ${largos.size} ${largos.size === 1 ? 'fila' : 'filas'}`, r.racks.length && `agregamos ${r.racks.length} ${r.racks.length === 1 ? 'fila nueva' : 'filas nuevas'}`].filter(Boolean);
+  avisoFaltan.value = partes.length
+    ? `Listo: ${partes.join(' y ')}. Nada de lo que acomodaste se movió de lugar.${sin ? ' No cupo todo: libera espacio o agranda la bodega.' : ''}`
+    : 'No hay espacio libre para lo que falta: acorta un pasillo, mueve un rack o agranda la bodega.';
+  marcar('rack_add', { tipo: 'faltantes', racks: r.racks.length });
+}
+// Largo de una fila y partirla en dos: el cliente arma su layout; la barra de demanda dice si sigue cubriendo
+function largoFila(r: any, n: number) {
+  racksPlano.value = racksPlano.value.map((x) => (x.id === r.id ? dentroDeBodega(conCuerpos(x, n), p.bodega) : x));
+}
+function partir(r: any) {
+  const [a, b] = partirRack(r, nuevoId) as any[];
+  racksPlano.value = [...racksPlano.value.filter((x) => x.id !== r.id), dentroDeBodega(a, p.bodega), lugarLibre(b, [...racksPlano.value.filter((x) => x.id !== r.id), a], p.bodega)];
+  sel.value = b.id;
+}
 
 function agregarElemento(clase: string) {
   if (trazado.value) terminarTrazado();
