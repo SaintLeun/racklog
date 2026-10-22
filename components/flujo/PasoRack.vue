@@ -11,6 +11,12 @@
         <input id="fl-altura" :value="p.bodega.altura ?? ''" type="number" min="2.5" max="40" step="0.1" inputmode="decimal" class="form-input !h-10 !w-24" placeholder="8" @change="cambiarAltura($event)">
         <button type="button" :class="['fl-nose', p.flags.includes('no_se:altura') && 'fl-nose--sel']" @click="alturaNoSe">No sé</button>
       </div>
+      <!-- La grúa limita la altura del rack: hasta dónde sube y cuánto levanta allá arriba (capacidad residual) -->
+      <div v-if="conGruaRack" class="flex w-full flex-wrap items-center gap-x-3 gap-y-2 border-t border-neutral-100 pt-2">
+        <span class="flex-1 text-[15px] font-medium text-neutral-700">Tu grúa levanta <FlujoInfo>Está en la placa de la grúa: altura máxima de horquilla y kg. Mientras más alto sube, menos peso levanta; usamos la curva típica de una {{ eqTipico.nombre.toLowerCase() }} si no los sabes.</FlujoInfo></span>
+        <label class="flex items-center gap-1.5 text-sm text-neutral-600"><span class="sr-only">Altura máxima de la grúa</span><input :value="(p.bodega as any).gruaLevante ?? ''" type="number" min="1" max="15" step="0.1" inputmode="decimal" class="form-input !h-10 !w-20" :placeholder="String(eqTipico.levante).replace('.', ',')" @change="placa('gruaLevante', $event)">m</label>
+        <label class="flex items-center gap-1.5 text-sm text-neutral-600"><span class="sr-only">Capacidad de la grúa</span><input :value="(p.bodega as any).gruaKg ?? ''" type="number" min="300" max="10000" step="50" inputmode="numeric" class="form-input !h-10 !w-24" :placeholder="eqTipico.kg.toLocaleString('es-CL')" @change="placa('gruaKg', $event)">kg</label>
+      </div>
     </div>
 
     <!-- El sistema que el cliente configura manda. Si para sus productos sugerimos otro, va como una línea
@@ -264,7 +270,7 @@ import { useProyecto, type Sistema, type Modelo } from '~/stores/proyecto';
 import { TIPOS, gruaDriveIn } from '~/lib/rack3d/planificador.js';
 import { resultadoModelo, nivelesMaximos, mezclaPorDefecto, mejorBandeja, firmaCajasAR } from '~/lib/flujo/calculos.js';
 import { recomendarProductos } from '~/lib/flujo/recomendacion.js';
-import { RACK } from '~/lib/rack3d/parametrosTecnicos.js';
+import { RACK, GRUAS } from '~/lib/rack3d/parametrosTecnicos.js';
 import { ANRA_FRENTES, ANRA_FONDOS } from '~/lib/rack3d/medidas.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
@@ -334,9 +340,17 @@ onMounted(() => {
 const mod = computed(() => p.modeloActual as Modelo | null);
 const catalogo = computed(() => (mod.value?.tipo === 'AR' ? p.cajas : p.pallets) as any[]);
 const tiposModelo = computed(() => p.pallets.filter((t) => (mod.value?.cantidades[t.id] ?? 0) > 0));
-const res = computed(() => (mod.value ? resultadoModelo(mod.value, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua }) as any : null));
-const maxNiveles = computed(() => (mod.value ? nivelesMaximos(mod.value, { pallets: p.pallets, altura: p.bodega.altura, grua: p.bodega.grua }) : 1));
-const limite = computed(() => (mod.value?.tipo === 'AR' ? 'altura de la estantería' : p.bodega.altura ? 'tu techo y tu equipo' : 'tu equipo'));
+const res = computed(() => (mod.value ? resultadoModelo(mod.value, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua, gruaDatos: gruaDatos.value }) as any : null));
+const maxNiveles = computed(() => (mod.value ? nivelesMaximos(mod.value, { pallets: p.pallets, altura: p.bodega.altura, grua: p.bodega.grua, gruaDatos: gruaDatos.value }) : 1));
+const limite = computed(() => (mod.value?.tipo === 'AR' ? 'altura de la estantería' : p.bodega.altura ? 'tu techo y lo que levanta tu grúa (altura y peso)' : 'lo que levanta tu grúa (altura y peso)'));
+// Grua del cliente: lo que dice su placa (si no la sabe, la típica de su tipo de equipo)
+const gruaDatos = computed(() => ({ gruaLevante: (p.bodega as any).gruaLevante ?? null, gruaKg: (p.bodega as any).gruaKg ?? null }));
+const eqTipico = computed(() => (GRUAS as any)[p.bodega.grua] ?? GRUAS.contrapeso);
+const conGruaRack = computed(() => mod.value?.tipo !== 'AR' && !['transpaleta'].includes(p.bodega.grua));
+function placa(campo: 'gruaLevante' | 'gruaKg', e: Event) {
+  const v = Number((e.target as HTMLInputElement).value);
+  (p.bodega as any)[campo] = v > 0 ? v : null;
+}
 // ─── Angulo ranurado: bandeja propuesta (la que ocupa menos piso) y cajas para el dibujo ───
 const mmTxt = (v: number) => Math.round(v * 1000).toLocaleString('es-CL');
 const propuesta = computed(() => (mod.value?.tipo === 'AR' ? mejorBandeja(mod.value, { cajas: p.cajas, altura: p.bodega.altura }) : null));
@@ -375,7 +389,7 @@ function sincronizarCantidades() {
   });
   // Niveles dentro de lo posible desde el inicio
   p.modelos.forEach((m) => {
-    const max = nivelesMaximos(m, { pallets: p.pallets, altura: p.bodega.altura, grua: p.bodega.grua });
+    const max = nivelesMaximos(m, { pallets: p.pallets, altura: p.bodega.altura, grua: p.bodega.grua, gruaDatos: gruaDatos.value });
     if (m.niveles > max) p.cambiarModelo(m.id, { niveles: max, mezcla: [] });
   });
 }

@@ -94,7 +94,9 @@ function inicial() {
       ancho: 20, largo: 30, altura: 8 as number | null, forma: null as { x: number; y: number }[] | null,
       // Plantilla de la forma ('L', 'T' o 'libre'; null = rectángulo)
       tipoForma: null as string | null,
-      elementos: [] as any[], grua: 'contrapeso', pesoPallet: null as number | null, pesoBandeja: null as number | null,
+      elementos: [] as any[], grua: 'contrapeso', pesoPallet: null as number | null,
+      // Placa de su grúa (si la sabe): altura máxima de horquilla (m) y capacidad nominal (kg)
+      gruaLevante: null as number | null, gruaKg: null as number | null, pesoBandeja: null as number | null,
       pallets: [] as any[],
     },
     racks: [] as any[],

@@ -261,3 +261,8 @@ Preguntas abiertas nuevas:
 |---|---|
 | Cuántos módulos necesita para su demanda, siempre a la vista | ✅ barra sobre el plano: "Tu demanda: N pallets → M cuerpos · en el plano: X cuerpos, Y posiciones" (verde si cubre, ámbar con "faltan N") |
 | Mover los racks al layout que quiere el cliente sin perder la demanda | ✅ mover, girar, duplicar, quitar (ya estaban) + largo de la fila (cuerpos), "Partir en dos tramos" y "Ubicar los que faltan" (primero alarga sus filas, después filas nuevas; nada de lo puesto se mueve). `prueba-rearmar.mjs` |
+
+### La grúa limita la altura del rack: altura y peso (22-10-2026)
+| Pedido | Estado |
+|---|---|
+| Capacidad de la grúa en altura y en peso | ✅ curva de capacidad residual por equipo (`GRUAS.*.kg/curva`, `equipoDe`, `capacidadEnAltura` en parametrosTecnicos.js; típicos PROVISORIOS); el cliente puede poner su placa (m y kg) en el paso 3 y la curva se escala. Paso 3 no ofrece niveles que la grúa no levanta por peso; revisión bloquea (`pesoGrua`) con arreglo; auditoría con "Peso que levanta la grúa arriba". `prueba-grua-peso.mjs` |
