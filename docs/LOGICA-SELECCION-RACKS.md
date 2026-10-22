@@ -36,10 +36,14 @@ Sistemas que vende Racklog: **rack selectivo** (simple o doble), **drive-in** y 
 | Pallets por SKU \ Rotación | < 1 vez/semana | 1–5 veces/semana | > 5 veces/semana |
 |---|---|---|---|
 | 1 a 5 | Selectivo | Selectivo | Selectivo |
-| 6 a 20 | **Drive-in** | **Drive-in** | Selectivo ⚠ (mucho movimiento: acceso directo) |
+| 6 a 10 | Doble profundidad / push-back → selectivo + `revisar_asesor` | Doble profundidad / push-back → selectivo + `revisar_asesor` | Selectivo ⚠ (mucho movimiento: acceso directo) |
+| 11 a 20 | **Drive-in** | **Drive-in** | Selectivo ⚠ (mucho movimiento: acceso directo) |
 | Más de 20 | **Drive-in** | **Drive-in** | Drive-in con calles cortas ⚠ |
 
-- Si el espacio "falta", el umbral de drive-in baja de 6 a 4 pallets por SKU. ⚠
+- Ronda 2 (dueño, 21-10-2026): drive-in es para **más de 10 pallets por SKU** con rotación baja o media. De 6 a
+  10 conviene doble profundidad o push-back; el planificador no los dibuja: diseña selectivo y un ingeniero evalúa.
+- Un drive-in lleva **al menos 3 pallets de fondo** por calle (una calle de 2 no es drive-in) y solo se recomienda si guarda más pallets por m² que el selectivo. ⚠
+- Si el espacio "falta", el umbral de doble profundidad / push-back baja de 6 a 4 pallets por SKU. ⚠
 - Si drive-in queda descartado por un filtro duro y el producto cae en zona drive-in del mapa → selectivo
   **y** flag `revisar_asesor` (un ingeniero evalúa otra alta densidad: push-back, doble profundidad). ⚠
 
@@ -65,5 +69,8 @@ Solo se muestran preguntas y avisos que aplican al sistema en evaluación.
 |---|---|---|
 | CASATEC | Bodega 5 × 10 × 5 m, apilador manual, 4 lotes de 29 / 16 / 46 / 18 pallets, cajas que no se apilan | **Selectivo** (filtro: apilador manual); alternativa drive-in calculada; `revisar_asesor` (lotes grandes en zona drive-in) |
 | Logística (retail) | 300 SKU, 1–2 pallets por SKU, rota harto, grúa contrapeso | **Selectivo** |
-| Minería (repuestos pesados) | 40 SKU, 8 pallets por SKU, rota poco, grúa contrapeso, sin vencimiento | **Drive-in**; alternativa selectivo |
+| Minería (repuestos pesados) | 40 SKU, 8 pallets por SKU, rota poco, grúa contrapeso, sin vencimiento | **Selectivo**; alternativa doble profundidad / push-back; `revisar_asesor` (ronda 2) |
+| Juan (alimentos) | 12 SKU, 100 pallets (8,3 por SKU), rota normal | **Selectivo**; alternativa doble profundidad / push-back |
+| Repuestos | 20 SKU, 30 pallets por SKU, rota poco | **Drive-in** con 3 o más de fondo; alternativa selectivo |
+| Repuestos (pocos) | 20 SKU, 16 pallets por SKU, contrapeso | **Selectivo**: calles de 3 con calle de 1,5 m no ganan espacio (`revisar_asesor`) |
 | Alimentos con vencimiento | 10 SKU, 30 pallets por SKU, rota normal, FIFO estricto, grúa | **Selectivo** (filtro FIFO) + `revisar_asesor` |

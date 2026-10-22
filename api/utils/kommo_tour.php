@@ -19,11 +19,24 @@
  *   $KOMMO_RESPONSABLE_TOUR = 987654;  (o KOMMO_RESPONSABLE_TOUR) vendedor fijo para estos leads;
  *     sin el, la tarea va al responsable que Kommo le asigno al lead.
  *   $KOMMO_ADJUNTOS = false;  (o KOMMO_ADJUNTOS=0) no subir los archivos a Kommo (siguen en el correo).
+ *
+ * Modo prueba (racklog.cl/planifica-tu-bodega/disena?prueba=1): el formulario llega completo, pero el lead
+ * lleva la etiqueta PRUEBA, no se le asigna vendedor ni se crea la tarea de 24 h. Solo vale si el correo
+ * es de prueba (algo+prueba@racklog.cl), para que un cliente real nunca quede marcado como prueba.
  */
 
 const TOUR_ETIQUETA = 'tour-logistico';
 const TOUR_TAREA_TEXTO = 'Enviar cotización (promesa máximo 24 horas)';
 const TOUR_TAREA_HORAS = 24;
+const TOUR_ETIQUETA_PRUEBA = 'PRUEBA';
+
+/** Lead de prueba: lo pide el formulario (?prueba=1) y el correo es +prueba@racklog.cl */
+function esPruebaTour(array $data): bool {
+    $config = configTour($data) ?? [];
+    $correo = strtolower(trim((string) ($data['customerEmail'] ?? '')));
+    return in_array(strtolower((string) ($config['Prueba'] ?? '')), ['sí', 'si', '1'], true)
+        && preg_match('/\+prueba@racklog\.cl$/', $correo) === 1;
+}
 
 /** Configuracion: variable global (token.php) o de entorno */
 function kommoConfigTour(string $nombre) {
@@ -138,6 +151,9 @@ function extrasLeadTour(array $data, string $tipo): array {
             $campos[] = ['field_id' => (int) $fieldId, 'values' => [['value' => $valor]]];
         }
     }
+    if (esPruebaTour($data)) {
+        return ['tags' => [['name' => TOUR_ETIQUETA], ['name' => TOUR_ETIQUETA_PRUEBA]], 'campos' => $campos, 'responsable' => null];
+    }
     $responsable = (int) (kommoConfigTour('KOMMO_RESPONSABLE_TOUR') ?? 0);
     return ['tags' => [['name' => TOUR_ETIQUETA]], 'campos' => $campos, 'responsable' => $responsable > 0 ? $responsable : null];
 }
@@ -145,8 +161,8 @@ function extrasLeadTour(array $data, string $tipo): array {
 function textoNotaTour(array $data, string $referencia): string {
     $t = datosTour($data);
     $lineas = [
-        "Lead del tour Planifica tu bodega ({$referencia})",
-        'Etiqueta: ' . TOUR_ETIQUETA,
+        (esPruebaTour($data) ? 'PRUEBA (no cotizar): ' : '') . "Lead del tour Planifica tu bodega ({$referencia})",
+        'Etiqueta: ' . TOUR_ETIQUETA . (esPruebaTour($data) ? ', ' . TOUR_ETIQUETA_PRUEBA : ''),
         'Rol: ' . ($t['rol'] ?: 'sin dato'),
         'Industria: ' . ($t['industria'] ?: 'sin dato'),
         'Puntaje: ' . ($t['puntaje'] !== null ? "{$t['puntaje']}/100" : 'sin dato'),
@@ -269,6 +285,13 @@ function procesarLeadTour(array $data, string $tipo, string $referencia, array $
         }
 
         $ahora = $ahora ?? time();
+        if (esPruebaTour($data)) {
+            // Prueba: sin vendedor ni tarea de 24 h (la nota y el plano si, para revisar que llegan)
+            $resultado['prueba'] = true;
+            $adj = adjuntarArchivosLead($leadId, $archivos);
+            $resultado['archivos'] = $adj['subidos'];
+            return $resultado;
+        }
         $responsable = responsableLead($leadId);
         $tarea = crearTareaTour($leadId, $responsable, $ahora);
         $resultado['responsable'] = $responsable;

@@ -1,6 +1,24 @@
 <template>
   <div>
-    <FlujoRegistro v-if="!p.registrado" @listo="marcar('kpi_view', { rol: p.rol })" />
+    <template v-if="!p.registrado">
+      <!-- Adelanto: lo que gana, antes de pedir sus datos. El plano, la lista y el link se abren al registrarse -->
+      <section class="fl-card mb-6 !p-0 overflow-hidden">
+        <div class="p-5">
+          <p class="text-sm font-semibold uppercase tracking-wider text-brand-700">Adelanto de tu diseño</p>
+          <p class="mt-1 text-[22px] font-bold leading-snug text-neutral-900">Te caben <FlujoContador :valor="conRacklog" /> pallets</p>
+          <p v-if="necesidad" class="text-neutral-600">Necesitas {{ n(necesidad) }}.</p>
+        </div>
+        <div class="relative h-[38vh] min-h-[240px]">
+          <ClientOnly>
+            <Visor3D :bodega="p.bodega" :racks="p.racks" :foco="foco" adelanto etiqueta="Adelanto 3D de tu bodega" />
+          </ClientOnly>
+          <p class="pointer-events-none absolute inset-x-3 bottom-3 rounded-xl bg-white/90 px-3 py-2 text-center text-sm font-medium text-neutral-700 shadow-sm ring-1 ring-black/5">
+            🔒 El plano con medidas, la lista para cotizar y el link a tu diseño se abren al registrarte.
+          </p>
+        </div>
+      </section>
+      <FlujoRegistro @listo="marcar('kpi_view', { rol: p.rol })" />
+    </template>
     <template v-else>
       <h1 class="fl-titulo">Revisa tu diseño</h1>
 
@@ -27,6 +45,31 @@
         </TransitionGroup>
       </section>
 
+      <!-- Auditoría de KPI: el dibujo contra las medidas y cantidades que dio el cliente -->
+      <details class="fl-card fl-auditoria mt-6" :open="auditoria.fallas > 0 || undefined">
+        <summary class="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
+          <span>
+            <span class="fl-leyenda block">¿Tu dibujo cumple con tus pallets?</span>
+            <span :class="['mt-1 block text-lg font-bold', auditoria.fallas ? 'text-red-800' : 'text-green-800']">
+              {{ auditoria.fallas ? `${auditoria.fallas} de ${auditoria.total} puntos no cumplen` : `Cumple ${auditoria.cumple} de ${auditoria.total} puntos ✓` }}
+            </span>
+          </span>
+          <span class="text-sm font-medium text-brand-700 underline underline-offset-2">Ver auditoría</span>
+        </summary>
+        <div v-for="(filas, grupo) in auditoriaPorGrupo" :key="grupo" class="mt-4">
+          <p class="text-sm font-semibold text-neutral-900">{{ grupo }}</p>
+          <ul class="mt-1 divide-y divide-neutral-100">
+            <li v-for="f in filas" :key="f.id" class="grid grid-cols-[1.25rem_1fr] gap-x-2 py-2 text-sm sm:grid-cols-[1.25rem_12rem_1fr_1fr]">
+              <span :class="['font-bold', f.nivel === 'ok' ? 'text-green-600' : f.nivel === 'aviso' ? 'text-amber-500' : 'text-red-600']" :aria-label="f.nivel === 'ok' ? 'Cumple' : 'No cumple'">{{ f.nivel === 'ok' ? '✓' : f.nivel === 'aviso' ? '!' : '✗' }}</span>
+              <span class="font-medium text-neutral-800">{{ f.titulo }}</span>
+              <span class="col-start-2 text-neutral-500 sm:col-start-auto"><span class="sm:hidden">Pide: </span>{{ f.pide }}</span>
+              <span :class="['col-start-2 sm:col-start-auto', f.nivel === 'ok' ? 'text-neutral-700' : 'font-medium text-red-700']"><span class="sm:hidden">Dibujo: </span>{{ f.dibujo }}</span>
+            </li>
+          </ul>
+        </div>
+        <p v-if="auditoria.fallas" class="mt-3 text-sm text-neutral-600">Vuelve a <button type="button" class="font-medium text-brand-700 underline" @click="p.ir('rack')">Arma tu rack</button> o a <button type="button" class="font-medium text-brand-700 underline" @click="p.ir('bodega')">Tu bodega</button> para corregirlo.</p>
+      </details>
+
       <!-- Lo que gana, en palabras simples, y antes / despues -->
       <section class="mt-6 rounded-2xl bg-white p-5 ring-1 ring-neutral-200">
         <p class="text-[22px] font-bold leading-snug text-neutral-900">
@@ -52,7 +95,7 @@
       <div class="fl-card mt-6 !p-0 overflow-hidden">
         <div class="h-[60vh] min-h-[380px]">
           <ClientOnly>
-            <Visor3D :bodega="p.bodega" :racks="p.racks" etiqueta="Vista 3D de tu bodega" />
+            <Visor3D ref="visorRef" :bodega="p.bodega" :racks="p.racks" :foco="foco" etiqueta="Vista 3D de tu bodega" />
           </ClientOnly>
         </div>
       </div>
@@ -64,42 +107,80 @@
 
       <div class="mt-4">
         <div class="fl-card">
+          <!-- Gerencia: hoy vs Racklog, crecimiento y capacidad útil, todo en positivo (sin precios) -->
           <template v-if="rol === 'supply'">
-            <p class="fl-leyenda">Capacidad y crecimiento</p>
-            <dl class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
-              <div class="fl-dato"><dt>Posiciones nuevas</dt><dd><FlujoContador :valor="k.posiciones" /></dd></div>
-              <div class="fl-dato"><dt>Pallets que necesitas hoy</dt><dd><FlujoContador :valor="necesidad" /></dd></div>
-              <div class="fl-dato"><dt>Holgura para crecer</dt><dd>{{ holgura }}</dd></div>
-              <div class="fl-dato"><dt>Bodega</dt><dd>{{ n(m2) }} m²</dd></div>
-              <div class="fl-dato"><dt>Posiciones por m²</dt><dd>{{ d2(m2 ? k.posiciones / m2 : 0) }}</dd></div>
-              <div class="fl-dato"><dt>Piso con racks</dt><dd>{{ m2 ? Math.round((k.piso / m2) * 100) : 0 }} %</dd></div>
+            <p class="fl-leyenda">Hoy vs Racklog</p>
+            <p class="mt-2 text-lg text-neutral-800">
+              <template v-if="g.hoy">De <b>{{ n(g.hoy) }}</b> a <b class="text-brand-800">{{ n(g.conRacklog) }}</b> posiciones: <b class="text-green-700">+{{ n(g.mas) }} (+{{ g.masPct }} %)</b></template>
+              <template v-else><b class="text-brand-800">{{ n(g.conRacklog) }}</b> posiciones con Racklog. Dinos cuántas tienes hoy (arriba) para comparar.</template>
+            </p>
+            <p class="fl-leyenda mt-6">Crecimiento</p>
+            <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-neutral-700">
+              Tu operación crece al año:
+              <button v-for="c in [0, 0.1, 0.2, 0.3]" :key="c" type="button" :class="['fl-chip !min-h-9 !w-auto !px-3 !text-sm', p.crecimiento === c && 'fl-chip--sel']" @click="p.crecimiento = c">{{ Math.round(c * 100) }} %</button>
+            </div>
+            <dl class="mt-3 grid grid-cols-3 gap-3">
+              <div v-for="x in g.anios" :key="x.t" class="fl-dato">
+                <dt>{{ x.t }} necesitas</dt><dd>{{ n(x.necesitas) }}</dd>
+                <p :class="['text-xs font-medium', x.cubre ? 'text-green-700' : 'text-neutral-600']">{{ x.cubre ? 'Cubierto ✓' : 'Para la fase 2' }}</p>
+              </div>
             </dl>
+            <p class="fl-leyenda mt-6">Capacidad útil</p>
+            <dl class="mt-2 grid grid-cols-2 gap-3">
+              <div class="fl-dato"><dt>Bodega usada</dt><dd>{{ g.usadoPct }} %</dd><p class="text-xs text-neutral-500">de {{ n(g.m2) }} m²</p></div>
+              <div class="fl-dato"><dt>Libre para crecer</dt><dd class="!text-green-700">{{ n(g.libre) }} m²</dd><p v-if="g.fase2" class="text-xs text-neutral-500">≈ {{ n(g.fase2) }} posiciones más en una fase 2</p></div>
+            </dl>
+            <p class="mt-4 text-sm text-neutral-600">{{ g.plazo }}.</p>
           </template>
+          <!-- Jefe de bodega: dónde queda cada producto, pasillos y alturas en metros -->
           <template v-else-if="rol === 'bodega'">
-            <p class="fl-leyenda">Operación</p>
-            <dl class="mt-3 grid grid-cols-2 gap-3 md:grid-cols-3">
-              <div class="fl-dato"><dt>Posiciones</dt><dd><FlujoContador :valor="k.posiciones" /></dd></div>
-              <div class="fl-dato"><dt>Cuerpos / calles</dt><dd>{{ k.cuerpos + k.calles }}</dd></div>
-              <div class="fl-dato"><dt>Pasillos</dt><dd>{{ lp.length }} · mín. {{ fm(minPasillo) }} m</dd></div>
-              <div class="fl-dato"><dt>Tu equipo pide</dt><dd>{{ fm(grua.pasillo) }} m</dd></div>
-              <div class="fl-dato"><dt>Nivel más alto</dt><dd>{{ fm(altoMax) }} m</dd></div>
-              <div class="fl-dato"><dt>Tu equipo llega a</dt><dd>{{ fm(grua.levante) }} m</dd></div>
+            <p class="fl-leyenda">Dónde queda cada producto</p>
+            <ul class="mt-2 space-y-1.5">
+              <li v-for="x in bo.productos" :key="x.id" class="flex items-start gap-2 text-neutral-800">
+                <span class="mt-1.5 h-3 w-3 flex-shrink-0 rounded-sm" :style="{ background: x.color }" aria-hidden="true" />
+                <span><b>{{ x.nombre }}</b>: {{ x.donde }}, {{ x.niveles }}</span>
+              </li>
+            </ul>
+            <p class="fl-leyenda mt-6">Alturas</p>
+            <ul class="mt-2 space-y-1 text-neutral-800">
+              <li v-for="a in bo.alturas" :key="a.nombre">{{ a.nombre }}: niveles en {{ a.niveles.join(' · ') }} m (marco de {{ a.marco }} m)</li>
+            </ul>
+            <dl class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
+              <div class="fl-dato"><dt>Pasillos</dt><dd>{{ bo.pasillos.n }}</dd><p class="text-xs text-neutral-500">de {{ bo.pasillos.anchos.join(' / ') || '—' }} m</p></div>
+              <div class="fl-dato"><dt>Tu equipo pide</dt><dd>{{ fm(bo.pasillos.pide) }} m</dd><p :class="['text-xs font-medium', bo.pasillos.angostos ? 'text-red-700' : 'text-green-700']">{{ bo.pasillos.angostos ? `${bo.pasillos.angostos} angosto(s)` : 'Todos los pasillos sirven ✓' }}</p></div>
+              <div class="fl-dato"><dt>Nivel más alto</dt><dd>{{ fm(bo.nivelMax) }} m</dd><p :class="['text-xs font-medium', bo.alcanza ? 'text-green-700' : 'text-red-700']">{{ bo.alcanza ? `Tu ${bo.equipo.toLowerCase()} llega (${fm(bo.levante)} m) ✓` : `Tu equipo llega a ${fm(bo.levante)} m` }}</p></div>
             </dl>
+            <p class="mt-3 text-sm text-neutral-500">En la vista 3D de arriba ves la grúa trabajando en tus pasillos.</p>
           </template>
+          <!-- Compras: especificación para comparar proveedores -->
           <template v-else>
             <p class="fl-leyenda">Qué cotizar</p>
-            <div v-for="q in cotizar" :key="q.modelo" class="mt-3">
+            <div v-for="q in co.cotizar" :key="q.modelo" class="mt-3">
               <p class="font-semibold text-neutral-900">{{ q.nombre }}</p>
-              <ul class="mt-1 list-disc space-y-0.5 pl-5 text-neutral-700"><li v-for="(l, i) in q.lineas" :key="i">{{ l }}</li></ul>
+              <ul class="mt-1 list-disc space-y-0.5 pl-5 text-neutral-700"><li v-for="(l, i) in q.lineas" :key="i">{{ l }}<FlujoInfo v-if="l.includes('pares de vigas')" class="ml-1">Código del perfil de viga de Racklog: el número es la altura del perfil en mm (70, 100, 125 o 150). Lo elige el cálculo según el peso de tus pallets.</FlujoInfo></li></ul>
             </div>
-            <p v-if="textoAcc" class="mt-4 border-t border-neutral-100 pt-3 text-neutral-700"><b>Accesorios:</b> {{ textoAcc }}</p>
+            <template v-if="co.accesorios.length">
+              <p class="fl-leyenda mt-6">Accesorios</p>
+              <table class="mt-2 w-full text-sm">
+                <tbody>
+                  <tr v-for="a in co.accesorios" :key="a.nombre" class="border-b border-neutral-100">
+                    <td class="py-1.5 text-neutral-800">{{ a.nombre }}<span v-if="a.medida" class="text-neutral-500"> · {{ a.medida }}</span></td>
+                    <td class="py-1.5 text-right font-semibold tabular-nums text-neutral-900">{{ a.cantidad }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </template>
+            <dl class="mt-6 space-y-2 text-sm">
+              <div class="flex justify-between gap-3"><dt class="text-neutral-500">Norma</dt><dd class="text-right font-medium text-neutral-900">{{ co.norma }}</dd></div>
+              <div class="flex justify-between gap-3"><dt class="text-neutral-500">Peso de acero</dt><dd class="text-right font-medium text-neutral-900">{{ co.pesoAcero }}</dd></div>
+            </dl>
           </template>
         </div>
       </div>
 
       <FlujoAcciones
         texto="Pedir mi cotización" :deshabilitado="!resumen.viable"
-        motivo="Resuelve los puntos en rojo para cotizar." @atras="emit('atras')" @siguiente="emit('siguiente')"
+        motivo="Resuelve los puntos en rojo para cotizar." @atras="emit('atras')" @siguiente="seguir"
       />
     </template>
   </div>
@@ -108,14 +189,12 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
 import { useProyecto } from '~/stores/proyecto';
-import { area, contorno, normalizar, formatoM } from '~/lib/rack3d/planificador.js';
+import { normalizar, formatoM } from '~/lib/rack3d/planificador.js';
 import { GRUAS } from '~/lib/rack3d/parametrosTecnicos.js';
-import { pasillos } from '~/lib/rack3d/pasillos.js';
-import { kpisPorSistema } from '~/lib/rack3d/kpis.js';
-import { alturaUltimoNivel } from '~/lib/rack3d/operacion.js';
 import { revisarDiseno, resumenViabilidad, aplicarArreglo } from '~/lib/rack3d/viabilidad.js';
-import { proponerAccesorios, aplicarAjustes, textoAccesorios } from '~/lib/rack3d/accesorios.js';
-import { queCotizar, conteoTotal } from '~/lib/flujo/calculos.js';
+import { vistasPorRol, focoDiseño } from '~/lib/flujo/perfiles.js';
+import { guardarCaptura } from '~/lib/flujo/captura.js';
+import { auditarDiseno } from '~/lib/flujo/auditoria.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();
@@ -123,31 +202,33 @@ const ROLES = [{ v: 'supply', t: 'Gerencia' }, { v: 'bodega', t: 'Bodega' }, { v
 const rol = ref(['supply', 'bodega', 'compras'].includes(p.rol || p.lead.perfil) ? (p.rol || p.lead.perfil) : 'bodega');
 const fm = (v: number) => formatoM(v || 0);
 const n = (v: number) => Math.round(v).toLocaleString('es-CL');
-const d2 = (v: number) => v.toLocaleString('es-CL', { maximumFractionDigits: 2 });
 
-const accesorios = computed(() => aplicarAjustes(proponerAccesorios({ bodega: p.bodega, racks: p.racks, pallets: p.pallets }), p.accesorios) as any[]);
-const textoAcc = computed(() => textoAccesorios(accesorios.value) as string);
 const avisos = computed(() => (revisarDiseno({ bodega: p.bodega, racks: p.racks, pallets: p.pallets, accesorios: p.accesorios }) as any[])
   .sort((a, b) => (a.nivel === b.nivel ? 0 : a.nivel === 'bloquea' ? -1 : 1)));
 const resumen = computed(() => resumenViabilidad(avisos.value) as { viable: boolean; bloquea: number; advierte: number });
-
-// Misma cuenta que los pasos 3 y 5 y la cotizacion; piso ocupado desde los KPI
-const k = computed(() => ({ ...conteoTotal(p.racks.filter((r) => !r.existente)), piso: (kpisPorSistema(p.racks).global.nuevo as any).piso, calles: 0 }));
-const m2 = computed(() => area(contorno(p.bodega)));
-const necesidad = computed(() => p.pallets.reduce((t, x) => t + (x.cantidad || 0), 0));
-const holgura = computed(() => (necesidad.value ? `${Math.round(((k.value.posiciones - necesidad.value) / necesidad.value) * 100)} %` : '—'));
-const lp = computed(() => pasillos(p.racks, p.bodega) as any[]);
-const minPasillo = computed(() => (lp.value.length ? Math.min(...lp.value.map((x) => x.libre)) : 0));
 const grua = computed(() => (GRUAS as any)[p.bodega.grua] ?? GRUAS.contrapeso);
-// Posiciones que ya tiene hoy (lo que dijo, sus importaciones o sus racks existentes) y con Racklog
-// (las nuevas mas las de los racks que conserva)
-const existentes = computed(() => conteoTotal(p.racks.filter((r) => r.existente)).posiciones);
-const hoy = computed(() => p.posicionesHoy || p.pallets.reduce((t, x: any) => t + (x.importacion?.actuales || 0), 0) || existentes.value);
-const conRacklog = computed(() => k.value.posiciones + existentes.value);
-const mas = computed(() => Math.round(((conRacklog.value - hoy.value) / Math.max(1, hoy.value)) * 100));
-const altoMax = computed(() => Math.max(0, ...p.racks.filter((r) => r.tipo !== 'AR').map((r) => alturaUltimoNivel(r))));
-const cotizar = computed(() => queCotizar(p.modelos, p.racks) as any[]);
+// Auditoría de KPI (lib/flujo/auditoria.js): medidas de pallet, cantidades y una sola cuenta
+const auditoria = computed(() => auditarDiseno(p) as { filas: any[]; total: number; cumple: number; fallas: number; avisos: number });
+const auditoriaPorGrupo = computed(() => auditoria.value.filas.reduce((g: Record<string, any[]>, f) => { (g[f.grupo] ||= []).push(f); return g; }, {}));
+const necesidad = computed(() => p.pallets.reduce((t, x) => t + (x.cantidad || 0), 0));
+// Lo que ve cada perfil: una sola cuenta (lib/flujo/perfiles.js)
+const vistas = computed(() => vistasPorRol(p) as any);
+// La vista 3D encuadra lo diseñado (no la bodega vacía)
+const foco = computed(() => focoDiseño(p.racks, p.bodega) as any);
+const g = computed(() => vistas.value.gerencia);
+const bo = computed(() => vistas.value.bodega);
+const co = computed(() => vistas.value.compras);
+// Hoy y con Racklog (lo que dijo, sus importaciones o sus racks existentes; las nuevas más las que conserva)
+const hoy = computed(() => g.value.hoy as number);
+const conRacklog = computed(() => g.value.conRacklog as number);
+const mas = computed(() => g.value.masPct as number);
 
+// La foto del 3D que ya está armado queda guardada para el link compartido
+const visorRef = ref<{ captura: () => string | null } | null>(null);
+function seguir() {
+  try { guardarCaptura(p, visorRef.value?.captura() ?? null); } catch { /* sin foto: el paso 7 la arma */ }
+  emit('siguiente');
+}
 function arreglar(a: any) {
   const r = aplicarArreglo({ bodega: p.bodega, racks: p.racks, quitados: p.accesorios.quitados }, a.arreglo) as any;
   p.racks = r.racks.map((x: any) => normalizar(x));

@@ -11,7 +11,7 @@
           <NuxtLink to="/productos" class="inline-flex min-h-11 items-center rounded-lg px-2.5 text-[15px] font-medium text-neutral-700 transition-colors hover:text-neutral-950 sm:px-3">
             Ver productos
           </NuxtLink>
-          <NuxtLink to="/planifica-tu-bodega/disena" class="btn btn-primary h-11 px-4 text-[15px] sm:px-5" @click="marcarCotizar">
+          <NuxtLink to="/planifica-tu-bodega/disena" class="btn btn-primary h-11 px-4 text-[15px] sm:px-5" @click="marcarCotizar($event)">
             Cotizar
           </NuxtLink>
         </nav>
@@ -43,10 +43,16 @@
 const anio = new Date().getFullYear();
 const { openSettings } = useConsent();
 
-function marcarCotizar() {
+const route = useRoute();
+function marcarCotizar(ev: MouseEvent) {
   if (typeof window === 'undefined') return;
   const w = window as unknown as { dataLayer?: unknown[] };
   w.dataLayer = w.dataLayer || [];
   w.dataLayer.push({ event: 'cta_click', event_category: 'Landing', ubicacion: 'header' });
+  // Dentro del flujo, "Cotizar" lleva al último paso (el flujo decide si falta algo antes)
+  if (route.path.startsWith('/planifica-tu-bodega/disena')) {
+    ev.preventDefault();
+    window.dispatchEvent(new CustomEvent('racklog:cotizar'));
+  }
 }
 </script>

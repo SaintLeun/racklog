@@ -2,7 +2,7 @@
   <nav aria-label="Pasos" class="fl-stepper">
     <div class="flex items-baseline justify-between gap-3">
       <p class="text-sm font-semibold text-neutral-900">
-        Paso {{ indice + 1 }} de {{ PASOS.length }} · <span class="text-brand-700">{{ PASOS[indice].t }}</span>
+        Paso {{ indice + 1 }} de {{ PASOS.length }} · <span class="text-brand-700">{{ nombre(indice) }}</span>
       </p>
       <p class="text-xs text-neutral-500">{{ falta }}</p>
     </div>
@@ -19,7 +19,7 @@
           :class="['w-full truncate rounded-md px-1 py-1 text-center text-xs transition',
                    i === indice ? 'font-semibold text-brand-800' : i <= alcanzado ? 'text-neutral-600 hover:bg-neutral-100' : 'text-neutral-400']"
           @click="emit('ir', p.k)"
-        >{{ i + 1 }}. {{ p.t }}</button>
+        >{{ i + 1 }}. {{ nombre(i) }}</button>
       </li>
     </ol>
   </nav>
@@ -27,10 +27,13 @@
 
 <script lang="ts" setup>
 import { computed } from 'vue';
-import { PASOS, type Paso } from '~/stores/proyecto';
+import { PASOS, useProyecto, type Paso } from '~/stores/proyecto';
 
 const props = defineProps<{ indice: number; alcanzado: number }>();
 const emit = defineEmits<{ ir: [paso: Paso] }>();
+// Con ángulo ranurado (solo cajas) el paso 2 es "Tus cajas"
+const proyecto = useProyecto();
+const nombre = (i: number) => (PASOS[i].k === 'pallets' && proyecto.sistema === 'AR' && !proyecto.pallets.length ? 'Tus cajas' : PASOS[i].t);
 // Minutos que quedan desde este paso (redondeado hacia arriba)
 const falta = computed(() => {
   const m = PASOS.slice(props.indice).reduce((t, p) => t + p.min, 0);

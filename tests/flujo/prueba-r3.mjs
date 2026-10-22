@@ -17,10 +17,27 @@ prueba('Logística: 300 SKU, 1–2 pallets por SKU, rota harto → selectivo', (
   const r = R.recomendarProductos({ pallets: [pal('a', 'Retail', 450, { skus: 300, rotacion: 'alta' })], respuestas: { equipo: 'grua', fifo: 'no' }, bodega: { altura: 9, grua: 'contrapeso' } });
   assert.equal(r.productos[0].sistema, 'RS'); assert.ok(!r.flags.includes('revisar_asesor'));
 });
-prueba('Minería: 8 pallets por SKU, rota poco, sin vencimiento → drive-in', () => {
+prueba('Minería: 8 pallets por SKU, rota poco → selectivo + doble profundidad/push-back (dueño 21-10-2026)', () => {
   const r = R.recomendarProductos({ pallets: [pal('a', 'Repuestos', 320, { skus: 40, rotacion: 'baja', peso: 900 })], respuestas: { equipo: 'grua', fifo: 'no' }, bodega: { altura: 8, grua: 'contrapeso' } });
   const x = r.productos[0];
+  assert.equal(x.sistema, 'RS'); assert.equal(x.alternativa, 'DP'); assert.equal(x.otra, null);
+  assert.ok(r.flags.includes('revisar_asesor'));
+});
+prueba('Juan: 100 pallets de 12 productos (8,3 por producto), rota normal → no drive-in', () => {
+  const r = R.recomendarProductos({ pallets: [pal('a', 'Pallet 1', 100, { skus: 12, alto: 1.35 })], respuestas: { equipo: 'grua', fifo: 'no' }, bodega: { altura: 8, grua: 'contrapeso' } });
+  const x = r.productos[0];
+  assert.equal(x.sistema, 'RS'); assert.equal(x.alternativa, 'DP');
+  assert.ok(!r.modelos.some((m) => m.tipo === 'DI'));
+});
+prueba('16 pallets por SKU: calles de 3 no ganan espacio con calle para contrapeso → selectivo', () => {
+  const r = R.recomendarProductos({ pallets: [pal('a', 'Repuestos', 320, { skus: 20, rotacion: 'baja', peso: 900 })], respuestas: { equipo: 'grua', fifo: 'no' }, bodega: { altura: 8, grua: 'contrapeso' } });
+  assert.equal(r.productos[0].sistema, 'RS'); assert.ok(r.flags.includes('revisar_asesor'));
+});
+prueba('30 pallets por SKU, rota poco → drive-in con 3 o más de fondo', () => {
+  const r = R.recomendarProductos({ pallets: [pal('a', 'Repuestos', 600, { skus: 20, rotacion: 'baja', peso: 900 })], respuestas: { equipo: 'grua', fifo: 'no' }, bodega: { altura: 8, grua: 'contrapeso' } });
+  const x = r.productos[0];
   assert.equal(x.sistema, 'DI', x.descartes.join(';')); assert.equal(x.alternativa, 'RS');
+  assert.ok(x.elegido.m.fondos >= 3, `fondos ${x.elegido.m.fondos}`);
   assert.ok(x.elegido.m2 < x.otra.m2, 'drive-in usa menos piso');
   console.log('   ', x.config, '|', x.gano);
 });
@@ -28,6 +45,15 @@ prueba('Alimentos con vencimiento (FIFO estricto) → selectivo + revisar_asesor
   const r = R.recomendarProductos({ pallets: [pal('a', 'Lácteos', 300, { skus: 10 })], respuestas: { equipo: 'grua', fifo: 'estricto' }, bodega: { altura: 8, grua: 'contrapeso' } });
   assert.equal(r.productos[0].sistema, 'RS'); assert.ok(r.flags.includes('revisar_asesor'));
   assert.ok(r.productos[0].porque[0].includes('FIFO'));
+  // Ronda 3: el drive-in no se ofrece como alternativa válida si rompe el FIFO
+  assert.equal(r.productos[0].alternativaValida, false);
+  assert.equal(r.productos[0].noCumple, 'No cumple tu FIFO');
+});
+prueba('Ronda 3: alternativa que rompe un filtro duro (equipo) no se ofrece; sin filtro duro sí', () => {
+  const manual = R.recomendarProductos({ pallets: [pal('a', 'A', 300, { skus: 10 })], respuestas: { equipo: 'manual', fifo: 'no' }, bodega: { altura: 8, grua: 'manual' } });
+  assert.equal(manual.productos[0].alternativaValida, false);
+  const libre = R.recomendarProductos({ pallets: [pal('a', 'A', 60, { skus: 40, rotacion: 'alta' })], respuestas: { equipo: 'grua', fifo: 'no' }, bodega: { altura: 8, grua: 'contrapeso' } });
+  assert.equal(libre.productos[0].alternativaValida, true);
 });
 prueba('Mezcla: selectivo y drive-in en modelos separados, drive-in por alto', () => {
   const pallets = [pal('a', 'Bebidas', 400, { skus: 10, rotacion: 'baja', alto: 1.4 }), pal('b', 'Snacks', 60, { skus: 40, rotacion: 'alta' })];

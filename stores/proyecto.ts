@@ -34,6 +34,8 @@ export interface TipoPallet {
   importacion?: { contenedor: string; n: number; entre: number; bodega: number; actuales: number; margen: number; crecimiento: number };
   // Campos que el cliente dejo en "No sé": se usa el valor tipico y el ejecutivo lo confirma
   noSe?: string[];
+  // Recien creado con datos de ejemplo: se avisa hasta que el cliente cambie algo
+  ejemplo?: boolean;
 }
 // Caja del cliente (angulo ranurado)
 export interface TipoCaja {
@@ -85,20 +87,29 @@ function inicial() {
     modelos: [] as Modelo[],
     modeloSel: null as string | null,
     // Paso 4: los propuestos que el cliente quito y las cantidades que cambio a mano
-    accesorios: { quitados: [] as string[], cantidades: {} as Record<string, number> },
+    // manuales: los que el cliente arrastro al 3D (lib/rack3d/accesorios.js, encajarAccesorio)
+    accesorios: { quitados: [] as string[], cantidades: {} as Record<string, number>, medidas: {} as Record<string, number>, manuales: [] as any[] },
     // Paso 5: misma forma que el planificador (lib/rack3d/planificador.js)
     bodega: {
       ancho: 20, largo: 30, altura: 8 as number | null, forma: null as { x: number; y: number }[] | null,
+      // Plantilla de la forma ('L', 'T' o 'libre'; null = rectángulo)
+      tipoForma: null as string | null,
       elementos: [] as any[], grua: 'contrapeso', pesoPallet: null as number | null, pesoBandeja: null as number | null,
       pallets: [] as any[],
     },
     racks: [] as any[],
+    // Layout de hoy (antes/después): se dibuja aparte, no se cotiza
+    racksHoy: [] as any[],
     // Posiciones que el cliente ya tiene hoy (para el antes / despues)
     posicionesHoy: 0,
+    // Crecimiento anual de su operación (gerencia: posiciones en 1 y 2 años)
+    crecimiento: 0.1,
     // Medicion
     inicio: Date.now(),
     tiempos: {} as Record<string, number>,
     utm: {} as Record<string, string>,
+    // Modo prueba (?prueba=1): el lead llega a Kommo con la etiqueta PRUEBA, sin vendedor ni tarea
+    prueba: false,
     enviado: false,
   };
 }
@@ -116,7 +127,7 @@ export const useProyecto = defineStore('proyecto', {
     cargar() {
       try {
         const g = JSON.parse(localStorage.getItem(CLAVE) || 'null');
-        if (g && g.version === 1) this.$patch({ ...inicial(), ...g, bodega: { ...inicial().bodega, ...g.bodega } });
+        if (g && g.version === 1) this.$patch({ ...inicial(), ...g, bodega: { ...inicial().bodega, ...g.bodega }, accesorios: { ...inicial().accesorios, ...g.accesorios } });
       } catch { /* sin almacenamiento */ }
       // Atribucion: se guarda la primera vez que llega con parametros
       try {
@@ -148,7 +159,7 @@ export const useProyecto = defineStore('proyecto', {
       // Por defecto se arma desde una caja tipica (60 × 40 × 30 cm, 15 kg, aguanta 5 apiladas)
       const t = {
         ...nuevoTipo(this.pallets.length), frente: 1.0, fondo: 1.2, alto: 1.2, peso: 800, cantidad: 100,
-        desdeCaja: true, caja: { largo: 0.6, ancho: 0.4, alto: 0.3, peso: 15, apilable: 5, orientacion: 'auto' }, ...base,
+        desdeCaja: true, caja: { largo: 0.6, ancho: 0.4, alto: 0.3, peso: 15, apilable: 5, orientacion: 'auto' }, ejemplo: true, ...base,
       } as TipoPallet;
       this.pallets.push(t);
       return t;
@@ -161,7 +172,8 @@ export const useProyecto = defineStore('proyecto', {
     // ─── Paso 3 ───
     agregarModelo(tipo: Sistema) {
       const n = this.modelos.filter((m) => m.tipo === tipo).length + 1;
-      const nombre = { RS: 'Selectivo', DI: 'Drive-in', AR: 'Ángulo ranurado' }[tipo] + (n > 1 ? ` ${n}` : '');
+      // Configuraciones del mismo sistema con letra: "Selectivo B", "Selectivo C"…
+      const nombre = { RS: 'Selectivo', DI: 'Drive-in', AR: 'Ángulo ranurado' }[tipo] + (n > 1 ? ` ${String.fromCharCode(64 + n)}` : '');
       const base: Modelo = tipo === 'RS'
         ? { id: 'm' + id(), nombre, tipo, doble: true, niveles: 3, porViga: 2, sobrante: 0.3, mezcla: [], planos: [], tunel: null, cantidades: {} }
         : tipo === 'DI'

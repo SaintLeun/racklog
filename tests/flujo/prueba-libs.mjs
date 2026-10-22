@@ -24,14 +24,19 @@ function filasRack(doble) {
   return [0, 1, 2].map((k) => ({ ...base, id: `R${k + 1}`, x: 20, y: +(4 + alto / 2 + k * (alto + 3.6)).toFixed(2) }));
 }
 
-prueba('doble 3 filas: 12 protecciones de 1.000 mm (2 por cabecera, como el bastidor)', () => {
+prueba('doble 3 filas: 6 protecciones de 2.300 mm (una por cabecera: 2 × 1.000 + separador 300)', () => {
   const lista = A.proponerAccesorios({ bodega, racks: filasRack(true), pallets: [] });
   const p = lista.find((a) => a.id === 'proteccionBastidor');
-  assert.equal(p.cantidad, 12);
-  assert.equal(p.medida, '1.000 mm');
-  assert.equal(p.marcas.filter((x) => x.tipo === 'barra').length, 12);
+  assert.equal(p.cantidad, 6);
+  assert.equal(p.medida, '2.300 mm');
+  assert.equal(p.marcas.filter((x) => x.tipo === 'barra').length, 6);
   const c = lista.find((a) => a.id === 'canilleras');
   assert.ok(c.cantidad > 0 && c.marcas.every((x) => x.tipo === 'punto'));
+  // Canillera: 500 mm por defecto, 1.000 mm si el cliente la elige; lo recomendado parte incluido
+  assert.equal(c.medida, '500 mm');
+  const ajustada = A.aplicarAjustes(lista, { medidas: { canilleras: 1 } });
+  assert.equal(ajustada.find((a) => a.id === 'canilleras').medida, '1.000 mm');
+  assert.ok(A.aplicarAjustes(lista).filter((a) => a.obligatorio).every((a) => a.incluido));
   mensajes.push(`\n# Accesorios doble 3 filas\n  ${A.textoAccesorios(A.aplicarAjustes(lista))}`);
   lista.forEach((a) => mensajes.push(`  - ${a.nombre}: ${a.cantidad} ${a.unidad} · ${a.medida} · ${a.motivo}`));
 });
@@ -56,7 +61,8 @@ prueba('pasillo peatonal de 20 m: 40 m de baranda', () => {
   const b = { ...bodega, elementos: [{ id: 'p1', clase: 'pasilloPeatonal', x: 5, y: 15, ancho: 1.2, alto: 20 }] };
   const lista = A.proponerAccesorios({ bodega: b, racks: [] });
   const br = lista.find((a) => a.id === 'barandas');
-  assert.equal(br.cantidad, 40); assert.equal(br.medida, "6 módulos de 6 m + 2 ajustes de 2 m");
+  assert.equal(br.cantidad, 40); assert.equal(br.detallePiezas, "6 módulos de 6 m + 2 ajustes de 2 m");
+  assert.equal(br.alto, 1); assert.match(br.resumen, /^40 m — módulos y ajustes los confirma Técnica Racklog/);
   assert.equal(br.modulos, 6);
   assert.equal(br.marcas.filter((x) => x.tipo === 'linea').length, 8);
   // Quitada no sale en el texto; con cantidad cambiada se respeta
@@ -70,14 +76,16 @@ prueba('pasillo peatonal de 20 m: 40 m de baranda', () => {
   assert.ok(br2.cantidad <= 40 && br2.marcas.length >= 4);
 });
 
-prueba('planos, separadores, topes y placa', () => {
+prueba('planos y separadores fijos, sin placa de capacidad', () => {
   const pallets = [{ id: 'a', nombre: 'Cajas', frente: 1, fondo: 0.8, alto: 1.2, peso: 500, cantidad: 10, rotacion: 'media', sinPallet: true }];
   const racks = [{ id: 'R1', tipo: 'RS', rot: 0, x: 20, y: 10, cuerpos: 4, niveles: 3, doble: true, mezcla: [null, 'a', null, null] }];
   const lista = A.proponerAccesorios({ bodega, racks, pallets });
   const pl = lista.find((a) => a.id === 'planosCarga');
   assert.equal(pl.cantidad, 8);       // 4 cuerpos × 2 filas en el nivel 1
   assert.equal(lista.find((a) => a.id === 'separadores').cantidad, 10);   // 5 marcos × 2
-  assert.equal(lista.find((a) => a.id === 'placaCapacidad').cantidad, 1);
+  assert.ok(!lista.find((a) => a.id === 'placaCapacidad'));   // Racklog no la vende
+  // El separador no se puede quitar: va siempre en racks dobles
+  assert.ok(A.aplicarAjustes(lista, { quitados: ['separadores'] }).find((a) => a.id === 'separadores').incluido);
   assert.ok(!lista.find((a) => a.id === 'topes'));   // sin pallet: no lleva topes
   const v = V.revisarDiseno({ bodega, racks, pallets });
   const bl = v.find((a) => a.regla === 'planos');

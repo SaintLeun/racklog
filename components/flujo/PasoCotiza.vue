@@ -27,7 +27,7 @@
       />
       <p v-if="cifra.n && resumen.viable && p.registrado" class="mt-2 text-right text-sm text-neutral-500">Te respondemos en máximo 24 horas.</p>
 
-      <FlujoEntregables ref="entregables" @registrarse="emit('atras')" />
+      <FlujoEntregables ref="entregables" />
     </template>
 
     <!-- Enviado -->
@@ -40,7 +40,7 @@
         <button type="button" class="fl-btn-sec" @click="p.enviado = false">Ver mi diseño</button>
       </div>
     </section>
-    <FlujoEntregables v-if="p.enviado" @registrarse="emit('atras')" />
+    <FlujoEntregables v-if="p.enviado" />
 
     <ContactModal
       :is-visible="abierto"
@@ -85,6 +85,8 @@ const noSe = computed(() => porConfirmar(p) as string[]);
 
 const item = computed<QuoteItem>(() => {
   const config: Record<string, string | number> = {
+    // Primero, para que nunca quede fuera del límite de pares del servidor
+    ...(p.prueba ? { 'Prueba': 'sí' } : {}),
     'Origen': 'Planifica tu bodega (landing)',
     'Rol': PERFILES.find((x) => x.v === p.lead.perfil)?.t ?? p.lead.perfil,
     'Industria': p.lead.industria,
@@ -120,7 +122,7 @@ function extra({ plazo, telefono }: { plazo: string; telefono: string }) {
   const pesoPallet = Math.max(0, ...p.pallets.map((t) => t.peso || 0));
   return { 'Puntaje del lead': `${puntajeLead({ racks: p.racks, bodega: { ...p.bodega, pesoPallet }, perfil: p.lead.perfil, plazo, telefono })}/100` };
 }
-// El plano (PNG) y el PDF del diseño van adjuntos a la cotizacion; si tardan o fallan, el formulario
+// El plano (PNG) va adjunto a la cotizacion para el ejecutivo; si tarda o falla, el formulario
 // se abre igual (maximo ~9 s esperando)
 const entregables = ref<{ archivos: () => Promise<File[]> } | null>(null);
 const adjuntos = ref<File[]>([]);

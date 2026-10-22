@@ -15,8 +15,8 @@
         <g v-for="f in filas" :key="`f${f}`" :transform="`translate(0 ${(f - 1) * (m.fondo + sep) * k})`">
           <!-- Vigas delantera y trasera de cada cuerpo -->
           <template v-for="c in n" :key="`c${c}`">
-            <rect :x="xc(c) * k" :y="0" :width="m.viga * k" :height="3" fill="#f97316" />
-            <rect :x="xc(c) * k" :y="m.fondo * k - 3" :width="m.viga * k" :height="3" fill="#f97316" />
+            <rect :x="xc(c) * k" :y="0" :width="(m.viga - 0.1) * k" :height="3" fill="#f97316" />
+            <rect :x="xc(c) * k" :y="m.fondo * k - 3" :width="(m.viga - 0.1) * k" :height="3" fill="#f97316" />
             <rect
               v-for="q in m.palletsPorViga" :key="q"
               :x="(xc(c) + hueco * q + palF * (q - 1)) * k" :y="((m.fondo - palD) / 2) * k"
@@ -38,15 +38,15 @@
         <rect v-for="i in n + 1" :key="`p${i}`" :x="(i - 1) * m.anchoCalle * k" :y="0" :width="Math.max(3, 0.1 * k)" :height="m.fondos * m.moduloFondo * k" fill="#94a3b8" />
       </template>
       <template v-else>
-        <g v-for="f in filas" :key="`f${f}`" :transform="`translate(0 ${(f - 1) * m.fondo * k})`">
-          <rect v-for="c in n" :key="c" :x="(c - 1) * m.frente * k" :y="0" :width="m.frente * k" :height="m.fondo * k" fill="#e2e8f0" stroke="#64748b" stroke-width="1" />
+        <g v-for="f in filas" :key="`f${f}`" :transform="`translate(0 ${(f - 1) * m.fondoExt * k})`">
+          <rect v-for="c in n" :key="c" :x="(c - 1) * m.frenteExt * k" :y="0" :width="m.frenteExt * k" :height="m.fondoExt * k" fill="#e2e8f0" stroke="#64748b" stroke-width="1" />
         </g>
       </template>
     </g>
 
     <!-- Cotas: largo (de un cuerpo) y fondo total -->
     <g class="pl-txt" fill="#334155">
-      <text :x="x0 + (tipo === 'selectivo' ? (0.1 + m.viga / 2) : tipo === 'drivein' ? m.anchoCalle / 2 : m.frente / 2) * k" :y="y0 + fondoTotal * k + 14" text-anchor="middle">
+      <text :x="x0 + (tipo === 'selectivo' ? (0.05 + m.viga / 2) : tipo === 'drivein' ? m.anchoCalle / 2 : m.frente / 2) * k" :y="y0 + fondoTotal * k + 14" text-anchor="middle">
         {{ tipo === 'selectivo' ? `viga ${fm(m.viga)} m` : tipo === 'drivein' ? `calle ${fm(m.anchoCalle)} m` : `bandeja ${fm(m.frente)} m` }}
       </text>
       <text :x="x0 + largoDibujo * k + 10" :y="y0 + (fondoTotal * k) / 2" :transform="`rotate(90 ${x0 + largoDibujo * k + 10} ${y0 + (fondoTotal * k) / 2})`" text-anchor="middle">
@@ -68,15 +68,15 @@ const tipo = computed(() => props.m.tipo as 'selectivo' | 'drivein' | 'anra');
 // Se dibujan hasta 3 cuerpos (o calles): con eso se entiende el modulo
 const n = computed(() => Math.min(3, tipo.value === 'drivein' ? props.m.calles : props.m.cuerpos));
 const filas = computed(() => (props.m.doble ? 2 : 1));
-const paso = computed(() => props.m.viga + 0.1);
-const palF = computed(() => (tipo.value === 'anra' ? 0 : Math.min(props.m.pallet.frente, tipo.value === 'drivein' ? props.m.anchoCalle - 0.15 : props.m.viga / props.m.palletsPorViga - 0.05)));
+const paso = computed(() => props.m.viga);   // de eje a eje de pilar
+const palF = computed(() => (tipo.value === 'anra' ? 0 : Math.min(props.m.pallet.frente, tipo.value === 'drivein' ? props.m.anchoCalle - 0.15 : (props.m.viga - 0.1) / props.m.palletsPorViga - 0.05)));
 const palD = computed(() => (tipo.value === 'selectivo' ? Math.min(props.m.pallet.fondo, props.m.fondo + 0.2) : 0));
-const hueco = computed(() => (tipo.value === 'selectivo' ? (props.m.viga - props.m.palletsPorViga * palF.value) / (props.m.palletsPorViga + 1) : 0));
+const hueco = computed(() => (tipo.value === 'selectivo' ? (props.m.viga - 0.1 - props.m.palletsPorViga * palF.value) / (props.m.palletsPorViga + 1) : 0));
 const xc = (c: number) => (c - 1) * paso.value + 0.1;
-const largoDibujo = computed(() => (tipo.value === 'selectivo' ? n.value * paso.value + 0.1 : tipo.value === 'drivein' ? n.value * props.m.anchoCalle + 0.1 : n.value * props.m.frente));
+const largoDibujo = computed(() => (tipo.value === 'selectivo' ? n.value * paso.value + 0.1 : tipo.value === 'drivein' ? n.value * props.m.anchoCalle + 0.1 : n.value * props.m.frenteExt));
 const fondoTotal = computed(() => (tipo.value === 'selectivo'
   ? props.m.fondo * filas.value + (filas.value === 2 ? sep : 0)
-  : tipo.value === 'drivein' ? props.m.fondos * props.m.moduloFondo : props.m.fondo * filas.value));
+  : tipo.value === 'drivein' ? props.m.fondos * props.m.moduloFondo : props.m.fondoExt * filas.value));
 // Escala: que quepa entre los pasillos y con espacio para las cotas
 const k = computed(() => Math.min((W - 50) / largoDibujo.value, (H - 26 - (props.m.doble ? 26 : 0) - 36) / fondoTotal.value));
 const x0 = computed(() => (W - 30 - largoDibujo.value * k.value) / 2);

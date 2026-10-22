@@ -4,23 +4,28 @@
   <svg :viewBox="`0 0 ${W} ${H}`" class="h-auto w-full" role="img" :aria-label="descripcion">
     <title>{{ descripcion }}</title>
     <line x1="0" :x2="W" :y1="y(0)" :y2="y(0)" stroke="#a3a3a3" />
-    <g v-for="(f, k) in filas" :key="k">
+    <!-- Pallets primero (sobresalen del bastidor); el bastidor de la punta de la fila queda delante -->
+    <g v-for="(f, k) in filas" :key="`p${k}`">
+      <rect v-for="(n, i) in niveles" :key="i" :x="x(f.z0 - vol)" :y="y(n.base + n.alto)" :width="x(f.z0 + m.fondo + vol) - x(f.z0 - vol)" :height="y(n.base) - y(n.base + n.alto)" fill="#e2c08c" fill-opacity="0.85" stroke="#8a6a3b" stroke-width="0.6" rx="1.5" />
+    </g>
+    <g v-for="(f, k) in filas" :key="`b${k}`">
       <!-- Pilares delantero y trasero del bastidor -->
       <rect :x="x(f.z0) - 2" :y="y(m.alto)" width="4" :height="y(0) - y(m.alto)" fill="#9ca3af" />
       <rect :x="x(f.z0 + m.fondo) - 2" :y="y(m.alto)" width="4" :height="y(0) - y(m.alto)" fill="#9ca3af" />
-      <!-- Diagonales en zigzag -->
-      <polyline :points="zigzag(f.z0)" fill="none" stroke="#b6bcc3" stroke-width="1.2" />
-      <!-- Vigas en corte y pallets (sobresalen del bastidor) -->
-      <g v-for="(n, i) in niveles" :key="i">
+      <!-- Diagonales en zigzag (en doble, el segundo bastidor en espejo: juntos forman rombos) -->
+      <polyline :points="zigzag(f.z0, k === 1)" fill="none" stroke="#6b7280" stroke-width="1.4" stroke-linejoin="round" />
+      <!-- Vigas en corte -->
+      <template v-for="(n, i) in niveles" :key="i">
         <template v-if="!n.piso">
           <rect :x="x(f.z0) - 3" :y="y(n.y) - 3" width="6" height="6" fill="#f97316" />
           <rect :x="x(f.z0 + m.fondo) - 3" :y="y(n.y) - 3" width="6" height="6" fill="#f97316" />
         </template>
-        <rect :x="x(f.z0 - vol)" :y="y(n.base + n.alto)" :width="x(f.z0 + m.fondo + vol) - x(f.z0 - vol)" :height="y(n.base) - y(n.base + n.alto)" fill="#e2c08c" stroke="#8a6a3b" stroke-width="0.6" rx="1.5" />
-      </g>
+      </template>
     </g>
-    <!-- Separador entre bastidores (doble) -->
-    <rect v-if="m.doble" :x="x(m.fondo)" :y="y(m.alto * 0.55)" :width="x(m.fondo + sep) - x(m.fondo)" height="4" fill="#64748b" />
+    <!-- Separadores entre bastidores (doble): en los nudos donde se juntan las diagonales -->
+    <template v-if="m.doble">
+      <rect v-for="ys in separadores" :key="ys" :x="x(m.fondo) + 2" :y="y(ys) - 2" :width="x(m.fondo + sep) - x(m.fondo) - 4" height="4" fill="#475569" />
+    </template>
 
     <g font-size="10" fill="#334155" font-family="Inter, system-ui, sans-serif" font-weight="600">
       <!-- Fondo de cada bastidor -->
@@ -40,6 +45,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import { SEPARACION_DOBLE, voladizoDe } from '~/lib/rack3d/medidas.js';
+import { zigzagBastidor, alturasSeparadores } from '~/lib/rack3d/arriostramiento.js';
 
 const props = defineProps<{ m: Record<string, any> }>();
 const W = 300, H = 280, arriba = 14, abajo = 40;
@@ -60,10 +66,12 @@ const niveles = computed(() => {
     return { y: yv, piso, base: piso ? 0 : yv + (m.altoViga ?? 0.1) / 2, alto: m.altosCarga?.[i] ?? m.pallet.alto };
   });
 });
-function zigzag(z0: number) {
-  const m = props.m, n = Math.max(4, Math.round(m.alto / 0.9)), pts: string[] = [];
-  for (let i = 0; i <= n; i++) pts.push(`${x(z0 + (i % 2 ? m.fondo : 0)).toFixed(1)},${y(0.08 + ((m.alto - 0.16) * i) / n).toFixed(1)}`);
+// Mismo arriostramiento que el 3D (lib/rack3d/construir.js); `espejo` parte del pilar de atras
+function zigzag(z0: number, espejo = false) {
+  const m = props.m, { tramos, y0, dy } = zigzagBastidor(m.alto), pts: string[] = [];
+  for (let i = 0; i <= tramos; i++) pts.push(`${x(z0 + ((i % 2 ? 1 : 0) ^ (espejo ? 1 : 0) ? m.fondo : 0)).toFixed(1)},${y(y0 + dy * i).toFixed(1)}`);
   return pts.join(' ');
 }
+const separadores = computed(() => (props.m.doble ? alturasSeparadores(props.m.alto) : []));
 const descripcion = computed(() => `Vista lateral: bastidor de ${mm(props.m.fondo)}${props.m.doble ? `, doble con separador de ${mm(sep)}` : ''}, alto ${mm(props.m.alto)}`);
 </script>

@@ -155,6 +155,26 @@ check('sin subir archivos', buscar($reqs, 'POST', '/drive/v1.0/sessions') === nu
 $KOMMO_RESPONSABLE_TOUR = null;
 $KOMMO_ADJUNTOS = null;
 
+echo "Modo prueba: etiqueta PRUEBA, sin vendedor ni tarea\n";
+$prueba = $tour;
+$prueba['customerEmail'] = 'comercial+prueba@racklog.cl';
+$prueba['products'][0]['config']['Prueba'] = 'sí';
+$KOMMO_RESPONSABLE_TOUR = 4242;
+check('lead de prueba detectado', esPruebaTour($prueba));
+solicitudes();
+$leadP = createLead($prueba, 'quote', 'QT-20261021-prue');
+$payloadP = json_decode(buscar(solicitudes(), 'POST', '/api/v4/leads')['body'] ?? '[]', true)[0] ?? [];
+check('etiquetas tour-logistico y PRUEBA', ($payloadP['_embedded']['tags'] ?? null) === [['name' => 'tour-logistico'], ['name' => 'PRUEBA']]);
+check('sin vendedor asignado', !isset($payloadP['responsible_user_id']));
+$res = procesarLeadTour($prueba, 'quote', 'QT-20261021-prue', $leadP, [], $ahora);
+$reqs = solicitudes();
+check('sin tarea de 24 h', buscar($reqs, 'POST', '/api/v4/tasks') === null && $res['tarea'] === null && ($res['prueba'] ?? false));
+$notaP = json_decode(buscar($reqs, 'POST', '/api/v4/leads/notes')['body'] ?? '[]', true)[0]['params']['text'] ?? '';
+check('nota marcada PRUEBA', str_starts_with($notaP, 'PRUEBA'));
+$falso = $prueba; $falso['customerEmail'] = 'cliente@empresa.cl';
+check('con correo real no es prueba (ni con ?prueba=1)', !esPruebaTour($falso));
+$KOMMO_RESPONSABLE_TOUR = null;
+
 echo "Errores no rompen\n";
 check('sin lead no hace nada', procesarLeadTour($tour, 'quote', 'QT-1', ['id' => null]) === null && solicitudes() === []);
 check('lead normal no hace nada', procesarLeadTour($otro, 'quote', 'QT-1', $lead) === null);

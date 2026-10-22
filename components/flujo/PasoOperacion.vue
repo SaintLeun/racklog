@@ -1,9 +1,25 @@
 <template>
   <div>
     <Transition name="fl-sub" mode="out-in">
+      <!-- Entrada: el camino "no sé" es el principal y va primero -->
+      <section v-if="vista === 'inicio'" key="inicio">
+        <h1 class="fl-titulo">¿Sabes qué rack necesitas?</h1>
+        <p class="mt-2 text-neutral-600">Si no lo sabes, no importa: te hacemos 8 preguntas simples sobre tu bodega y te decimos cuál conviene.</p>
+        <div class="mt-6 grid gap-3 sm:grid-cols-2">
+          <button type="button" class="fl-opcion fl-opcion--sel !p-5 text-left" @click="empezar(false)">
+            <span class="block text-lg font-bold text-neutral-900">No, ayúdenme</span>
+            <span class="mt-1 block text-neutral-600">Respondes 8 preguntas (unos 2 minutos) y te recomendamos el sistema.</span>
+          </button>
+          <button type="button" class="fl-opcion !p-5 text-left" @click="empezar(true)">
+            <span class="block text-lg font-bold text-neutral-900">Sí, ya sé</span>
+            <span class="mt-1 block text-neutral-600">Eliges entre rack selectivo, drive-in o ángulo ranurado.</span>
+          </button>
+        </div>
+      </section>
+
       <!-- Si sabe: elige sistema y equipo -->
-      <section v-if="vista === 'elegir'" key="elegir">
-        <h1 class="fl-titulo">¿Qué quieres cotizar?</h1>
+      <section v-else-if="vista === 'elegir'" key="elegir">
+        <h1 class="fl-titulo">¿Qué rack quieres?</h1>
         <div class="mt-6 grid gap-3 sm:grid-cols-3">
           <button
             v-for="(t, k) in TIPOS" :key="k" type="button"
@@ -28,26 +44,30 @@
             >{{ o.t }}</button>
           </div>
         </fieldset>
-        <FlujoAcciones :deshabilitado="!p.sistema" motivo="Elige un sistema para seguir." @atras="p.sabe = false" @siguiente="confirmarEleccion" />
+        <p v-if="diSinEquipo" class="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-900">
+          El drive-in no se puede usar con tu equipo: {{ diSinEquipo }}. Necesitas grúa horquilla, retráctil o apilador eléctrico; o elige rack selectivo.
+        </p>
+        <FlujoAcciones :deshabilitado="!p.sistema || !!diSinEquipo" :motivo="diSinEquipo ? 'El drive-in necesita otro equipo.' : 'Elige un sistema para seguir.'" @atras="p.sabe = null" @siguiente="confirmarEleccion" />
       </section>
 
       <!-- Preguntas, una por pantalla -->
       <section v-else-if="vista === 'pregunta' && actual" :key="`q-${actual.clave}`" class="grid gap-6 lg:grid-cols-[1fr_minmax(280px,40%)]">
-        <!-- Lo que se va perfilando con sus respuestas (primero en celular) -->
-        <aside class="order-first lg:order-last">
-          <div class="fl-card !p-0 overflow-hidden">
-            <img :src="TIPOS[previa].imagen" alt="" class="aspect-[4/3] w-full object-cover transition-opacity duration-300" loading="lazy">
-            <div class="p-4">
+        <!-- Lo que se va perfilando con sus respuestas: chico y recién desde la pregunta 4, para que la
+             pregunta quede arriba en el celular (abajo de las opciones; al lado en escritorio) -->
+        <aside v-if="respondidas >= 3" class="order-last">
+          <div class="fl-card flex items-center gap-3 !p-2.5 lg:block lg:!p-0 lg:overflow-hidden">
+            <img :src="TIPOS[previa].imagen" alt="" class="h-16 w-20 flex-shrink-0 rounded-lg object-cover lg:aspect-[4/3] lg:h-auto lg:w-full lg:rounded-none" loading="lazy">
+            <div class="min-w-0 lg:p-4">
               <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500">Con lo que llevas</p>
-              <p class="text-lg font-bold text-neutral-900">{{ TIPOS[previa].nombre }}</p>
-              <p class="text-sm text-neutral-600">{{ TIPOS[previa].asesoria.sirve }}</p>
+              <p class="font-bold text-neutral-900 lg:text-lg">{{ TIPOS[previa].nombre }}</p>
+              <p class="hidden text-sm text-neutral-600 lg:block">{{ TIPOS[previa].asesoria.sirve }}</p>
             </div>
           </div>
         </aside>
         <div>
         <div class="flex items-center justify-between gap-3">
           <p class="text-sm font-medium text-neutral-500">Pregunta {{ p.pregunta + 1 }} de {{ preguntas.length }}</p>
-          <button type="button" class="text-sm font-medium text-brand-700 underline underline-offset-2" @click="p.sabe = true">Ya sé lo que quiero</button>
+          <button type="button" class="text-sm font-medium text-brand-700 underline underline-offset-2" @click="p.sabe = true">Ya sé qué rack quiero</button>
         </div>
         <h1 class="fl-titulo mt-1">{{ actual.texto }}</h1>
         <div class="mt-6 grid gap-2">
@@ -65,7 +85,7 @@
           <summary>¿Por qué te preguntamos esto?</summary>
           <p>{{ actual.tip }}</p>
         </details>
-        <FlujoAcciones :texto="'Saltar'" @atras="volverPregunta" @siguiente="responder(TIPICO[actual.clave], true)" />
+        <FlujoAcciones :texto="'Saltar'" @atras="p.pregunta ? volverPregunta() : (p.sabe = null)" @siguiente="responder(TIPICO[actual.clave], true)" />
         </div>
       </section>
 
@@ -75,23 +95,28 @@
         <h1 class="fl-titulo mt-1">{{ TIPOS[p.sistema!].nombre }}</h1>
         <div class="fl-card mt-5">
           <img :src="TIPOS[p.sistema!].imagen" alt="" class="-mx-5 -mt-5 mb-4 aspect-[16/7] w-[calc(100%+2.5rem)] max-w-none rounded-t-2xl object-cover" loading="lazy">
-          <ul class="space-y-2 text-neutral-700">
+          <p v-if="supuestos.length >= MUCHOS_NO_SE" class="font-medium text-neutral-900">
+            Como no sabías varias respuestas, partimos con lo más común en bodegas como la tuya: es el sistema más versátil y te deja sacar cualquier pallet. Lo afinamos con tus pallets en el paso 3.
+          </p>
+          <ul v-else class="space-y-2 text-neutral-700">
             <li v-for="(t, i) in rec.porque" :key="i" class="flex gap-2"><span class="text-brand-600" aria-hidden="true">✓</span>{{ t }}</li>
           </ul>
+          <div v-if="supuestos.length" class="mt-4 rounded-xl bg-neutral-50 p-3 text-sm text-neutral-700">
+            <p class="font-medium">Lo que supusimos (tu ejecutivo lo confirma contigo):</p>
+            <ul class="mt-1 list-disc pl-5"><li v-for="t in supuestos" :key="t">{{ t }}</li></ul>
+          </div>
           <ul v-if="rec.notas.length" class="mt-4 space-y-1.5 border-t border-neutral-100 pt-4 text-sm text-neutral-600">
             <li v-for="(t, i) in rec.notas" :key="i">{{ t }}</li>
           </ul>
         </div>
-        <p v-if="p.flags.includes('revisar_asesor')" class="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
-          Un ingeniero de Racklog revisará tu caso para confirmar la mejor solución.
-        </p>
         <button v-if="rec.alternativa" type="button" class="mt-4 text-sm font-medium text-brand-700 underline underline-offset-2" @click="cambiarSistema(rec.alternativa)">
           Prefiero {{ TIPOS[rec.alternativa as Sistema].nombre.toLowerCase() }}
         </button>
         <button v-else type="button" class="mt-4 text-sm font-medium text-brand-700 underline underline-offset-2" @click="p.sabe = true">
           Elegir otro sistema
         </button>
-        <p class="mt-4 rounded-xl bg-neutral-100 px-3 py-2 text-sm text-neutral-600">Es una primera recomendación. En el paso 3 la afinamos producto por producto con tus pallets.</p>
+        <!-- Una sola mención al ingeniero, al final -->
+        <p class="mt-4 rounded-xl bg-neutral-100 px-3 py-2 text-sm text-neutral-600">Es una primera recomendación: en el paso 3 la afinamos producto por producto con tus pallets{{ p.flags.includes('revisar_asesor') ? ' y un ingeniero de Racklog revisa tu caso antes de cotizar' : '' }}.</p>
         <FlujoAcciones texto="Seguir con mis pallets" @atras="volverPregunta" @siguiente="emit('siguiente')" />
       </section>
     </Transition>
@@ -101,13 +126,16 @@
 <script lang="ts" setup>
 import { computed, onMounted } from 'vue';
 import { useProyecto, type Sistema } from '~/stores/proyecto';
-import { TIPOS } from '~/lib/rack3d/planificador.js';
+import { TIPOS, gruaDriveIn } from '~/lib/rack3d/planificador.js';
 import { preguntasActivas, recomendar } from '~/lib/tour/reglas.js';
 
 const emit = defineEmits<{ siguiente: [] }>();
 const p = useProyecto();
-if (p.sabe === null) p.sabe = false;
-onMounted(() => { if (!p.pregunta && !p.sabe) marcar('tour_start', {}); });
+onMounted(() => { if (p.sabe === null) marcar('tour_start', {}); });
+function empezar(sabe: boolean) {
+  p.sabe = sabe;
+  marcar('tour_entrada', { sabe });
+}
 
 // Respuesta tipica cuando el cliente no sabe (queda marcada para que el ejecutivo la confirme)
 const TIPICO: Record<string, string> = {
@@ -122,12 +150,26 @@ const EQUIPOS = [
 ];
 
 const preguntas = computed(() => preguntasActivas(p.respuestas));
+// Respuestas de verdad (no "No sé") y lo que supusimos por cada "No sé", en palabras del cliente
+const MUCHOS_NO_SE = 4;
+const noSe = computed(() => p.flags.filter((f) => f.startsWith('no_se:')).map((f) => f.slice(6)));
+const respondidas = computed(() => Object.keys(p.respuestas).filter((k) => !noSe.value.includes(k)).length);
+const supuestos = computed(() => preguntas.value
+  .filter((q: any) => noSe.value.includes(q.clave))
+  .map((q: any) => {
+    const o = q.opciones.find((x: any) => x.v === p.respuestas[q.clave]);
+    return o ? `${q.corta ?? q.texto.replace(/[¿?]/g, '')}: ${o.t.toLowerCase()}` : null;
+  })
+  .filter(Boolean) as string[]);
+// Drive-in con un equipo que no entra a las calles (apilador manual, transpaleta): se bloquea con su motivo
+const diSinEquipo = computed(() => { const g = gruaDriveIn({ grua: p.bodega.grua }); return p.sistema === 'DI' && !g.puede ? g.motivo : null; });
 const actual = computed(() => preguntas.value[p.pregunta] ?? null);
 // Sistema que se va perfilando con las respuestas que lleva (cambia al instante)
 const previa = computed(() => (recomendar({ ...TIPICO, ...p.respuestas }).sistema as Sistema));
 const rec = computed(() => (p.sabe === false && p.pregunta >= preguntas.value.length ? recomendar(p.respuestas) : null));
 // Empieza por las preguntas; "Ya sé lo que quiero" es el atajo a elegir el sistema
 const vista = computed(() => {
+  if (p.sabe === null) return 'inicio';
   if (p.sabe) return 'elegir';
   return p.pregunta < preguntas.value.length ? 'pregunta' : 'resultado';
 });
