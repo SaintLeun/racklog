@@ -16,19 +16,18 @@
         <text x="80" y="109" text-anchor="middle">{{ medidaBastidor }}</text>
         <text x="80" y="9" text-anchor="middle" fill="#64748b" font-weight="500">arco de tubo · vista de lado</text>
       </template>
-      <!-- Canillera: perfil plegado (U) un poco más ancho que el pilar, apernado al piso. Frente y planta -->
+      <!-- Canillera: pieza delante del pilar (no lo envuelve), un poco más ancha, apernada al piso. Frente y planta -->
       <template v-else-if="a.id === 'canilleras'">
         <rect x="24" y="8" width="16" height="88" fill="#9ca3af" />
         <circle v-for="i in 9" :key="i" cx="32" :cy="12 + i * 8" r="1.2" fill="#6b7280" />
         <rect x="22" :y="96 - altoCan" width="20" :height="altoCan" fill="#dc2626" stroke="#991b1b" />
-        <rect x="22" :y="96 - altoCan" width="3" :height="altoCan" fill="#991b1b" opacity=".55" /><rect x="39" :y="96 - altoCan" width="3" :height="altoCan" fill="#991b1b" opacity=".55" />
         <rect x="18" y="93" width="28" height="3" fill="#991b1b" /><circle cx="20.5" cy="94.5" r="1.1" fill="#fff" /><circle cx="43.5" cy="94.5" r="1.1" fill="#fff" />
         <line x1="4" x2="56" y1="96" y2="96" stroke="#cbd5e1" />
         <line x1="62" x2="62" y1="96" :y2="96 - altoCan" stroke="#334155" :marker-start="`url(#fl-${uid})`" :marker-end="`url(#fl-${uid})`" />
         <text x="66" :y="99 - altoCan / 2" font-size="8">{{ mm(a.alto || 0.5) }}</text>
-        <!-- Planta: la U envuelve la cara del pilar que da al pasillo -->
+        <!-- Planta: la pieza va delante de la cara del pilar que da al pasillo -->
         <rect x="100" y="34" width="30" height="21" fill="#9ca3af" />
-        <path d="M97 31v27h36V31" fill="none" stroke="#dc2626" stroke-width="3" />
+        <line x1="97" x2="133" y1="60" y2="60" stroke="#dc2626" stroke-width="3" stroke-linecap="round" />
         <text x="115" y="47" text-anchor="middle" font-size="7" fill="#fff">pilar</text>
         <text x="115" y="70" text-anchor="middle" font-size="7" fill="#64748b" font-weight="500">pasillo ↓</text>
         <line x1="97" x2="133" y1="80" y2="80" stroke="#334155" :marker-start="`url(#fl-${uid})`" :marker-end="`url(#fl-${uid})`" />

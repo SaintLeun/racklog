@@ -233,13 +233,13 @@
       </g>
 
       <!-- Accesorios propuestos (lib/rack3d/accesorios.js), a su tamaño real con un mínimo legible según el
-           zoom (fm): canillera = U roja que envuelve el pilar por el lado del pasillo, protección de bastidor =
+           zoom (fm): canillera = pieza roja delante del pilar, por el lado del pasillo, protección de bastidor =
            arco de tubo amarillo con placas base, baranda = tubo amarillo (ajuste en naranjo) -->
       <g v-if="marcas?.length && !dibujando && !ocultarAccesorios" pointer-events="none">
         <template v-for="(mk, i) in marcas" :key="`mk-${i}`">
           <path
             v-if="mk.tipo === 'punto'" :transform="`translate(${mk.x} ${mk.y}) rotate(${anguloMarca(mk)}) scale(${fm})`"
-            d="M-0.06 -0.022V0.058H0.06V-0.022" fill="none" stroke="#c81e1e" stroke-width="0.016" stroke-linejoin="round"
+            d="M-0.06 0.065H0.06" fill="none" stroke="#c81e1e" stroke-width="0.016" stroke-linecap="round"
           />
           <g v-else-if="mk.tipo === 'barra'">
             <line :x1="mk.x1" :y1="mk.y1" :x2="mk.x2" :y2="mk.y2" stroke="#a16207" :stroke-width="0.09 * fm" stroke-linecap="round" />
