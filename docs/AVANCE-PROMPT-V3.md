@@ -11,7 +11,7 @@ Leyenda: ✅ hecho y probado · 🟡 parcial · ⬜ pendiente · 🔒 requiere a
 | Correo "Continúa tu diseño" | 🟡🔒 | Producción: `POST /api/continuar-diseno` → 404 (no desplegado); `health` ok con `mail: true`. Cliente: un reintento ante 5xx o red y aviso con el link si falla (`disena.vue`) |
 | Vulnerabilidades | 🟡 | `npm audit fix`: se fueron las 2 críticas (simple-git) y quedan 11 altas y 1 moderada, todas de herramientas de compilación/dev de Nuxt 3 (nuxt, nitropack, @nuxt/cli → listhen → node-forge; globby → micromatch → braces). Sin parche en Nuxt 3; el arreglo es Nuxt 4 (cambio mayor). Ver "Ignoradas" abajo |
 | Valores "referencial" | ✅ | `docs/VALORES-POR-CONFIRMAR.md` (33 valores) generado desde el código con `node scripts/valores-por-confirmar.mjs` (`--check` para CI). Etiqueta `FlujoReferencial` en pasillo/equipo (paso bodega y revisa), levante de la grúa y carga por nivel/marco (paso rack) y accesorios con medidas sin confirmar; desaparece sola al marcar `confirmado: true` |
-| Casos de aceptación | 🟡 | Importación 3×40' (83 hoy, 43 a crecer) ✅ `prueba-importacion.mjs`. CASATEC y pallets mezclados: ⬜ falta prueba dedicada |
+| Casos de aceptación | 🟡 | Importación 3×40' (83 hoy, 43 a crecer) ✅ `prueba-importacion.mjs`. Pallets mezclados: ⬜ falta prueba dedicada. CASATEC: descartado por el dueño (22-10) |
 | Celular 390 px | 🟡 | Recorrido automático hasta el layout: sin scroll horizontal (scrollWidth 390), sin errores de consola, ~20 s con valores por defecto. Falta la auditoría con red lenta (§8) |
 | `npx nuxi typecheck` | ✅ | Limpio (eran 34 errores: `.d.ts` desactualizados de `calculos.js` y `visor.js`). Se agregaron `typescript` y `vue-tsc` como devDependencies |
 
