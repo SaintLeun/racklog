@@ -14,6 +14,7 @@ function sendEmail(string $to, array $data, string $type, string $referenceId, a
         'quote_confirmation' => 'Cotización de Productos - Racklog',
         'contact' => '[Contacto] desde Sitio Web - Racklog',
         'contact_confirmation' => 'Hemos recibido tu mensaje - Racklog',
+        'continuar' => 'Tu diseño de bodega quedó guardado - Racklog',
         default => 'Mensaje desde Racklog'
     };
 

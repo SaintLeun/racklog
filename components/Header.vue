@@ -178,7 +178,7 @@
       <!-- Acciones -->
       <div class="flex items-center gap-1 sm:gap-2">
         <!-- El planificador va como boton, junto a Cotizar, para que se vea -->
-        <NuxtLink to="/planificador" class="btn btn-primary btn-sm hidden sm:inline-flex min-h-10 whitespace-nowrap px-4" @click="closeAllMenus">
+        <NuxtLink to="/planifica-tu-bodega" class="btn btn-primary btn-sm hidden sm:inline-flex min-h-10 whitespace-nowrap px-4" @click="closeAllMenus">
           <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
           </svg>
@@ -290,7 +290,7 @@
         </ul>
 
         <div class="mt-4 grid grid-cols-2 gap-3 border-t border-neutral-200 pt-4">
-          <NuxtLink to="/planificador" class="btn btn-primary px-3" @click="closeAllMenus">
+          <NuxtLink to="/planifica-tu-bodega" class="btn btn-primary px-3" @click="closeAllMenus">
             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
             </svg>

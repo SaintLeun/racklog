@@ -145,10 +145,10 @@
             <div v-else-if="paso === 'resultado' && rec" key="resultado">
               <div class="card overflow-hidden">
                 <div class="grid sm:grid-cols-[220px_1fr]">
-                  <img :src="TIPOS[rec.sistema].imagen" :alt="TIPOS[rec.sistema].nombre" class="h-full max-h-56 w-full object-cover sm:max-h-none">
+                  <img :src="TIPOS[rec.sistema as Tipo].imagen" :alt="TIPOS[rec.sistema as Tipo].nombre" class="h-full max-h-56 w-full object-cover sm:max-h-none">
                   <div class="p-6">
                     <p class="text-xs font-semibold uppercase tracking-wider text-brand-700">Te recomendamos</p>
-                    <h2 class="mt-1 text-3xl font-bold">{{ TIPOS[rec.sistema].nombre }}</h2>
+                    <h2 class="mt-1 text-3xl font-bold">{{ TIPOS[rec.sistema as Tipo].nombre }}</h2>
                     <ul class="mt-3 space-y-1.5 text-sm text-neutral-700">
                       <li v-for="(p, i) in rec.porque" :key="i" class="flex gap-2"><span class="text-brand-600">●</span>{{ p }}</li>
                     </ul>
@@ -165,15 +165,15 @@
 
               <div v-if="rec.alternativa" class="card mt-4 flex items-center justify-between gap-4 p-5">
                 <div class="text-sm">
-                  <p class="font-semibold text-neutral-900">Alternativa: {{ TIPOS[rec.alternativa].nombre }}</p>
-                  <p class="text-neutral-600">{{ TIPOS[rec.alternativa].asesoria.impacto }}</p>
+                  <p class="font-semibold text-neutral-900">Alternativa: {{ TIPOS[rec.alternativa as Tipo].nombre }}</p>
+                  <p class="text-neutral-600">{{ TIPOS[rec.alternativa as Tipo].asesoria.impacto }}</p>
                 </div>
                 <NuxtLink :to="`/planificador?rack=${rec.alternativa}`" class="btn btn-secondary btn-sm shrink-0">Ver</NuxtLink>
               </div>
 
               <div class="mt-6 flex flex-col-reverse justify-between gap-3 sm:flex-row">
                 <button type="button" class="btn btn-secondary" @click="empezarTour">Volver a responder</button>
-                <button type="button" class="btn btn-primary btn-lg" @click="irPallet(rec.sistema)">
+                <button type="button" class="btn btn-primary btn-lg" @click="irPallet(rec.sistema as Tipo)">
                   {{ rec.sistema === 'AR' ? 'Arma tu repisa' : 'Arma tu pallet' }} →
                 </button>
               </div>

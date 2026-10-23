@@ -193,9 +193,10 @@ function validateQuoteData($data): array {
 
         $config = [];
         if (is_array($product['config'] ?? null)) {
-            foreach (array_slice($product['config'], 0, 30, true) as $key => $value) {
+            // El diseño de Planifica tu bodega trae mas pares (pallets, cajas, racks) y la etiqueta y el puntaje al final
+            foreach (array_slice($product['config'], 0, 60, true) as $key => $value) {
                 $cleanKey = cleanString((string) $key, 50);
-                $cleanValue = is_scalar($value) ? cleanString($value, 100) : null;
+                $cleanValue = is_scalar($value) ? cleanString($value, 300) : null;
                 if ($cleanKey !== null && $cleanKey !== '' && $cleanValue !== null) {
                     $config[$cleanKey] = $cleanValue;
                 }

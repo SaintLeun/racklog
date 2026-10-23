@@ -30,7 +30,7 @@ const cerrarEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') abierto.value 
 watch(abierto, (v) => {
   const accion = v ? 'addEventListener' : 'removeEventListener';
   document[accion]('pointerdown', cerrarFuera);
-  document[accion]('keydown', cerrarEsc);
+  (document as any)[accion]('keydown', cerrarEsc);
 });
 
 onBeforeUnmount(() => {

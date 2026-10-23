@@ -6,6 +6,7 @@ require_once __DIR__ . '/../partials/template_quote.php';
 require_once __DIR__ . '/../partials/template_quote_confirmation.php';
 require_once __DIR__ . '/../partials/template_contact.php';
 require_once __DIR__ . '/../partials/template_contact_confirmation.php';
+require_once __DIR__ . '/../partials/template_continuar.php';
 
 
 /** Lista de archivos adjuntos para el correo interno (los archivos van adjuntos al mismo correo) */
@@ -38,6 +39,8 @@ function generateEmailTemplate(?array $data, string $type, string $ref): string 
             return generateContact($data, $ref);
         case 'contact_confirmation':
             return generateContactConfirmation($data, $ref);
+        case 'continuar':
+            return generateContinuar($data, $ref);
         default:
             return "<html><body><p>Plantilla no válida para tipo: <strong>" . esc($type) . "</strong></p></body></html>";
     }

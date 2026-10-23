@@ -1,0 +1,453 @@
+<template>
+  <div>
+    <h1 class="fl-titulo">Arma tu rack</h1>
+    <p class="fl-bajada">Te proponemos un rack para tus {{ mod?.tipo === 'AR' ? 'cajas' : 'pallets' }}. Puedes cambiarlo; en el paso 5 lo ubicamos en tu bodega.</p>
+
+    <!-- Altura de la bodega primero: la recomendación y los niveles dependen de ella. En una sola línea
+         para que el dibujo del rack quede en la primera pantalla del celular -->
+    <div class="fl-card mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 !py-2">
+      <label for="fl-altura" class="flex-1 text-[15px] font-medium text-neutral-700">Altura de tu bodega (m) <FlujoInfo>Mide desde el piso hasta lo más bajo del techo: una viga, una lámpara o un rociador. Si no sabes, usamos 8 m y tu ejecutivo lo confirma.</FlujoInfo></label>
+      <div class="flex gap-2">
+        <input id="fl-altura" :value="p.bodega.altura ?? ''" type="number" min="2.5" max="40" step="0.1" inputmode="decimal" class="form-input !h-10 !w-24" placeholder="8" @change="cambiarAltura($event)">
+        <button type="button" :class="['fl-nose', p.flags.includes('no_se:altura') && 'fl-nose--sel']" @click="alturaNoSe">No sé</button>
+      </div>
+      <!-- La grúa limita la altura del rack: hasta dónde sube y cuánto levanta allá arriba (capacidad residual) -->
+      <div v-if="conGruaRack" class="flex w-full flex-wrap items-center gap-x-3 gap-y-2 border-t border-neutral-100 pt-2">
+        <span class="flex-1 text-[15px] font-medium text-neutral-700">Tu grúa levanta<FlujoReferencial v-if="!(p.bodega as any).gruaKg" :de="eqTipico" /> <FlujoInfo>Está en la placa de la grúa: altura máxima de horquilla y kg. Mientras más alto sube, menos peso levanta; usamos la curva típica de una {{ eqTipico.nombre.toLowerCase() }} si no los sabes.</FlujoInfo></span>
+        <label class="flex items-center gap-1.5 text-sm text-neutral-600"><span class="sr-only">Altura máxima de la grúa</span><input :value="(p.bodega as any).gruaLevante ?? ''" type="number" min="1" max="15" step="0.1" inputmode="decimal" class="form-input !h-10 !w-20" :placeholder="String(eqTipico.levante).replace('.', ',')" @change="placa('gruaLevante', $event)">m</label>
+        <label class="flex items-center gap-1.5 text-sm text-neutral-600"><span class="sr-only">Capacidad de la grúa</span><input :value="(p.bodega as any).gruaKg ?? ''" type="number" min="300" max="10000" step="50" inputmode="numeric" class="form-input !h-10 !w-24" :placeholder="eqTipico.kg.toLocaleString('es-CL')" @change="placa('gruaKg', $event)">kg</label>
+      </div>
+    </div>
+
+    <!-- El sistema que el cliente configura manda. Si para sus productos sugerimos otro, va como una línea
+         secundaria y plegada con la comparación; nunca como "recomendado" encima de lo que eligió (R3) -->
+    <details v-if="mod && recModelo.productos.length" class="fl-sugerencia mt-3">
+      <summary>
+        <span v-if="sugerido" class="text-neutral-800"><span class="mr-1.5 rounded bg-amber-100 px-1.5 py-0.5 text-xs font-semibold text-amber-900">Sugerencia</span>{{ sugerido.texto }}</span>
+        <span v-else class="text-neutral-700"><span class="mr-1 text-brand-600" aria-hidden="true">✓</span>{{ TIPOS[mod.tipo].nombre }} es lo que recomendamos para estos productos</span>
+        <span class="ml-1 whitespace-nowrap font-semibold text-brand-700">{{ sugerido ? 'Ver comparación' : 'Ver por qué' }}</span>
+      </summary>
+      <div class="mt-3">
+        <FlujoRecomendacion :rec="recModelo" :actual="mod.tipo" />
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+          <button v-if="sugerido" type="button" class="fl-btn !min-h-10 !px-4 !text-sm" @click="usarSugerido">Cambiar a {{ TIPOS[sugerido.tipo].nombre.toLowerCase() }}</button>
+          <span class="text-sm text-neutral-500">Un ingeniero de Racklog revisa cada diseño antes de cotizar.</span>
+        </div>
+      </div>
+    </details>
+
+    <!-- Modelos (si tiene mas de uno) -->
+    <div v-if="p.modelos.length > 1" class="mt-5 flex flex-wrap gap-2" role="tablist" aria-label="Modelos de rack">
+      <button
+        v-for="m in p.modelos" :key="m.id" type="button" role="tab" :aria-selected="m.id === mod?.id"
+        :class="['fl-chip !min-h-10 !w-auto !px-4 !text-sm', m.id === mod?.id && 'fl-chip--sel']" @click="p.modeloSel = m.id"
+      >{{ m.nombre }}</button>
+    </div>
+
+    <div v-if="mod && res" class="mt-3 grid gap-4 lg:grid-cols-[1fr_360px]">
+      <div class="fl-card fl-secciones lg:self-start">
+
+        <!-- 1. Sistema -->
+        <fieldset>
+          <legend class="fl-leyenda">Sistema</legend>
+          <div class="mt-2 grid grid-cols-3 gap-2">
+            <button v-for="(t, k) in TIPOS" :key="k" type="button" :class="['fl-chip !text-sm', mod.tipo === k && 'fl-chip--sel']" :aria-pressed="mod.tipo === k" @click="cambiarSistema(k as Sistema)">{{ t.nombre }}</button>
+          </div>
+        </fieldset>
+
+        <!-- 2. Que va en este modelo -->
+        <fieldset>
+          <legend class="fl-leyenda">{{ mod.tipo === 'AR' ? 'Cajas en este rack' : 'Pallets en este rack' }}</legend>
+          <div class="mt-2 space-y-2">
+            <label v-for="t in catalogo" :key="t.id" class="flex items-center justify-between gap-3">
+              <span class="flex min-w-0 items-center gap-2 text-neutral-800">
+                <span v-if="'color' in t" class="h-3 w-3 flex-shrink-0 rounded" :style="{ background: (t as any).color }" aria-hidden="true" />
+                <span class="truncate">{{ t.nombre }}</span>
+                <span class="flex-shrink-0 text-sm text-neutral-500">· {{ 'frente' in t ? `${fm((t as any).alto)} m` : `${cm((t as any).largo)}×${cm((t as any).ancho)}×${cm((t as any).alto)} cm` }}</span>
+              </span>
+              <input :value="mod.cantidades[t.id] ?? 0" type="number" min="0" step="1" inputmode="numeric" class="form-input !h-10 !w-28 text-right" @change="cambiarCantidad(t.id, $event)">
+            </label>
+            <p v-if="!catalogo.length" class="text-sm text-neutral-600">
+              Primero agrega tus {{ mod.tipo === 'AR' ? 'cajas' : 'pallets' }} en el paso anterior.
+              <button type="button" class="font-semibold text-brand-700 underline" @click="emit('atras')">Volver</button>
+            </p>
+          </div>
+        </fieldset>
+
+        <!-- 3. Configuracion del modulo -->
+        <fieldset>
+          <legend class="fl-leyenda">Configuración</legend>
+          <div class="mt-2 grid gap-x-6 gap-y-4 sm:grid-cols-2">
+            <div v-if="mod.tipo === 'AR' && propuesta" class="rounded-xl bg-brand-50 sm:col-span-2 px-3 py-2.5 text-sm text-neutral-700 ring-1 ring-brand-100">
+              <p>
+                <b class="text-neutral-900">Te proponemos</b> bandeja de {{ mmTxt(propuesta.frente) }} × {{ mmTxt(propuesta.bandeja) }} mm, {{ propuesta.niveles }} repisas y {{ propuesta.camasRepisa }} {{ propuesta.camasRepisa === 1 ? 'caja' : 'cajas' }} de alto:
+                {{ propuesta.porBandeja }} cajas por bandeja y {{ n(propuesta.cuerpos) }} {{ propuesta.cuerpos === 1 ? 'cuerpo' : 'cuerpos' }}. Es lo que ocupa menos piso.
+              </p>
+              <button v-if="!enPropuesta" type="button" class="mt-1.5 font-semibold text-brand-700 underline underline-offset-2" @click="usarPropuesta">Volver a la propuesta</button>
+            </div>
+            <div v-if="mod.tipo === 'RS'">
+              <p class="fl-sub">Pallets por nivel</p>
+              <div class="mt-2 grid grid-cols-3 gap-2">
+                <button v-for="n in [1, 2, 3]" :key="n" type="button" :class="['fl-chip', (mod.porViga ?? 2) === n && 'fl-chip--sel']" :aria-pressed="(mod.porViga ?? 2) === n" @click="cambiar({ porViga: n })">{{ n }}</button>
+              </div>
+            </div>
+            <div v-if="mod.tipo !== 'DI'">
+              <p class="fl-sub">
+                Simple o doble
+                <FlujoInfo>Doble = dos racks espalda con espalda: comparten el pasillo y ganas posiciones.</FlujoInfo>
+              </p>
+              <div class="mt-2 grid grid-cols-2 gap-2">
+                <button type="button" :class="['fl-chip', !mod.doble && 'fl-chip--sel']" :aria-pressed="!mod.doble" @click="cambiar({ doble: false })">Simple</button>
+                <button type="button" :class="['fl-chip', mod.doble && 'fl-chip--sel']" :aria-pressed="mod.doble" @click="cambiar({ doble: true })">Doble</button>
+              </div>
+            </div>
+            <div v-if="mod.tipo === 'DI'">
+              <p class="fl-sub">Pallets uno detrás de otro <FlujoInfo>En un drive-in la grúa entra a un pasillo interno (la "calle") y deja los pallets uno detrás de otro.</FlujoInfo></p>
+              <FlujoNumero :valor="mod.fondos ?? 5" :min="2" :max="12" etiqueta="Pallets de fondo" @cambio="cambiar({ fondos: $event })" />
+            </div>
+            <div>
+              <p class="fl-sub">
+                {{ mod.tipo === 'AR' ? 'Repisas' : 'Niveles sobre el piso' }}
+                <FlujoInfo v-if="mod.tipo !== 'AR'">El piso también guarda pallets y no se cuenta como nivel.</FlujoInfo>
+              </p>
+              <FlujoNumero :valor="mod.niveles" :min="mod.tipo === 'AR' ? 2 : 1" :max="maxNiveles" :etiqueta="mod.tipo === 'AR' ? 'Repisas' : 'Niveles'" @cambio="cambiar({ niveles: $event, mezcla: [], vigasY: null })" />
+              <p class="mt-1 text-xs text-neutral-500">Máximo {{ maxNiveles }} por {{ limite }}.</p>
+            </div>
+            <div v-if="mod.tipo === 'AR'" class="sm:col-span-2">
+              <p class="fl-sub">Fondo de la bandeja</p>
+              <div class="mt-2 grid grid-cols-4 gap-2">
+                <button v-for="f in ANRA_FONDOS" :key="f" type="button" :class="['fl-chip !text-sm', (mod.bandeja ?? 0.4) === f && 'fl-chip--sel']" @click="cambiar({ bandeja: f })">{{ f * 1000 }} mm</button>
+              </div>
+              <p class="fl-sub mt-4">Cajas apiladas por repisa</p>
+              <FlujoNumero :valor="mod.camasRepisa ?? 1" :min="1" :max="maxCamas" etiqueta="cajas por repisa" @cambio="cambiar({ camasRepisa: $event })" />
+              <p class="mt-1 text-xs text-neutral-500">Tu caja aguanta {{ maxCamas }} de alto. Entre repisas: {{ Math.round((res.m.altoEntre ?? 0) * 100) }} cm · estantería de {{ fm(res.m.alto) }} m</p>
+              <label class="fl-campo mt-4">
+                <span>Ancho del carro de carga (cm) <FlujoInfo>El pasillo es el ancho del carro + 30 cm (mínimo 1,2 m).</FlujoInfo></span>
+                <input :value="mod.anchoCarro ? Math.round(mod.anchoCarro * 100) : ''" type="number" min="30" max="200" step="any" placeholder="Sin carro" class="form-input" @change="cambiar({ anchoCarro: Number(($event.target as HTMLInputElement).value) / 100 || null })">
+              </label>
+              <p class="fl-sub mt-4">Largo de la bandeja</p>
+              <div class="mt-2 grid grid-cols-2 gap-2">
+                <button v-for="f in ANRA_FRENTES" :key="f" type="button" :class="['fl-chip !text-sm', (mod.frente ?? 0.92) === f && 'fl-chip--sel']" @click="cambiar({ frente: f })">{{ mmTxt(f) }} mm</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tipo de pallet por nivel (selectivo con mas de un tipo) -->
+          <div v-if="mod.tipo === 'RS' && tiposModelo.length > 1" class="mt-4 border-t border-neutral-100 pt-4">
+            <div class="flex items-center justify-between gap-3">
+              <span />
+              <button type="button" class="text-sm font-semibold text-brand-700" @click="acomodar">Acomodar solo</button>
+            </div>
+            <!-- Componente del planificador: elevacion clickeable y "aplicar a todos los selectivos" -->
+            <PlanificadorMezclaNiveles class="mt-3" :rack="res.r" :tipos="tiposModelo" @asignar="cambiar({ mezcla: $event })" @todos="aplicarATodos" />
+            <p class="mt-2 text-sm text-neutral-500">"Acomodar solo": lo que sale más seguido va abajo; lo alto y lento, arriba.</p>
+          </div>
+
+          <details v-if="mod.tipo !== 'AR'" class="fl-mas mt-3">
+            <summary>Más opciones</summary>
+            <div v-if="mod.tipo === 'RS'" class="mt-4 space-y-5">
+              <label class="fl-campo">
+                <span>Sobrante de marco sobre la última viga: {{ Math.round((mod.sobrante ?? 0.3) * 1000) }} mm</span>
+                <input :value="mod.sobrante ?? 0.3" type="range" min="0.3" max="1" step="0.05" class="w-full accent-brand-600" @input="cambiar({ sobrante: Number(($event.target as HTMLInputElement).value) })">
+                <em class="text-sm not-italic text-neutral-500">Entre 300 y 1.000 mm. Más de 1.000 no se fabrica.</em>
+              </label>
+              <div>
+                <label class="flex items-center gap-2 text-neutral-800">
+                  <input type="checkbox" :checked="!!mod.tunel" class="h-4 w-4 accent-brand-600" @change="cambiar({ tunel: ($event.target as HTMLInputElement).checked ? { cuerpo: 0, altoLibre: 2.2 } : null })">
+                  Cuerpo túnel (para pasar por debajo)
+                </label>
+                <div v-if="mod.tunel" class="mt-2 grid grid-cols-2 gap-2">
+                  <button v-for="a in [2.2, 2.5, 3.5, 4.5]" :key="a" type="button" :class="['fl-chip !text-sm', mod.tunel.altoLibre === a && 'fl-chip--sel']" @click="cambiar({ tunel: { ...mod.tunel, altoLibre: a } })">Paso libre {{ fm(a) }} m</button>
+                </div>
+              </div>
+              <div>
+                <p class="fl-sub">Plano de carga por nivel</p>
+                <ol class="mt-2 space-y-2">
+                  <li v-for="i in mod.niveles" :key="i" class="flex items-center gap-3">
+                    <span class="w-16 text-sm text-neutral-600">Nivel {{ i }}</span>
+                    <select :value="res.r.planos?.[i] ?? ''" class="form-input" @change="plano(i, ($event.target as HTMLSelectElement).value)">
+                      <option value="">Sin plano (pallet sobre vigas)</option>
+                      <option value="malla">Malla</option>
+                      <option value="madera">Madera</option>
+                      <option value="metal">Bandeja metálica</option>
+                    </select>
+                  </li>
+                </ol>
+              </div>
+            </div>
+            <div v-else class="mt-4">
+              <PlanificadorGruaDriveIn :rack="res.r" :abierto="true" @cambio="cambiar($event as any)" />
+            </div>
+          </details>
+        </fieldset>
+      </div>
+
+      <!-- 4. Resultado inmediato -->
+      <!-- En celular el dibujo va primero (visual antes que controles) -->
+      <aside class="order-first lg:order-none lg:sticky lg:top-36 lg:self-start">
+        <div class="fl-card">
+          <div class="flex items-center justify-between gap-2">
+            <p class="fl-leyenda">Tu {{ TIPOS[mod.tipo].nombre.toLowerCase() }}</p>
+            <div class="flex gap-1 rounded-lg bg-neutral-100 p-0.5" role="tablist" aria-label="Vista del rack">
+              <button v-for="v in VISTAS_RACK" :key="v.v" type="button" role="tab" :aria-selected="vistaRack === v.v" :class="['rounded-md px-2 py-1.5 text-sm font-medium', vistaRack === v.v ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="vistaRack = v.v as typeof vistaRack">{{ v.t }}</button>
+            </div>
+          </div>
+          <FlujoElevacionDriveIn v-if="vistaRack === 'frente' && mod.tipo === 'DI'" :m="res.m" class="mt-3" />
+          <FlujoElevacion v-if="vistaRack === 'frente' && mod.tipo !== 'DI'" :m="res.m" :editable="mod.tipo === 'RS'" :cajas="cajasDibujo" class="mt-3 touch-none" @vigas="cambiar({ vigasY: $event })" />
+          <FlujoElevacion v-if="vistaRack === 'planta' && mod.tipo === 'AR'" :m="res.m" :cajas="cajasDibujo" vista="planta" class="mt-3" />
+          <p v-if="mod.tipo === 'RS' && vistaRack === 'frente'" class="mt-1 text-xs text-neutral-500">
+            Puedes subir o bajar cada nivel arrastrando su viga (naranja).
+            <button v-if="mod.vigasY?.length" type="button" class="font-semibold text-brand-700 underline" @click="cambiar({ vigasY: null })">Volver a las alturas calculadas</button>
+          </p>
+          <FlujoLateralRack v-if="vistaRack === 'lado' && mod.tipo === 'RS'" :m="res.m" class="mt-3" />
+          <FlujoPlantaRack v-if="mod.tipo !== 'AR' && (vistaRack === 'planta' || (vistaRack === 'lado' && mod.tipo !== 'RS'))" :m="res.m" class="mt-3" />
+          <dl v-if="mod.tipo === 'AR'" class="mt-3 grid grid-cols-2 gap-2">
+            <div class="fl-dato">
+              <dt>Cajas por bandeja</dt><dd><FlujoContador :valor="res.principal?.cajas ?? 0" /></dd>
+              <p v-if="res.principal?.cajas" class="text-xs text-neutral-500">{{ res.principal.cols }} al frente × {{ res.principal.filas }} al fondo × {{ res.principal.camas }} de alto</p>
+            </div>
+            <div class="fl-dato">
+              <dt>Cuerpos que necesitas <FlujoInfo>Cuerpo: una estantería con sus 4 ángulos y sus repisas.</FlujoInfo></dt>
+              <dd><FlujoContador :valor="res.cuerpos" /></dd>
+              <p class="text-xs text-neutral-500">{{ res.m.nivelesY.length }} repisas por cuerpo<template v-if="mod.doble"> · {{ res.modulos }} por lado</template></p>
+            </div>
+            <div class="fl-dato"><dt>Alto de la estantería</dt><dd>{{ fm(res.alto) }} m</dd></div>
+            <div class="fl-dato"><dt>Guardas</dt><dd><FlujoContador :valor="res.capacidadCajas" /> <span class="text-sm font-normal text-neutral-500">cajas</span></dd><p class="text-xs text-neutral-500">Necesitas {{ n(res.total) }} cajas</p></div>
+          </dl>
+          <dl v-else class="mt-3 grid grid-cols-2 gap-2">
+            <div class="fl-dato"><dt>Pallets por {{ mod.tipo === 'DI' ? 'calle' : 'cuerpo' }} <FlujoInfo v-if="mod.tipo === 'DI'">Calle: el pasillo interno donde entra la grúa.</FlujoInfo><FlujoInfo v-else>Cuerpo: el espacio entre dos marcos, con sus niveles.</FlujoInfo></dt><dd><FlujoContador :valor="res.porCuerpo" /></dd></div>
+            <div class="fl-dato">
+              <dt>{{ mod.tipo === 'DI' ? 'Calles' : 'Cuerpos' }} que necesitas</dt>
+              <dd><FlujoContador :valor="res.cuerpos" /></dd>
+              <p v-if="mod.tipo !== 'DI' && mod.doble" class="text-xs text-neutral-500">{{ res.modulos }} por lado</p>
+            </div>
+            <div class="fl-dato"><dt>Alto con la carga</dt><dd>{{ fm(res.alto) }} m</dd></div>
+            <div class="fl-dato"><dt>Guardas</dt><dd><FlujoContador :valor="res.capacidad" /> <span class="text-sm font-normal text-neutral-500">{{ res.unidad }}</span></dd><p class="text-xs text-neutral-500">Necesitas {{ n(res.total) }} {{ res.totalUnidad }}</p></div>
+          </dl>
+          <p v-if="res.carga && res.carga.color !== 'verde'" :class="['mt-4 rounded-xl px-3 py-2.5 text-sm', SEMAFORO[res.carga.color as keyof typeof SEMAFORO]]">
+            Tus {{ mod.tipo === 'AR' ? 'cajas' : 'pallets' }} pesan cerca de lo que aguanta {{ mod.tipo === 'RS' ? 'cada nivel' : mod.tipo === 'DI' ? 'cada posición' : 'cada bandeja' }}: lo verificamos en el cálculo antes de cotizar.
+          </p>
+          <details class="fl-mas mt-2">
+            <summary>Ver detalle técnico</summary>
+            <!-- La cuenta a la vista: de donde salen viga y marco -->
+            <p v-if="mod.tipo === 'RS'" class="mt-3 rounded-lg bg-neutral-50 px-3 py-2 text-sm leading-relaxed text-neutral-600">
+              Viga = {{ res.m.palletsPorViga }} × {{ fm(res.m.pallet.frente) }} + {{ res.m.palletsPorViga + 1 }} × {{ fm(RACK.holguraViga.valor) }} = <b class="text-neutral-800">{{ fm(res.m.viga) }} m</b><br>
+              Fondo del marco = {{ fm(res.m.pallet.fondo) }} − 2 × {{ fm(RACK.voladizoPallet.valor) }} = <b class="text-neutral-800">{{ fm(res.m.fondo) }} m</b><br>
+              Viga {{ res.m.vigaModelo }} ({{ Math.round(res.m.altoViga * 1000) }} mm) para {{ n(res.m.kgPallet) }} kg por pallet
+              <span class="block text-xs text-neutral-500">Mismas fórmulas del cotizador Racklog. El pallet sobresale {{ Math.round(RACK.voladizoPallet.valor * 1000) }} mm por lado. Los niveles se mueven de a una perforación ({{ Math.round(RACK.pasoPerforado.valor * 10000) / 10 }} mm).</span>
+            </p>
+            <div v-if="res.carga" :class="['mt-3 rounded-xl px-3 py-2.5 text-sm', SEMAFORO[res.carga.color as keyof typeof SEMAFORO]]">
+              <b>{{ mod.tipo === 'RS' ? 'Carga por par de vigas' : mod.tipo === 'DI' ? 'Carga por pallet' : 'Carga por bandeja' }}:</b>
+              {{ n(res.carga.kg) }} de {{ n(res.carga.capacidad) }} kg ({{ Math.round(res.carga.uso * 100) }} %)<FlujoReferencial :de="mod.tipo === 'RS' ? CAPACIDADES.selectivoParVigas : mod.tipo === 'DI' ? CAPACIDADES.driveInPallet : CAPACIDADES.bandejaAngulo" />
+            </div>
+            <!-- Corte contra el techo: holgura y si cabe un nivel mas (componente del planificador) -->
+            <PlanificadorCorteRack v-if="mod.tipo !== 'AR'" :rack="res.r" :altura="p.bodega.altura" class="mt-3" />
+            <div v-if="res.cargaMarco" :class="['mt-2 rounded-xl px-3 py-2.5 text-sm', SEMAFORO[res.cargaMarco.color as keyof typeof SEMAFORO]]">
+              <b>Carga por marco:</b> {{ n(res.cargaMarco.kg) }} de {{ n(res.cargaMarco.capacidad) }} kg ({{ Math.round(res.cargaMarco.uso * 100) }} %)<FlujoReferencial />
+              <span class="block text-xs opacity-80">Capacidad referencial hasta tener la tabla de pilares de Racklog.</span>
+            </div>
+          </details>
+          <ul v-if="res.avisos.length" class="mt-3 space-y-1.5 text-sm text-amber-900">
+            <li v-for="(a, i) in res.avisos" :key="i" class="rounded-lg bg-amber-50 px-3 py-2">{{ a }}</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+
+    <div class="mt-6 flex flex-wrap gap-2">
+      <button type="button" class="fl-agregar !w-auto px-4" @click="nuevo">+ Otro modelo de rack</button>
+      <button v-if="mod && p.modelos.length > 1" type="button" class="fl-agregar !w-auto px-4 !text-red-700" @click="p.quitarModelo(mod.id)">Quitar este modelo</button>
+    </div>
+
+    <FlujoAcciones :deshabilitado="!valido || diSinEquipo" :motivo="diSinEquipo ? 'Tu equipo no puede trabajar en un drive-in: cambia el sistema o el equipo.' : 'Indica cuántos pallets o cajas van en el rack.'" @atras="emit('atras')" @siguiente="emit('siguiente')" />
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { ref, computed, onMounted } from 'vue';
+import { useProyecto, type Sistema, type Modelo } from '~/stores/proyecto';
+import { TIPOS, gruaDriveIn } from '~/lib/rack3d/planificador.js';
+import { resultadoModelo, nivelesMaximos, mezclaPorDefecto, mejorBandeja, firmaCajasAR } from '~/lib/flujo/calculos.js';
+import { recomendarProductos } from '~/lib/flujo/recomendacion.js';
+import { RACK, GRUAS, CAPACIDADES } from '~/lib/rack3d/parametrosTecnicos.js';
+import { ANRA_FRENTES, ANRA_FONDOS } from '~/lib/rack3d/medidas.js';
+
+const emit = defineEmits<{ siguiente: []; atras: [] }>();
+const p = useProyecto();
+const vistaRack = ref<'frente' | 'lado' | 'planta'>('frente');
+const VISTAS_RACK = computed(() => [{ v: 'frente', t: 'Frente' }, ...(mod.value?.tipo === 'RS' ? [{ v: 'lado', t: 'Lado' }] : []), { v: 'planta', t: 'Planta' }] as const);
+const SEMAFORO = { verde: 'bg-green-50 text-green-900', amarillo: 'bg-amber-50 text-amber-900', rojo: 'bg-red-50 text-red-900' } as const;
+const fm = (v: number) => (+(+v).toFixed(2)).toLocaleString('es-CL');
+const cm = (v: number) => Math.round(v * 100);
+const n = (v: number) => Math.round(v).toLocaleString('es-CL');
+
+// Recomendacion por producto (lib/flujo/recomendacion.js)
+const rec = computed(() => recomendarProductos({ pallets: p.pallets, cajas: p.cajas, respuestas: p.respuestas, bodega: p.bodega, flags: p.flags }) as any);
+const recAplicada = ref(false);
+// Comparación solo de los productos de este modelo (el ángulo ranurado no compite con los de pallet)
+const recModelo = computed(() => {
+  if (!mod.value || mod.value.tipo === 'AR') return { productos: [] };
+  const ids = Object.entries(mod.value.cantidades ?? {}).filter(([, v]) => v > 0).map(([k]) => k);
+  return { productos: rec.value.productos.filter((x: any) => ids.includes(x.id)) };
+});
+// Otro sistema sugerido para la mayoría de los productos de este modelo: una línea con lo que ganaría
+const sugerido = computed(() => {
+  const otros = recModelo.value.productos.filter((x: any) => x.sistema !== mod.value?.tipo);
+  if (!otros.length || otros.length * 2 < recModelo.value.productos.length) return null;
+  const x = otros[0], tipo = x.sistema as Sistema;
+  if (tipo === 'DI' && x.elegido && x.otra) {
+    const pct = Math.round(((x.elegido.posiciones / x.elegido.m2) / (x.otra.posiciones / x.otra.m2) - 1) * 100);
+    if (pct > 0) return { tipo, texto: `Con drive-in guardarías ${pct} % más pallets en el mismo piso.` };
+  }
+  return { tipo, texto: tipo === 'RS' ? 'Con rack selectivo llegas directo a cada pallet, sin mover otros.' : `Para estos productos sugerimos ${TIPOS[tipo].nombre.toLowerCase()}.` };
+});
+// Cambia este modelo al sistema sugerido (no toca los otros modelos ni lo que ya configuró en ellos)
+function usarSugerido() {
+  if (!sugerido.value) return;
+  cambiarSistema(sugerido.value.tipo);
+  marcar('recomendacion', { sistemas: sugerido.value.tipo, por_producto: true, desde: 'sugerencia' });
+}
+function usarRecomendacion(modelos: any[]) {
+  const id = () => 'm' + Math.random().toString(36).slice(2, 9);
+  p.modelos = modelos.map((m) => ({ ...JSON.parse(JSON.stringify(m)), id: id() }));
+  p.modeloSel = p.modelos[0]?.id ?? null;
+  p.racks = [];
+  p.flags = [...new Set([...p.flags, ...rec.value.flags])];
+  recAplicada.value = true;
+  sincronizarCantidades();
+  marcar('recomendacion', { sistemas: p.modelos.map((m) => m.tipo).join(','), por_producto: true });
+}
+function marcar(event: string, datos: Record<string, unknown>) {
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event, event_category: 'Planifica tu bodega', ...datos });
+}
+
+onMounted(() => {
+  // Llega sin racks armados: parte con la mezcla recomendada para sus productos (si la hay)
+  if (!p.modelos.length && p.respuestas && Object.keys(p.respuestas).length && rec.value.modelos.length && !p.sabe) {
+    usarRecomendacion(rec.value.modelos);
+    recAplicada.value = false;
+  }
+  if (!p.modelos.length) {
+    p.agregarModelo(p.sistema ?? 'RS');
+    // Si tambien guarda cajas, un ángulo ranurado aparte
+    if (p.sistema !== 'AR' && p.cajas.length) { p.agregarModelo('AR'); p.modeloSel = p.modelos[0].id; }
+  }
+  sincronizarCantidades();
+});
+
+const mod = computed(() => p.modeloActual as Modelo | null);
+const catalogo = computed(() => (mod.value?.tipo === 'AR' ? p.cajas : p.pallets) as any[]);
+const tiposModelo = computed(() => p.pallets.filter((t) => (mod.value?.cantidades[t.id] ?? 0) > 0));
+const res = computed(() => (mod.value ? resultadoModelo(mod.value, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua, gruaDatos: gruaDatos.value, ocupacion: p.bodega.ocupacion }) as any : null));
+const maxNiveles = computed(() => (mod.value ? nivelesMaximos(mod.value, { pallets: p.pallets, altura: p.bodega.altura, grua: p.bodega.grua, gruaDatos: gruaDatos.value }) : 1));
+const limite = computed(() => (mod.value?.tipo === 'AR' ? 'altura de la estantería' : p.bodega.altura ? 'tu techo y lo que levanta tu grúa (altura y peso)' : 'lo que levanta tu grúa (altura y peso)'));
+// Grua del cliente: lo que dice su placa (si no la sabe, la típica de su tipo de equipo)
+const gruaDatos = computed(() => ({ gruaLevante: (p.bodega as any).gruaLevante ?? null, gruaKg: (p.bodega as any).gruaKg ?? null }));
+const eqTipico = computed(() => (GRUAS as any)[p.bodega.grua] ?? GRUAS.contrapeso);
+const conGruaRack = computed(() => mod.value?.tipo !== 'AR' && !['transpaleta'].includes(p.bodega.grua));
+function placa(campo: 'gruaLevante' | 'gruaKg', e: Event) {
+  const v = Number((e.target as HTMLInputElement).value);
+  (p.bodega as any)[campo] = v > 0 ? v : null;
+}
+// ─── Angulo ranurado: bandeja propuesta (la que ocupa menos piso) y cajas para el dibujo ───
+const mmTxt = (v: number) => Math.round(v * 1000).toLocaleString('es-CL');
+const propuesta = computed(() => (mod.value?.tipo === 'AR' ? mejorBandeja(mod.value, { cajas: p.cajas, altura: p.bodega.altura }) : null));
+const enPropuesta = computed(() => {
+  const b = propuesta.value, m = mod.value as any;
+  return !b || (m.bandeja === b.bandeja && m.frente === b.frente && m.niveles === b.niveles && (m.camasRepisa ?? 1) === b.camasRepisa);
+});
+function usarPropuesta() {
+  const b = propuesta.value;
+  if (b && mod.value) cambiar({ bandeja: b.bandeja, frente: b.frente, niveles: b.niveles, camasRepisa: b.camasRepisa, altoEntre: null });
+}
+const maxCamas = computed(() => Math.max(1, Math.min(8, ...p.cajas.filter((c) => (mod.value?.cantidades[c.id] ?? 0) > 0).map((c) => Math.round(c.apilable || 1)))));
+const cajasDibujo = computed(() => (mod.value?.tipo === 'AR' && res.value?.porTipo
+  ? res.value.porTipo.map((x: any) => ({ ...x, bandejas: x.cajas > 0 ? Math.ceil((mod.value!.cantidades[x.c.id] ?? 0) / x.cajas) : 0 }))
+  : undefined));
+const diSinEquipo = computed(() => p.modelos.some((m) => m.tipo === 'DI') && !gruaDriveIn({ grua: p.bodega.grua }).puede);
+const valido = computed(() => p.modelos.length > 0 && p.modelos.every((m) => Object.values(m.cantidades).some((v) => v > 0)));
+
+// Tipos nuevos del catalogo: entran con su cantidad al unico modelo de su clase
+function sincronizarCantidades() {
+  p.modelos.forEach((m) => {
+    const lista = m.tipo === 'AR' ? p.cajas : p.pallets;
+    const mismos = p.modelos.filter((o) => (o.tipo === 'AR') === (m.tipo === 'AR'));
+    const cantidades = { ...m.cantidades };
+    lista.forEach((t) => { if (!(t.id in cantidades)) cantidades[t.id] = mismos[0].id === m.id ? t.cantidad : 0; });
+    Object.keys(cantidades).forEach((k) => { if (!lista.some((t) => t.id === k)) delete cantidades[k]; });
+    p.cambiarModelo(m.id, { cantidades });
+    // Angulo ranurado: con cajas nuevas (o cambiadas) se propone la bandeja que ocupa menos piso
+    if (m.tipo === 'AR') {
+      const firma = firmaCajasAR({ ...m, cantidades }, p.cajas);
+      if ((m as any).propuestaAR !== firma) {
+        const b = mejorBandeja({ ...m, cantidades }, { cajas: p.cajas, altura: p.bodega.altura });
+        p.cambiarModelo(m.id, { ...(b ? { bandeja: b.bandeja, frente: b.frente, niveles: b.niveles, camasRepisa: b.camasRepisa, altoEntre: null } : {}), propuestaAR: firma } as any);
+      }
+    }
+  });
+  // Niveles dentro de lo posible desde el inicio
+  p.modelos.forEach((m) => {
+    const max = nivelesMaximos(m, { pallets: p.pallets, altura: p.bodega.altura, grua: p.bodega.grua, gruaDatos: gruaDatos.value });
+    if (m.niveles > max) p.cambiarModelo(m.id, { niveles: max, mezcla: [] });
+  });
+}
+
+function cambiar(c: Partial<Modelo>) {
+  if (!mod.value) return;
+  // Si cambia lo que va en cada nivel, las vigas movidas a mano vuelven a las calculadas (la luz cambia)
+  if (('mezcla' in c || 'cantidades' in c || 'porViga' in c) && !('vigasY' in c)) c = { ...c, vigasY: null };
+  p.cambiarModelo(mod.value.id, c);
+}
+function cambiarSistema(t: Sistema) {
+  if (!mod.value || mod.value.tipo === t) return;
+  const lista = t === 'AR' ? p.cajas : p.pallets;
+  const base = t === 'RS' ? { porViga: 2, sobrante: 0.3, doble: true, niveles: 3 } : t === 'DI' ? { fondos: 5, doble: false, niveles: 3 } : { bandeja: 0.4, frente: 0.92, doble: false, niveles: 5, propuestaAR: null };
+  cambiar({ tipo: t, ...(base as any), mezcla: [], nombre: TIPOS[t].nombre, cantidades: Object.fromEntries(lista.map((x) => [x.id, x.cantidad])) });
+  if (t === 'AR' && !p.cajas.length) { p.agregarCaja(); sincronizarCantidades(); }
+  if (t !== 'AR' && !p.pallets.length) { p.agregarPallet(); sincronizarCantidades(); }
+  sincronizarCantidades();
+}
+function cambiarCantidad(id: string, e: Event) {
+  if (!mod.value) return;
+  const v = Math.max(0, Math.round(Number((e.target as HTMLInputElement).value) || 0));
+  cambiar({ cantidades: { ...mod.value.cantidades, [id]: v }, mezcla: [] });
+}
+function cambiarAltura(e: Event) {
+  const v = Number((e.target as HTMLInputElement).value);
+  p.bodega.altura = v >= 2.5 ? Math.min(40, v) : null;
+  p.flags = p.flags.filter((f) => f !== 'no_se:altura');
+  sincronizarCantidades();
+}
+function alturaNoSe() {
+  p.bodega.altura = 8;
+  p.flags = [...new Set([...p.flags, 'no_se:altura'])];
+  sincronizarCantidades();
+}
+const alturaNombre = (i: number) => (i === 0 ? 'Piso' : `Nivel ${i}`);
+function asignar(i: number, id: string) {
+  const mezcla = [...res.value.r.mezcla];
+  mezcla[i] = id;
+  cambiar({ mezcla });
+}
+function acomodar() {
+  if (!mod.value) return;
+  cambiar({ mezcla: mezclaPorDefecto({ ...mod.value, mezcla: [] }, p.pallets) });
+}
+// "Aplicar a todos": esa altura con ese tipo en todos los selectivos del proyecto
+function aplicarATodos(i: number, id: string | null) {
+  p.modelos.filter((m) => m.tipo === 'RS' && m.niveles >= i).forEach((m) => {
+    const actual = resultadoModelo(m, { pallets: p.pallets }).r.mezcla as (string | null)[];
+    p.cambiarModelo(m.id, { mezcla: actual.map((x, j) => (j === i ? id : x)) });
+  });
+}
+function plano(i: number, tipo: string) {
+  const planos = Array.from({ length: (mod.value?.niveles ?? 0) + 1 }, (_, j) => (j === i ? tipo || null : res.value.r.planos?.[j] ?? null));
+  cambiar({ planos });
+}
+function nuevo() {
+  const tipo = mod.value?.tipo === 'RS' && p.cajas.length ? 'AR' : (mod.value?.tipo ?? 'RS');
+  p.agregarModelo(tipo);
+  sincronizarCantidades();
+}
+</script>

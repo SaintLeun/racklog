@@ -28,7 +28,7 @@
           </ol>
 
           <div class="mt-9 flex flex-col items-start gap-3">
-            <NuxtLink to="/planificador" class="btn btn-primary btn-lg w-full whitespace-nowrap sm:w-auto" @click="marcar('boton')">
+            <NuxtLink to="/planifica-tu-bodega" class="btn btn-primary btn-lg w-full whitespace-nowrap sm:w-auto" @click="marcar('boton')">
               Diseñar mi bodega en 3D
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -40,7 +40,7 @@
 
         <!-- Imagen: el mismo diseño en 2D y en 3D -->
         <NuxtLink
-          to="/planificador"
+          to="/planifica-tu-bodega"
           class="group relative block rounded-3xl bg-gradient-to-br from-brand-50 via-neutral-50 to-neutral-100 p-3 ring-1 ring-neutral-200 transition hover:ring-brand-300 sm:p-5"
           aria-label="Abrir el planificador de bodega 3D"
           @click="marcar('imagen')"
