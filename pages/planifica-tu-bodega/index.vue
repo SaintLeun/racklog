@@ -11,16 +11,31 @@
           <span class="eyebrow !bg-white/5 !text-brand-300 !ring-white/10">Planificador de bodegas gratis</span>
           <h1 class="mt-4 text-[32px] font-bold leading-tight tracking-tight text-white sm:text-5xl sm:leading-[1.1]">
             <template v-if="varTitulo === 'costo'">Descubre cuánto cuesta equipar tu bodega y recibe tu cotización en <span class="text-brand-400">máximo 24 horas</span></template>
-            <template v-else>Diseña tu bodega en 5 minutos y recibe tu cotización en <span class="text-brand-400">máximo 24 horas</span></template>
+            <template v-else>Diseña tu bodega y recibe tu cotización en <span class="text-brand-400">máximo 24 horas</span></template>
           </h1>
           <p class="mt-5 max-w-xl text-lg leading-relaxed text-neutral-300">
-            Gratis y sin instalar nada. Un ingeniero de Racklog revisa tu diseño antes de cotizar.
+            Gratis y sin instalar nada. Ingeniería Racklog valida tu diseño con cálculo estructural antes de cotizar.
           </p>
-          <div class="mt-8 flex flex-col gap-3 sm:flex-row">
-            <NuxtLink to="/planifica-tu-bodega/disena" class="btn btn-primary btn-lg" @click="marcar('cta_click', { ubicacion: 'hero' })">
-              {{ textoCta }}
+          <!-- Dos puertas (prompt de conversión §B): en el celular la vía exprés va primero -->
+          <p class="mt-8 font-semibold text-white">¿Lo diseñamos nosotros (2 min) o lo diseñas tú (10 min)?</p>
+          <div class="mt-3 flex flex-col gap-3 sm:flex-row">
+            <NuxtLink to="/planifica-tu-bodega/expres" class="btn btn-primary btn-lg lg:hidden" @click="marcar('cta_click', { ubicacion: 'hero', via: 'expres' })">
+              Lo diseñan ustedes · 2 min
               <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </NuxtLink>
+            <NuxtLink to="/planifica-tu-bodega/disena" class="btn btn-primary btn-lg hidden lg:inline-flex" @click="marcar('cta_click', { ubicacion: 'hero', via: 'diseno' })">
+              Lo diseño yo · 10 min
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </NuxtLink>
+            <NuxtLink to="/planifica-tu-bodega/disena" class="btn btn-ghost-light btn-lg lg:hidden" @click="marcar('cta_click', { ubicacion: 'hero', via: 'diseno' })">
+              Lo diseño yo · 10 min
+            </NuxtLink>
+            <NuxtLink to="/planifica-tu-bodega/expres" class="btn btn-ghost-light btn-lg hidden lg:inline-flex" @click="marcar('cta_click', { ubicacion: 'hero', via: 'expres' })">
+              Lo diseñan ustedes · 2 min
+            </NuxtLink>
+          </div>
+          <p class="mt-3 max-w-xl text-sm text-neutral-400">Mientras más sepamos de tu bodega y tu operación, más precisa y rápida es tu cotización — sin esperar visitas ni mediciones.</p>
+          <div class="mt-4 flex flex-col gap-3 sm:flex-row">
             <a :href="WHATSAPP" target="_blank" rel="noopener noreferrer" class="btn btn-ghost-light btn-lg active:scale-[.98]" @click="marcar('whatsapp_click', { ubicacion: 'hero' })">
               <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path :d="ICONO_WA" /></svg>
               Hablar por WhatsApp
@@ -84,7 +99,8 @@
       <div class="container-page">
         <div class="mx-auto max-w-2xl text-center" data-aparece>
           <span class="eyebrow">Cómo funciona</span>
-          <h2 class="titulo-seccion mt-4">Tres pasos y listo</h2>
+          <h2 class="titulo-seccion mt-4">Cuatro pasos, unos 10 minutos</h2>
+          <p class="mt-3 text-neutral-600">¿Sin tiempo o sin medidas? <NuxtLink to="/planifica-tu-bodega/expres" class="font-semibold text-brand-700 underline underline-offset-2" @click="marcar('cta_click', { ubicacion: 'como_funciona', via: 'expres' })">Lo diseñamos nosotros con 4 preguntas (2 min)</NuxtLink>.</p>
         </div>
         <ol class="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
           <li v-for="(p, i) in PASOS" :key="p.t" class="card relative p-6" data-aparece>
@@ -194,7 +210,7 @@
                 Te limita el techo: dejamos 0,5 m libres sobre la carga más alta, por seguridad.
               </span>
             </p>
-            <p class="nota mt-3">Cálculo referencial con pallet de 1,2 × 1,0 m. El diseño final lo revisa un ingeniero.</p>
+            <p class="nota mt-3">Cálculo preliminar con pallet de 1,2 × 1,0 m. Ingeniería Racklog valida el diseño final con cálculo estructural (NCh2369 · ANSI MH16.1).</p>
 
             <div class="mt-auto pt-6">
               <NuxtLink :to="linkDemo" class="btn btn-primary btn-lg w-full" @click="marcar('cta_click', { ubicacion: 'demo', ...datosDemo })">
@@ -257,10 +273,13 @@
         <h2 class="mx-auto max-w-3xl text-3xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
           Tu bodega diseñada hoy, tu cotización en máximo 24 horas
         </h2>
-        <p class="mx-auto mt-5 max-w-xl text-lg text-neutral-300">Gratis, desde el celular, y con un ingeniero revisando tu diseño.</p>
+        <p class="mx-auto mt-5 max-w-xl text-lg text-neutral-300">Gratis, desde el celular, y con ingeniería Racklog validando tu diseño.</p>
         <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <NuxtLink to="/planifica-tu-bodega/disena" class="btn btn-primary btn-lg w-full sm:w-auto" @click="marcar('cta_click', { ubicacion: 'final' })">
-            {{ textoCta }}
+          <NuxtLink to="/planifica-tu-bodega/expres" class="btn btn-primary btn-lg w-full sm:w-auto" @click="marcar('cta_click', { ubicacion: 'final', via: 'expres' })">
+            Lo diseñan ustedes · 2 min
+          </NuxtLink>
+          <NuxtLink to="/planifica-tu-bodega/disena" class="btn btn-ghost-light btn-lg w-full sm:w-auto" @click="marcar('cta_click', { ubicacion: 'final', via: 'diseno' })">
+            Lo diseño yo · 10 min
           </NuxtLink>
           <a :href="WHATSAPP" target="_blank" rel="noopener noreferrer" class="btn btn-ghost-light btn-lg w-full active:scale-[.98] sm:w-auto" @click="marcar('whatsapp_click', { ubicacion: 'final' })">
             Hablar por WhatsApp
@@ -282,7 +301,7 @@ definePageMeta({ layout: 'landing' });
 
 usePageSeo({
   title: 'Planifica tu bodega gratis',
-  description: 'Diseña tu bodega en 5 minutos con el planificador de Racklog y recibe tu cotización de racks en máximo 24 horas. Gratis y revisado por un ingeniero.',
+  description: 'Diseña tu bodega con el planificador de Racklog (o pídenos que la diseñemos en 2 minutos) y recibe tu cotización de racks en máximo 24 horas. Gratis y revisado por un ingeniero.',
   ogDescription: 'Dibuja tu bodega, arma tus pallets y mira tus racks en 2D y 3D. Un ingeniero de Racklog lo revisa y te cotiza en máximo 24 horas.',
   twitterDescription: 'Planificador de bodegas gratis: racks en 2D y 3D desde el celular y cotización en máximo 24 horas.',
   image: '/assets/images/og-planifica-tu-bodega.png',
@@ -322,7 +341,7 @@ const PASOS = [
   { t: 'Dibuja tu bodega', d: 'Marca las medidas, pilares, portones y oficinas. Si no sabes algo, usamos lo típico.', icono: 'M4 4h16v16H4zM4 10h6v10M14 4v6h6' },
   { t: 'Arma tus pallets y tu rack', d: 'Dinos el alto, el peso y cuántos tienes. Calculamos niveles y cuerpos por ti.', icono: 'M3 18h18M5 18v2M12 18v2M19 18v2M6 6h12v12H6zM6 12h12M12 6v12' },
   { t: 'Arma tu layout', d: 'Pon tus racks lineal por lineal, simples o dobles, donde tú quieras. Te decimos cuánto te falta.', icono: 'M4 5h16M4 12h16M4 19h16M8 5v14' },
-  { t: 'Recibe tu cotización en máximo 24 h', d: 'Un ingeniero revisa tu diseño y te enviamos la cotización por correo.', icono: 'M12 7v5l3 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+  { t: 'Recibe tu cotización en máximo 24 h', d: 'Ingeniería Racklog valida tu diseño y te enviamos la cotización formal por correo.', icono: 'M12 7v5l3 2M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
 ];
 
 const ROLES = [

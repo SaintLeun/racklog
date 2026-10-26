@@ -112,7 +112,7 @@
           </li>
         </ul>
         <p v-if="!lista.length" class="mt-6 text-neutral-600">Tu rack no necesita accesorios adicionales.</p>
-        <p class="mt-4 text-sm text-neutral-500">Medidas y módulos referenciales: los confirma Técnica Racklog según su catálogo.</p>
+        <p class="mt-4 text-sm text-neutral-500">Medidas y módulos típicos: ingeniería Racklog los valida con tu caso antes de cotizar.</p>
       </div>
     </div>
 

@@ -4,7 +4,7 @@ Archivo generado por `node scripts/valores-por-confirmar.mjs` a partir del códi
 Cada valor de esta lista se muestra en el flujo con la etiqueta **referencial**. Para confirmarlo, Técnica Racklog
 corrige el valor en el archivo indicado, cambia `confirmado: false` por `confirmado: true` y se vuelve a correr el script.
 
-Pendientes: **33**.
+Pendientes: **34**.
 
 ## Equipos (pasillo m, levante m, kg nominal, curva de capacidad residual)
 
@@ -36,6 +36,7 @@ Pendientes: **33**.
 | rackMuro | 0.1 | ☐ |
 | rackPilar | 0.1 | ☐ |
 | pasilloPersona | 1.2 | ☐ |
+| pasilloAR | valor: 1 · min: 0.8 · max: 1.5 | ☐ |
 
 ## Capacidades por nivel (kg)
 

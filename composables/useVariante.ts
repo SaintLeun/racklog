@@ -13,11 +13,12 @@
 //
 // Experimento 'registro' (para el flujo, components/flujo/*):
 //   import { leerVariante } from '~/composables/useVariante';
-//   const registro = leerVariante('registro');   // 'inicio' | 'resultado' | null (null = comportamiento actual)
+//   const registro = leerVariante('registro');   // 'inicio' | 'final' | null (null = control: registro al final)
 //   Llamarla en el cliente (onMounted o un handler): en el servidor siempre devuelve null.
 
 export const EXPERIMENTOS = {
-  registro: ['inicio', 'resultado'],
+  // Control: registro al final (prompt de conversión §C); 'inicio' = variante con registro antes de empezar
+  registro: ['inicio', 'final'],
   titulo: ['minutos', 'costo'],
   cta: ['cotizar', 'recibir'],
 } as const;

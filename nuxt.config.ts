@@ -87,6 +87,9 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    // Solo en dev: abrir el servidor desde el navegador por el puerto reenviado de Codespaces
+    // (*.app.github.dev). Sin esto Vite responde "Blocked request" y la página queda en error
+    server: { allowedHosts: [".app.github.dev"] },
     // three y jsPDF se cargan recien al abrir la vista 3D o descargar el PDF. Sin esto, en dev
     // Vite los descubre en ese momento, los optimiza y recarga la pagina: la vista 3D parecia
     // quedar en un bucle y la descarga del PDF se perdia.

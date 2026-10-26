@@ -6,15 +6,22 @@
         <ClientOnly>
           <FlujoStepper v-if="!compartido" :indice="p.indice" :alcanzado="p.alcanzado" @ir="ir" />
           <!-- Continuar donde quede: el link a su diseño llega por correo -->
-          <div v-if="!compartido" class="mt-2 flex justify-end gap-5">
+          <div v-if="!compartido" class="mt-2 flex flex-wrap items-center justify-end gap-x-5 gap-y-2">
+            <!-- Precisión de la cotización siempre a la vista: sube con cada dato real (prompt de conversión §H) -->
+            <FlujoPrecision v-if="p.alcanzado > 0 && !guardar.abierto" compacto class="mr-auto" :estados="estados" />
             <button v-if="!guardar.abierto && p.alcanzado > 0" type="button" class="text-sm font-medium text-neutral-500 underline underline-offset-2" @click="empezarDeNuevo">Empezar de nuevo</button>
             <button v-if="!guardar.abierto" type="button" class="text-sm font-medium text-brand-700 underline underline-offset-2" @click="guardar.abierto = true">Guardar y seguir después</button>
             <form v-else class="flex w-full flex-wrap items-center justify-end gap-2" @submit.prevent="enviarLink">
               <label class="sr-only" for="fl-correo-guardar">Tu correo</label>
               <input id="fl-correo-guardar" v-model.trim="guardar.correo" type="email" required placeholder="tu@empresa.cl" class="form-input !h-10 w-56 max-w-full">
               <button type="submit" class="fl-btn !min-h-10 !px-4 !text-sm" :disabled="guardar.estado === 'enviando'">{{ guardar.estado === 'enviando' ? 'Enviando…' : 'Envíame el link' }}</button>
+              <button type="button" class="text-sm font-medium text-brand-700 underline underline-offset-2" @click="copiarLink">{{ guardar.copiado ? 'Link copiado ✓' : 'Copiar el link' }}</button>
               <span v-if="guardar.estado === 'ok'" class="text-sm text-green-700" role="status">Listo, revisa tu correo.</span>
-              <span v-else-if="guardar.estado === 'error'" class="text-sm text-red-700" role="status">No se pudo enviar. Copia el link: <a :href="guardar.link" class="underline">abrir</a></span>
+              <!-- Si el correo falla, el diseño no se pierde: el link queda copiado y se puede mandar por WhatsApp -->
+              <span v-else-if="guardar.estado === 'error'" class="w-full text-right text-sm text-neutral-700" role="status">
+                No pudimos enviar el correo{{ guardar.copiado ? ', pero te copiamos el link' : '' }}: guárdalo o
+                <a :href="`https://wa.me/?text=${encodeURIComponent('Mi diseño de bodega en Racklog: ' + guardar.link)}`" target="_blank" rel="noopener" class="font-semibold text-green-700 underline" @click="marcar('guardar_diseno', { ok: false, via: 'whatsapp' })">envíatelo por WhatsApp</a>.
+              </span>
             </form>
           </div>
           <!-- Mientras carga: la misma forma del stepper (nunca una franja en blanco) -->
@@ -31,6 +38,16 @@
 
     <main :class="['container-page pt-5', ANCHO[p.paso]]">
       <ClientOnly>
+        <!-- En el celular la vía exprés es la de por defecto: el diseño completo se sigue mejor en el computador -->
+        <div v-if="movil && !compartido && p.paso === 'operacion' && !p.alcanzado && !avisoMovilCerrado" class="fl-card mb-5 bg-brand-50/60 !outline-brand-200">
+          <p class="font-semibold text-neutral-900">En el celular es más rápido que lo diseñemos nosotros</p>
+          <p class="mt-1 text-sm text-neutral-700">{{ MENSAJE_INICIO }}</p>
+          <div class="mt-3 grid gap-2 sm:grid-cols-2">
+            <NuxtLink to="/planifica-tu-bodega/expres" class="fl-btn" @click="marcar('cta_click', { ubicacion: 'disena_movil', via: 'expres' })">Lo diseñan ustedes (2 min)</NuxtLink>
+            <button v-if="!guardar.abierto" type="button" class="fl-btn-sec" @click="guardar.abierto = true; marcar('cta_click', { ubicacion: 'disena_movil', via: 'link_computador' })">Envíame el link para seguir en el computador</button>
+          </div>
+          <button type="button" class="mt-2 text-sm font-medium text-neutral-500 underline underline-offset-2" @click="avisoMovilCerrado = true">Seguir aquí en el celular</button>
+        </div>
         <Transition name="fl-paso" mode="out-in">
           <!-- Link compartido: solo lectura, con "Cotizar este diseño" (no pisa el diseño de quien lo abre) -->
           <FlujoCompartido v-if="compartido" key="compartido" :datos="compartido" @cotizar="cotizarCompartido" @propio="dejarCompartido" />
@@ -83,7 +100,8 @@
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { diseñoDesdeUrl, aplicarDiseño, limpiarUrl, enlaceDiseño } from '~/lib/flujo/enlace.js';
 import { leerVariante } from '~/composables/useVariante';
-import { racksAlDia } from '~/lib/flujo/calculos.js';
+import { MENSAJE_INICIO, estadosDiseño, pideRegistroAntes } from '~/lib/flujo/conversion.js';
+import { racksAlDia, cantidadesAlDia } from '~/lib/flujo/calculos.js';
 import { useProyecto, PASOS, type Paso } from '~/stores/proyecto';
 import {
   FlujoPasoOperacion, FlujoPasoPallets, FlujoPasoRack, FlujoPasoAccesorios, FlujoPasoBodega, FlujoPasoRevisa, FlujoPasoCotiza,
@@ -113,13 +131,21 @@ function ir(paso: Paso) {
   if (import.meta.client) window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 const siguiente = () => ir(PASOS[Math.min(PASOS.length - 1, p.indice + 1)].k);
-const atras = () => ir(PASOS[Math.max(0, p.indice - 1)].k);
+const atras = () => {
+  // Volver desde el dibujo de la bodega sin haberlo terminado cuenta como abandono de medidas (rescate §I)
+  if (p.paso === 'dibujo' && p.alcanzado <= PASOS.findIndex((x) => x.k === 'dibujo')) p.abandonoMedidas = true;
+  ir(PASOS[Math.max(0, p.indice - 1)].k);
+};
+// Datos reales o estimados del diseño: alimentan la precisión de la cotización
+const estados = computed(() => estadosDiseño(p));
+const movil = ref(false);
+const avisoMovilCerrado = ref(false);
 // "Cotizar" de arriba: al último paso; si falta definir el rack o la bodega, al paso que falta
 function cotizarYa() {
   marcar('cta_click', { ubicacion: 'header', paso: p.paso });
   if (!p.modelos.length) ir('rack');
   else if (!p.racks.length) ir('bodega');
-  else ir(p.registrado ? 'cotiza' : 'revisa');
+  else ir('cotiza');
 }
 
 // Un diseño nuevo parte limpio (sin accesorios quitados ni racks de un recorrido anterior)
@@ -156,6 +182,13 @@ function racksAlDiaConModelo() {
   if (JSON.stringify(racks) !== JSON.stringify(p.racks)) p.racks = racks;
 }
 watch(() => JSON.stringify([p.modelos, p.pallets, p.cajas, p.bodega.grua]), racksAlDiaConModelo);
+// Una sola cantidad por producto: si el cliente cambia cuántos pallets tiene, el rack lo sigue (y al revés,
+// "Arma tu rack" actualiza la cantidad del producto). Así la barra del layout y "por producto" nunca difieren
+function cantidadesConPallets() {
+  const m = cantidadesAlDia(p.modelos, { pallets: p.pallets, cajas: p.cajas });
+  if (m !== p.modelos) p.modelos = m;
+}
+watch(() => JSON.stringify([p.pallets.map((t) => [t.id, t.cantidad]), p.cajas.map((c) => [c.id, c.cantidad])]), cantidadesConPallets);
 
 const registroAlInicio = ref(false);
 // ─── Diseño compartido (solo lectura): "Cotizar este diseño" lo carga y va a pedir la cotización ───
@@ -165,14 +198,23 @@ function cotizarCompartido() {
   compartido.value = null;
   limpiarUrl();
   marcar('cta_click', { ubicacion: 'link_compartido' });
-  ir(p.registrado ? 'cotiza' : 'revisa');
+  ir('cotiza');
 }
 function dejarCompartido() {
   compartido.value = null;
   limpiarUrl();
 }
 // ─── Guardar y seguir despues (correo con el link al diseño) ───
-const guardar = reactive({ abierto: false, correo: '', estado: '' as '' | 'enviando' | 'ok' | 'error', link: '' });
+const guardar = reactive({ abierto: false, correo: '', estado: '' as '' | 'enviando' | 'ok' | 'error', link: '', copiado: false });
+// Copiar el link al diseño (sirve aunque el correo no salga); en navegadores sin portapapeles queda para tocarlo
+async function copiarLink() {
+  try {
+    guardar.link ||= await enlaceDiseño(p.$state);
+    await navigator.clipboard.writeText(guardar.link);
+    guardar.copiado = true;
+    marcar('guardar_diseno', { ok: true, via: 'copiar' });
+  } catch { guardar.copiado = false; }
+}
 async function enviarLink() {
   guardar.estado = 'enviando';
   try {
@@ -189,10 +231,11 @@ async function enviarLink() {
       r = await enviar();
     }
     guardar.estado = r.ok ? 'ok' : 'error';
-    marcar('guardar_diseno', { ok: r.ok });
+    marcar('guardar_diseno', { ok: r.ok, status: r.status });
   } catch {
     guardar.estado = 'error';
   }
+  if (guardar.estado === 'error') await copiarLink();
 }
 onMounted(async () => {
   p.cargar();
@@ -206,8 +249,11 @@ onMounted(async () => {
     else if (datos) { aplicarDiseño(p, datos); limpiarUrl(); }
   } catch { /* link dañado: sigue con lo guardado */ }
   if (p.lead.correo) guardar.correo = p.lead.correo;
-  registroAlInicio.value = leerVariante('registro') === 'inicio' && !p.registrado;
+  // A/B 'registro': el control (sin variante o 'final') nunca pide registro antes de dibujar
+  registroAlInicio.value = pideRegistroAntes('operacion', { registrado: p.registrado, variante: leerVariante('registro') });
+  movil.value = matchMedia('(max-width: 1023px)').matches;
   aplicarDemo();
+  cantidadesConPallets();                       // diseños guardados con cantidades descuadradas
   if (p.racks.length) racksAlDiaConModelo();   // diseños guardados antes de este arreglo
   p.$subscribe(() => p.persistir());
   armarReloj();
@@ -243,126 +289,4 @@ function marcar(event: string, datos: Record<string, unknown>) {
 }
 </script>
 
-<style>
-/* ─── Flujo "Planifica tu bodega": tipografia con aire y controles de 44 px ─── */
-.fl { font-size: 16px; line-height: 1.5; }
-.fl-titulo { font-size: 1.375rem; line-height: 1.25; font-weight: 700; color: #171717; letter-spacing: -0.01em; }
-.fl-bajada { margin-top: .25rem; color: #525252; }
-.fl-pregunta { font-size: 1.125rem; font-weight: 600; color: #171717; }
-.fl-leyenda { font-size: .8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #525252; }
-.fl-sub { font-weight: 600; color: #262626; }
-.fl-card { border-radius: 1rem; background: #fff; padding: 1rem; box-shadow: 0 1px 2px rgb(0 0 0 / .04); outline: 1px solid #e5e5e5; }
-.fl-campo { display: grid; gap: .375rem; }
-.fl-campo > span { font-size: .9375rem; font-weight: 500; color: #404040; }
-.fl-campo .form-input { min-height: 2.75rem; font-size: 1rem; }
-.fl-error { border-color: #dc2626 !important; }
-/* Datos de ejemplo: se ven grises hasta que el cliente los cambia */
-.fl-ejemplo .form-input { color: #a3a3a3; }
-.fl-msg { font-size: .875rem; color: #b91c1c; }
-.fl-input-titulo { flex: 1; min-width: 0; border-radius: .5rem; padding: .25rem .5rem; margin-left: -.5rem; font-weight: 600; font-size: 1.0625rem; color: #171717; }
-.fl-input-titulo:hover { background: #f5f5f5; }
-.fl-input-titulo:focus { outline: 2px solid #fdba74; background: #fff; }
-.fl-quitar { font-size: .875rem; font-weight: 500; color: #b91c1c; padding: .5rem; }
-.fl-btn {
-  display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem; padding: 0 1.5rem; border-radius: .75rem;
-  background: #ea580c; color: #fff; font-weight: 600; transition: background .2s, transform .12s;
-}
-.fl-btn:hover { background: #c2410c; }
-.fl-btn:active, .fl-btn-sec:active, .fl-chip:active, .fl-opcion:active { transform: scale(.98); }
-.fl-btn-sec {
-  display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem; padding: 0 1.25rem; border-radius: .75rem;
-  background: #fff; color: #262626; font-weight: 600; box-shadow: inset 0 0 0 1px #d4d4d4; transition: background .2s, transform .12s;
-}
-.fl-btn-sec:hover { background: #f5f5f5; }
-.fl-opcion {
-  display: flex; flex-direction: column; gap: .25rem; text-align: left; border-radius: 1rem; background: #fff; padding: 1rem;
-  box-shadow: inset 0 0 0 1px #e5e5e5; transition: box-shadow .2s, transform .12s;
-}
-.fl-opcion:hover { box-shadow: inset 0 0 0 2px #fdba74; }
-.fl-opcion--sel { box-shadow: inset 0 0 0 2px #ea580c !important; }
-.fl-chip {
-  display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: 2.75rem; padding: .5rem .875rem;
-  border-radius: .75rem; background: #fff; color: #262626; font-weight: 500; box-shadow: inset 0 0 0 1px #d4d4d4;
-  transition: box-shadow .15s, background .15s, transform .12s;
-}
-.fl-chip:hover { box-shadow: inset 0 0 0 1px #a3a3a3; }
-.fl-chip--sel { background: #fff7ed; color: #9a3412; box-shadow: inset 0 0 0 2px #ea580c !important; font-weight: 600; }
-.fl-nose { flex-shrink: 0; min-height: 2.75rem; padding: 0 .875rem; border-radius: .75rem; font-size: .875rem; font-weight: 500; color: #525252; box-shadow: inset 0 0 0 1px #d4d4d4; background: #fff; }
-.fl-nose--sel { background: #f5f5f5; color: #171717; box-shadow: inset 0 0 0 2px #737373; }
-.fl-agregar { display: block; width: 100%; min-height: 2.75rem; border-radius: .75rem; border: 1.5px dashed #d4d4d4; color: #c2410c; font-weight: 600; }
-.fl-agregar:hover { border-color: #fdba74; background: #fff7ed; }
-.fl-mas > summary, .fl-tip > summary { cursor: pointer; font-weight: 600; font-size: .9375rem; color: #404040; min-height: 2.5rem; display: flex; align-items: center; }
-.fl-tip > p { margin-top: .25rem; color: #525252; }
-/* Panel de propiedades del plano (paso 5): al borde derecho, fijo con el plano, acciones al pie */
-.fl-panel { display: flex; flex-direction: column; flex-shrink: 0; border-top: 1px solid #f5f5f5; background: #fff; max-height: 46svh; }
-/* En escritorio toma el alto del plano (absoluto en su columna) y su cuerpo scrollea: el pie siempre a la vista */
-@media (min-width: 1024px) { .fl-panel { position: absolute; inset: 0; max-height: none; border-top: 0; border-left: 1px solid #f0f0f0; } }
-.fl-panel__cab { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; padding: 1rem 1rem .75rem; border-bottom: 1px solid #f5f5f5; }
-.fl-panel__tipo { font-size: .6875rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #a3a3a3; }
-.fl-panel__titulo { font-size: 1.0625rem; font-weight: 700; color: #171717; line-height: 1.3; }
-.fl-panel__cerrar { width: 2rem; height: 2rem; flex-shrink: 0; border-radius: .5rem; font-size: 1.375rem; line-height: 1; color: #737373; }
-.fl-panel__cerrar:hover { background: #f5f5f5; color: #171717; }
-.fl-panel__cuerpo { flex: 1; overflow-y: auto; padding: .25rem 1rem 1rem; }
-.fl-panel__sec { margin: 1rem 0 .5rem; font-size: .75rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: #737373; }
-.fl-panel__datos { display: grid; grid-template-columns: repeat(3, 1fr); gap: .375rem; }
-.fl-panel__datos > div { border-radius: .5rem; background: #fafafa; padding: .375rem .5rem; }
-.fl-panel__datos dt { font-size: .75rem; color: #737373; }
-.fl-panel__datos dd { font-size: .9375rem; font-weight: 600; color: #171717; font-variant-numeric: tabular-nums; }
-.fl-prop { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 2.5rem; font-size: .875rem; color: #404040; }
-.fl-prop + .fl-prop { border-top: 1px solid #fafafa; }
-.fl-prop__in { position: relative; flex-shrink: 0; }
-.fl-prop__in input { width: 6.5rem; height: 2.25rem; border-radius: .5rem; border: 1px solid #d4d4d4; padding: 0 1.75rem 0 .625rem; text-align: right; font-variant-numeric: tabular-nums; color: #171717; background: #fff; }
-.fl-prop__in input:focus { outline: 2px solid #fb923c; outline-offset: 0; border-color: #fb923c; }
-.fl-prop__in i { position: absolute; right: .625rem; top: 50%; transform: translateY(-50%); font-style: normal; font-size: .8125rem; color: #a3a3a3; pointer-events: none; }
-.fl-panel__pie { display: grid; grid-template-columns: repeat(3, 1fr); gap: .375rem; padding: .75rem 1rem; border-top: 1px solid #f5f5f5; background: #fafafa; }
-.fl-panel__accion { min-height: 2.5rem; border-radius: .625rem; background: #fff; box-shadow: inset 0 0 0 1px #d4d4d4; font-size: .875rem; font-weight: 600; color: #262626; }
-.fl-panel__accion:hover { box-shadow: inset 0 0 0 1px #a3a3a3; }
-/* Sugerencia de otro sistema (paso 3): una línea discreta y plegada bajo la altura */
-.fl-sugerencia { border-radius: .75rem; background: #fff; box-shadow: inset 0 0 0 1px #e5e5e5; padding: .5rem .875rem; font-size: .9375rem; }
-.fl-sugerencia > summary { cursor: pointer; list-style: none; min-height: 2.25rem; display: flex; flex-wrap: wrap; align-items: center; gap: .125rem .25rem; }
-.fl-sugerencia > summary::-webkit-details-marker { display: none; }
-.fl-sugerencia[open] > summary { border-bottom: 1px solid #f5f5f5; padding-bottom: .5rem; }
-.fl-dato { border-radius: .625rem; background: #fafafa; padding: .5rem .625rem; }
-.fl-dato dt { font-size: .75rem; line-height: 1.3; color: #737373; }
-.fl-dato dd { font-size: 1.125rem; font-weight: 700; color: #171717; }
-.fl-paso-btn { width: 2.75rem; height: 2.75rem; font-size: 1.25rem; font-weight: 600; color: #404040; }
-.fl-paso-btn:disabled { color: #d4d4d4; }
-
-/* Transiciones: fade + 10 px, 220 ms. El paso que sale se va de inmediato (sin pantalla en blanco) */
-.fl-paso-leave-active { transition: none; }
-.fl-paso-enter-active, .fl-sub-enter-active, .fl-sub-leave-active { transition: opacity .22s cubic-bezier(.2, .8, .2, 1), transform .22s cubic-bezier(.2, .8, .2, 1); }
-.fl-paso-enter-from, .fl-sub-enter-from { opacity: 0; transform: translateY(10px); }
-.fl-paso-leave-to, .fl-sub-leave-to { opacity: 0; transform: translateY(-6px); }
-.fl-lista-enter-active, .fl-lista-leave-active { transition: opacity .2s, transform .2s; }
-.fl-lista-enter-from, .fl-lista-leave-to { opacity: 0; transform: translateY(8px); }
-/* Densidad: información corta en controles bajos. Con mouse los chips bajan a 40 px; con dedo quedan en 44 px */
-@media (pointer: fine) {
-  .fl-chip, .fl-btn, .fl-btn-sec, .fl-nose, .fl-agregar { min-height: 2.5rem; }
-  .fl-campo .form-input { min-height: 2.5rem; }
-  .fl input.form-input, .fl select.form-input { height: 2.5rem; padding-top: .375rem; padding-bottom: .375rem; }
-}
-.fl-sub { font-size: .9375rem; }
-.fl-leyenda { font-size: .75rem; }
-/* Tarjeta con secciones: una sola caja con líneas finas en vez de una tarjeta por dato */
-.fl-secciones > * + * { margin-top: .875rem; padding-top: .875rem; border-top: 1px solid #f0f0f0; }
-.fl-secciones > fieldset > legend { float: left; width: 100%; }
-.fl-secciones > fieldset > legend + * { clear: both; }
-
-/* Esqueletos de carga: brillo que pasa (no un gris plano) y entrada en cascada */
-.fl-esq { border-radius: .75rem; background: linear-gradient(90deg, #ededed 0%, #f7f7f7 40%, #ededed 80%) 0 0 / 300% 100%; animation: fl-brillo 1.4s ease-in-out infinite; }
-.fl-esq-tarjeta { border-radius: 1rem; background: #fff; padding: 1.25rem; outline: 1px solid #f0f0f0; }
-.fl-esq-cascada > *, .fl-cascada > *, .fl-cascada > section > *, .fl-cascada > div > section > * { animation: fl-cae .38s cubic-bezier(.2, .8, .2, 1) both; }
-.fl-esq-cascada > :nth-child(2), .fl-cascada > :nth-child(2), .fl-cascada > section > :nth-child(2), .fl-cascada > div > section > :nth-child(2) { animation-delay: 50ms; }
-.fl-esq-cascada > :nth-child(3), .fl-cascada > :nth-child(3), .fl-cascada > section > :nth-child(3), .fl-cascada > div > section > :nth-child(3) { animation-delay: 100ms; }
-.fl-esq-cascada > :nth-child(4), .fl-cascada > :nth-child(4), .fl-cascada > section > :nth-child(4), .fl-cascada > div > section > :nth-child(4) { animation-delay: 150ms; }
-.fl-esq-cascada > :nth-child(n+5), .fl-cascada > :nth-child(n+5), .fl-cascada > section > :nth-child(n+5), .fl-cascada > div > section > :nth-child(n+5) { animation-delay: 200ms; }
-@keyframes fl-brillo { 0% { background-position: 100% 0; } 100% { background-position: -50% 0; } }
-@keyframes fl-cae { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@media (min-width: 640px) { .fl-titulo { font-size: 1.75rem; } }
-@media (prefers-reduced-motion: reduce) {
-  .fl-paso-enter-active, .fl-paso-leave-active, .fl-sub-enter-active, .fl-sub-leave-active, .fl-lista-enter-active, .fl-lista-leave-active { transition: opacity .01s; }
-  .fl-esq { animation: none; }
-  .fl-esq-cascada > *, .fl-cascada > *, .fl-cascada > section > *, .fl-cascada > div > section > * { animation: none; }
-  .fl-paso-enter-from, .fl-paso-leave-to, .fl-sub-enter-from, .fl-sub-leave-to, .fl-lista-enter-from, .fl-lista-leave-to { transform: none; }
-}
-</style>
+<style src="~/assets/css/flujo.css"></style>

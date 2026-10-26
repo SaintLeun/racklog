@@ -1,6 +1,8 @@
 <template>
-  <!-- Premio del paso 7: el cliente se lleva solo el link a su diseño (sin PDF ni imágenes para descargar) -->
-  <section class="fl-card mt-6" aria-labelledby="entregables-titulo">
+  <!-- Premio del último paso: el link a su diseño (el PDF lo descarga en Cotiza tras registrarse).
+       soloPlano: antes del registro solo queda el plano fuera de pantalla, para adjuntarlo al lead -->
+  <section :class="soloPlano ? 'contents' : 'fl-card mt-6'" :aria-labelledby="soloPlano ? undefined : 'entregables-titulo'">
+    <template v-if="!soloPlano">
     <p class="fl-leyenda">Llévate tu diseño</p>
     <h2 id="entregables-titulo" class="mt-1 text-lg font-bold text-neutral-900">{{ titulo }}</h2>
     <p class="mt-1 text-neutral-600">Guarda el link o compártelo con tu equipo: abre tu bodega en 3D, en solo lectura y con el botón para cotizar.</p>
@@ -12,6 +14,7 @@
     <p class="mt-2 text-sm text-neutral-500">Sin tus datos personales. Dura {{ DIAS_LINK }} días.</p>
     <input v-if="linkManual" :value="linkManual" readonly class="form-input mt-2 w-full text-sm" aria-label="Link a tu diseño" @focus="($event.target as HTMLInputElement).select()">
     <p v-if="mensaje" class="mt-3 text-sm" :class="error ? 'text-red-700' : 'text-neutral-600'" role="status">{{ mensaje }}</p>
+    </template>
 
     <!-- Fuera de pantalla: el plano que va adjunto a la cotización (solo para el ejecutivo de Racklog) -->
     <ClientOnly>
@@ -35,6 +38,7 @@ import { proponerAccesorios, aplicarAjustes } from '~/lib/rack3d/accesorios.js';
 import { cifraPrincipal, imagenSvg, nombreArchivo } from '~/lib/flujo/exportar.js';
 import { enlaceParaVer, DIAS_LINK } from '~/lib/flujo/enlace.js';
 
+defineProps<{ soloPlano?: boolean }>();
 const p = useProyecto();
 
 const cifra = computed(() => cifraPrincipal(p.racks) as { n: number; unidad: string });
@@ -89,16 +93,22 @@ async function compartirLink() {
   }
 }
 
+// El plano 2D con cotas como PNG (dataURL), para el PDF y el adjunto. Nunca lanza
+async function plano(): Promise<string | null> {
+  try {
+    const svg = planoCaja.value?.querySelector('svg') as SVGSVGElement | null;
+    return svg ? await imagenSvg(svg) as string | null : null;
+  } catch { return null; }
+}
 // Adjunto para la cotización (Kommo): el plano 2D en PNG, para el ejecutivo. Nunca lanza
 async function archivos(): Promise<File[]> {
   try {
-    const svg = planoCaja.value?.querySelector('svg') as SVGSVGElement | null;
-    const img = svg ? await imagenSvg(svg) as string | null : null;
+    const img = await plano();
     if (img) return [new File([await (await fetch(img)).blob()], `plano-bodega-${nombreArchivo(p.lead.empresa)}.png`, { type: 'image/png' })];
   } catch { /* sin plano */ }
   return [];
 }
-defineExpose({ archivos });
+defineExpose({ archivos, plano });
 
 function marcar(event: string, datos: Record<string, unknown>) {
   window.dataLayer = window.dataLayer || [];

@@ -20,6 +20,11 @@
  *     sin el, la tarea va al responsable que Kommo le asigno al lead.
  *   $KOMMO_ADJUNTOS = false;  (o KOMMO_ADJUNTOS=0) no subir los archivos a Kommo (siguen en el correo).
  *
+ * Prompt de conversion (docs/AVANCE-CONVERSION.md): la via expres (4 preguntas) entra al mismo circuito con la
+ * etiqueta via-expres. Si el cliente se atasco y pidio la visita tecnica en la RM, el lead lleva la etiqueta
+ * visita-tecnica y una segunda tarea de 24 h "Coordinar visita tecnica" (fuera de la RM: validar por
+ * videollamada o fotos). La nota lista los "Datos por confirmar" (valores que el cliente dejo en "No lo se").
+ *
  * Modo prueba (racklog.cl/planifica-tu-bodega/disena?prueba=1): el formulario llega completo, pero el lead
  * lleva la etiqueta PRUEBA, no se le asigna vendedor ni se crea la tarea de 24 h. Solo vale si el correo
  * es de prueba (algo+prueba@racklog.cl), para que un cliente real nunca quede marcado como prueba.
@@ -29,6 +34,10 @@ const TOUR_ETIQUETA = 'tour-logistico';
 const TOUR_TAREA_TEXTO = 'Enviar cotización (promesa máximo 24 horas)';
 const TOUR_TAREA_HORAS = 24;
 const TOUR_ETIQUETA_PRUEBA = 'PRUEBA';
+const TOUR_ETIQUETA_EXPRES = 'via-expres';
+const TOUR_ETIQUETA_VISITA = 'visita-tecnica';
+const TOUR_TAREA_VISITA = 'Coordinar visita técnica';
+const TOUR_TAREA_REMOTA = 'Validar medidas por videollamada o fotos';
 
 /** Lead de prueba: lo pide el formulario (?prueba=1) y el correo es +prueba@racklog.cl */
 function esPruebaTour(array $data): bool {
@@ -126,8 +135,16 @@ function datosTour(array $data): array {
         }
     }
     $puntaje = preg_match('/(\d+)/', (string) ($config['Puntaje del lead'] ?? ''), $m) ? (int) $m[1] : null;
+    $visita = (string) ($config['Visita técnica'] ?? '');
+    $confirmar = (string) ($config['Datos por confirmar'] ?? $config['Confirmar con el cliente'] ?? '');
     return [
         'origen' => (string) ($config['Origen'] ?? 'Planifica tu bodega'),
+        'via' => str_starts_with(mb_strtolower((string) ($config['Vía'] ?? '')), 'expr') ? 'expres' : 'diseno',
+        'comuna' => (string) ($config['Comuna'] ?? $config['Comuna de instalación'] ?? ''),
+        'precision' => (string) ($config['Precisión'] ?? ''),
+        'confirmar' => array_values(array_filter(array_map('trim', preg_split('/\s*[;,]\s*/u', $confirmar) ?: []), 'strlen')),
+        // 'solicitada (RM)' = visita en terreno; cualquier otro valor = validar a distancia
+        'visita' => $visita === '' ? null : (str_starts_with($visita, 'solicitada') ? 'terreno' : 'remota'),
         'rol' => (string) ($config['Rol'] ?? ''),
         'industria' => (string) ($config['Industria'] ?? ''),
         'flags' => (string) ($config['Flags'] ?? ''),
@@ -151,18 +168,37 @@ function extrasLeadTour(array $data, string $tipo): array {
             $campos[] = ['field_id' => (int) $fieldId, 'values' => [['value' => $valor]]];
         }
     }
+    $tags = array_map(fn($t) => ['name' => $t], etiquetasTour($data));
     if (esPruebaTour($data)) {
-        return ['tags' => [['name' => TOUR_ETIQUETA], ['name' => TOUR_ETIQUETA_PRUEBA]], 'campos' => $campos, 'responsable' => null];
+        return ['tags' => $tags, 'campos' => $campos, 'responsable' => null];
     }
     $responsable = (int) (kommoConfigTour('KOMMO_RESPONSABLE_TOUR') ?? 0);
-    return ['tags' => [['name' => TOUR_ETIQUETA]], 'campos' => $campos, 'responsable' => $responsable > 0 ? $responsable : null];
+    return ['tags' => $tags, 'campos' => $campos, 'responsable' => $responsable > 0 ? $responsable : null];
+}
+
+/** Etiquetas del lead: tour-logistico, via-expres, visita-tecnica (solo en terreno, RM) y PRUEBA */
+function etiquetasTour(array $data): array {
+    $t = datosTour($data);
+    $tags = [TOUR_ETIQUETA];
+    if ($t['via'] === 'expres') {
+        $tags[] = TOUR_ETIQUETA_EXPRES;
+    }
+    if ($t['visita'] === 'terreno') {
+        $tags[] = TOUR_ETIQUETA_VISITA;
+    }
+    if (esPruebaTour($data)) {
+        $tags[] = TOUR_ETIQUETA_PRUEBA;
+    }
+    return $tags;
 }
 
 function textoNotaTour(array $data, string $referencia): string {
     $t = datosTour($data);
     $lineas = [
-        (esPruebaTour($data) ? 'PRUEBA (no cotizar): ' : '') . "Lead del tour Planifica tu bodega ({$referencia})",
-        'Etiqueta: ' . TOUR_ETIQUETA . (esPruebaTour($data) ? ', ' . TOUR_ETIQUETA_PRUEBA : ''),
+        (esPruebaTour($data) ? 'PRUEBA (no cotizar): ' : '') . 'Lead del tour Planifica tu bodega' . ($t['via'] === 'expres' ? ' — vía exprés' : '') . " ({$referencia})",
+        'Etiqueta: ' . implode(', ', etiquetasTour($data)),
+        'Vía: ' . ($t['via'] === 'expres' ? 'exprés (4 preguntas, cotizamos nosotros)' : 'diseño (el cliente armó su layout)'),
+        'Comuna: ' . ($t['comuna'] ?: 'sin dato'),
         'Rol: ' . ($t['rol'] ?: 'sin dato'),
         'Industria: ' . ($t['industria'] ?: 'sin dato'),
         'Puntaje: ' . ($t['puntaje'] !== null ? "{$t['puntaje']}/100" : 'sin dato'),
@@ -172,6 +208,22 @@ function textoNotaTour(array $data, string $referencia): string {
         $lineas[] = 'Campaña: ' . implode(' · ', array_map(fn($k, $v) => "{$k}={$v}", array_keys($t['utm']), $t['utm']));
     } else {
         $lineas[] = 'Campaña: directo (sin UTM)';
+    }
+    if ($t['precision'] !== '') {
+        $lineas[] = 'Precisión de la cotización: ' . $t['precision'];
+    }
+    if ($t['confirmar']) {
+        $lineas[] = 'Datos por confirmar (el cliente marcó "No lo sé"; quedó un valor estimado):';
+        foreach ($t['confirmar'] as $c) {
+            $lineas[] = "- {$c}";
+        }
+    } else {
+        $lineas[] = 'Datos por confirmar: ninguno';
+    }
+    if ($t['visita'] === 'terreno') {
+        $lineas[] = 'Visita técnica: SOLICITADA (RM). Coordinar fecha con el cliente; la web no prometió fecha.';
+    } elseif ($t['visita'] === 'remota') {
+        $lineas[] = 'Validar medidas por videollamada o con fotos/plano (fuera de la RM).';
     }
     if (!empty($data['adjuntos'])) {
         $lineas[] = 'Archivos: ' . implode(', ', $data['adjuntos']);
@@ -191,10 +243,10 @@ function responsableLead(int $leadId): ?int {
     return is_int($id) && $id > 0 ? $id : null;
 }
 
-function crearTareaTour(int $leadId, ?int $responsable, int $ahora): array {
+function crearTareaTour(int $leadId, ?int $responsable, int $ahora, string $texto = TOUR_TAREA_TEXTO): array {
     $tarea = [
         'task_type_id' => 1, // Seguimiento
-        'text' => TOUR_TAREA_TEXTO,
+        'text' => $texto,
         'complete_till' => $ahora + TOUR_TAREA_HORAS * 3600,
         'entity_id' => $leadId,
         'entity_type' => 'leads',
@@ -299,6 +351,15 @@ function procesarLeadTour(array $data, string $tipo, string $referencia, array $
         $resultado['tarea_vence'] = date('c', $ahora + TOUR_TAREA_HORAS * 3600);
         if ($resultado['tarea'] === false) {
             $resultado['errores'][] = 'tarea: ' . ($tarea['error'] ?? 'http_' . $tarea['status']);
+        }
+        // Rescate: el cliente pidio que midamos (RM) o validar a distancia (regiones)
+        $visita = datosTour($data)['visita'];
+        if ($visita !== null) {
+            $tv = crearTareaTour($leadId, $responsable, $ahora, $visita === 'terreno' ? TOUR_TAREA_VISITA : TOUR_TAREA_REMOTA);
+            $resultado['tarea_visita'] = kommoOk($tv) ? ($tv['body']['_embedded']['tasks'][0]['id'] ?? true) : false;
+            if ($resultado['tarea_visita'] === false) {
+                $resultado['errores'][] = 'tarea visita: ' . ($tv['error'] ?? 'http_' . $tv['status']);
+            }
         }
 
         $adj = adjuntarArchivosLead($leadId, $archivos);

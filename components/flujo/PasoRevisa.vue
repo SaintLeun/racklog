@@ -1,25 +1,6 @@
 <template>
   <div>
-    <template v-if="!p.registrado">
-      <!-- Adelanto: lo que gana, antes de pedir sus datos. El plano, la lista y el link se abren al registrarse -->
-      <section class="fl-card mb-6 !p-0 overflow-hidden">
-        <div class="p-5">
-          <p class="text-sm font-semibold uppercase tracking-wider text-brand-700">Adelanto de tu diseño</p>
-          <p class="mt-1 text-[22px] font-bold leading-snug text-neutral-900">Te caben <FlujoContador :valor="conRacklog" /> pallets</p>
-          <p v-if="necesidad" class="text-neutral-600">Necesitas {{ n(necesidad) }}.</p>
-        </div>
-        <div class="relative h-[38vh] min-h-[240px]">
-          <ClientOnly>
-            <Visor3D :bodega="p.bodega" :racks="p.racks" :foco="foco" adelanto etiqueta="Adelanto 3D de tu bodega" />
-          </ClientOnly>
-          <p class="pointer-events-none absolute inset-x-3 bottom-3 rounded-xl bg-white/90 px-3 py-2 text-center text-sm font-medium text-neutral-700 shadow-sm ring-1 ring-black/5">
-            🔒 El plano con medidas, la lista para cotizar y el link a tu diseño se abren al registrarte.
-          </p>
-        </div>
-      </section>
-      <FlujoRegistro @listo="marcar('kpi_view', { rol: p.rol })" />
-    </template>
-    <template v-else>
+    <!-- Sin registro: dibujo, rack y 3D se ven libres; el registro va al final, en Cotiza (prompt de conversión §C) -->
       <h1 class="fl-titulo">Revisa tu diseño</h1>
 
       <!-- Revision del diseño: lo que bloquea no deja cotizar; cada aviso trae su arreglo -->
@@ -32,7 +13,7 @@
             ? (resumen.advierte ? `Se puede fabricar y montar. Revisa ${resumen.advierte} ${resumen.advierte === 1 ? 'sugerencia' : 'sugerencias'}.` : 'Se puede fabricar y montar tal como está.')
             : 'Resuélvelos con un toque para poder cotizar.' }}
         </p>
-        <p v-if="resumen.viable" class="mt-1 text-sm text-green-800">Revisado por un ingeniero Racklog antes de cotizar · Diseño sísmico NCh2369.</p>
+        <p class="mt-1 text-sm" :class="resumen.viable ? 'text-green-800' : 'text-red-800'">{{ TEXTO_INGENIERIA }}</p>
         <TransitionGroup tag="ul" name="fl-lista" class="mt-4 space-y-2">
           <li v-for="a in avisos" :key="a.id" class="flex flex-col gap-2 rounded-xl bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
             <span class="flex gap-2 text-neutral-800">
@@ -182,7 +163,6 @@
         texto="Pedir mi cotización" :deshabilitado="!resumen.viable"
         motivo="Resuelve los puntos en rojo para cotizar." @atras="emit('atras')" @siguiente="seguir"
       />
-    </template>
   </div>
 </template>
 
@@ -195,6 +175,7 @@ import { revisarDiseno, resumenViabilidad, aplicarArreglo } from '~/lib/rack3d/v
 import { vistasPorRol, focoDiseño } from '~/lib/flujo/perfiles.js';
 import { guardarCaptura } from '~/lib/flujo/captura.js';
 import { auditarDiseno } from '~/lib/flujo/auditoria.js';
+import { TEXTO_INGENIERIA } from '~/lib/flujo/conversion.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();
@@ -210,7 +191,6 @@ const grua = computed(() => (GRUAS as any)[p.bodega.grua] ?? GRUAS.contrapeso);
 // Auditoría de KPI (lib/flujo/auditoria.js): medidas de pallet, cantidades y una sola cuenta
 const auditoria = computed(() => auditarDiseno(p) as { filas: any[]; total: number; cumple: number; fallas: number; avisos: number });
 const auditoriaPorGrupo = computed(() => auditoria.value.filas.reduce((g: Record<string, any[]>, f) => { (g[f.grupo] ||= []).push(f); return g; }, {}));
-const necesidad = computed(() => p.pallets.reduce((t, x) => t + (x.cantidad || 0), 0));
 // Lo que ve cada perfil: una sola cuenta (lib/flujo/perfiles.js)
 const vistas = computed(() => vistasPorRol(p) as any);
 // La vista 3D encuadra lo diseñado (no la bodega vacía)

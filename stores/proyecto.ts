@@ -22,6 +22,8 @@ export type Sistema = 'RS' | 'DI' | 'AR';
 export interface Lead {
   nombre: string; empresa: string; rut: string; correo: string; telefono: string;
   perfil: string; industria: string;
+  // Comuna de la bodega: distingue RM (visita técnica) de regiones (videollamada o fotos)
+  comuna: string;
 }
 // Tipo de pallet del cliente (selectivo y drive-in). Medidas en m y kg
 export interface TipoPallet {
@@ -50,7 +52,7 @@ export interface Modelo {
   id: string; nombre: string; tipo: Sistema;
   doble: boolean; niveles: number;
   porViga?: number; mezcla?: (string | null)[]; sobrante?: number; planos?: (string | null)[];
-  tunel?: { cuerpo: number; altoLibre: number } | null;
+  tunel?: { cuerpo: number | null; altoLibre: number } | null;
   fondos?: number; techoGrua?: number | null; mastilGrua?: number | null; anchoGrua?: number | null;
   bandeja?: number; frente?: number;
   // Angulo ranurado: cajas apiladas por repisa (define la altura entre repisas) y carro de carga (m)
@@ -72,8 +74,10 @@ function inicial() {
     // Pasos a los que ya llego (el stepper deja volver a cualquiera de ellos)
     alcanzado: 0,
     rol: '' as string,
-    lead: { nombre: '', empresa: '', rut: '', correo: '', telefono: '', perfil: '', industria: '' } as Lead,
+    lead: { nombre: '', empresa: '', rut: '', correo: '', telefono: '', perfil: '', industria: '', comuna: '' } as Lead,
     registrado: false,
+    // Se fue del paso de medidas sin completarlas (cuenta para ofrecer la visita técnica como rescate)
+    abandonoMedidas: false,
     flags: [] as string[],
     // Paso 1
     sabe: null as boolean | null,
@@ -134,7 +138,7 @@ export const useProyecto = defineStore('proyecto', {
     cargar() {
       try {
         const g = JSON.parse(localStorage.getItem(CLAVE) || 'null');
-        if (g && g.version === 1) this.$patch({ ...inicial(), ...g, bodega: { ...inicial().bodega, ...g.bodega }, accesorios: { ...inicial().accesorios, ...g.accesorios } });
+        if (g && g.version === 1) this.$patch({ ...inicial(), ...g, lead: { ...inicial().lead, ...g.lead }, bodega: { ...inicial().bodega, ...g.bodega }, accesorios: { ...inicial().accesorios, ...g.accesorios } });
       } catch { /* sin almacenamiento */ }
       // Atribucion: se guarda la primera vez que llega con parametros
       try {

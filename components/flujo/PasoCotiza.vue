@@ -2,13 +2,17 @@
   <div>
     <template v-if="!p.enviado">
       <h1 class="fl-titulo">Pide tu cotización</h1>
-      <p class="fl-bajada">Nuestro equipo comercial revisa tu diseño y te envía la cotización en máximo 24 horas.</p>
+      <p class="fl-bajada">{{ MENSAJE_INICIO }}</p>
 
       <div v-if="!resumen.viable" class="mt-5 rounded-2xl bg-red-50 p-5 text-red-900 ring-1 ring-red-200">
         <p class="font-semibold">Tu diseño tiene {{ resumen.bloquea }} {{ resumen.bloquea === 1 ? 'punto' : 'puntos' }} por resolver.</p>
+        <p class="mt-1 text-sm">Puedes resolverlos tú o pedir la cotización igual: tu ejecutivo los revisa contigo. Nadie se queda atascado.</p>
         <button type="button" class="mt-2 font-semibold underline underline-offset-2" @click="emit('atras')">Volver a la revisión</button>
       </div>
-      <div v-else class="mt-5 rounded-2xl bg-green-50 p-4 font-semibold text-green-900 ring-1 ring-green-200">Tu diseño es viable ✓</div>
+      <div v-else class="mt-5 rounded-2xl bg-green-50 p-4 text-green-900 ring-1 ring-green-200">
+        <p class="font-semibold">Tu diseño es viable ✓</p>
+        <p class="mt-0.5 text-sm">{{ TEXTO_INGENIERIA }}</p>
+      </div>
 
       <div class="fl-card mt-5">
         <p class="fl-leyenda">Lo que vamos a cotizar</p>
@@ -20,38 +24,36 @@
         <p v-if="noSe.length" class="mt-3 text-sm text-neutral-500">Tu ejecutivo confirmará: {{ noSe.join(', ') }}.</p>
       </div>
 
-      <FlujoAcciones
-        :texto="preparando ? 'Preparando tu diseño…' : textoCta" :deshabilitado="!resumen.viable || !p.registrado"
-        :motivo="!p.registrado ? 'Completa tus datos en el paso anterior.' : 'Resuelve los puntos en rojo para cotizar.'"
-        @atras="emit('atras')" @siguiente="abrir"
+      <!-- Registro al final: a cambio del PDF, el link "continúa tu diseño" y la cotización en 24 h -->
+      <FlujoRegistroFinal
+        class="mt-5"
+        :cliente="p.lead" :estados="estados" :abandono-medidas="p.abandonoMedidas"
+        :posiciones="cifra.n" :unidad="cifra.unidad" :ganas="ganas"
+        entregables="El PDF de tu diseño (con resumen ejecutivo para gerencia) y el link para seguir editándolo"
+        :texto-boton="preparando ? 'Preparando tu diseño…' : textoCta" :enviando="preparando" :error="errorEnvio"
+        @enviar="enviar"
       />
-      <p v-if="cifra.n && resumen.viable && p.registrado" class="mt-2 text-right text-sm text-neutral-500">Te respondemos en máximo 24 horas.</p>
+      <div class="mt-6"><button type="button" class="fl-btn-sec" @click="emit('atras')">Atrás</button></div>
 
-      <FlujoEntregables ref="entregables" />
+      <FlujoEntregables ref="entregables" solo-plano />
     </template>
 
-    <!-- Enviado -->
+    <!-- Enviado: el premio (PDF, link y cotización en 24 h) -->
     <section v-else class="fl-card text-center">
       <p class="text-5xl" aria-hidden="true">✓</p>
       <h1 class="fl-titulo mt-3">¡Listo, {{ primerNombre }}!</h1>
-      <p class="mx-auto mt-2 max-w-md text-neutral-700">Recibimos tu diseño. Nuestro equipo comercial te envía la cotización en <b>máximo 24 horas</b>.</p>
+      <p class="mx-auto mt-2 max-w-md text-neutral-700">Recibimos tu diseño. Tu ejecutivo te envía la cotización formal en <b>máximo 24 horas</b>: fabricación, montaje e ingeniería.</p>
+      <p v-if="visitaPedida" class="mx-auto mt-2 max-w-md text-sm text-neutral-600">Tu ejecutivo te contacta para coordinar {{ visitaPedida === 'visita' ? 'la visita técnica' : 'la validación de tus medidas' }}.</p>
+      <p class="mx-auto mt-2 max-w-md text-sm text-neutral-600">{{ correoLink === 'ok' ? `Te enviamos el link para seguir tu diseño a ${p.lead.correo}.` : correoLink === 'error' ? 'No pudimos enviarte el link por correo: cópialo abajo.' : '' }}</p>
       <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+        <button type="button" class="fl-btn" :disabled="armandoPdf" @click="pdf">{{ armandoPdf ? 'Armando tu PDF…' : 'Descargar PDF de mi diseño' }}</button>
         <a href="https://wa.me/56932403819" target="_blank" rel="noopener" class="fl-btn-sec" @click="marcar('whatsapp_click', { ubicacion: 'enviado' })">Escribir por WhatsApp</a>
         <button type="button" class="fl-btn-sec" @click="p.enviado = false">Ver mi diseño</button>
       </div>
+      <p v-if="errorPdf" class="mt-3 text-sm text-red-700" role="alert">{{ errorPdf }}</p>
+      <p class="mx-auto mt-4 max-w-md text-xs text-neutral-500">{{ TEXTO_INGENIERIA }}</p>
     </section>
-    <FlujoEntregables v-if="p.enviado" />
-
-    <ContactModal
-      :is-visible="abierto"
-      :encabezado="{ etiqueta: 'Respuesta en máximo 24 h', titulo: 'Recibe tu cotización en máximo 24 horas', texto: 'Revisamos tu diseño y te enviamos la cotización en máximo 24 horas.' }"
-      :quote-item="item"
-      :prefill="{ name: p.lead.nombre, phone: p.lead.telefono, email: p.lead.correo, company: p.lead.empresa, rut: p.lead.rut }"
-      :config-extra="extra"
-      :initial-files="adjuntos"
-      @close="abierto = false"
-      @sent="enviado"
-    />
+    <FlujoEntregables v-if="p.enviado" ref="entregablesEnviado" />
   </div>
 </template>
 
@@ -64,12 +66,15 @@ import { revisarDiseno, resumenViabilidad } from '~/lib/rack3d/viabilidad.js';
 import { proponerAccesorios, aplicarAjustes, textoAccesorios } from '~/lib/rack3d/accesorios.js';
 import { puntajeLead } from '~/lib/rack3d/operacion.js';
 import { queCotizar } from '~/lib/flujo/calculos.js';
-import { cifraPrincipal, porConfirmar } from '~/lib/flujo/exportar.js';
-import type { QuoteItem } from '~/components/QuoteModal/ProductConfig';
+import { cifraPrincipal, porConfirmar, resumenDiseño, descargar, nombreArchivo, logoCliente } from '~/lib/flujo/exportar.js';
+import { vistasPorRol } from '~/lib/flujo/perfiles.js';
+import { capturaGuardada } from '~/lib/flujo/captura.js';
+import { enlaceDiseño } from '~/lib/flujo/enlace.js';
+import { validarRut } from '~/lib/tour/reglas.js';
+import { MENSAJE_INICIO, TEXTO_INGENIERIA, configConversion, estadosDiseño, payloadLead, enviarLead, ofertaRescate } from '~/lib/flujo/conversion.js';
 
 const emit = defineEmits<{ atras: [] }>();
 const p = useProyecto();
-const abierto = ref(false);
 const n = (v: number) => Math.round(v).toLocaleString('es-CL');
 const primerNombre = computed(() => p.lead.nombre.split(' ')[0] || '');
 
@@ -82,14 +87,18 @@ const textoCta = computed(() => (cifra.value.n ? `Cotizar mis ${n(cifra.value.n)
 const textoAcc = computed(() => textoAccesorios(aplicarAjustes(proponerAccesorios({ bodega: p.bodega, racks: p.racks, pallets: p.pallets }), p.accesorios)) as string);
 // Datos que el cliente dejo en "No sé" (en palabras simples)
 const noSe = computed(() => porConfirmar(p) as string[]);
+const estados = computed(() => estadosDiseño(p));
+// Posiciones que gana sobre las de hoy (si las dijo)
+const ganas = computed(() => { const g = (vistasPorRol(p) as any).gerencia; return g.hoy && g.mas > 0 ? g.mas : 0; });
 
-const item = computed<QuoteItem>(() => {
+function producto(visita: boolean) {
   const config: Record<string, string | number> = {
     // Primero, para que nunca quede fuera del límite de pares del servidor
     ...(p.prueba ? { 'Prueba': 'sí' } : {}),
     'Origen': 'Planifica tu bodega (landing)',
-    'Rol': PERFILES.find((x) => x.v === p.lead.perfil)?.t ?? p.lead.perfil,
-    'Industria': p.lead.industria,
+    ...configConversion({ via: 'diseno', comuna: p.lead.comuna, estados: estados.value, porConfirmar: noSe.value, visita }),
+    ...(p.lead.perfil ? { 'Rol': PERFILES.find((x) => x.v === p.lead.perfil)?.t ?? p.lead.perfil } : {}),
+    ...(p.lead.industria ? { 'Industria': p.lead.industria } : {}),
     'Equipo': (GRUAS as any)[p.bodega.grua]?.nombre ?? p.bodega.grua,
     'Bodega': `${formatoM(p.bodega.ancho)} × ${formatoM(p.bodega.largo)} m${p.bodega.altura ? ` · ${formatoM(p.bodega.altura)} m de altura libre` : ''}`,
   };
@@ -98,55 +107,95 @@ const item = computed<QuoteItem>(() => {
   p.pallets.forEach((t) => { config[`Pallet ${t.nombre}`] = `${t.cantidad} u · ${formatoM(t.alto)} m · ${t.peso} kg · ${t.frente}×${t.fondo} m`; });
   p.cajas.forEach((c) => { config[`Caja ${c.nombre}`] = `${c.cantidad} u · ${Math.round(c.largo * 100)}×${Math.round(c.ancho * 100)}×${Math.round(c.alto * 100)} cm · ${c.peso} kg`; });
   config['Viabilidad'] = resumen.value.viable ? `Viable${resumen.value.advierte ? ` (${resumen.value.advierte} sugerencias)` : ''}` : 'Con puntos por resolver';
-  if (noSe.value.length) config['Confirmar con el cliente'] = noSe.value.join(', ');
   const flags = p.flags.filter((f) => !f.startsWith('no_se:'));
   if (flags.length) config['Flags'] = flags.join(', ');
   if (Object.keys(p.utm).length) config['Campaña'] = Object.entries(p.utm).map(([k, v]) => `${k}=${v}`).join(' · ');
-  config['Etiqueta'] = 'tour-logistico';
-  return {
-    name: 'Diseño de bodega (Planifica tu bodega)',
-    config,
-    analytics: {
-      lead_origin: 'planifica-tu-bodega',
-      sistemas: [...new Set(p.racks.map((r) => r.tipo))].join(','),
-      m2: Math.round(area(contorno(p.bodega))),
-      posiciones: cotizar.value.reduce((t, q) => t + q.posiciones, 0),
-      rol: p.lead.perfil, industria: p.lead.industria,
-      minutos: Math.round((Date.now() - p.inicio) / 60000),
-      ...p.utm,
-    },
-  };
-});
-// Puntaje del lead con la fecha y telefono del formulario (igual que el planificador)
-function extra({ plazo, telefono }: { plazo: string; telefono: string }) {
+  // Puntaje del lead (igual que el planificador)
   const pesoPallet = Math.max(0, ...p.pallets.map((t) => t.peso || 0));
-  return { 'Puntaje del lead': `${puntajeLead({ racks: p.racks, bodega: { ...p.bodega, pesoPallet }, perfil: p.lead.perfil, plazo, telefono })}/100` };
+  config['Puntaje del lead'] = `${puntajeLead({ racks: p.racks, bodega: { ...p.bodega, pesoPallet }, perfil: p.lead.perfil, plazo: '', telefono: p.lead.telefono })}/100`;
+  config['Etiqueta'] = 'tour-logistico';
+  return { name: 'Diseño de bodega (Planifica tu bodega)', config: config as Record<string, string> };
 }
-// El plano (PNG) va adjunto a la cotizacion para el ejecutivo; si tarda o falla, el formulario
-// se abre igual (maximo ~9 s esperando)
-const entregables = ref<{ archivos: () => Promise<File[]> } | null>(null);
-const adjuntos = ref<File[]>([]);
+
+// El plano (PNG) va adjunto para el ejecutivo; si tarda o falla, el lead se envía igual (máximo ~9 s)
+const entregables = ref<{ archivos: () => Promise<File[]>; plano: () => Promise<string | null> } | null>(null);
+const entregablesEnviado = ref<{ plano: () => Promise<string | null> } | null>(null);
 const preparando = ref(false);
-async function abrir() {
+const errorEnvio = ref('');
+const visitaPedida = ref<'' | 'visita' | 'remota'>('');
+const correoLink = ref<'' | 'ok' | 'error'>('');
+const ERRORES: Record<string, string> = {
+  rate_limit: 'Recibimos muchas solicitudes desde tu conexión. Espera un minuto e inténtalo de nuevo.',
+  too_large: 'El plano es muy pesado. Inténtalo de nuevo o escríbenos por WhatsApp.',
+};
+async function enviar({ visita }: { visita: boolean }) {
   if (preparando.value) return;
   preparando.value = true;
+  errorEnvio.value = '';
   try {
-    adjuntos.value = await Promise.race([
+    const archivos = await Promise.race([
       entregables.value?.archivos() ?? Promise.resolve([]),
       new Promise<File[]>((ok) => setTimeout(() => ok([]), 9000)),
-    ]);
-  } catch {
-    adjuntos.value = [];
+    ]).catch(() => [] as File[]);
+    const l = p.lead;
+    const rut = l.rut ? validarRut(l.rut) : null;
+    p.flags = [...new Set([...p.flags.filter((f) => f !== 'persona_natural_con_giro'), ...(rut?.ok && rut.personaNatural ? ['persona_natural_con_giro'] : [])])];
+    const item = producto(visita);
+    const r = await enviarLead(payloadLead({ nombre: l.nombre, correo: l.correo, empresa: l.empresa, rut: l.rut, telefono: l.telefono }, item), archivos);
+    if (!r.ok) {
+      errorEnvio.value = ERRORES[r.error ?? ''] ?? 'No pudimos enviar tu diseño. Inténtalo de nuevo o escríbenos por WhatsApp al +56 9 3240 3819.';
+      marcar('quote_error', { error: r.error });
+      return;
+    }
+    p.registrado = true;
+    p.enviado = true;
+    window.scrollTo({ top: 0 });
+    visitaPedida.value = visita ? (ofertaRescate(l.comuna)?.tipo ?? '') as '' | 'visita' | 'remota' : '';
+    // Conversión para GTM (GA4 y Google Ads): un lead, no una compra
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push({
+      event: 'generate_lead', event_category: 'Conversion', event_label: 'Quote Form Sent', funnel_step: 'quote_form_sent', lead_type: 'quote',
+      product: item.name, lead_origin: 'planifica-tu-bodega', via: 'diseno', lead_reference: r.referencia, currency: 'CLP', value: 0,
+      sistemas: [...new Set(p.racks.map((x) => x.tipo))].join(','), m2: Math.round(area(contorno(p.bodega))), posiciones: cifra.value.n, ...p.utm,
+    });
+    marcar('registro_ok', { via: 'diseno', comuna: l.comuna });
+    marcar('quote_sent', { via: 'diseno', visita, minutos: Math.round((Date.now() - p.inicio) / 60000), ...p.utm });
+    enviarLinkPorCorreo();
   } finally {
     preparando.value = false;
   }
-  abierto.value = true;
-  marcar('quote_open', {});
 }
-function enviado() {
-  p.enviado = true;
-  abierto.value = false;
-  marcar('quote_sent', { rol: p.lead.perfil, minutos: Math.round((Date.now() - p.inicio) / 60000), ...p.utm });
+// El link "continúa tu diseño" llega por correo (mismo servicio que "Guardar y seguir después")
+async function enviarLinkPorCorreo() {
+  try {
+    const link = await enlaceDiseño(p.$state);
+    const r = await fetch('https://api.racklog.cl/api/continuar-diseno', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: p.lead.correo, nombre: p.lead.nombre, link }),
+    });
+    correoLink.value = r.ok ? 'ok' : 'error';
+  } catch {
+    correoLink.value = 'error';
+  }
+}
+// PDF con página ejecutiva, vista 3D (la de Revisa) y plano técnico
+const armandoPdf = ref(false);
+const errorPdf = ref('');
+async function pdf() {
+  if (armandoPdf.value) return;
+  armandoPdf.value = true;
+  errorPdf.value = '';
+  try {
+    const { crearPdfDiseno } = await import('~/lib/rack3d/pdfPlano.js');
+    const plano = await (entregablesEnviado.value?.plano() ?? Promise.resolve(null)).catch(() => null);
+    const blob = await crearPdfDiseno({ ...resumenDiseño(p), plano, vista3d: capturaGuardada(p), logoCliente: logoCliente() } as any);
+    descargar(blob, `diseno-bodega-${nombreArchivo(p.lead.empresa || p.lead.nombre)}.pdf`);
+    marcar('pdf_descarga', { posiciones: cifra.value.n });
+  } catch {
+    errorPdf.value = 'No pudimos armar el PDF. Inténtalo de nuevo.';
+  } finally {
+    armandoPdf.value = false;
+  }
 }
 function marcar(event: string, datos: Record<string, unknown>) {
   window.dataLayer = window.dataLayer || [];

@@ -31,7 +31,7 @@
         <FlujoRecomendacion :rec="recModelo" :actual="mod.tipo" />
         <div class="mt-4 flex flex-wrap items-center gap-3">
           <button v-if="sugerido" type="button" class="fl-btn !min-h-10 !px-4 !text-sm" @click="usarSugerido">Cambiar a {{ TIPOS[sugerido.tipo].nombre.toLowerCase() }}</button>
-          <span class="text-sm text-neutral-500">Un ingeniero de Racklog revisa cada diseño antes de cotizar.</span>
+          <span class="text-sm text-neutral-500">Ingeniería Racklog valida cada diseño con cálculo estructural antes de cotizar.</span>
         </div>
       </div>
     </details>
@@ -153,12 +153,22 @@
               </label>
               <div>
                 <label class="flex items-center gap-2 text-neutral-800">
-                  <input type="checkbox" :checked="!!mod.tunel" class="h-4 w-4 accent-brand-600" @change="cambiar({ tunel: ($event.target as HTMLInputElement).checked ? { cuerpo: 0, altoLibre: 2.2 } : null })">
+                  <!-- Al medio de cada fila (en la punta no sirve) y con el paso que pide el equipo de la bodega -->
+                  <input type="checkbox" :checked="!!mod.tunel" class="h-4 w-4 accent-brand-600" @change="cambiar({ tunel: ($event.target as HTMLInputElement).checked ? { cuerpo: null, altoLibre: altoTunelGrua(p.bodega.grua) } : null })">
                   Cuerpo túnel (para pasar por debajo)
                 </label>
-                <div v-if="mod.tunel" class="mt-2 grid grid-cols-2 gap-2">
-                  <button v-for="a in [2.2, 2.5, 3.5, 4.5]" :key="a" type="button" :class="['fl-chip !text-sm', mod.tunel.altoLibre === a && 'fl-chip--sel']" @click="cambiar({ tunel: { ...mod.tunel, altoLibre: a } })">Paso libre {{ fm(a) }} m</button>
-                </div>
+                <template v-if="mod.tunel">
+                  <p class="mt-2 text-sm text-neutral-700">¿Quién pasa por debajo?</p>
+                  <div class="mt-1 grid grid-cols-2 gap-2">
+                    <button v-for="a in ALTOS_TUNEL" :key="a.v" type="button" :class="['fl-chip !min-h-11 !flex-col !gap-0 !text-sm leading-tight', Math.abs(mod.tunel.altoLibre - a.v) < 0.01 && 'fl-chip--sel']" :aria-pressed="Math.abs(mod.tunel.altoLibre - a.v) < 0.01" @click="cambiar({ tunel: { ...mod.tunel, altoLibre: a.v } })"><b>{{ a.t }}</b><span class="text-xs font-normal">paso {{ fm(a.v) }} m</span></button>
+                  </div>
+                  <p class="mt-2 text-xs text-neutral-500">Va al medio de cada fila; en el plano (paso 5) puedes moverlo a otro cuerpo.</p>
+                  <p v-if="res && res.m.tunel && (res.m.tunel.libreReal ?? res.m.tunel.altoLibre) < altoTunelGrua(p.bodega.grua) - 0.01" class="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
+                    Bajo la viga quedan {{ fm(res.m.tunel.libreReal ?? res.m.tunel.altoLibre) }} m: pasan personas, pero tu {{ (GRUAS as any)[p.bodega.grua]?.nombre?.toLowerCase() ?? 'equipo' }} necesita ~{{ fm(altoTunelGrua(p.bodega.grua)) }} m.
+                    <button type="button" class="font-semibold underline" @click="cambiar({ tunel: { ...mod.tunel, altoLibre: altoTunelGrua(p.bodega.grua) } })">Usar {{ fm(altoTunelGrua(p.bodega.grua)) }} m</button>
+                  </p>
+                  <p v-if="res && res.m.tunel" class="mt-1 text-xs text-neutral-500">El túnel quita {{ res.m.tunel.quitadas * res.m.palletsPorViga * (mod.doble ? 2 : 1) }} posiciones por fila.</p>
+                </template>
               </div>
               <div>
                 <p class="fl-sub">Plano de carga por nivel</p>
@@ -244,7 +254,7 @@
             <PlanificadorCorteRack v-if="mod.tipo !== 'AR'" :rack="res.r" :altura="p.bodega.altura" class="mt-3" />
             <div v-if="res.cargaMarco" :class="['mt-2 rounded-xl px-3 py-2.5 text-sm', SEMAFORO[res.cargaMarco.color as keyof typeof SEMAFORO]]">
               <b>Carga por marco:</b> {{ n(res.cargaMarco.kg) }} de {{ n(res.cargaMarco.capacidad) }} kg ({{ Math.round(res.cargaMarco.uso * 100) }} %)<FlujoReferencial />
-              <span class="block text-xs opacity-80">Capacidad referencial hasta tener la tabla de pilares de Racklog.</span>
+              <span class="block text-xs opacity-80">Capacidad preliminar: ingeniería Racklog la valida con cálculo estructural (NCh2369 · ANSI MH16.1) antes de cotizar.</span>
             </div>
           </details>
           <ul v-if="res.avisos.length" class="mt-3 space-y-1.5 text-sm text-amber-900">
@@ -271,6 +281,7 @@ import { resultadoModelo, nivelesMaximos, mezclaPorDefecto, mejorBandeja, firmaC
 import { recomendarProductos } from '~/lib/flujo/recomendacion.js';
 import { RACK, GRUAS, CAPACIDADES } from '~/lib/rack3d/parametrosTecnicos.js';
 import { ANRA_FRENTES, ANRA_FONDOS } from '~/lib/rack3d/medidas.js';
+import { ALTOS_TUNEL, altoTunelGrua } from '~/lib/rack3d/rutas.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();
@@ -412,6 +423,11 @@ function cambiarCantidad(id: string, e: Event) {
   if (!mod.value) return;
   const v = Math.max(0, Math.round(Number((e.target as HTMLInputElement).value) || 0));
   cambiar({ cantidades: { ...mod.value.cantidades, [id]: v }, mezcla: [] });
+  // El producto queda con lo que suman sus modelos (una sola cantidad en todo el flujo)
+  const ar = mod.value.tipo === 'AR';
+  const t = (ar ? p.cajas : p.pallets).find((x) => x.id === id);
+  const suma = p.modelos.filter((m) => (m.tipo === 'AR') === ar).reduce((s, m) => s + (m.cantidades?.[id] ?? 0), 0);
+  if (t && suma > 0) t.cantidad = suma;
 }
 function cambiarAltura(e: Event) {
   const v = Number((e.target as HTMLInputElement).value);

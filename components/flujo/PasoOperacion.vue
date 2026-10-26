@@ -5,6 +5,7 @@
       <section v-if="vista === 'inicio'" key="inicio">
         <h1 class="fl-titulo">¿Sabes qué rack necesitas?</h1>
         <p class="mt-2 text-neutral-600">Si no lo sabes, no importa: te hacemos 8 preguntas simples sobre tu bodega y te decimos cuál conviene.</p>
+        <p class="mt-2 text-sm text-neutral-500">{{ MENSAJE_INICIO }}</p>
         <div class="mt-6 grid gap-3 sm:grid-cols-2">
           <button type="button" class="fl-opcion fl-opcion--sel !p-5 text-left" @click="empezar(false)">
             <span class="block text-lg font-bold text-neutral-900">No, ayúdenme</span>
@@ -36,13 +37,12 @@
         </div>
         <fieldset v-if="p.sistema && p.sistema !== 'AR'" class="mt-8">
           <legend class="fl-pregunta">¿Con qué equipo mueves los pallets?</legend>
-          <div class="mt-3 grid gap-2 sm:grid-cols-2">
-            <button
-              v-for="o in EQUIPOS" :key="o.v" type="button"
-              :class="['fl-chip', p.respuestas.equipo === o.v && 'fl-chip--sel']" :aria-pressed="p.respuestas.equipo === o.v"
-              @click="elegirEquipo(o.v)"
-            >{{ o.t }}</button>
-          </div>
+          <p class="text-sm text-neutral-600">{{ PORQUE.grua }} Toca el que se parece al tuyo.</p>
+          <!-- Por foto (prompt de conversión §D): se reconoce aunque no se sepa el nombre -->
+          <FlujoFotoEquipo
+            class="mt-3" :opciones="FOTOS" :valor="p.respuestas.equipo ?? null" :no-se="p.flags.includes('no_se:equipo')" tipico="grua"
+            @elegir="(v, noSe) => elegirEquipo(v, noSe)"
+          />
         </fieldset>
         <p v-if="diSinEquipo" class="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-900">
           El drive-in no se puede usar con tu equipo: {{ diSinEquipo }}. Necesitas grúa horquilla, retráctil o apilador eléctrico; o elige rack selectivo.
@@ -70,7 +70,13 @@
           <button type="button" class="text-sm font-medium text-brand-700 underline underline-offset-2" @click="p.sabe = true">Ya sé qué rack quiero</button>
         </div>
         <h1 class="fl-titulo mt-1">{{ actual.texto }}</h1>
-        <div class="mt-6 grid gap-2">
+        <p v-if="actual.clave === 'equipo'" class="fl-bajada">{{ PORQUE.grua }} Toca el que se parece al tuyo.</p>
+        <FlujoFotoEquipo
+          v-if="actual.clave === 'equipo'" class="mt-5" :opciones="FOTOS" :valor="p.respuestas.equipo ?? null"
+          :no-se="p.flags.includes('no_se:equipo')" tipico="grua" @elegir="(v, noSe) => responder(v, noSe)"
+        />
+        <button v-if="actual.clave === 'equipo'" type="button" :class="['fl-chip mt-2 !justify-start !text-left', p.respuestas.equipo === 'ninguno' && 'fl-chip--sel']" @click="responder('ninguno')">Todavía no tengo equipo</button>
+        <div v-else class="mt-6 grid gap-2">
           <button
             v-for="o in actual.opciones" :key="o.v" type="button"
             :class="['fl-chip !justify-start !text-left', p.respuestas[actual.clave] === o.v && 'fl-chip--sel']"
@@ -78,7 +84,7 @@
             @click="responder(o.v)"
           >{{ o.t }}</button>
           <button type="button" class="fl-chip !justify-start !text-left text-neutral-500" @click="responder(TIPICO[actual.clave], true)">
-            No sé, usen lo típico
+            No lo sé, usen lo típico
           </button>
         </div>
         <details class="fl-tip mt-5">
@@ -128,6 +134,7 @@ import { computed, onMounted } from 'vue';
 import { useProyecto, type Sistema } from '~/stores/proyecto';
 import { TIPOS, gruaDriveIn } from '~/lib/rack3d/planificador.js';
 import { preguntasActivas, recomendar } from '~/lib/tour/reglas.js';
+import { MENSAJE_INICIO, PORQUE } from '~/lib/flujo/conversion.js';
 
 const emit = defineEmits<{ siguiente: [] }>();
 const p = useProyecto();
@@ -150,10 +157,6 @@ const TIPICO: Record<string, string> = {
 };
 // Equipo del tour → equipo del planificador (parametrosTecnicos.GRUAS)
 const GRUA: Record<string, string> = { manual: 'manual', electrico: 'apiladora', grua: 'contrapeso', retractil: 'retractil', ninguno: 'contrapeso' };
-const EQUIPOS = [
-  { v: 'grua', t: 'Grúa horquilla' }, { v: 'retractil', t: 'Grúa retráctil' },
-  { v: 'electrico', t: 'Apilador eléctrico' }, { v: 'manual', t: 'Apilador manual' },
-];
 
 const preguntas = computed(() => preguntasActivas(p.respuestas));
 // Respuestas de verdad (no "No sé") y lo que supusimos por cada "No sé", en palabras del cliente
@@ -205,10 +208,18 @@ function aplicarRecomendacion() {
 function cambiarSistema(s: string) {
   p.sistema = s as Sistema;
 }
-function elegirEquipo(v: string) {
+function elegirEquipo(v: string, noSe = false) {
   p.respuestas.equipo = v;
   p.bodega.grua = GRUA[v];
+  p.flags = noSe ? [...new Set([...p.flags, 'no_se:equipo'])] : p.flags.filter((f) => f !== 'no_se:equipo');
 }
+// Los equipos por foto, con el valor del tour (respuestas.equipo)
+const FOTOS = [
+  { v: 'grua', t: 'Grúa horquilla', d: 'contrapeso, a gas o eléctrica', dibujo: 'contrapeso', foto: 'contrapeso' },
+  { v: 'retractil', t: 'Grúa retráctil', d: 'el mástil avanza; pasillo angosto', dibujo: 'retractil', foto: 'retractil' },
+  { v: 'electrico', t: 'Apilador eléctrico', d: 'se maneja caminando', dibujo: 'apiladora', foto: 'apiladora' },
+  { v: 'manual', t: 'Apilador manual', d: 'se levanta bombeando', dibujo: 'manual', foto: 'manual' },
+];
 function confirmarEleccion() {
   if (p.sistema !== 'AR' && !p.respuestas.equipo) elegirEquipo('grua');
   marcar('recomendacion', { sistema: p.sistema, elegido: true });

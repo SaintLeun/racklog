@@ -30,4 +30,13 @@ assert.equal(c8.productos[0].ok, false, 'al 80 % no cubre');
 assert.equal(c8.productos[0].necesita, 125);
 assert.equal(c8.productos[0].pallets, 100);
 assert.ok(c8.modelos[0].diferencia < 0, 'el modelo dice que faltan cuerpos');
+// El factor es de selectivo y drive-in: el angulo ranurado cubica sus cajas tal cual (y la bandeja propuesta
+// dice los mismos cuerpos que la tarjeta)
+const cajas = [{ id: 'c1', nombre: 'Caja 1', largo: 0.6, ancho: 0.4, alto: 0.3, peso: 10, cantidad: 500, apilable: 3 }];
+const ar = { id: 'a1', nombre: 'AR', tipo: 'AR', doble: false, niveles: 5, bandeja: 0.4, frente: 0.92, cantidades: { c1: 500 } };
+assert.equal(k.resultadoModelo(ar, { cajas, ocupacion: 0.8 }).cuerpos, k.resultadoModelo(ar, { cajas }).cuerpos, 'AR sin factor de ocupación');
+const prop = k.mejorBandeja(ar, { cajas, altura: 8 });
+assert.equal(k.resultadoModelo({ ...ar, ...prop, altoEntre: null }, { cajas, ocupacion: 0.8 }).cuerpos, prop.cuerpos, 'propuesta AR = tarjeta');
+const cAR = k.cobertura({ racks: [], modelos: [ar], cajas, ocupacion: 0.8 });
+assert.equal(cAR.modelos[0].necesita, k.resultadoModelo(ar, { cajas }).modulos * k.resultadoModelo(ar, { cajas }).porCuerpo, 'AR: bandejas sin holgura');
 console.log(`ocupación: ${pos} posiciones para 100 pallets → al 80 % faltan ${c8.productos[0].falta}; pruebas ok`);

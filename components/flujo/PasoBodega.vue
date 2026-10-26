@@ -6,7 +6,7 @@
     </template>
     <template v-else>
       <h1 class="fl-titulo">Arma tu layout</h1>
-      <p class="fl-bajada">Arma tu layout lineal por lineal: agrega cada uno, arrástralo a su lugar y elige si va simple o doble. Nosotros no movemos nada. <button type="button" class="font-medium text-brand-700 underline underline-offset-2" @click="p.ir('dibujo')">Cambiar mi bodega</button></p>
+      <p class="fl-bajada">Dibuja tus racks arrastrando en el plano, por el muro que quieras y del largo que quieras. Tú decides cuántos cuerpos van en cada lado. <button type="button" class="font-medium text-brand-700 underline underline-offset-2" @click="p.ir('dibujo')">Cambiar mi bodega</button></p>
     </template>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
@@ -72,8 +72,31 @@
           <div class="mt-3 flex flex-wrap items-center gap-2">
             <label for="fl-altura-bodega" class="flex-1 text-sm font-medium text-neutral-700">Altura libre (m) <FlujoInfo>Desde el piso hasta lo más bajo del techo: una viga, una lámpara o un rociador. Si no sabes, usamos 8 m.</FlujoInfo></label>
             <input id="fl-altura-bodega" :value="p.bodega.altura ?? ''" type="number" min="2.5" max="40" step="0.1" inputmode="decimal" class="form-input !h-10 !w-24" placeholder="8" @change="cambiarAltura($event)">
-            <button type="button" :class="['fl-nose', p.flags.includes('no_se:altura') && 'fl-nose--sel']" @click="alturaNoSe">No sé</button>
+            <button type="button" :class="['fl-nose', p.flags.includes('no_se:altura') && 'fl-nose--sel']" @click="alturaNoSe">No lo sé</button>
           </div>
+          <!-- "No lo sé" (prompt de conversión §D): valores típicos; queda estimado y el ejecutivo lo confirma -->
+          <div v-if="p.flags.includes('no_se:altura')" class="mt-2 grid grid-cols-2 gap-1.5">
+            <button v-for="a in ALTURAS_TIPICAS" :key="a.m" type="button" :class="['fl-chip !min-h-9 !flex-col !gap-0 !text-sm leading-tight', p.bodega.altura === a.m && 'fl-chip--sel']" @click="p.bodega.altura = a.m">{{ a.t }} · {{ fm(a.m) }} m<span class="text-[11px] font-normal text-neutral-500">{{ a.d }}</span></button>
+          </div>
+          <p class="mt-1 text-xs text-neutral-500">{{ p.flags.includes('no_se:altura') ? `${ESTIMADO}. ${PIERDE}` : PORQUE.altura }}</p>
+          <label class="mt-3 flex items-start gap-2 text-sm text-neutral-700">
+            <input type="checkbox" class="mt-0.5 h-4 w-4 flex-shrink-0 accent-brand-600" :checked="p.flags.includes('no_se:medidas')" @change="medidasAprox(($event.target as HTMLInputElement).checked)">
+            <span>No tengo las medidas exactas: son aproximadas (±{{ TOLERANCIA_MEDIDAS }} m)</span>
+          </label>
+          <p class="mt-1 text-xs text-neutral-500">{{ p.flags.includes('no_se:medidas') ? `${ESTIMADO}. ${PIERDE}` : PORQUE.medidas }}</p>
+          <!-- No sabe las medidas: se estiman desde cuántos pallets quiere guardar (quedan estimadas) -->
+          <details v-if="!p.bodega.forma && !dibujo" class="fl-mas mt-2 rounded-xl bg-neutral-50 px-3" :open="sinMedidas.abierto" @toggle="sinMedidas.abierto = ($event.target as HTMLDetailsElement).open">
+            <summary class="!text-sm">¿No sabes las medidas? Calcúlalas desde tus pallets</summary>
+            <div class="pb-3">
+              <label class="fl-campo"><span class="!text-sm">¿Cuántos pallets quieres guardar?</span>
+                <input v-model.number="sinMedidas.pallets" type="number" min="1" step="1" inputmode="numeric" class="form-input" placeholder="Ej: 500">
+              </label>
+              <template v-if="medidasEstimadas">
+                <p class="mt-2 text-sm text-neutral-700">Para {{ n(sinMedidas.pallets ?? 0) }} pallets en selectivo doble de {{ medidasEstimadas.niveles }} {{ medidasEstimadas.niveles === 1 ? 'nivel' : 'niveles' }} (con {{ fm(p.bodega.altura ?? 8) }} m de altura) necesitas una bodega de unos <b>{{ fm(medidasEstimadas.ancho) }} × {{ fm(medidasEstimadas.largo) }} m</b> (~{{ n(medidasEstimadas.m2) }} m²).</p>
+                <button type="button" class="fl-btn-sec mt-2 w-full !min-h-10 !text-sm" @click="usarMedidasEstimadas">Usar estas medidas (quedan estimadas)</button>
+              </template>
+            </div>
+          </details>
           <p class="mt-3 text-sm text-neutral-500">{{ grua.nombre }}: pasillo de {{ fm(grua.pasillo) }} m entre racks<FlujoReferencial :de="grua" /></p>
         </section>
 
@@ -183,21 +206,62 @@
           <div class="flex items-center justify-between gap-2">
             <p class="fl-leyenda">Tus racks en la bodega</p>
           </div>
-          <!-- Bandeja: el cliente arma su layout lineal por lineal y decide si cada uno va simple o doble -->
-          <p class="mt-2 text-sm text-neutral-600">Arma tu layout lineal por lineal: agrega uno, arrástralo a su lugar y elige si va simple o doble.</p>
-          <ul class="mt-2 space-y-2">
-            <li v-for="m in p.modelos" :key="m.id" class="flex flex-wrap items-center gap-2">
-              <span class="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded text-[11px] font-bold text-white" :style="{ background: colorModelo(m.id).borde }">{{ letraModelo(m.id) }}</span>
-              <span class="mr-auto min-w-0 truncate text-sm font-medium text-neutral-800">{{ m.nombre }}</span>
-              <template v-if="m.tipo !== 'DI'">
-                <button type="button" class="fl-chip !min-h-9 !w-auto !flex-col !gap-0 !px-3 !text-sm leading-tight" :aria-label="`Agregar lineal simple, ${aporteLineal(m, false)} posiciones`" @click="agregarLineal(m.id, false)">+ Lineal simple<span class="text-[11px] font-normal text-neutral-500">{{ n(aporteLineal(m, false)) }} {{ m.tipo === 'AR' ? 'bandejas' : 'posiciones' }}</span></button>
-                <button type="button" class="fl-chip !min-h-9 !w-auto !flex-col !gap-0 !px-3 !text-sm leading-tight" :aria-label="`Agregar lineal doble, ${aporteLineal(m, true)} posiciones`" @click="agregarLineal(m.id, true)">+ Lineal doble<span class="text-[11px] font-normal text-neutral-500">{{ n(aporteLineal(m, true)) }} {{ m.tipo === 'AR' ? 'bandejas' : 'posiciones' }}</span></button>
-              </template>
-              <button v-else type="button" class="fl-chip !min-h-9 !w-auto !flex-col !gap-0 !px-3 !text-sm leading-tight" @click="agregarLineal(m.id, false)">+ Bloque<span class="text-[11px] font-normal text-neutral-500">{{ n(aporteLineal(m, false)) }} posiciones</span></button>
+          <!-- Bandeja: el cliente dibuja cada lineal arrastrando en el plano, del largo y por el muro que quiera -->
+          <p class="mt-2 text-sm text-neutral-600">Elige simple o doble, toca <b>Dibujar</b> y arrastra en el plano por donde quieres el rack. El largo del arrastre son los cuerpos: puedes repartirlos en varios tramos, por el muro que quieras.</p>
+          <ul class="mt-3 space-y-2.5">
+            <li v-for="m in p.modelos" :key="m.id" :class="['rounded-xl p-2.5 ring-1', pincel?.modelo === m.id ? 'bg-brand-50 ring-brand-400' : 'bg-white ring-neutral-200']">
+              <div class="flex items-center gap-2">
+                <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-xs font-bold text-white" :style="{ background: colorModelo(m.id).borde }">{{ letraModelo(m.id) }}</span>
+                <span class="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-900">{{ m.nombre }}</span>
+                <span v-for="c in [cob.modelos.find((x: any) => x.id === m.id)]" :key="`f${m.id}`" :class="['whitespace-nowrap text-sm font-semibold tabular-nums', !c ? '' : c.diferencia < 0 ? 'text-amber-700' : 'text-green-700']">
+                  <template v-if="c">{{ c.diferencia < 0 ? `Faltan ${-c.diferencia} ${c.unidadCuerpo}` : '✓ Cubierto' }}</template>
+                </span>
+              </div>
+              <div class="mt-2 flex gap-2">
+                <div v-if="m.tipo !== 'DI'" class="flex rounded-lg bg-neutral-100 p-0.5" role="group" :aria-label="`Simple o doble, ${m.nombre}`">
+                  <button v-for="o in [{ v: false, t: 'Simple' }, { v: true, t: 'Doble' }]" :key="o.t" type="button" :aria-pressed="dobleDe(m) === o.v" :class="['h-9 rounded-md px-3 text-sm font-semibold', dobleDe(m) === o.v ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="elegirDoble(m, o.v)">{{ o.t }}</button>
+                </div>
+                <button type="button" :aria-pressed="pincel?.modelo === m.id" :class="['h-10 flex-1 rounded-lg px-3 text-sm font-semibold', pincel?.modelo === m.id ? 'bg-brand-700 text-white' : 'bg-brand-600 text-white hover:bg-brand-700']" @click="tomarPincel(m.id)">
+                  {{ pincel?.modelo === m.id ? 'Listo' : '✏️ Dibujar' }}
+                </button>
+              </div>
+              <p class="mt-1.5 text-xs text-neutral-500">Cada {{ fm(largoCuerpo(m)) }} m de largo: {{ n(aporteCuerpo(m)) }} {{ m.tipo === 'AR' ? 'bandejas' : 'posiciones' }}<template v-if="m.tipo !== 'DI'"> ({{ dobleDe(m) ? 'doble' : 'simple' }})</template>
+</p>
+              <button type="button" class="mt-1.5 h-9 w-full rounded-lg bg-white text-sm font-semibold text-brand-800 ring-1 ring-brand-300 hover:bg-brand-50" @click="agregarLineal(m.id, dobleDe(m), 1)">+ 1 {{ m.tipo === 'DI' ? 'calle' : 'cuerpo' }} y armo desde ahí</button>
             </li>
           </ul>
           <!-- En celular el plano queda arriba: lo que se descontó se dice junto a los botones -->
           <p v-if="avisoFaltan" class="mt-2 rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-700 lg:hidden" aria-hidden="true">{{ avisoFaltan }}</p>
+          <!-- Comparación y atajos opcionales, cerrados: el cliente manda y el sistema ayuda solo cuando se le pide -->
+          <details class="fl-mas mt-3 rounded-xl bg-neutral-50 px-3">
+            <summary class="!text-sm">¿Simple o doble? Comparar · Atajos</summary>
+          <!-- Simple o doble: el cliente compara y elige (el sistema no arma el layout) -->
+          <div v-for="m in p.modelos.filter((x) => x.tipo !== 'DI')" :key="`cmp-${m.id}`" class="mt-2">
+            <p class="text-sm font-semibold text-neutral-800">¿Simple o doble? Compara {{ p.modelos.filter((x) => x.tipo !== 'DI').length > 1 ? m.nombre : 'las dos opciones' }}</p>
+            <table class="mb-2 w-full text-sm tabular-nums">
+              <thead><tr class="text-xs text-neutral-500"><th class="py-1 text-left font-medium">Lineal de 6 cuerpos</th><th class="py-1 text-right font-medium">Simple</th><th class="py-1 text-right font-medium">Doble</th></tr></thead>
+              <tbody class="text-neutral-800">
+                <tr class="border-t border-neutral-200"><td class="py-1">{{ m.tipo === 'AR' ? 'Bandejas' : 'Posiciones' }}</td><td v-for="o in compararLineal[m.id]" :key="`p${o.doble}`" class="py-1 text-right font-semibold">{{ n(o.pos) }}</td></tr>
+                <tr class="border-t border-neutral-200"><td class="py-1">Fondo del rack</td><td v-for="o in compararLineal[m.id]" :key="`f${o.doble}`" class="py-1 text-right">{{ fm(o.fondo) }} m</td></tr>
+                <tr class="border-t border-neutral-200"><td class="py-1">Piso con su pasillo <FlujoInfo>Largo × (fondo + medio pasillo de {{ fm(compararLineal[m.id][0].pasillo) }} m por cada lado que se carga). El simple se carga por un lado; el doble, por los dos.</FlujoInfo></td><td v-for="o in compararLineal[m.id]" :key="`m${o.doble}`" class="py-1 text-right">{{ n(o.m2) }} m²</td></tr>
+                <tr class="border-t border-neutral-200"><td class="py-1">{{ m.tipo === 'AR' ? 'Bandejas' : 'Posiciones' }} cada 100 m²</td><td v-for="o in compararLineal[m.id]" :key="`d${o.doble}`" class="py-1 text-right">{{ n(o.densidad) }}</td></tr>
+                <tr v-if="compararLineal[m.id][0].lineales" class="border-t border-neutral-200"><td class="py-1">Para lo que te falta</td><td v-for="o in compararLineal[m.id]" :key="`l${o.doble}`" class="py-1 text-right font-semibold">{{ o.lineales }} {{ o.lineales === 1 ? 'lineal' : 'lineales' }}</td></tr>
+              </tbody>
+            </table>
+            <p class="pb-3 text-xs text-neutral-500">Simple: va contra un muro o frente a otro, y se carga por un lado. Doble: dos racks espalda con espalda, y se carga por los dos pasillos. Puedes mezclarlos y cambiar cada lineal cuando quieras.</p>
+          </div>
+          <!-- Atajo opcional: el cliente manda y el sistema ayuda solo cuando se le pide -->
+          <template v-if="confirmarLlenar">
+            <p class="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-900" role="alert">Ya acomodaste {{ racksNuevos }} {{ racksNuevos === 1 ? 'rack' : 'racks' }}. "Llenar mi bodega" los vuelve a ubicar todos desde cero.</p>
+            <div class="mt-2 flex gap-2">
+              <button type="button" class="fl-btn-sec flex-1 !min-h-10 !text-sm" @click="confirmarLlenar = false">Conservar mi layout</button>
+              <button type="button" class="fl-btn-sec flex-1 !min-h-10 !text-sm !text-red-700" @click="confirmarLlenar = false; ubicar(true)">Sí, ubicar de nuevo</button>
+            </div>
+          </template>
+          <button v-else type="button" class="fl-btn-sec mt-3 w-full" @click="llenar">Llenar mi bodega</button>
+          <p class="mt-1.5 text-xs text-neutral-500">Atajo opcional: ubicamos tus racks por ti. Después los mueves como quieras.</p>
+            <div class="pb-3" />
+          </details>
           <!-- Cobertura contra los pallets del paso 2: por modelo (cuerpos que faltan o sobran) y por producto -->
           <ul class="mt-4 space-y-3">
             <li v-for="m in cob.modelos" :key="m.id" class="text-neutral-800">
@@ -226,6 +290,9 @@
               </li>
             </ul>
           </div>
+          <p v-if="Object.keys(faltan).length" class="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
+            No cabe todo en tu bodega. Opciones: subir un nivel en el paso de rack, usar un rack doble o agrandar las medidas.
+          </p>
         </section>
       </div>
 
@@ -259,34 +326,49 @@
               <span :class="['block h-full rounded-full transition-all duration-300', demanda.faltan ? 'bg-amber-500' : 'bg-green-600']" :style="{ width: `${Math.min(100, (demanda.posiciones / Math.max(1, demanda.necesita)) * 100)}%` }" />
             </span>
           </span>
+          <button v-if="demanda.faltan" type="button" class="rounded-lg bg-amber-600 px-3 py-1 text-sm font-semibold text-white hover:bg-amber-700" @click="ubicarLosQueFaltan">Ubicar los que faltan</button>
         </div>
         <p v-if="avisoFaltan" class="border-b border-neutral-100 bg-white px-3 py-1.5 text-sm text-neutral-700 lg:px-4" role="status">{{ avisoFaltan }}</p>
+        <!-- En el celular la bandeja queda bajo el plano: los pinceles van aquí, a mano -->
+        <div v-if="modo === 'layout' && !enHoy && vista === '2d'" class="flex gap-1.5 overflow-x-auto border-b border-neutral-100 px-3 py-2 lg:hidden">
+          <template v-for="m in p.modelos" :key="`pm-${m.id}`">
+            <button v-for="d in (m.tipo === 'DI' ? [false] : [false, true])" :key="`${m.id}${d}`" type="button" :aria-pressed="pincel?.modelo === m.id && pincel.doble === d" :class="['flex h-9 flex-shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2.5 text-sm font-semibold ring-1', pincel?.modelo === m.id && pincel.doble === d ? 'bg-brand-700 text-white ring-brand-700' : 'bg-white text-neutral-800 ring-neutral-300']" @click="pincel?.modelo === m.id && pincel.doble === d ? (pincel = null) : (elegirDoble(m, d), pincel = null, tomarPincel(m.id))">
+              <span class="flex h-4 w-4 items-center justify-center rounded-sm text-[10px] font-bold text-white" :style="{ background: colorModelo(m.id).borde }">{{ letraModelo(m.id) }}</span>✏️ {{ m.tipo === 'DI' ? 'Bloque' : d ? 'Doble' : 'Simple' }}
+            </button>
+          </template>
+        </div>
         <!-- Espacio libre dicho como beneficio -->
         <p v-if="libre" class="border-b border-green-100 bg-green-50 px-3 py-1.5 text-sm font-medium text-green-900 lg:px-4">Te quedan {{ n(libre) }} m² libres para crecer.</p>
         <div class="flex flex-col lg:min-h-[500px] lg:flex-row">
           <div class="min-w-0 flex-1">
         <div v-show="vista === '2d'">
           <div class="relative h-[44svh] lg:h-[max(440px,calc(100svh-19rem))]">
-          <!-- Con zoom: un toque vuelve a toda la bodega (también vuelve sola al soltar la selección) -->
+          <!-- Con zoom: un toque vuelve a toda la bodega -->
           <button v-if="(plano as any)?.zoom > 1" type="button" class="absolute right-3 top-3 z-10 rounded-lg bg-white/95 px-2.5 py-1.5 text-xs font-medium text-neutral-700 shadow-sm ring-1 ring-black/10 hover:bg-white" @click="plano?.restablecerVista()">Ajustar a la bodega</button>
           <PlanificadorPlano2D
             :bodega="p.bodega" :racks="racksPlano" :seleccion="sel" :conflictos="malos" :ocultar-accesorios="!verAccesorios" :fantasmas="fantasmas" :colores="coloresModelos" :etiquetas="letrasModelos" ref="plano" :editar-contorno="!!p.bodega.forma" :muro-sel="muroSel"
             @mover-vertice="moverVertice" @seleccionar-muro="muroSel = $event; sel = null; elementoSel = null"
             :pasillos="listaPasillos" :marcas="enHoy ? [] : marcas" :elemento-sel="elementoSel"
             :trazando="!!trazado" :agregando-cruce="agregandoCruce" :trazo-peatonal="trazado ? { puntos: trazado.puntos, ancho: trazado.ancho } : null"
+            :pincel="pincel && !enHoy ? armarLineal : null" @pintar="pintarLineal"
             :recorridos="verRecorrido && !enHoy ? recorridos : null" :sugerencias-tunel="verRecorrido && !enHoy ? sugerencias : []" :fantasma-grua="fantasmaGrua"
             @tramo-trazo="tramoTrazo" @terminar-trazo="terminarTrazado" @aplicar-tunel="aplicarSugerencia" @girar-elemento="girarElemento"
             :dibujando="!!dibujo" :puntos-dibujo="dibujo ?? []" :solo-rectos="!diagonales"
             @agregar-punto="(q: any) => { dibujo?.push(q); avisoDibujo = ''; }" @cerrar-contorno="terminarDibujo"
             class="p-3"
-            @seleccionar="sel = $event; if ($event) elementoSel = null"
+            @seleccionar="sel = $event; if ($event) { elementoSel = null; pincel = null }"
             @mover="mover" @girar="girar" @eliminar="eliminar"
             @seleccionar-elemento="elementoSel = $event; if ($event) sel = null"
-            @mover-elemento="(id: string, x: number, y: number) => cambiarElemento({ x, y }, id)"
+            @mover-elemento="moverElemento"
             @eliminar-elemento="quitarElemento"
             @cambiar-elemento="(id: string, c: any) => cambiarElemento(c, id)"
             @punto-trazo="puntoTrazo" @cruce-elemento="cruce"
           />
+          <!-- Dibujando un lineal: qué hacer, en el mismo plano, chico para no tapar -->
+          <div v-if="pincel && pincelModelo" class="pointer-events-none absolute left-2 top-2 z-10 flex select-none items-center gap-2 rounded-lg bg-slate-900/85 py-1 pl-3 pr-1 text-sm text-white shadow" role="status" aria-live="polite">
+            <span>Arrastra donde va el {{ pincelModelo.tipo === 'DI' ? 'bloque' : `lineal ${pincel.doble ? 'doble' : 'simple'}` }}<span class="hidden sm:inline text-slate-300"> · toca un rack para girarlo o repetirlo</span></span>
+            <button type="button" class="pointer-events-auto rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-slate-900" @click="pincel = null">Listo</button>
+          </div>
           <!-- Dibujando un pasillo peatonal: qué hacer, en el mismo plano, con deshacer y listo -->
           <div v-if="trazado" class="pointer-events-none absolute inset-x-2 top-2 z-10 select-none rounded-xl bg-green-700/90 px-3 py-2 text-sm text-white shadow-lg lg:inset-x-auto lg:left-3 lg:max-w-sm" role="status" aria-live="polite">
             <div class="flex items-center gap-1.5">
@@ -299,13 +381,6 @@
           <div v-else-if="agregandoCruce" class="absolute inset-x-2 top-2 z-10 flex items-center justify-between gap-3 rounded-xl bg-green-700/95 px-3 py-2 text-sm text-white shadow-lg lg:inset-x-auto lg:left-3" role="status">
             <span>Toca el pasillo donde va el cruce.</span>
             <button type="button" class="font-semibold underline" @click="agregandoCruce = false">Cancelar</button>
-          </div>
-          <!-- Túnel sugerido por el recorrido de la grúa -->
-          <div v-else-if="sugerencias.length && verRecorrido && !enHoy && !sel && !elementoSel" class="absolute inset-x-2 bottom-2 z-10 flex flex-wrap items-center gap-2 rounded-xl bg-white/95 px-3 py-2 text-sm shadow-lg ring-1 ring-sky-200 lg:inset-x-auto lg:left-3 lg:max-w-md" role="status">
-            <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-sky-600 text-xs font-bold text-white" aria-hidden="true">T</span>
-            <span class="min-w-0 flex-1 text-neutral-800"><b>Pon un túnel aquí:</b> {{ textoSugerencia(sugerencias[0]) }}</span>
-            <button type="button" class="min-h-9 rounded-lg bg-sky-600 px-3 text-sm font-semibold text-white hover:bg-sky-700" @click="aplicarSugerencia(sugerencias[0])">Poner túnel</button>
-            <button v-if="enLinea.length > 1" type="button" class="min-h-9 rounded-lg px-2 text-sm font-semibold text-sky-800 underline underline-offset-2" @click="aplicarEnLinea">En las {{ enLinea.length }} filas</button>
           </div>
           </div>
           <!-- Configuraciones en el plano: color y letra de cada modelo, con lo que guarda -->
@@ -430,6 +505,21 @@
                   </div>
                   <p class="mt-1.5 text-xs text-neutral-500">¿Otra mezcla de pallets o niveles? <button type="button" class="font-semibold text-brand-700 underline" @click="irAlPaso3">Crea otro modelo en el paso 3</button>.</p>
                   <p class="mt-2 text-sm text-neutral-700">Guarda: {{ contenidoRack(rackSel) }}</p>
+                  <!-- Todo parte de un cuerpo (dueño 26-10): el mismo lineal se alarga cuerpo a cuerpo hasta el muro y
+                       después se repite en filas, con su pasillo, hasta el muro. En selectivo, drive-in y ángulo ranurado -->
+                  <p class="fl-panel__sec">Armar desde aquí</p>
+                  <p class="text-xs text-neutral-500">Agrega {{ rackSel.tipo === 'DI' ? 'calles' : 'cuerpos' }} a este mismo lineal hasta el muro, y después repite la fila hasta el otro muro.</p>
+                  <div class="mt-1.5 grid grid-cols-2 gap-1.5">
+                    <button type="button" class="fl-chip !min-h-10 !text-sm" @click="alargar(rackSel, -1)">{{ rackSel.rot % 180 ? '↑' : '←' }} Hasta el muro</button>
+                    <button type="button" class="fl-chip !min-h-10 !text-sm" @click="alargar(rackSel, 1)">Hasta el muro {{ rackSel.rot % 180 ? '↓' : '→' }}</button>
+                  </div>
+                  <div v-if="rackSel.tipo === 'AR'" class="fl-prop mt-2"><span>Pasillo entre filas</span>
+                    <select v-model.number="bloque.pasillo" class="rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm font-semibold" aria-label="Pasillo entre filas">
+                      <option v-for="v in PASILLOS_AR" :key="v" :value="v">{{ fm(v) }} m</option>
+                    </select>
+                  </div>
+                  <button type="button" class="fl-chip mt-1.5 w-full !min-h-10 !text-sm" @click="hastaElMuro(rackSel, 'profundidad')">Repetir la fila hasta el muro <span class="ml-1 text-xs font-normal text-neutral-500">(pasillo {{ fm(rackSel.tipo === 'AR' ? bloque.pasillo : grua.pasillo) }} m)</span></button>
+                  <p v-if="avisoMuro" class="mt-1 text-xs text-neutral-600" role="status">{{ avisoMuro }}</p>
                   <!-- Largo de la fila: acortarla o alargarla sin perder de vista la demanda (barra de arriba) -->
                   <p class="fl-panel__sec">Largo de la fila</p>
                   <div class="fl-prop"><span>{{ rackSel.tipo === 'DI' ? 'Calles' : rackSel.doble ? 'Cuerpos por lado' : 'Cuerpos' }}</span><FlujoNumero :valor="rackSel.cuerpos" :min="1" :max="50" etiqueta="cuerpos" @cambio="largoFila(rackSel, $event)" /></div>
@@ -442,7 +532,7 @@
                     <button v-for="op in [{ v: false, t: 'Sin túnel' }, { v: true, t: 'Con túnel' }]" :key="op.t" type="button" :aria-pressed="!!rackSel.tunel === op.v" :class="['h-9 rounded-md text-sm font-semibold', !!rackSel.tunel === op.v ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="ponerTunel(rackSel, op.v ? { cuerpo: Math.floor((rackSel.cuerpos - 1) / 2), altoLibre: altoTunelGrua(p.bodega.grua) } : null)">{{ op.t }}</button>
                   </div>
                   <template v-if="rackSel.tunel">
-                    <div class="fl-prop mt-2"><span>Cuerpo (desde la izquierda)</span><FlujoNumero :valor="Math.min(rackSel.cuerpos, (rackSel.tunel.cuerpo ?? 0) + 1)" :min="1" :max="rackSel.cuerpos" etiqueta="cuerpo túnel" @cambio="ponerTunel(rackSel, { ...rackSel.tunel, cuerpo: $event - 1 })" /></div>
+                    <div class="fl-prop mt-2"><span>Cuerpo (desde la izquierda)</span><FlujoNumero :valor="((medidasRack(rackSel) as any).tunel?.indice ?? 0) + 1" :min="1" :max="rackSel.cuerpos" etiqueta="cuerpo túnel" @cambio="ponerTunel(rackSel, { ...rackSel.tunel, cuerpo: $event - 1 })" /></div>
                     <p class="mt-2 text-sm text-neutral-700">¿Quién pasa por debajo?</p>
                     <div class="mt-1 grid grid-cols-2 gap-1.5">
                       <button v-for="a in ALTOS_TUNEL" :key="a.v" type="button" :class="['fl-chip !min-h-11 !flex-col !gap-0 !px-1 !text-xs leading-tight', Math.abs(rackSel.tunel.altoLibre - a.v) < 0.01 && 'fl-chip--sel']" :aria-pressed="Math.abs(rackSel.tunel.altoLibre - a.v) < 0.01" @click="ponerTunel(rackSel, { ...rackSel.tunel, altoLibre: a.v })"><b>{{ a.t }}</b><span>paso {{ fm(a.v) }} m</span></button>
@@ -462,12 +552,14 @@
                 <label class="fl-prop"><span>Desde el muro izquierdo</span><span class="fl-prop__in"><input :value="bordeRack.x" type="number" min="0" step="0.1" @change="moverRackA('x', $event)"><i>m</i></span></label>
                 <label class="fl-prop"><span>Desde el muro de arriba</span><span class="fl-prop__in"><input :value="bordeRack.y" type="number" min="0" step="0.1" @change="moverRackA('y', $event)"><i>m</i></span></label>
                 <p class="fl-panel__sec">Repetir en bloque</p>
-                <div class="fl-prop"><span>A lo largo</span><FlujoNumero :valor="bloque.largo" :min="1" :max="10" etiqueta="a lo largo" @cambio="bloque.largo = $event" /></div>
-                <div class="fl-prop"><span>En profundidad</span><FlujoNumero :valor="bloque.profundidad" :min="1" :max="10" etiqueta="en profundidad" @cambio="bloque.profundidad = $event" /></div>
+                <div class="fl-prop"><span>A lo largo</span><FlujoNumero :valor="bloque.largo" :min="1" :max="60" etiqueta="a lo largo" @cambio="bloque.largo = $event" /></div>
+                <div class="fl-prop"><span>En profundidad</span><FlujoNumero :valor="bloque.profundidad" :min="1" :max="60" etiqueta="en profundidad" @cambio="bloque.profundidad = $event" /></div>
+
                 <label v-if="!rackSel.doble && rackSel.tipo !== 'DI'" class="mt-2 flex items-center gap-2 text-sm text-neutral-700">
                   <input v-model="bloque.espalda" type="checkbox" class="h-4 w-4 accent-brand-600"> Filas espalda con espalda
                 </label>
-                <p class="mt-2 text-xs text-neutral-500">Entre filas queda el pasillo de tu equipo ({{ fm(grua.pasillo) }} m<FlujoReferencial :de="grua" />). Las copias se ven punteadas en el plano antes de agregarlas.</p>
+                <p v-if="rackSel.tipo === 'AR'" class="mt-2 text-xs text-neutral-500">En ángulo ranurado el pasillo de circulación va de {{ fm(DISTANCIAS.pasilloAR.min) }} a {{ fm(DISTANCIAS.pasilloAR.max) }} m. Las copias se ven punteadas en el plano antes de agregarlas.</p>
+                <p v-else class="mt-2 text-xs text-neutral-500">Entre filas queda el pasillo de tu equipo ({{ fm(grua.pasillo) }} m<FlujoReferencial :de="grua" />). Las copias se ven punteadas en el plano antes de agregarlas.</p>
                 <p v-if="previaRacks.length" class="mt-2 rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-700" role="status">
                   <b class="text-neutral-900">{{ previaRacks.filter((c) => c.ok).length }} {{ previaRacks.filter((c) => c.ok).length === 1 ? 'cabe' : 'caben' }}</b>
                   <template v-if="previaRacks.some((c) => !c.ok)"> · <span class="text-red-700">{{ previaRacks.filter((c) => !c.ok).length }} no {{ previaRacks.filter((c) => !c.ok).length === 1 ? 'cabe' : 'caben' }}: {{ textoMotivos(previaRacks) }}</span> (en rojo en el plano)</template>
@@ -570,12 +662,17 @@
           </div>
         </div>
         <p v-if="malos.size" class="border-t border-red-100 bg-red-50 px-4 py-2.5 text-sm text-red-800" role="status">
-          <span class="block">Hay racks superpuestos, sobre un pasillo, pilar o zona, o fuera de la bodega (en rojo). Arrástralos a un lugar libre, acórtalos o quítalos.</span>
-          <button type="button" class="mt-1.5 min-h-9 rounded-lg bg-red-700 px-3 text-sm font-semibold text-white hover:bg-red-800" @click="verConflicto">Ver el primero en rojo</button>
+          <span class="block">Hay racks superpuestos, sobre un pasillo, pilar o zona, o fuera de la bodega (en rojo). Arrástralos a un lugar libre, acórtalos o quítalos, o:</span>
+          <span class="mt-1.5 flex flex-wrap gap-2">
+            <button type="button" class="min-h-9 rounded-lg bg-red-700 px-3 text-sm font-semibold text-white hover:bg-red-800" @click="reubicarConflictos">Reubicar solo los racks en conflicto</button>
+            <button type="button" class="min-h-9 rounded-lg bg-white px-3 text-sm font-semibold text-red-800 ring-1 ring-red-200 hover:bg-red-100" @click="verConflicto">Ver el primero en rojo</button>
+          </span>
         </p>
         <p v-else-if="angostos" class="border-t border-amber-100 bg-amber-50 px-4 py-2.5 text-sm text-amber-900" role="status">
           Hay pasillos más angostos de lo que necesita tu equipo (en rojo). Lo revisamos en el paso siguiente.
         </p>
+        <!-- Al pie del plano: la ingeniería como garantía (prompt de conversión §E) -->
+        <p class="border-t border-neutral-100 bg-white px-4 py-2 text-xs text-neutral-500">{{ TEXTO_INGENIERIA }}</p>
       </div>
     </div>
 
@@ -585,7 +682,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, reactive, watch, onMounted, onBeforeUnmount, shallowRef } from 'vue';
+import { ref, computed, reactive, watch, watchEffect, onMounted, onBeforeUnmount, shallowRef } from 'vue';
 import { useProyecto } from '~/stores/proyecto';
 import {
   ELEMENTOS, conflictos, contorno, caja, normalizar, dentroDeBodega, grillaPilaresXY, lugarLibre, formatoM, NOMBRE,
@@ -594,8 +691,9 @@ import {
 import { GRUAS, DISTANCIAS } from '~/lib/rack3d/parametrosTecnicos.js';
 import { pasillos, pasilloRequerido } from '~/lib/rack3d/pasillos.js';
 import { huella } from '~/lib/rack3d/medidas.js';
-import { conCuerpos, conDoble, partirRack, resultadoModelo, rackDeModelo, conteoRack, repetirBloque, previaBloque, previaPasillos, textoMotivos, cobertura, conteoTotal, conManiobras, enMuro, muroDe } from '~/lib/flujo/calculos.js';
+import { bodegaParaPallets, conCuerpos, conDoble, partirRack, ubicarFaltantes, resultadoModelo, rackDeModelo, conteoRack, ubicarModelos, repetirBloque, previaBloque, previaPasillos, textoMotivos, cobertura, conteoTotal, conManiobras, enMuro, muroDe, conPilares, linealArrastrado, maxBloque, alargarHastaMuro } from '~/lib/flujo/calculos.js';
 import { proponerAccesorios, aplicarAjustes } from '~/lib/rack3d/accesorios.js';
+import { ALTURAS_TIPICAS, ESTIMADO, PIERDE, PORQUE, TEXTO_INGENIERIA, TOLERANCIA_MEDIDAS } from '~/lib/flujo/conversion.js';
 import { areaOcupada } from '~/lib/flujo/perfiles.js';
 import { recorridosGrua, sugerirTuneles, tunelesAlineados, ALTOS_TUNEL, altoTunelGrua, tunelParaGrua, dimensiones, radioGiro } from '~/lib/rack3d/rutas.js';
 
@@ -609,14 +707,34 @@ function cambiarAltura(e: Event) {
   p.flags = p.flags.filter((f) => f !== 'no_se:altura');
 }
 function alturaNoSe() {
-  p.bodega.altura = 8;
+  if (!p.flags.includes('no_se:altura')) p.bodega.altura = 8;
   p.flags = [...new Set([...p.flags, 'no_se:altura'])];
+}
+// Medidas aproximadas (±1 m): se dibuja igual; el ejecutivo las confirma
+function medidasAprox(v: boolean) {
+  p.flags = v ? [...new Set([...p.flags, 'no_se:medidas'])] : p.flags.filter((f) => f !== 'no_se:medidas');
 }
 const p = useProyecto();
 const fm = formatoM;
 const n = (v: number) => Math.round(v).toLocaleString('es-CL');
 const num = (e: Event) => Math.max(0.2, Number((e.target as HTMLInputElement).value) || 0.2);
 const nuevoId = () => Math.random().toString(36).slice(2, 9);
+// Medidas estimadas desde los pallets (el cliente no sabe el área): se marcan como estimadas
+const sinMedidas = reactive({ abierto: false, pallets: null as number | null });
+const medidasEstimadas = computed(() => (sinMedidas.pallets && sinMedidas.pallets > 0
+  ? bodegaParaPallets(sinMedidas.pallets, { altura: p.bodega.altura, grua: p.bodega.grua, ocupacion: p.bodega.ocupacion, pallet: p.pallets[0] ?? null })
+  : null));
+function usarMedidasEstimadas() {
+  const e = medidasEstimadas.value;
+  if (!e) return;
+  p.bodega.ancho = e.ancho; p.bodega.largo = e.largo;
+  medidasAprox(true);
+  marcar('medidas_estimadas', { pallets: sinMedidas.pallets, m2: e.m2 });
+}
+// Medidas escritas o dibujadas por el cliente: dejan de ser las de ejemplo (precisión de la cotización)
+watch(() => [p.bodega.ancho, p.bodega.largo, JSON.stringify(p.bodega.forma)], () => {
+  if (!p.flags.includes('medidas_ok')) p.flags = [...p.flags, 'medidas_ok'];
+});
 
 const vista = ref<'2d' | '3d'>('2d');
 const sel = ref<string | null>(null);
@@ -628,6 +746,13 @@ const racksPlano = computed<any[]>({
   get: () => (enHoy.value ? p.racksHoy : p.racks),
   set: (v) => { if (enHoy.value) p.racksHoy = v; else p.racks = v; },
 });
+// Pilar dentro de un selectivo doble: el rack lo anota y pierde una columna de pallets de un lado (conPilares
+// devuelve el mismo arreglo si nada cambió, así que no se vuelve a disparar)
+watchEffect(() => {
+  const nuevos = conPilares(p.racks, p.bodega), hoy = conPilares(p.racksHoy, p.bodega);
+  if (nuevos !== p.racks) p.racks = nuevos;
+  if (hoy !== p.racksHoy) p.racksHoy = hoy;
+});
 // Muro elegido en el plano (forma de la bodega): el panel derecho deja cambiar su largo y sus esquinas
 const muroSel = ref<number | null>(null);
 const gp = reactive({ pasoX: 6, pasoY: 6, offX: 6, offY: 6, seccion: 40, forma: 'cuadrado' as 'cuadrado' | 'circular' | 'H' });
@@ -637,7 +762,10 @@ const trazado = ref<{ grupo: string; puntos: Pto[]; ids: string[]; ancho: number
 const agregandoCruce = ref(false);
 const FORMAS_PILAR = [{ v: 'cuadrado', t: 'Hormigón cuadrado' }, { v: 'circular', t: 'Hormigón redondo' }, { v: 'H', t: 'Perfil metálico' }] as const;
 const MUROS = [{ v: 'abajo', t: 'Abajo' }, { v: 'arriba', t: 'Arriba' }, { v: 'izquierda', t: 'Izquierda' }, { v: 'derecha', t: 'Derecha' }];
-const bloque = reactive({ largo: 1, profundidad: 1, espalda: false });
+const bloque = reactive({ largo: 1, profundidad: 1, espalda: false, pasillo: DISTANCIAS.pasilloAR.valor });
+// Ángulo ranurado: pasillo de circulación de 0,8 a 1,5 m (dueño 26-10), de a 10 cm
+const PASILLOS_AR = Array.from({ length: Math.round((DISTANCIAS.pasilloAR.max - DISTANCIAS.pasilloAR.min) * 10) + 1 }, (_, i) => +(DISTANCIAS.pasilloAR.min + i / 10).toFixed(1));
+const avisoMuro = ref('');
 // Pasillos en serie (panel del pasillo elegido)
 const serie = reactive({ cantidad: 1, separacion: 6 });
 const PESTANAS_DIBUJO = [{ k: 'medidas', t: 'Medidas' }, { k: 'pilares', t: 'Pilares' }, { k: 'accesos', t: 'Portones y andenes' }] as const;
@@ -646,11 +774,10 @@ const PESTANAS = computed(() => (modo.value === 'dibujo' ? PESTANAS_DIBUJO : PES
 // En el dibujo parte en Medidas; en el layout las pestañas de lo que ya tiene van cerradas hasta que las toque
 const pestana = ref<string>(props.modo === 'dibujo' ? 'medidas' : '');
 // Encuadre a lo diseñado: los racks con su pasillo (y los accesos). Se calcula al ubicar, no en cada arrastre
-// El plano y el 3D muestran siempre toda la bodega; al soltar la selección el plano vuelve solo a encuadrarla
+// El plano parte mostrando toda la bodega; el zoom queda donde el cliente lo deja ("Ajustar a la bodega" lo vuelve)
 const plano = ref<{ restablecerVista(): void; aPlanoCliente(x: number, y: number): Pto | null } | null>(null);
 watch(sel, (v) => { if (v) muroSel.value = null; });
 watch(elementoSel, (v) => { if (v) muroSel.value = null; });
-watch(() => !sel.value && !elementoSel.value && muroSel.value === null, (nada) => { if (nada) plano.value?.restablecerVista(); });
 // Capa de accesorios del plano (canilleras, protecciones, barandas): se puede ocultar
 const verAccesorios = ref(true);
 // m² libres para crecer: la bodega menos lo que ocupan los racks con sus pasillos (solo si es harto)
@@ -732,7 +859,7 @@ const marcas = computed(() => {
 });
 // ─── Recorrido de la grúa (portón o andén → pasillos de carga) y dónde conviene un túnel ───
 // Se calcula un rato después del último cambio (no en cada cuadro de un arrastre)
-const verRecorrido = ref(true);
+const verRecorrido = ref(false);
 const recorridos = shallowRef<any>(null);
 const sugerencias = shallowRef<any[]>([]);
 const firmaRutas = computed(() => (verRecorrido.value && !enHoy.value
@@ -1028,14 +1155,30 @@ function duplicar(r: any) {
   sel.value = copia.id;
 }
 function repetir(r: any) {
-  const res = repetirBloque(r, { ...bloque }, racksPlano.value, p.bodega, nuevoId) as { nuevos: any[]; omitidos: number; copias: any[] };
+  const res = repetirBloque(r, opcionesBloque(r), racksPlano.value, p.bodega, nuevoId) as { nuevos: any[]; omitidos: number; copias: any[] };
   racksPlano.value = [...racksPlano.value, ...res.nuevos];
   avisoBloque.value = `Se agregaron ${res.nuevos.length} ${res.nuevos.length === 1 ? 'rack' : 'racks'}${res.omitidos ? ` (${res.omitidos} no cabían: ${textoMotivos(res.copias)})` : ''}.`;
   marcar('rack_add', { tipo: 'bloque', largo: bloque.largo, profundidad: bloque.profundidad, nuevos: res.nuevos.length });
   bloque.largo = 1; bloque.profundidad = 1;
 }
 // ─── Vista previa en el plano: copias del bloque o de la serie de pasillos ───
-const previaRacks = computed(() => (rackSel.value && bloque.largo * bloque.profundidad > 1 ? previaBloque(rackSel.value, { ...bloque }, racksPlano.value, p.bodega) as any[] : []));
+const opcionesBloque = (r: any) => ({ ...bloque, pasillo: r.tipo === 'AR' ? bloque.pasillo : null });
+const previaRacks = computed(() => (rackSel.value && bloque.largo * bloque.profundidad > 1 ? previaBloque(rackSel.value, opcionesBloque(rackSel.value), racksPlano.value, p.bodega) as any[] : []));
+// "Hasta el muro": cuántos caben de ese rack en ese sentido; quedan en vista previa para agregarlos con un toque
+function alargar(r: any, sentido: 1 | -1) {
+  const antes = porPoner.value, nuevo = alargarHastaMuro(r, racksPlano.value, p.bodega, sentido);
+  const mas = nuevo.cuerpos - r.cuerpos, u = r.tipo === 'DI' ? 'calles' : 'cuerpos';
+  if (!mas) { avisoMuro.value = 'No cabe otro en ese sentido: el muro, un rack o un pilar está al lado.'; return; }
+  racksPlano.value = racksPlano.value.map((x) => (x.id === r.id ? nuevo : x));
+  avisoMuro.value = `Se alargó ${mas} ${mas === 1 ? u.replace(/s$/, '') : u}: ahora tiene ${nuevo.cuerpos}.`;
+  avisoDescuento(`Alargaste el lineal ${mas} ${u}`, antes);
+  marcar('rack_add', { tipo: 'alargar', cuerpos: mas });
+}
+function hastaElMuro(r: any, eje: 'largo' | 'profundidad') {
+  const k = maxBloque(r, opcionesBloque(r), eje, racksPlano.value, p.bodega);
+  bloque[eje] = k;
+  avisoMuro.value = k > 1 ? `Caben ${k} ${eje === 'largo' ? 'a lo largo' : 'filas'} hasta el muro. Revisa la vista previa y agrégalos.` : 'No cabe otro en ese sentido: el muro o un rack está al lado.';
+}
 const esPasillo = (e: any) => e && (e.clase === 'pasilloGrua' || e.clase === 'pasilloPeatonal');
 const previaPas = computed(() => (esPasillo(elementoActual.value) && serie.cantidad > 1 ? previaPasillos(elementoActual.value, { ...serie }, p.bodega) as any[] : []));
 const fantasmas = computed(() => [
@@ -1043,7 +1186,7 @@ const fantasmas = computed(() => [
   ...previaPas.value.map((c) => ({ ...rectElemento(c.el), ok: c.ok, motivo: c.motivo })),
 ]);
 watch(elementoSel, () => { serie.cantidad = 1; });
-watch(sel, () => { bloque.largo = 1; bloque.profundidad = 1; avisoBloque.value = ''; });
+watch(sel, () => { bloque.largo = 1; bloque.profundidad = 1; avisoBloque.value = ''; avisoMuro.value = ''; });
 // Paso entre filas de racks (eje a eje) perpendicular al pasillo elegido: para alinear la serie con ellas
 const pasoFilas = computed(() => {
   const e = elementoActual.value;
@@ -1149,14 +1292,79 @@ function aporteLineal(mo: any, doble: boolean) {
   const c = conteoRack(mo.tipo === 'DI' ? base : normalizar({ ...base, doble }));
   return c.posiciones || c.bandejas;
 }
+// Simple o doble, lado a lado (para que el cliente elija; el sistema no decide ni ubica): un lineal de 6 cuerpos
+// con su pasillo. Piso = largo × (fondo + medio pasillo por cara de carga): el simple carga por una cara y el
+// doble por dos. "Te faltan" = lineales de ese tipo para cubrir lo que todavía no está en el plano
+function opcionesLineal(mo: any) {
+  const base = rackDeModelo(mo, { pallets: p.pallets, cajas: p.cajas, cuerpos: 6, grua: p.bodega.grua });
+  const c = cob.value.modelos.find((x: any) => x.id === mo.id);
+  const falta = c ? Math.max(0, c.necesita - c.posiciones) : 0;
+  return [false, true].map((doble) => {
+    const r = normalizar({ ...base, doble, rot: 0 });
+    const q = rectangulo(r), cuenta = conteoRack(r);
+    const pos = cuenta.posiciones || cuenta.bandejas;
+    const pasillo = pasilloRequerido(r, p.bodega);
+    const m2 = q.ancho * (q.alto + (doble ? 2 : 1) * pasillo / 2);
+    return { doble, pos, largo: q.ancho, fondo: q.alto, pasillo, m2, densidad: m2 > 0 ? (pos / m2) * 100 : 0, lineales: pos > 0 ? Math.ceil(falta / pos) : 0 };
+  });
+}
+const compararLineal = computed(() => Object.fromEntries(p.modelos.filter((m) => m.tipo !== 'DI').map((m) => [m.id, opcionesLineal(m)])));
+// ─── Pincel: el cliente dibuja cada lineal arrastrando (dueño 26-10: "que vaya arrastrando las cantidades que
+// quiera por el lado que quiera de su bodega"). Simple o doble se elige por modelo antes de dibujar ───
+const pincel = ref<{ modelo: string; doble: boolean } | null>(null);
+const dobles = reactive<Record<string, boolean>>({});
+const dobleDe = (m: any) => m.tipo !== 'DI' && (dobles[m.id] ?? !!m.doble);
+const pincelModelo = computed(() => p.modelos.find((m) => m.id === pincel.value?.modelo));
+function elegirDoble(m: any, v: boolean) {
+  dobles[m.id] = v;
+  if (pincel.value?.modelo === m.id) pincel.value = { modelo: m.id, doble: v };
+}
+function tomarPincel(id: string) {
+  const m = p.modelos.find((x) => x.id === id);
+  if (!m || pincel.value?.modelo === id) { pincel.value = null; return; }
+  pincel.value = { modelo: id, doble: dobleDe(m) };
+  sel.value = null; elementoSel.value = null; vista.value = '2d';
+  if (trazado.value) terminarTrazado();
+  marcar('pincel', { tipo: m.tipo, doble: dobleDe(m) });
+}
+const baseDe = (mo: any, doble: boolean) => ({ ...rackDeModelo(mo, { pallets: p.pallets, cajas: p.cajas, cuerpos: 1, grua: p.bodega.grua }), ...(mo.tipo === 'DI' ? {} : { doble, dobleLineal: doble }) });
+const largoCuerpo = (mo: any) => {
+  const r = normalizar({ ...baseDe(mo, dobleDe(mo)), rot: 0 });
+  return rectangulo(normalizar({ ...r, cuerpos: 2 })).ancho - rectangulo(r).ancho;
+};
+const aporteCuerpo = (mo: any) => { const c = conteoRack(normalizar({ ...baseDe(mo, dobleDe(mo)), cuerpos: 1, rot: 0 })); return c.posiciones || c.bandejas; };
+// Lo que se ve mientras arrastra: el rack con sus cuerpos y lo que aporta
+function armarLineal(a: Pto, b: Pto) {
+  const mo = pincelModelo.value;
+  if (!mo || !pincel.value) return null;
+  const r = linealArrastrado(baseDe(mo, pincel.value.doble), a, b, p.bodega);
+  // Cuerpos como en la barra de demanda: en el doble cuentan los dos lados
+  const c = conteoRack(r), u = mo.tipo === 'DI' ? (c.cuerpos === 1 ? 'calle' : 'calles') : c.cuerpos === 1 ? 'cuerpo' : 'cuerpos';
+  return { ...r, id: 'pincel', modelo: mo.id, texto: `${c.cuerpos} ${u} · ${fm(rectangulo(r)[r.rot % 180 ? 'alto' : 'ancho'])} m · ${n(c.posiciones || c.bandejas)} ${c.posiciones ? 'pos.' : 'bandejas'}` };
+}
+function pintarLineal(r: any) {
+  const { texto, ...rack } = r;
+  void texto;
+  const antes = porPoner.value, mo = pincelModelo.value;
+  const id = nuevoId();
+  p.racks = [...p.racks, { ...rack, id }];
+  sel.value = id;
+  avisoDescuento(`Dibujaste ${conteoRack(rack).cuerpos} ${mo?.tipo === 'DI' ? 'calles' : 'cuerpos'}`, antes);
+  marcar('rack_add', { tipo: 'pincel', cuerpos: rack.cuerpos, doble: !!rack.doble });
+}
+function teclaPincel(e: KeyboardEvent) { if (e.key === 'Escape' && pincel.value) pincel.value = null; }
+onMounted(() => window.addEventListener('keydown', teclaPincel));
+onBeforeUnmount(() => window.removeEventListener('keydown', teclaPincel));
+watch(elementoSel, (v) => { if (v) pincel.value = null; });
+
 // Un lineal nuevo del modelo, simple o doble a elección, en el primer lugar libre; queda elegido para moverlo
-function agregarLineal(modeloId: string, doble: boolean) {
+function agregarLineal(modeloId: string, doble: boolean, cuerpos?: number) {
   const mo = p.modelos.find((m) => m.id === modeloId);
   if (!mo) return;
-  const base = rackDeModelo(mo, { pallets: p.pallets, cajas: p.cajas, cuerpos: mo.tipo === 'DI' ? 4 : 6, grua: p.bodega.grua });
+  const base = rackDeModelo(mo, { pallets: p.pallets, cajas: p.cajas, cuerpos: cuerpos ?? (mo.tipo === 'DI' ? 4 : 6), grua: p.bodega.grua });
   const lineal = mo.tipo === 'DI' ? {} : { doble, dobleLineal: doble, rot: doble ? 0 : 180 };
   // Cae a un pasillo de grua de lo que ya hay, para que se pueda cargar sin moverlo
-  const r = lugarLibre(normalizar({ ...base, id: nuevoId(), ...lineal }), p.racks, p.bodega, mo.tipo === 'AR' ? DISTANCIAS.pasilloPersona.valor : grua.value.pasillo);
+  const r = lugarLibre(normalizar({ ...base, id: nuevoId(), ...lineal }), p.racks, p.bodega, mo.tipo === 'AR' ? DISTANCIAS.pasilloAR.valor : grua.value.pasillo);
   const antes = porPoner.value;
   p.racks = [...p.racks, r];
   sel.value = r.id; elementoSel.value = null;
@@ -1176,10 +1384,64 @@ function cambiarDoble(r: any, doble: boolean) {
   avisoDescuento(`Pasaste el lineal a ${doble ? 'doble' : 'simple'}`, antes);
   marcar('rack_doble', { doble });
 }
-// Conflicto: se elige el primer rack en rojo para que el cliente lo mueva (no se reubica solo)
+// Conflicto: se elige el primer rack en rojo para que el cliente lo mueva
 function verConflicto() {
   const id = [...malos.value][0];
   if (id) { sel.value = id; elementoSel.value = null; }
+}
+// ─── Atajos opcionales (el cliente los pide; nada se ubica solo) ───
+// "Llenar mi bodega" rehace el layout nuevo: si el cliente ya puso racks, se le pregunta antes
+const faltan = ref<Record<string, number>>({});
+const confirmarLlenar = ref(false);
+const modulos = computed(() => Object.fromEntries(p.modelos.map((m) => [m.id, resultados.value[m.id].modulos])));
+let reveladoTimer: ReturnType<typeof setTimeout> | null = null;
+function llenar() {
+  if (racksNuevos.value) confirmarLlenar.value = true;
+  else ubicar(true);
+}
+function ubicar(manual: boolean) {
+  const exist = p.racks.filter((r) => r.existente);
+  const r = ubicarModelos(p.bodega, p.modelos, modulos.value, { pallets: p.pallets, cajas: p.cajas, nuevoId, existentes: exist });
+  faltan.value = r.faltan;
+  sel.value = null;
+  if (reveladoTimer) clearTimeout(reveladoTimer);
+  // Los racks aparecen de a uno y el contador sube (sin animar si se pide menos movimiento)
+  const quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!manual || quieto || r.racks.length < 2) {
+    p.racks = [...exist, ...r.racks];
+  } else {
+    p.racks = [...exist];
+    const paso = Math.max(60, Math.min(220, 1600 / r.racks.length));
+    const poner = (i: number) => {
+      p.racks = [...exist, ...r.racks.slice(0, i)];
+      if (i < r.racks.length) reveladoTimer = setTimeout(() => poner(i + 1), paso);
+    };
+    poner(1);
+  }
+  avisoFaltan.value = '';
+  if (manual) marcar('rack_add', { tipo: 'llenar', racks: r.racks.length });
+}
+// Solo los racks en rojo se sacan y se vuelven a poner donde quepan; lo demás no se mueve
+function reubicarConflictos() {
+  const fuera = new Set([...malos.value].filter((id) => !p.racks.find((r: any) => r.id === id)?.existente));
+  if (!fuera.size) return;
+  if (sel.value && fuera.has(sel.value)) sel.value = null;
+  p.racks = p.racks.filter((r: any) => !fuera.has(r.id));
+  ubicarLosQueFaltan();
+  marcar('rack_add', { tipo: 'conflictos', racks: fuera.size });
+}
+// Alarga filas o agrega nuevas solo por lo que falta, sin mover lo que el cliente acomodó
+function ubicarLosQueFaltan() {
+  const r = ubicarFaltantes(p.bodega, p.modelos, p.racks.filter((x: any) => !x.existente), { pallets: p.pallets, cajas: p.cajas, nuevoId }) as { racks: any[]; alargados: any[]; faltan: Record<string, number> };
+  const largos = new Map((r.alargados ?? []).map((x: any) => [x.id, x]));
+  p.racks = [...p.racks.map((x: any) => largos.get(x.id) ?? x), ...r.racks];
+  faltan.value = r.faltan ?? {};
+  const sin = Object.values(r.faltan ?? {}).reduce((t: number, v: any) => t + v, 0);
+  const partes = [largos.size && `alargamos ${largos.size} ${largos.size === 1 ? 'fila' : 'filas'}`, r.racks.length && `agregamos ${r.racks.length} ${r.racks.length === 1 ? 'fila nueva' : 'filas nuevas'}`].filter(Boolean);
+  avisoFaltan.value = partes.length
+    ? `Listo: ${partes.join(' y ')}. Nada de lo que acomodaste se movió de lugar.${sin ? ' No cupo todo: libera espacio o agranda la bodega.' : ''}`
+    : 'No hay espacio libre para lo que falta: acorta un pasillo, mueve un rack o agranda la bodega.';
+  marcar('rack_add', { tipo: 'faltantes', racks: r.racks.length });
 }
 // Largo de una fila y partirla en dos: el cliente arma su layout; la barra de demanda dice si sigue cubriendo
 function largoFila(r: any, n: number) {
@@ -1394,6 +1656,20 @@ function cruce(id: string, pos: number) {
   if (!e) return;
   cambiarElemento({ aberturas: [...(e.aberturas ?? []), pos].sort((a: number, b: number) => a - b) } as any, id);
   agregandoCruce.value = false;
+}
+// Arrastrar un elemento: un pasillo de varios tramos (mismo grupo) se mueve entero, sin abrir sus esquinas,
+// y nada sale de la bodega (se frena en el muro)
+function moverElemento(id: string, x: number, y: number) {
+  const e = p.bodega.elementos.find((q: any) => q.id === id);
+  if (!e) return;
+  const juntos = new Set(p.bodega.elementos.filter((q: any) => q.id === id || (e.grupo && q.grupo === e.grupo)).map((q: any) => q.id));
+  const rs = p.bodega.elementos.filter((q: any) => juntos.has(q.id)).map((q: any) => rectElemento(q));
+  const u = { x0: Math.min(...rs.map((r) => r.x0)), y0: Math.min(...rs.map((r) => r.y0)), x1: Math.max(...rs.map((r) => r.x0 + r.ancho)), y1: Math.max(...rs.map((r) => r.y0 + r.alto)) };
+  const c = caja(contorno(p.bodega));
+  const dx = Math.min(Math.max(x - e.x, c.x0 - u.x0), c.x1 - u.x1), dy = Math.min(Math.max(y - e.y, c.y0 - u.y0), c.y1 - u.y1);
+  if (Math.abs(dx) < 1e-6 && Math.abs(dy) < 1e-6) return;
+  p.bodega.elementos = p.bodega.elementos.map((q: any) => (juntos.has(q.id) ? { ...q, x: +(q.x + dx).toFixed(3), y: +(q.y + dy).toFixed(3) } : q));
+  sincronizarManiobras();
 }
 function cambiarElemento(cambio: Record<string, any>, id = elementoSel.value) {
   p.bodega.elementos = p.bodega.elementos.map((e: any) => (e.id === id ? { ...e, ...cambio } : e));

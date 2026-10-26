@@ -123,17 +123,23 @@
             <span>Alto con la carga (m)</span>
             <div class="flex gap-2">
               <input v-model.number="t.alto" type="number" min="0.3" max="2.5" step="0.05" inputmode="decimal" class="form-input" :class="err(t).alto && 'fl-error'" :aria-label="`Alto del ${t.nombre} en metros`" @input="sabe(t, 'alto')">
-              <button type="button" :class="['fl-nose', t.noSe?.includes('alto') && 'fl-nose--sel']" @click="noSe(t, 'alto', 1.2)">No sé</button>
+              <button type="button" :class="['fl-nose', t.noSe?.includes('alto') && 'fl-nose--sel']" @click="noSe(t, 'alto', 1.2)">No lo sé</button>
             </div>
             <small v-if="err(t).alto" class="fl-msg">{{ err(t).alto }}</small>
+            <em class="text-xs not-italic text-neutral-500">{{ t.noSe?.includes('alto') ? `${ESTIMADO}. ${PIERDE}` : PORQUE.medidasPallet }}</em>
           </div>
           <div class="fl-campo">
             <span>Peso con la carga (kg)</span>
             <div class="flex gap-2">
               <input v-model.number="t.peso" type="number" min="1" max="2000" step="10" inputmode="numeric" class="form-input" :class="err(t).peso && 'fl-error'" :aria-label="`Peso del ${t.nombre} en kilos`" @input="sabe(t, 'peso')">
-              <button type="button" :class="['fl-nose', t.noSe?.includes('peso') && 'fl-nose--sel']" @click="noSe(t, 'peso', 800)">No sé</button>
+              <button type="button" :class="['fl-nose', t.noSe?.includes('peso') && 'fl-nose--sel']" @click="noSe(t, 'peso', t.noSe?.includes('peso') ? t.peso : 1000)">No lo sé</button>
             </div>
             <small v-if="err(t).peso" class="fl-msg">{{ err(t).peso }}</small>
+            <!-- "No lo sé" (prompt de conversión §D): rangos típicos; queda estimado -->
+            <div v-if="t.noSe?.includes('peso')" class="grid grid-cols-3 gap-1.5">
+              <button v-for="o in PESOS_TIPICOS" :key="o.v" type="button" :class="['fl-chip !min-h-9 !flex-col !gap-0 !text-sm leading-tight', t.peso === o.kg && 'fl-chip--sel']" @click="t.peso = o.kg">{{ o.t }}<span class="text-[11px] font-normal text-neutral-500">~{{ o.kg.toLocaleString('es-CL') }} kg</span></button>
+            </div>
+            <em class="text-xs not-italic text-neutral-500">{{ t.noSe?.includes('peso') ? `${ESTIMADO}. ${PIERDE}` : PORQUE.peso }}</em>
           </div>
         </div>
 
@@ -142,9 +148,18 @@
           <h3 class="fl-paso-t"><span v-if="t.desdeCaja" class="fl-num">4</span>Cuántos tienes</h3>
           <label class="fl-campo mt-2">
             <span class="!text-sm">Pallets de este tipo</span>
-            <input v-model.number="t.cantidad" type="number" min="1" step="1" inputmode="numeric" class="form-input" :class="err(t).cantidad && 'fl-error'">
+            <span class="flex gap-2">
+              <input v-model.number="t.cantidad" type="number" min="1" step="1" inputmode="numeric" class="form-input" :class="err(t).cantidad && 'fl-error'" @input="sabe(t, 'cantidad')">
+              <button type="button" :class="['fl-nose', t.noSe?.includes('cantidad') && 'fl-nose--sel']" @click.prevent="noSeCantidad(t)">No sé</button>
+            </span>
             <small v-if="err(t).cantidad" class="fl-msg">{{ err(t).cantidad }}</small>
+            <em v-else class="text-xs not-italic text-neutral-500">{{ t.noSe?.includes('cantidad') ? `${ESTIMADO}. ${PIERDE}` : PORQUE.cantidad }}</em>
           </label>
+          <!-- No sabe cuántos: lo que cabe en la bodega que dibujó (paso anterior), descontando los otros tipos -->
+          <div v-if="t.noSe?.includes('cantidad') && caben.pallets > 0" class="mt-2 rounded-lg bg-neutral-50 p-3 text-sm text-neutral-700 ring-1 ring-neutral-200">
+            <p>En tu bodega de {{ n(caben.m2) }} m² caben unos <b>{{ n(caben.pallets) }} pallets</b> en selectivo doble de {{ caben.niveles }} {{ caben.niveles === 1 ? 'nivel' : 'niveles' }}.</p>
+            <button type="button" class="fl-btn-sec mt-2 w-full !min-h-10 !text-sm" @click="usarLoQueCabe(t)">Usar {{ n(Math.max(1, caben.pallets - otros(t))) }} pallets (queda estimado)</button>
+          </div>
           <!-- Cuantos pallets: desde las importaciones (contenedores que llegan y lo que tardan en salir) -->
           <details v-if="t.desdeCaja && t.caja" class="fl-mas mt-3 rounded-xl bg-neutral-50 px-3" :open="!!t.importacion">
             <summary @click="t.importacion ??= { contenedor: 'c40', n: 1, entre: 8, bodega: 8, actuales: 0, margen: 0.1, crecimiento: 0.2 }">¿No sabes cuántos? Calcúlalo desde tus importaciones</summary>
@@ -276,8 +291,9 @@ import { ref, computed, watch, watchEffect, onMounted } from 'vue';
 import { useProyecto, type TipoPallet, type TipoCaja } from '~/stores/proyecto';
 import { ROTACION } from '~/lib/rack3d/mezcla.js';
 import { PREGUNTAS } from '~/lib/tour/reglas.js';
+import { PESOS_TIPICOS, ESTIMADO, PIERDE, PORQUE } from '~/lib/flujo/conversion.js';
 import { armarPallet, orientaciones, demandaImportacion, CONTENEDORES } from '~/lib/tour/pallet.js';
-import { mejorBandeja, resultadoModelo } from '~/lib/flujo/calculos.js';
+import { mejorBandeja, resultadoModelo, palletsQueCaben } from '~/lib/flujo/calculos.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();
@@ -342,6 +358,17 @@ const MEDIDAS = [
 function noSe(t: TipoPallet, campo: 'alto' | 'peso', tipico: number) {
   t[campo] = tipico;
   t.noSe = [...new Set([...(t.noSe ?? []), campo])];
+}
+// "No sé cuántos": queda estimado y se ofrece lo que cabe en la bodega dibujada
+const caben = computed(() => palletsQueCaben(p.bodega, { pallet: p.pallets[0] ?? null, gruaDatos: { gruaLevante: p.bodega.gruaLevante, gruaKg: p.bodega.gruaKg } }));
+const otros = (t: TipoPallet) => p.pallets.filter((x) => x.id !== t.id).reduce((s, x) => s + (x.cantidad || 0), 0);
+function noSeCantidad(t: TipoPallet) {
+  t.noSe = [...new Set([...(t.noSe ?? []), 'cantidad'])];
+}
+function usarLoQueCabe(t: TipoPallet) {
+  t.cantidad = Math.max(1, caben.value.pallets - otros(t));
+  t.noSe = [...new Set([...(t.noSe ?? []), 'cantidad'])];
+  marcar('cantidad_estimada', { pallets: t.cantidad });
 }
 function sabe(t: TipoPallet, campo: string) {
   t.noSe = (t.noSe ?? []).filter((c) => c !== campo);

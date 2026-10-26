@@ -25,6 +25,7 @@ function generateContinuar(array $data, string $ref): string {
                     <a href='{$link}' style='background:#ea580c; color:#fff; padding:14px 26px; border-radius:10px; text-decoration:none; font-weight:600;'>Continuar mi diseño</a>
                 </p>
                 <p>Cuando pidas tu cotización, nuestro equipo comercial te la envía en máximo 24 horas.</p>
+                <p style='font-size:13px; color:#616161;'>Diseño preliminar. Antes de cotizar, ingeniería Racklog lo valida con cálculo estructural según NCh2369 (diseño sísmico) y ANSI MH16.1.</p>
                 <p style='font-size:12px; color:#757575;'>Ref.: " . esc($ref) . "</p>
             </div>
             <div style='text-align:center; font-size:12px; color:#9e9e9e; padding:15px;'>© {$year} Racklog</div>

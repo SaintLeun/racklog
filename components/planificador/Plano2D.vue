@@ -2,7 +2,7 @@
   <svg
     ref="svgRef"
     class="h-full w-full select-none"
-    :class="dibujando || trazando || agregandoCruce || herramienta === 'medir' ? 'cursor-crosshair' : (paneo ? 'cursor-grabbing' : '')"
+    :class="dibujando || trazando || agregandoCruce || pincel || herramienta === 'medir' ? 'cursor-crosshair' : (paneo ? 'cursor-grabbing' : '')"
     :viewBox="`${vista.x} ${vista.y} ${vista.w} ${vista.h}`"
     preserveAspectRatio="xMidYMid meet"
     role="application"
@@ -11,10 +11,12 @@
       ? 'Dibujo del contorno de la bodega: haz clic en cada esquina y termina en el primer punto. También puedes escribir el largo y el ángulo de cada muro en el panel.'
       : `Plano de la bodega con ${racks.length} racks. Selecciona un rack y muévelo con las flechas; R lo gira y Suprimir lo elimina.`"
     style="touch-action: none"
+    @pointerdown.capture="pincelAbajo"
     @pointerdown.self="presionarFondo"
     @pointermove="moverPuntero"
     @pointerup="soltar"
     @pointercancel="soltar"
+    @pointerleave="cursorPincel = null"
     @wheel.prevent="rueda"
   >
     <defs>
@@ -126,8 +128,8 @@
           <path v-if="d.trazo" :d="d.trazo" :stroke="d.borde" :stroke-width="d.grosorTrazo" fill="none" pointer-events="none" :stroke-dasharray="d.trazoPunteado" />
           <path v-if="d.relleno2" :d="d.relleno2" :fill="d.color2" pointer-events="none" />
           <text
-            v-if="d.etiqueta && Math.min(el.ancho, el.alto) >= 0.5"
-            :x="el.x" :y="el.y" v-bind="TEXTO_COTA" :font-size="Math.min(0.36 * k, Math.min(el.alto, el.ancho) * 0.35, Math.max(el.ancho, el.alto) * 0.14)"
+            v-if="d.etiqueta && Math.min(el.ancho, el.alto) >= 14 * mpp && Math.max(el.ancho, el.alto) >= d.etiqueta.length * 7 * mpp"
+            :x="el.x" :y="el.y" v-bind="TEXTO_COTA"
             :fill="d.borde" text-anchor="middle" dominant-baseline="central"
             :transform="el.alto > el.ancho * 1.6 ? `rotate(-90 ${el.x} ${el.y})` : undefined"
           >{{ d.etiqueta }}</text>
@@ -186,6 +188,7 @@
         class="plan-rack cursor-move outline-none"
         style="touch-action: none"
         tabindex="0"
+        :data-rack="r.id"
         role="button"
         :aria-label="`${i + 1}: ${describir(r)}${conflictos.has(r.id) ? ', superpuesto o fuera de la bodega' : ''}`"
         :aria-pressed="seleccion === r.id"
@@ -205,6 +208,9 @@
           <path v-if="f.tunel" :d="f.tunel" fill="#e0f2fe" stroke="#0284c7" stroke-width="0.03" pointer-events="none" />
           <!-- Vigas de túnel (reforzadas) en las dos caras del cuerpo túnel -->
           <line v-for="(l, j) in f.vigasTunel" :key="`vt${j}`" :x1="l[0]" :y1="l[1]" :x2="l[2]" :y2="l[3]" stroke="#0369a1" :stroke-width="Math.max(0.09, 3 * mpp)" stroke-linecap="square" pointer-events="none" />
+          <path v-if="f.pallets" :d="f.pallets" fill="#fff" fill-opacity="0.85" :stroke="colorDe(r).linea" stroke-width="0.025" pointer-events="none" />
+          <path v-if="f.vigas" :d="f.vigas" fill="none" :stroke="colorDe(r).borde" :stroke-width="Math.max(0.05, 1.5 * mpp)" pointer-events="none" />
+          <path v-if="f.marcos" :d="f.marcos" :fill="colorDe(r).borde" pointer-events="none" />
           <!-- Divisiones (cuerpos, calles o filas) -->
           <line
             v-for="(l, j) in f.lineas" :key="j"
@@ -217,10 +223,10 @@
             :stroke="COLOR[r.tipo].borde" stroke-width="0.14" stroke-dasharray="0.3 0.15" pointer-events="none"
           />
           <text
-            v-if="Math.min(f.ancho, f.alto) >= 0.7"
+            v-if="Math.min(f.ancho, f.alto) >= 15 * mpp"
             :x="f.x0 + f.ancho / 2" :y="f.y0 + f.alto / 2"
             text-anchor="middle" dominant-baseline="central"
-            :font-size="Math.min(0.6, Math.min(f.ancho, f.alto) * 0.55)"
+            :font-size="13 * mpp"
             font-weight="700" font-family="Inter, Arial, sans-serif" fill="#1f2937" pointer-events="none"
           >{{ etiquetas?.[r.modelo as string] ? `${etiquetas[r.modelo as string]}${i + 1}` : i + 1 }}</text>
           <!-- Foco de teclado: borde de 2 px de pantalla, sin importar el zoom del plano -->
@@ -230,6 +236,27 @@
             fill="none" stroke="#ea580c" stroke-width="2" vector-effect="non-scaling-stroke" pointer-events="none"
           />
         </template>
+      </g>
+
+      <!-- Pilares dentro de un selectivo doble: se ven encima del rack (ahí se pierde una columna de pallets) -->
+      <g v-if="!dibujando" pointer-events="none">
+        <template v-for="el in pilaresEnRacks" :key="`pr-${el.id}`">
+          <rect v-bind="rectSvg(el)" fill="#475569" stroke="#fff" :stroke-width="Math.max(0.03, 1 * mpp)" />
+        </template>
+      </g>
+
+      <!-- Lineal que se está dibujando con el pincel: el rack real, sus cuerpos y cuánto aporta -->
+      <g v-if="previaPincel" pointer-events="none">
+        <template v-for="f in [figura(previaPincel)]" :key="f.clave">
+          <rect :x="f.x0" :y="f.y0" :width="f.ancho" :height="f.alto" :fill="colorDe(previaPincel).fondo" :fill-opacity="pintura ? 0.95 : 0.55" :stroke="colorDe(previaPincel).borde" :stroke-width="Math.max(0.06, 2 * mpp)" :stroke-dasharray="pintura ? undefined : `${6 * mpp} ${4 * mpp}`" />
+          <path v-if="f.pallets" :d="f.pallets" fill="#fff" fill-opacity="0.85" :stroke="colorDe(previaPincel).linea" stroke-width="0.025" />
+          <path v-if="f.marcos" :d="f.marcos" :fill="colorDe(previaPincel).borde" />
+          <line v-for="(l, j) in f.lineas" :key="j" :x1="l[0]" :y1="l[1]" :x2="l[2]" :y2="l[3]" :stroke="colorDe(previaPincel).linea" stroke-width="0.03" />
+        </template>
+        <g v-if="pintura && previaPincel.texto">
+          <rect :x="etiquetaPincel.x - 4 * mpp" :y="etiquetaPincel.y - 13 * mpp" :width="(previaPincel.texto.length * 7.2 + 8) * mpp" :height="26 * mpp" :rx="6 * mpp" fill="#0f172a" fill-opacity="0.9" />
+          <text :x="etiquetaPincel.x" :y="etiquetaPincel.y" :font-size="13 * mpp" font-weight="700" font-family="Inter, Arial, sans-serif" fill="#fff" dominant-baseline="central">{{ previaPincel.texto }}</text>
+        </g>
       </g>
 
       <!-- Accesorios propuestos (lib/rack3d/accesorios.js), a su tamaño real con un mínimo legible según el
@@ -256,10 +283,10 @@
         class="cursor-pointer" role="button" tabindex="0" :aria-label="`Poner un túnel aquí: ${textoSugerencia(t)}`"
         @pointerdown.stop @click.stop="emit('aplicar-tunel', t)" @keydown.enter.prevent="emit('aplicar-tunel', t)"
       >
-        <circle :cx="t.x" :cy="t.y" :r="22 * mpp" fill="#0284c7" fill-opacity="0.18" class="plan-pulso" />
-        <circle :cx="t.x" :cy="t.y" :r="12 * mpp" fill="#0284c7" stroke="#fff" :stroke-width="2 * mpp" />
-        <text :x="t.x" :y="t.y" :font-size="13 * mpp" font-weight="800" font-family="Inter, Arial, sans-serif" fill="#fff" text-anchor="middle" dominant-baseline="central" pointer-events="none">T</text>
-        <text :x="t.x + 16 * mpp" :y="t.y" v-bind="TEXTO_COTA" fill="#075985" text-anchor="start" dominant-baseline="central">Túnel aquí · {{ t.nuevos ? `llega a ${t.nuevos} ${t.nuevos === 1 ? 'pasillo' : 'pasillos'} más` : `−${t.ahorro} m` }}</text>
+        <title>Túnel aquí: {{ textoSugerencia(t) }}</title>
+        <circle :cx="t.x" :cy="t.y" :r="12 * mpp" fill="transparent" />
+        <circle :cx="t.x" :cy="t.y" :r="7 * mpp" fill="#fff" stroke="#0284c7" :stroke-width="1.5 * mpp" />
+        <text :x="t.x" :y="t.y" :font-size="9 * mpp" font-weight="800" font-family="Inter, Arial, sans-serif" fill="#0284c7" text-anchor="middle" dominant-baseline="central" pointer-events="none">T</text>
       </g>
 
       <!-- Grúa elegida: su radio de giro y una manilla para girarla -->
@@ -284,7 +311,7 @@
           />
           <text
             v-if="!g.ok && g.motivo" :x="g.x0 + g.ancho / 2" :y="g.y0 + g.alto / 2" text-anchor="middle" dominant-baseline="central"
-            :font-size="Math.min(0.5 * k, Math.max(0.25, g.alto * 0.45))" font-weight="700" fill="#b91c1c" paint-order="stroke" stroke="#fff" :stroke-width="0.12 * k"
+            :font-size="12 * mpp" font-weight="700" fill="#b91c1c" paint-order="stroke" stroke="#fff" :stroke-width="3 * mpp"
           >No cabe: {{ g.motivo }}</text>
         </template>
       </g>
@@ -299,7 +326,7 @@
       <text
         v-for="m in muros" :key="`m${m.i}`"
         :x="m.tx" :y="m.ty" :transform="`rotate(${m.ang} ${m.tx} ${m.ty})`"
-        v-bind="TEXTO_COTA" :font-size="0.42 * k" :fill="muroSel === m.i ? '#0369a1' : '#0f172a'"
+        v-bind="TEXTO_COTA" :font-size="13 * mpp" :fill="muroSel === m.i ? '#0369a1' : '#0f172a'"
         text-anchor="middle" dominant-baseline="central"
         :pointer-events="cotasTodas ? 'none' : 'all'" :class="cotasTodas ? '' : 'cursor-pointer'"
         role="button" :aria-label="`Muro ${m.i + 1}: ${formatoM(m.largo)} metros. Editar largo`"
@@ -340,7 +367,7 @@
       <polyline v-if="(trazoPeatonal?.puntos.length ?? 0) > 1" :points="trazoPeatonal!.puntos.map((q) => `${q.x},${q.y}`).join(' ')" fill="none" stroke="#15803d" stroke-width="1.5" vector-effect="non-scaling-stroke" />
       <template v-if="previaTramo">
         <rect v-bind="previaTramo.rect" fill="#22c55e" fill-opacity="0.3" stroke="#15803d" stroke-width="2" stroke-dasharray="6 4" vector-effect="non-scaling-stroke" />
-        <text :x="previaTramo.tx" :y="previaTramo.ty" v-bind="TEXTO_COTA" :font-size="Math.max(0.42 * k, 13 * mpp)" fill="#166534" text-anchor="middle" dominant-baseline="central">{{ formatoM(previaTramo.largo) }} m</text>
+        <text :x="previaTramo.tx" :y="previaTramo.ty" v-bind="TEXTO_COTA" :font-size="13 * mpp" fill="#166534" text-anchor="middle" dominant-baseline="central">{{ formatoM(previaTramo.largo) }} m</text>
       </template>
       <circle v-for="(q, i) in trazoPeatonal?.puntos ?? []" :key="`tp${i}`" :cx="q.x" :cy="q.y" :r="5 * mpp" fill="#15803d" stroke="#fff" :stroke-width="1.5 * mpp" />
       <template v-if="cursorTrazo">
@@ -375,7 +402,7 @@
       <circle v-for="(q, i) in [medicion.a, medicion.b]" :key="`mc${i}`" :cx="q.x" :cy="q.y" :r="0.15 * k" fill="#7c3aed" />
       <text
         :x="(medicion.a.x + medicion.b.x) / 2 + 0.3 * k" :y="(medicion.a.y + medicion.b.y) / 2 - 0.3 * k"
-        v-bind="TEXTO_COTA" :font-size="0.45 * k" fill="#6d28d9" text-anchor="start"
+        v-bind="TEXTO_COTA" :font-size="13 * mpp" fill="#6d28d9" text-anchor="start"
       >{{ formatoM(Math.hypot(medicion.b.x - medicion.a.x, medicion.b.y - medicion.a.y)) }} m</text>
     </g>
   </svg>
@@ -383,7 +410,7 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import { rectangulo, rectElemento, medidasRack, describir, contorno, caja, cotasRack, cotasElemento, formatoM, PASO, ELEMENTOS } from '~/lib/rack3d/planificador.js';
+import { rectangulo, rectElemento, medidasRack, describir, contorno, caja, cotasRack, cotasElemento, formatoM, PASO, ELEMENTOS, pilarDentro } from '~/lib/rack3d/planificador.js';
 import { pasilloEn, franjaPasillo } from '~/lib/rack3d/pasillos.js';
 import { radioGiro } from '~/lib/rack3d/rutas.js';
 
@@ -468,6 +495,8 @@ const props = defineProps<{
   sugerenciasTunel?: Array<{ rackId: string; cuerpo: number; altoLibre: number; ahorro: number; nuevos: number; x: number; y: number }>;
   // Grúa que se arrastra desde la paleta (centro, huella y radio de giro, m)
   fantasmaGrua?: { x: number; y: number; ancho: number; alto: number; radio: number } | null;
+  // Dibujar un lineal arrastrando: arma el rack entre donde aprieta (a) y donde va el puntero (b), con su texto
+  pincel?: ((a: Punto, b: Punto) => (RackPlano & { texto?: string }) | null) | null;
 }>();
 
 const emit = defineEmits<{
@@ -494,6 +523,8 @@ const emit = defineEmits<{
   'terminar-trazo': [];
   'aplicar-tunel': [s: { rackId: string; cuerpo: number; altoLibre: number; ahorro: number; nuevos: number; x: number; y: number }];
   'girar-elemento': [id: string];
+  // Lineal dibujado con el pincel (al soltar)
+  pintar: [r: RackPlano];
 }>();
 
 const MARGEN = 1.8;   // deja lugar a las medidas de los muros (se multiplica por k)
@@ -617,10 +648,10 @@ const murosDibujo = computed(() => {
 });
 
 // Estilo de las cotas como atributos (no CSS): el plano se exporta copiando el SVG
-// Nunca más chico que ~11 px en pantalla (bodegas grandes o planos angostos)
+// Siempre ~12 px en pantalla: no crecen ni se achican con el zoom ni con el tamaño de lo que rotulan
 const TEXTO_COTA = computed((): Record<string, any> => ({
-  'font-size': +Math.max(0.36 * k.value, 11 * mpp.value).toFixed(3), 'font-weight': 600, 'font-family': 'Inter, Arial, sans-serif', fill: '#334155',
-  'paint-order': 'stroke', stroke: '#fff', 'stroke-width': +(0.12 * k.value).toFixed(3), 'stroke-linejoin': 'round', 'pointer-events': 'none',
+  'font-size': +(12 * mpp.value).toFixed(4), 'font-weight': 600, 'font-family': 'Inter, Arial, sans-serif', fill: '#334155',
+  'paint-order': 'stroke', stroke: '#fff', 'stroke-width': +(3 * mpp.value).toFixed(4), 'stroke-linejoin': 'round', 'pointer-events': 'none',
 }));
 
 // Donde va el numero de una cota: al centro de la linea, o al costado si la linea es corta
@@ -768,6 +799,8 @@ const medidasRacks = computed(() => (props.dibujando ? [] : conCotas.value.map((
 
 const trazo = computed(() => contorno(props.bodega).map((p: Punto, i: number) => `${i ? 'L' : 'M'}${p.x} ${p.y}`).join(' ') + ' Z');
 
+const pilaresEnRacks = computed(() => (props.bodega.elementos ?? []).filter((el) => el.clase === 'pilar' && props.racks.some((r) => (r as any).pilares && pilarDentro(r, el))));
+
 function figura(r: RackPlano) {
   const p = rectangulo(r);
   const m = medidasRack(r) as Record<string, any>;
@@ -803,7 +836,58 @@ function figura(r: RackPlano) {
     vigasTunel.push(seg(u0, 0.03, u1, 0.03));
     if (r.doble) vigasTunel.push(seg(u0, F - 0.03, u1, F - 0.03));
   }
-  return { ...p, lineas, entrada, tunel, vigasTunel, clave: `${r.id}-${m.tipo}` };
+  // Detalle legible: vigas en las caras de carga, marcos en cada division y los pallets de cada cuerpo (en el
+  // drive-in, cada calle con sus fondos). Se omite cuando el pallet mide menos de 4 px en pantalla
+  let vigas = '', marcos = '', pallets = '';
+  const ps = (u0: number, v0: number, u1: number, v1: number) => {
+    const a = aPlanoLocal(u0, v0), b = aPlanoLocal(u1, v1);
+    return `M${a[0]} ${a[1]}H${b[0]}V${b[1]}H${a[0]}Z`;
+  };
+  const caras = r.doble ? [[0, F / 2], [F / 2, F]] : [[0, F]];
+  if (r.tipo === 'RS') {
+    const marco = Math.min(0.1, pasoCuerpo * 0.08), ppv = m.palletsPorViga || 2;
+    const anchoP = (pasoCuerpo - marco) / ppv;
+    for (const [v0, v1] of caras) {
+      const fr = v0 === 0 ? v0 : v1;   // cara de carga de este lado
+      vigas += `M${seg(0, fr, L, fr).slice(0, 2).join(' ')}L${seg(0, fr, L, fr).slice(2).join(' ')}`;
+      for (let j = 0; j <= n; j++) marcos += ps(j * pasoCuerpo - marco / 2, v0 + 0.02, j * pasoCuerpo + marco / 2, v1 - 0.02);
+      if (anchoP / mpp.value >= 4) {
+        for (let j = 0; j < n; j++) {
+          if (m.tunel && j === m.tunel.indice) continue;
+          for (let q = 0; q < ppv; q++) {
+            const u0 = j * pasoCuerpo + marco / 2 + q * anchoP + anchoP * 0.08;
+            pallets += ps(u0, v0 + (v1 - v0) * 0.1, u0 + anchoP * 0.84, v1 - (v1 - v0) * 0.1);
+          }
+        }
+      }
+    }
+  } else if (r.tipo === 'AR') {
+    // Planta de una estantería: poste de ángulo en cada esquina de cada cuerpo, borde de la repisa al frente
+    // y atrás, y dos cajas por repisa (si se alcanzan a ver)
+    const poste = Math.min(pasoCuerpo * 0.18, Math.max(0.05, 3 * mpp.value));
+    for (const [v0, v1] of caras) {
+      vigas += `M${seg(0, v0, L, v0).slice(0, 2).join(' ')}L${seg(0, v0, L, v0).slice(2).join(' ')}M${seg(0, v1, L, v1).slice(0, 2).join(' ')}L${seg(0, v1, L, v1).slice(2).join(' ')}`;
+      for (let j = 0; j <= n; j++) {
+        const u = Math.min(L - poste, Math.max(0, j * pasoCuerpo - poste / 2));
+        marcos += ps(u, v0, u + poste, v0 + poste) + ps(u, v1 - poste, u + poste, v1);
+      }
+      if (pasoCuerpo / mpp.value >= 10) {
+        const ancho = (pasoCuerpo - poste) / 2;
+        for (let j = 0; j < n; j++) for (let q = 0; q < 2; q++) {
+          const u0 = j * pasoCuerpo + poste / 2 + q * ancho + ancho * 0.1;
+          pallets += ps(u0, v0 + (v1 - v0) * 0.15, u0 + ancho * 0.8, v1 - (v1 - v0) * 0.15);
+        }
+      }
+    }
+  } else if (r.tipo === 'DI' && m.fondos > 0) {
+    const fondo = F / m.fondos;
+    if (pasoCuerpo / mpp.value >= 6) {
+      for (let j = 0; j < n; j++) for (let q = 0; q < m.fondos; q++) {
+        pallets += ps(j * pasoCuerpo + pasoCuerpo * 0.12, q * fondo + fondo * 0.1, (j + 1) * pasoCuerpo - pasoCuerpo * 0.12, (q + 1) * fondo - fondo * 0.1);
+      }
+    }
+  }
+  return { ...p, lineas, entrada, tunel, vigasTunel, vigas, marcos, pallets, clave: `${r.id}-${m.tipo}` };
 }
 
 // Coordenadas del puntero en metros de la bodega
@@ -1060,6 +1144,31 @@ function rectAbertura(el: Elemento, pos: number) {
   return v ? { x: el.x - A / 2 - 0.1, y: a, width: A + 0.2, height: ab } : { x: a, y: el.y - A / 2 - 0.1, width: ab, height: A + 0.2 };
 }
 
+// ─── Pincel: el cliente arrastra por donde quiere el lineal; el largo son los cuerpos ───
+// Un clic sin arrastrar no dibuja: si fue sobre un rack, lo elige (para girarlo, repetirlo o quitarlo)
+const pintura = ref<{ a: Punto; b: Punto; puntero: number; px: number; py: number; movio: boolean; rack: string | null } | null>(null);
+const cursorPincel = ref<Punto | null>(null);
+const previaPincel = computed(() => {
+  if (!props.pincel || props.dibujando) return null;
+  if (pintura.value) return pintura.value.movio ? props.pincel(pintura.value.a, pintura.value.b) : null;
+  return cursorPincel.value ? props.pincel(cursorPincel.value, cursorPincel.value) : null;
+});
+const etiquetaPincel = computed(() => {
+  const b = pintura.value?.b ?? { x: 0, y: 0 };
+  return { x: b.x + 14 * mpp.value, y: b.y - 18 * mpp.value };
+});
+const enCuadro = (q: Punto) => ({ x: Math.round(q.x * 10) / 10, y: Math.round(q.y * 10) / 10 });
+function pincelAbajo(e: PointerEvent) {
+  if (!props.pincel || props.dibujando || e.button !== 0) return;
+  e.stopPropagation();
+  e.preventDefault();
+  const q = enCuadro(aPlano(e));
+  const rack = (e.target as Element | null)?.closest?.('[data-rack]')?.getAttribute('data-rack') ?? null;
+  pintura.value = { a: q, b: q, puntero: e.pointerId, px: e.clientX, py: e.clientY, movio: false, rack };
+  svgRef.value?.setPointerCapture(e.pointerId);
+}
+watch(() => props.pincel, (v) => { if (!v) { pintura.value = null; cursorPincel.value = null; } });
+
 function iniciarArrastre(e: PointerEvent, o: { tipo: 'rack' | 'vertice' | 'elemento'; id: string; x: number; y: number }) {
   if (e.button !== 0) return;
   if (o.tipo === 'rack') emit('seleccionar', o.id);
@@ -1082,6 +1191,12 @@ function moverPuntero(e: PointerEvent) {
     return;
   }
   const p = aPlano(e);
+  if (pintura.value && e.pointerId === pintura.value.puntero) {
+    const movio = pintura.value.movio || Math.hypot(e.clientX - pintura.value.px, e.clientY - pintura.value.py) > 6;
+    pintura.value = { ...pintura.value, b: enCuadro(p), movio };
+    return;
+  }
+  if (props.pincel && !props.dibujando) { cursorPincel.value = e.pointerType === 'mouse' ? enCuadro(p) : null; return; }
   if (props.trazando) { moverTrazo(e, p); return; }
   if (props.dibujando) {
     cursor.value = ajustarDibujo(p, e);
@@ -1100,6 +1215,14 @@ function moverPuntero(e: PointerEvent) {
 }
 
 function soltar(e: PointerEvent) {
+  if (pintura.value && e.pointerId === pintura.value.puntero) {
+    const r = previaPincel.value, { movio, rack } = pintura.value;
+    pintura.value = null;
+    if (e.type !== 'pointerup') return;
+    if (movio && r) emit('pintar', r);
+    else if (!movio) emit('seleccionar', rack);
+    return;
+  }
   if (trazoPresion && e.pointerId === trazoPresion.puntero) { soltarTrazo(e); return; }
   if (paneoInicio && e.pointerId === paneoInicio.puntero) {
     if (!paneoInicio.movio) { emit('seleccionar', null); emit('seleccionar-muro', null); emit('seleccionar-elemento', null); }
