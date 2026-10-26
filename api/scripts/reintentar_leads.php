@@ -69,6 +69,11 @@ foreach ($files as $file) {
             $kommoId = $r['id'];
             $lead['kommo_lead_id'] = $r['id'];
             $lead['kommo_estado'] = 'creado';
+            // Lead del tour: nota y tarea a 24 h (los archivos quedaron solo en el correo)
+            $tour = procesarLeadTour($lead['datos'], $lead['tipo'], $ref, $r);
+            if ($tour !== null && $tour['errores']) {
+                logEvent('error', 'kommo_tour', ['ref' => $ref, 'kommo_lead_id' => $r['id']] + $tour);
+            }
             $pendiente['pendiente_kommo'] = false;
             // Reenviar a la intranet para que guarde el id (registrar_lead_web lo completa si ya existia)
             $pendiente['pendiente_intranet'] = $pendiente['pendiente_intranet'] || intranetConfigured();

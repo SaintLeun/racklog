@@ -1,0 +1,24 @@
+// Tipos de lib/rack3d/accesorios.js para los componentes Vue
+type Obj = Record<string, any>;
+export const PARAMETROS_ACCESORIOS: Record<string, any>;
+export const mmTexto: (v: number) => string;
+export const numTexto: (v: number) => string;
+export function marcoLocal(r: Obj): any;
+export function marcosS(r: Obj): number[];
+export function cabeceras(r: Obj): any[];
+export function libreHacia(r: Obj, lado: string, racks: Obj[], bodega: Obj): number;
+export function cabecerasExpuestas(r: Obj, racks: Obj[], bodega: Obj): any[];
+export function caraConPasillo(...a: any[]): any;
+export function tipoEnAltura(r: Obj, i: number, pallets?: Obj[]): Obj | null;
+export function planosDe(r: Obj, pallets?: Obj[]): (string | null)[];
+export function tramosBaranda(e: Obj, bodega: Obj): { tramos: any[]; aberturas: number; largo: number };
+export function piezasBaranda(largo: number): { modulos: number; ajuste: number };
+export function proponerAccesorios(datos: { bodega: Obj; racks?: Obj[]; pallets?: Obj[] }): any[];
+export type ManualAccesorio = { id: string; tipo: string; rackId: string | null; modelo?: string | null; orden?: number | null; lugar: Obj | null; marca: Obj };
+export const TIPOS_MANUALES: string[];
+export function aplicarAjustes(lista: any[], ajustes?: { quitados?: string[]; cantidades?: Record<string, number>; medidas?: Record<string, number>; manuales?: ManualAccesorio[] }): any[];
+export function resolverManual(m: ManualAccesorio, racks?: Obj[] | null): Obj | null;
+export function lugaresAccesorio(tipo: string, datos: { bodega: Obj; racks?: Obj[] }): any[];
+export function encajarAccesorio(tipo: string, p: { x: number; y: number } | null, datos: { bodega: Obj; racks?: Obj[]; pallets?: Obj[] }, ajustes?: Obj): { ok: boolean; motivo?: 'ocupado' | 'lejos' | null; distancia: number; marca: Obj | null; manual?: Omit<ManualAccesorio, 'id'> };
+export function manualCerca(p: { x: number; y: number }, manuales?: ManualAccesorio[], racks?: Obj[] | null, radio?: number): { manual: ManualAccesorio; marca: Obj } | null;
+export function textoAccesorios(lista: any[]): string;

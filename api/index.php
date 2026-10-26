@@ -18,6 +18,7 @@ require_once __DIR__ . '/utils/kommo.php';
 // Endpoints
 require_once __DIR__ . '/endpoints/send_email.php';
 require_once __DIR__ . '/endpoints/health.php';
+require_once __DIR__ . '/endpoints/continuar.php';
 
 // Manejo centralizado de errores: se registran en el log y el cliente
 // recibe siempre un JSON generico, nunca trazas internas
@@ -70,6 +71,10 @@ switch ($endpoint) {
 
     case 'health':
         handleHealth($method);
+        break;
+
+    case 'continuar-diseno':
+        handleContinuar($method);
         break;
 
     default:

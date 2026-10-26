@@ -10,6 +10,8 @@ const prerenderRoutes = [
   "/",
   "/nosotros",
   "/planificador",
+  "/planifica-tu-bodega",
+  "/planifica-tu-bodega/disena",
   "/productos",
   "/blog",
   "/politica-privacidad",
@@ -23,7 +25,7 @@ const prerenderRoutes = [
 
 export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
-  devtools: { enabled: process.env.NODE_ENV !== "production" },
+  devtools: { enabled: (globalThis as any).process?.env?.NODE_ENV !== "production" },
   css: ["~/assets/css/main.css"],
 
   // Contenido estatico: se renderiza en build (SSG) para que buscadores y
@@ -69,6 +71,11 @@ export default defineNuxtConfig({
     },
   },
 
+  // El tour quedo dentro del flujo "Planifica tu bodega" (paso 1)
+  routeRules: {
+    "/tour": { redirect: "/planifica-tu-bodega/disena" },
+  },
+
   nitro: {
     preset: "static",
     prerender: {
@@ -80,6 +87,9 @@ export default defineNuxtConfig({
 
   vite: {
     plugins: [tailwindcss()],
+    // Solo en dev: abrir el servidor desde el navegador por el puerto reenviado de Codespaces
+    // (*.app.github.dev). Sin esto Vite responde "Blocked request" y la página queda en error
+    server: { allowedHosts: [".app.github.dev"] },
     // three y jsPDF se cargan recien al abrir la vista 3D o descargar el PDF. Sin esto, en dev
     // Vite los descubre en ese momento, los optimiza y recarga la pagina: la vista 3D parecia
     // quedar en un bucle y la descarga del PDF se perdia.
@@ -89,6 +99,7 @@ export default defineNuxtConfig({
         "three/examples/jsm/controls/OrbitControls.js",
         "three/examples/jsm/environments/RoomEnvironment.js",
         "three/examples/jsm/utils/BufferGeometryUtils.js",
+        "three/examples/jsm/geometries/RoundedBoxGeometry.js",
         "jspdf",
       ],
     },

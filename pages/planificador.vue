@@ -87,7 +87,7 @@
                     <label class="block text-xs text-neutral-600">Ángulo del muro (°)
                       <input v-model.number="muroTeclado.angulo" type="number" inputmode="numeric" step="1" class="plan-input mt-1 !h-10" placeholder="0">
                     </label>
-                    <button type="submit" class="plan-accion h-10 px-3" :disabled="!(muroTeclado.largo > 0)">Agregar</button>
+                    <button type="submit" class="plan-accion h-10 px-3" :disabled="!((muroTeclado.largo ?? 0) > 0)">Agregar</button>
                   </div>
                 </form>
                 <div v-if="dibujando" class="mt-3 grid grid-cols-3 gap-2">
@@ -186,7 +186,7 @@
                   <form v-if="puntosCalibracion.length === 2" class="mt-2 grid grid-cols-[1fr_auto] gap-2" @submit.prevent="calibrarCalco">
                     <label class="sr-only" for="plan-calibra">Medida real en metros</label>
                     <input id="plan-calibra" v-model.number="medidaCalibracion" type="number" inputmode="decimal" min="0.5" step="0.1" placeholder="Metros" class="plan-input !h-10">
-                    <button type="submit" class="plan-accion h-10 bg-pink-600 px-3 text-white hover:bg-pink-700" :disabled="!(medidaCalibracion > 0)">Calibrar</button>
+                    <button type="submit" class="plan-accion h-10 bg-pink-600 px-3 text-white hover:bg-pink-700" :disabled="!((medidaCalibracion ?? 0) > 0)">Calibrar</button>
                   </form>
                   <div class="mt-2 flex gap-4 text-xs font-medium text-neutral-500">
                     <button v-if="puntosCalibracion.length" type="button" class="hover:text-neutral-800" @click="puntosCalibracion = []">Marcar de nuevo</button>
@@ -383,12 +383,12 @@
                   <div v-for="(def, campo) in TIPOS[rackSel.tipo].campos" :key="campo" class="flex items-center justify-between gap-3">
                     <span class="flex items-center text-sm font-medium text-neutral-700">
                       {{ def[0] }}
-                      <PlanificadorAyuda :titulo="def[0]">{{ ayudaCampo(rackSel.tipo, String(campo)) }}</PlanificadorAyuda>
+                      <PlanificadorAyuda :titulo="String(def[0])">{{ ayudaCampo(rackSel.tipo, String(campo)) }}</PlanificadorAyuda>
                     </span>
                     <div class="flex items-center gap-2">
-                      <button type="button" class="plan-step" :aria-label="`${def[0]}: quitar uno`" :disabled="valor(campo) <= def[1]" @click="cambiar({ [campo]: valor(campo) - 1 })">−</button>
+                      <button type="button" class="plan-step" :aria-label="`${def[0]}: quitar uno`" :disabled="valor(campo) <= Number(def[1])" @click="cambiar({ [campo]: valor(campo) - 1 })">−</button>
                       <span class="w-8 text-center text-lg font-bold tabular-nums" aria-live="polite">{{ valor(campo) }}</span>
-                      <button type="button" class="plan-step" :aria-label="`${def[0]}: agregar uno`" :disabled="valor(campo) >= def[2]" @click="cambiar({ [campo]: valor(campo) + 1 })">+</button>
+                      <button type="button" class="plan-step" :aria-label="`${def[0]}: agregar uno`" :disabled="valor(campo) >= Number(def[2])" @click="cambiar({ [campo]: valor(campo) + 1 })">+</button>
                     </div>
                   </div>
 
@@ -489,7 +489,7 @@
                   <tbody>
                     <template v-for="(s, k) in kpi.porSistema" :key="k">
                       <tr v-for="(f, i) in filasKpi(String(k), s)" :key="f.t" :class="i === 0 ? 'border-t border-neutral-200' : ''">
-                        <td class="py-1 font-semibold text-neutral-900">{{ i === 0 ? s.nombre : '' }}</td>
+                        <td class="py-1 font-semibold text-neutral-900">{{ i === 0 ? (s as any).nombre : '' }}</td>
                         <td class="py-1 text-neutral-600">{{ f.t }}</td>
                         <td class="py-1 text-right tabular-nums text-neutral-500">{{ f.e }}</td>
                         <td class="py-1 text-right tabular-nums text-brand-800">{{ f.n }}</td>

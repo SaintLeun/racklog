@@ -79,7 +79,7 @@ Errors (always JSON, never internal details):
 Notes:
 - Types: `contact` or `quote`.
 - The endpoint also creates a Kommo lead (10 s timeout).
-- Field lengths are capped (name 100, message/comments 5000, up to 50 products).
+- Field lengths are capped (name 100, message/comments 5000, up to 50 products; product config up to 60 pairs of 300 characters).
 - Each submission is logged as one JSON line (`form_submission`) with a `request_id`.
 
 ## GET /health
@@ -100,6 +100,26 @@ API skips Kommo and stores leads only in the intranet (`leads_web`, see
 gets the Kommo lead id in `kommo_lead_id` and the Kommo outcome in `kommo_estado`
 (`creado`, `no_configurado`, `sin_respuesta`, `sin_id` or `http_<code>`; `http_401` =
 expired token).
+
+## Leads del tour "Planifica tu bodega"
+A quote whose product config has `Etiqueta: tour-logistico` or `Origen: Planifica tu bodega…`
+(sent by `components/flujo/PasoCotiza.vue`) gets extra handling in Kommo
+([api/utils/kommo_tour.php](../api/utils/kommo_tour.php)):
+
+1. The lead is created with the tag `tour-logistico` and, if `$KOMMO_CAMPOS_TOUR` is set,
+   custom fields for `rol`, `industria`, `flags`, `puntaje` and each UTM key (`utm_source`, …).
+2. A note (`POST /api/v4/leads/notes`) with role, industry, score, flags and UTM.
+3. A task (`POST /api/v4/tasks`, `task_type_id` 1) on the lead: "Enviar cotización (promesa máximo
+   24 horas)", `complete_till` = now + 24 h, for the lead's responsible user (read with
+   `GET /api/v4/leads/{id}`) or `$KOMMO_RESPONSABLE_TOUR`.
+4. Uploaded files (the plan) go to the Kommo Drive (`/account?with=drive_url` → `/v1.0/sessions`
+   → upload parts) and are linked with `PUT /api/v4/leads/{id}/files`. They are still attached to
+   the internal email. `$KOMMO_ADJUNTOS = false` turns this off.
+
+Failures in steps 2–4 never change the response: they are logged as `kommo_tour` and
+`form_submission` carries `kommo_tarea` and `kommo_archivos`. Leads retried from the queue
+(`scripts/reintentar_leads.php`) get the note and task, not the files.
+Tests (local fake Kommo, nothing real): `php api/tests/kommo_tour_test.php`.
 
 ## CORS
 CORS headers are set in [api/config/cors.php](api/config/cors.php). Only

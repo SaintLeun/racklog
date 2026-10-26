@@ -64,7 +64,8 @@
             <li><NuxtLink to="/productos" class="footer-link">Catálogo de productos</NuxtLink></li>
             <li><button type="button" class="footer-link" @click="openContactModal">Contacto</button></li>
             <li><NuxtLink to="/blog" class="footer-link">Proyectos recientes</NuxtLink></li>
-            <li><NuxtLink to="/planificador" class="footer-link">Planificador 3D</NuxtLink></li>
+            <li><NuxtLink to="/planifica-tu-bodega" class="footer-link">Planifica tu bodega</NuxtLink></li>
+            <li><NuxtLink to="/planificador" class="footer-link">Planificador avanzado</NuxtLink></li>
           </ul>
         </div>
 
@@ -166,7 +167,7 @@ const productCategories = [
 const featuredProducts = computed(() => {
   const allProducts = Object.values(products.value);
   // First try to get featured products
-  const featured = allProducts.filter(product => product.featured);
+  const featured = allProducts.filter((product: any) => product.featured);
   
   // If we have featured products, show them (up to 6)
   if (featured.length > 0) {

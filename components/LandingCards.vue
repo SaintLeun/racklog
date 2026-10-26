@@ -66,7 +66,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useProductStore } from '@/stores/productStore';
 import QuoteModal from './QuoteModal/QuoteModal.vue';
 
@@ -96,6 +96,13 @@ function openQuoteWithProduct(product: { slug: string; name: string }) {
   // Open the quote modal
   isQuoteModalVisible.value = true;
 }
+
+// Links externos (p. ej. correos) abren un configurador directo: /?configurar=drive-in
+onMounted(() => {
+  const slug = useRoute().query.configurar;
+  const product = filteredProducts.value.find(p => p.slug === `rack-${slug}` || p.slug === slug);
+  if (product) openQuoteWithProduct(product);
+});
 
 function closeModal() {
   isQuoteModalVisible.value = false;

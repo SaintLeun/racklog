@@ -32,6 +32,8 @@ function generateQuoteConfirmation(array $data, string $quoteRef): string {
             
             foreach ($product['config'] as $key => $value) {
                 if (empty($value)) continue;
+                // Campos internos del tour (para el ejecutivo, no para el cliente)
+                if (in_array($key, ['Puntaje del lead', 'Flags', 'Etiqueta', 'Campaña', 'Prueba', 'Origen', 'Precisión', 'Vía'], true)) continue;
                 
                 // Formatear etiquetas para mejor legibilidad
                 $label = match ($key) {
@@ -134,6 +136,14 @@ function generateQuoteConfirmation(array $data, string $quoteRef): string {
         DETALLE DE PRODUCTOS
     </div>";
     
+    // Planifica tu bodega: la ingenieria como garantia (prompt de conversion §E)
+    $esTour = function_exists('configTour') && configTour($data) !== null;
+    $ingenieriaHtml = $esTour ? "
+    <div style='background-color:#fff7ed; padding:15px; border-radius:4px; margin:20px 0; border-left:4px solid #ea580c;'>
+        <p style='margin:0 0 6px; font-weight:600;'>Diseño preliminar. Antes de cotizar, ingeniería Racklog lo valida con cálculo estructural según NCh2369 (diseño sísmico) y ANSI MH16.1.</p>
+        <p style='margin:0;'>Tu ejecutivo te envía la cotización formal en máximo 24 horas: fabricación (Quilicura, Chile), montaje e ingeniería.</p>
+    </div>" : '';
+
     // Sección de precio a consultar
     $priceSection = "
     <div style='background-color:#f0f7ff; padding:15px; border-radius:4px; margin:20px 0; border-left:4px solid #2196f3;'>
@@ -168,6 +178,7 @@ function generateQuoteConfirmation(array $data, string $quoteRef): string {
                 {$productsSectionTitle}
                 {$productsHtml}
                 
+                {$ingenieriaHtml}
                 {$priceSection}
                 
                 <div style='background-color:#e8f5e9; padding:12px 15px; border-radius:4px; margin:20px 0; font-size:14px; color:#2e7d32; border-left:4px solid #4caf50;'>
