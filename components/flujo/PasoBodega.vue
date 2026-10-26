@@ -214,7 +214,7 @@
                 <span class="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded text-xs font-bold text-white" :style="{ background: colorModelo(m.id).borde }">{{ letraModelo(m.id) }}</span>
                 <span class="min-w-0 flex-1 truncate text-sm font-semibold text-neutral-900">{{ m.nombre }}</span>
                 <span v-for="c in [cob.modelos.find((x: any) => x.id === m.id)]" :key="`f${m.id}`" :class="['whitespace-nowrap text-sm font-semibold tabular-nums', !c ? '' : c.diferencia < 0 ? 'text-amber-700' : 'text-green-700']">
-                  <template v-if="c">{{ c.diferencia < 0 ? `Faltan ${-c.diferencia} ${c.unidadCuerpo}` : '✓ Cubierto' }}</template>
+                  <template v-if="c">{{ c.diferencia < 0 ? `Faltan ${-c.diferencia} ${c.unidadCuerpo}` : '✓ Cumple lo pedido' }}</template>
                 </span>
               </div>
               <div class="mt-2 flex gap-2">
@@ -320,7 +320,7 @@
               · en el plano <b><FlujoContador :valor="demanda.posiciones" /></b>
               <template v-if="porPoner > 0"> — <b>te faltan {{ n(porPoner) }}</b> <span class="opacity-75">(≈ {{ demanda.faltan || 1 }} {{ (demanda.faltan || 1) === 1 ? demanda.unidadCuerpo.replace(/s$/, '') : demanda.unidadCuerpo }})</span></template>
               <template v-else-if="demanda.faltan"> — <b>faltan {{ demanda.faltan }} {{ demanda.faltan === 1 ? demanda.unidadCuerpo.replace(/s$/, '') : demanda.unidadCuerpo }}</b> de un producto</template>
-              <template v-else> ✓ cubre lo que pediste</template>
+              <template v-else> — <b>✓ ya cumples con lo que pediste</b></template>
             </span>
             <span class="mt-1 block h-1.5 overflow-hidden rounded-full bg-black/10" aria-hidden="true">
               <span :class="['block h-full rounded-full transition-all duration-300', demanda.faltan ? 'bg-amber-500' : 'bg-green-600']" :style="{ width: `${Math.min(100, (demanda.posiciones / Math.max(1, demanda.necesita)) * 100)}%` }" />
@@ -364,6 +364,14 @@
             @cambiar-elemento="(id: string, c: any) => cambiarElemento(c, id)"
             @punto-trazo="puntoTrazo" @cruce-elemento="cruce"
           />
+          <!-- Cumplió lo que pidió: se dice claro, una vez, sin tapar el plano -->
+          <Transition name="fl-paso">
+            <div v-if="logro" class="absolute inset-x-2 bottom-2 z-20 flex items-start gap-2.5 rounded-xl bg-green-700 px-3 py-2.5 text-sm text-white shadow-lg lg:inset-x-auto lg:left-1/2 lg:max-w-lg lg:-translate-x-1/2" role="status" aria-live="polite">
+              <span class="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-white text-sm font-bold text-green-700" aria-hidden="true">✓</span>
+              <span class="min-w-0 flex-1"><b class="block">¡Listo! Ya cumples con lo que pediste</b>{{ textoLogro }} Puedes seguir agregando para crecer o pasar a los accesorios.</span>
+              <button type="button" class="flex-shrink-0 rounded-md px-1.5 text-lg leading-none text-green-100 hover:text-white" aria-label="Cerrar" @click="logro = false">×</button>
+            </div>
+          </Transition>
           <!-- Dibujando un lineal: qué hacer, en el mismo plano, chico para no tapar -->
           <div v-if="pincel && pincelModelo" class="pointer-events-none absolute left-2 top-2 z-10 flex select-none items-center gap-2 rounded-lg bg-slate-900/85 py-1 pl-3 pr-1 text-sm text-white shadow" role="status" aria-live="polite">
             <span>Arrastra donde va el {{ pincelModelo.tipo === 'DI' ? 'bloque' : `lineal ${pincel.doble ? 'doble' : 'simple'}` }}<span class="hidden sm:inline text-slate-300"> · toca un rack para girarlo o repetirlo</span></span>
@@ -508,21 +516,36 @@
                   <!-- Todo parte de un cuerpo (dueño 26-10): el mismo lineal se alarga cuerpo a cuerpo hasta el muro y
                        después se repite en filas, con su pasillo, hasta el muro. En selectivo, drive-in y ángulo ranurado -->
                   <p class="fl-panel__sec">Armar desde aquí</p>
-                  <p class="text-xs text-neutral-500">Agrega {{ rackSel.tipo === 'DI' ? 'calles' : 'cuerpos' }} a este mismo lineal hasta el muro, y después repite la fila hasta el otro muro.</p>
-                  <div class="mt-1.5 grid grid-cols-2 gap-1.5">
-                    <button type="button" class="fl-chip !min-h-10 !text-sm" @click="alargar(rackSel, -1)">{{ rackSel.rot % 180 ? '↑' : '←' }} Hasta el muro</button>
-                    <button type="button" class="fl-chip !min-h-10 !text-sm" @click="alargar(rackSel, 1)">Hasta el muro {{ rackSel.rot % 180 ? '↓' : '→' }}</button>
+                  <p class="text-xs text-neutral-500">Desde este {{ rackSel.tipo === 'DI' ? 'bloque' : 'lineal' }}: cuántos {{ rackSel.tipo === 'DI' ? 'calles' : 'cuerpos' }} a lo largo y cuántas filas en profundidad. O hasta donde dé el muro.</p>
+                  <!-- A lo largo: el mismo lineal, cuerpo a cuerpo (continuo, comparte marcos) -->
+                  <div class="fl-prop mt-2"><span><b>A lo largo</b> · {{ rackSel.tipo === 'DI' ? 'calles' : rackSel.doble ? 'cuerpos por lado' : 'cuerpos' }}</span><FlujoNumero :valor="rackSel.cuerpos" :min="1" :max="50" etiqueta="cuerpos a lo largo" @cambio="largoFila(rackSel, $event)" /></div>
+                  <div class="mt-1 grid grid-cols-2 gap-1.5">
+                    <button type="button" class="fl-chip !min-h-9 !text-sm" @click="alargar(rackSel, -1)">{{ rackSel.rot % 180 ? '↑' : '←' }} Hasta el muro</button>
+                    <button type="button" class="fl-chip !min-h-9 !text-sm" @click="alargar(rackSel, 1)">Hasta el muro {{ rackSel.rot % 180 ? '↓' : '→' }}</button>
                   </div>
-                  <div v-if="rackSel.tipo === 'AR'" class="fl-prop mt-2"><span>Pasillo entre filas</span>
+                  <!-- En profundidad: la misma fila repetida con su pasillo -->
+                  <div class="fl-prop mt-3"><span><b>En profundidad</b> · filas</span><FlujoNumero :valor="bloque.profundidad" :min="1" :max="60" etiqueta="filas en profundidad" @cambio="bloque.profundidad = $event; avisoMuro = ''" /></div>
+                  <button type="button" class="fl-chip mt-1 w-full !min-h-9 !text-sm" @click="hastaElMuro(rackSel, 'profundidad')">Filas hasta el muro</button>
+                  <div v-if="rackSel.tipo === 'AR'" class="fl-prop mt-2"><span>Pasillo entre filas <span class="text-xs text-neutral-500">({{ fm(DISTANCIAS.pasilloAR.min) }}–{{ fm(DISTANCIAS.pasilloAR.max) }} m)</span></span>
                     <select v-model.number="bloque.pasillo" class="rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm font-semibold" aria-label="Pasillo entre filas">
                       <option v-for="v in PASILLOS_AR" :key="v" :value="v">{{ fm(v) }} m</option>
                     </select>
                   </div>
-                  <button type="button" class="fl-chip mt-1.5 w-full !min-h-10 !text-sm" @click="hastaElMuro(rackSel, 'profundidad')">Repetir la fila hasta el muro <span class="ml-1 text-xs font-normal text-neutral-500">(pasillo {{ fm(rackSel.tipo === 'AR' ? bloque.pasillo : grua.pasillo) }} m)</span></button>
-                  <p v-if="avisoMuro" class="mt-1 text-xs text-neutral-600" role="status">{{ avisoMuro }}</p>
-                  <!-- Largo de la fila: acortarla o alargarla sin perder de vista la demanda (barra de arriba) -->
-                  <p class="fl-panel__sec">Largo de la fila</p>
-                  <div class="fl-prop"><span>{{ rackSel.tipo === 'DI' ? 'Calles' : rackSel.doble ? 'Cuerpos por lado' : 'Cuerpos' }}</span><FlujoNumero :valor="rackSel.cuerpos" :min="1" :max="50" etiqueta="cuerpos" @cambio="largoFila(rackSel, $event)" /></div>
+                  <p v-else class="mt-1.5 text-xs text-neutral-500">Entre filas queda el pasillo de tu equipo ({{ fm(grua.pasillo) }} m<FlujoReferencial :de="grua" />).</p>
+                  <label v-if="!rackSel.doble && rackSel.tipo !== 'DI'" class="mt-2 flex items-center gap-2 text-sm text-neutral-700">
+                    <input v-model="bloque.espalda" type="checkbox" class="h-4 w-4 accent-brand-600"> Filas espalda con espalda
+                  </label>
+                  <p v-if="avisoMuro" class="mt-1 text-xs text-neutral-600" role="status">{{ avisoMuro }}
+                    <button v-if="filasJustas" type="button" class="ml-1 font-semibold text-brand-700 underline underline-offset-2" @click="bloque.profundidad = filasJustas; filasJustas = 0">Usar {{ filasJustas }}</button>
+                  </p>
+                  <p v-if="previaRacks.length" class="mt-2 rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-700" role="status">
+                    <b class="text-neutral-900">{{ previaRacks.filter((c) => c.ok).length }} {{ previaRacks.filter((c) => c.ok).length === 1 ? 'fila cabe' : 'filas caben' }}</b> (punteadas en el plano) · +{{ n(aportePrevia) }} {{ demanda.unidadPos }}
+                    <span v-if="faltaDelModelo(rackSel) > 0" :class="['mt-1 block font-semibold', aportePrevia >= faltaDelModelo(rackSel) ? 'text-green-700' : 'text-amber-800']">{{ aportePrevia >= faltaDelModelo(rackSel) ? '✓ Con estas filas cumples con lo que pediste' : `Te faltarían ${n(faltaDelModelo(rackSel) - aportePrevia)} ${demanda.unidadPos}` }}</span>
+                    <span v-else class="mt-1 block text-sky-800">Lo que pediste ya está cubierto: estas filas son espacio para crecer.</span>
+                    <template v-if="previaRacks.some((c) => !c.ok)"> · <span class="text-red-700">{{ previaRacks.filter((c) => !c.ok).length }} no: {{ textoMotivos(previaRacks) }}</span></template>
+                  </p>
+                  <button v-if="bloque.profundidad > 1" type="button" class="fl-btn mt-2 w-full !min-h-10 !text-sm" :disabled="!previaRacks.some((c) => c.ok)" @click="repetir(rackSel)">{{ previaRacks.some((c) => c.ok) ? `Agregar ${previaRacks.filter((c) => c.ok).length} ${previaRacks.filter((c) => c.ok).length === 1 ? 'fila' : 'filas'}` : 'Ninguna fila cabe' }}</button>
+                  <p v-if="avisoBloque" class="mt-2 text-sm text-green-800" role="status">{{ avisoBloque }}</p>
                   <button v-if="rackSel.cuerpos >= 2" type="button" class="fl-chip mt-1 !min-h-9 !text-sm" @click="partir(rackSel)">Partir en dos tramos</button>
                 </template>
                 <!-- Cuerpo túnel de este rack (pisa el del modelo del paso 3) -->
@@ -551,21 +574,6 @@
                 <p class="fl-panel__sec">Ubicación</p>
                 <label class="fl-prop"><span>Desde el muro izquierdo</span><span class="fl-prop__in"><input :value="bordeRack.x" type="number" min="0" step="0.1" @change="moverRackA('x', $event)"><i>m</i></span></label>
                 <label class="fl-prop"><span>Desde el muro de arriba</span><span class="fl-prop__in"><input :value="bordeRack.y" type="number" min="0" step="0.1" @change="moverRackA('y', $event)"><i>m</i></span></label>
-                <p class="fl-panel__sec">Repetir en bloque</p>
-                <div class="fl-prop"><span>A lo largo</span><FlujoNumero :valor="bloque.largo" :min="1" :max="60" etiqueta="a lo largo" @cambio="bloque.largo = $event" /></div>
-                <div class="fl-prop"><span>En profundidad</span><FlujoNumero :valor="bloque.profundidad" :min="1" :max="60" etiqueta="en profundidad" @cambio="bloque.profundidad = $event" /></div>
-
-                <label v-if="!rackSel.doble && rackSel.tipo !== 'DI'" class="mt-2 flex items-center gap-2 text-sm text-neutral-700">
-                  <input v-model="bloque.espalda" type="checkbox" class="h-4 w-4 accent-brand-600"> Filas espalda con espalda
-                </label>
-                <p v-if="rackSel.tipo === 'AR'" class="mt-2 text-xs text-neutral-500">En ángulo ranurado el pasillo de circulación va de {{ fm(DISTANCIAS.pasilloAR.min) }} a {{ fm(DISTANCIAS.pasilloAR.max) }} m. Las copias se ven punteadas en el plano antes de agregarlas.</p>
-                <p v-else class="mt-2 text-xs text-neutral-500">Entre filas queda el pasillo de tu equipo ({{ fm(grua.pasillo) }} m<FlujoReferencial :de="grua" />). Las copias se ven punteadas en el plano antes de agregarlas.</p>
-                <p v-if="previaRacks.length" class="mt-2 rounded-lg bg-neutral-50 px-3 py-2 text-sm text-neutral-700" role="status">
-                  <b class="text-neutral-900">{{ previaRacks.filter((c) => c.ok).length }} {{ previaRacks.filter((c) => c.ok).length === 1 ? 'cabe' : 'caben' }}</b>
-                  <template v-if="previaRacks.some((c) => !c.ok)"> · <span class="text-red-700">{{ previaRacks.filter((c) => !c.ok).length }} no {{ previaRacks.filter((c) => !c.ok).length === 1 ? 'cabe' : 'caben' }}: {{ textoMotivos(previaRacks) }}</span> (en rojo en el plano)</template>
-                </p>
-                <button type="button" class="fl-btn mt-2 w-full !min-h-10 !text-sm" :disabled="!previaRacks.some((c) => c.ok)" @click="repetir(rackSel)">{{ previaRacks.some((c) => c.ok) ? `Agregar ${previaRacks.filter((c) => c.ok).length} ${previaRacks.filter((c) => c.ok).length === 1 ? 'rack' : 'racks'}` : bloque.largo * bloque.profundidad < 2 ? 'Elige cuántos repetir' : 'Ninguna copia cabe' }}</button>
-                <p v-if="avisoBloque" class="mt-2 text-sm text-green-800" role="status">{{ avisoBloque }}</p>
               </template>
 
               <!-- ─── Muro (forma de la bodega) ─── -->
@@ -1155,9 +1163,11 @@ function duplicar(r: any) {
   sel.value = copia.id;
 }
 function repetir(r: any) {
+  const antes = porPoner.value;
   const res = repetirBloque(r, opcionesBloque(r), racksPlano.value, p.bodega, nuevoId) as { nuevos: any[]; omitidos: number; copias: any[] };
   racksPlano.value = [...racksPlano.value, ...res.nuevos];
-  avisoBloque.value = `Se agregaron ${res.nuevos.length} ${res.nuevos.length === 1 ? 'rack' : 'racks'}${res.omitidos ? ` (${res.omitidos} no cabían: ${textoMotivos(res.copias)})` : ''}.`;
+  avisoDescuento(`Agregaste ${res.nuevos.length} ${res.nuevos.length === 1 ? 'fila' : 'filas'}`, antes);
+  avisoBloque.value = `Se agregaron ${res.nuevos.length} ${res.nuevos.length === 1 ? 'fila' : 'filas'}${res.omitidos ? ` (${res.omitidos} no cabían: ${textoMotivos(res.copias)})` : ''}.`;
   marcar('rack_add', { tipo: 'bloque', largo: bloque.largo, profundidad: bloque.profundidad, nuevos: res.nuevos.length });
   bloque.largo = 1; bloque.profundidad = 1;
 }
@@ -1177,7 +1187,15 @@ function alargar(r: any, sentido: 1 | -1) {
 function hastaElMuro(r: any, eje: 'largo' | 'profundidad') {
   const k = maxBloque(r, opcionesBloque(r), eje, racksPlano.value, p.bodega);
   bloque[eje] = k;
-  avisoMuro.value = k > 1 ? `Caben ${k} ${eje === 'largo' ? 'a lo largo' : 'filas'} hasta el muro. Revisa la vista previa y agrégalos.` : 'No cabe otro en ese sentido: el muro o un rack está al lado.';
+  filasJustas.value = 0;
+  if (k < 2) { avisoMuro.value = 'No cabe otro en ese sentido: el muro o un rack está al lado.'; return; }
+  // Cuántas filas bastan para lo que pidió de este modelo (el cliente decide si pone todas o solo esas)
+  const falta = faltaDelModelo(r), porFila = conteoRack(r).posiciones || conteoRack(r).bandejas;
+  const justas = falta > 0 && porFila > 0 ? 1 + Math.ceil(falta / porFila) : 0;
+  if (justas && justas < k) {
+    filasJustas.value = justas;
+    avisoMuro.value = `Caben ${k} filas hasta el muro. Con ${justas} ya cumples con lo que pediste.`;
+  } else avisoMuro.value = `Caben ${k} filas hasta el muro. Revisa la vista previa y agrégalas.`;
 }
 const esPasillo = (e: any) => e && (e.clase === 'pasilloGrua' || e.clase === 'pasilloPeatonal');
 const previaPas = computed(() => (esPasillo(elementoActual.value) && serie.cantidad > 1 ? previaPasillos(elementoActual.value, { ...serie }, p.bodega) as any[] : []));
@@ -1286,6 +1304,33 @@ const demanda = computed(() => {
 const avisoFaltan = ref('');
 // Posiciones (o bandejas) que aún faltan contra lo que pidió
 const porPoner = computed(() => Math.max(0, demanda.value.necesita - demanda.value.posiciones));
+// ─── ¿Ya alcanza? El cliente tiene que saber cuándo sus racks cubren los pallets que pidió ───
+const filasJustas = ref(0);
+// Lo que aún le falta al modelo de ese rack (posiciones o bandejas)
+function faltaDelModelo(r: any) {
+  const c = cob.value.modelos.find((x: any) => x.id === r.modelo);
+  return c ? Math.max(0, c.necesita - c.posiciones) : porPoner.value;
+}
+// Lo que aportan las filas de la vista previa, contra lo que le falta a ese modelo
+const aportePrevia = computed(() => previaRacks.value.filter((c) => c.ok).reduce((t, c) => { const k = conteoRack(c.rack); return t + (k.posiciones || k.bandejas); }, 0));
+const cubierto = computed(() => modo.value === 'layout' && !enHoy.value && demanda.value.necesita > 0 && porPoner.value === 0 && !demanda.value.faltan);
+const logro = ref(false);
+let logroTimer: ReturnType<typeof setTimeout> | null = null;
+// Solo cuando pasa de "falta" a "cubierto" (no al abrir un diseño que ya cumplía)
+watch(cubierto, (v, antes) => {
+  if (logroTimer) clearTimeout(logroTimer);
+  logro.value = !!v && antes === false;
+  if (logro.value) {
+    logroTimer = setTimeout(() => { logro.value = false; }, 12000);
+    marcar('demanda_cubierta', { posiciones: demanda.value.posiciones, necesita: demanda.value.necesita });
+  }
+});
+const textoLogro = computed(() => {
+  const d = demanda.value;
+  return d.unidad === 'pallets'
+    ? `Con estos racks cumples con los ${n(d.pidio)} pallets que pediste: ${n(d.posiciones)} posiciones en el plano para las ${n(d.necesita)} que necesitas (ocupación ${Math.round((p.bodega.ocupacion ?? 0.8) * 100)} %).`
+    : `Con estas estanterías guardas lo que pediste: ${n(d.posiciones)} bandejas para las ${n(d.necesita)} que necesitas.`;
+});
 // Lo que aporta un lineal nuevo de cada modelo (6 cuerpos; drive-in 4 calles), para mostrarlo en el botón
 function aporteLineal(mo: any, doble: boolean) {
   const base = rackDeModelo(mo, { pallets: p.pallets, cajas: p.cajas, cuerpos: mo.tipo === 'DI' ? 4 : 6, grua: p.bodega.grua });
@@ -1364,7 +1409,13 @@ function agregarLineal(modeloId: string, doble: boolean, cuerpos?: number) {
   const base = rackDeModelo(mo, { pallets: p.pallets, cajas: p.cajas, cuerpos: cuerpos ?? (mo.tipo === 'DI' ? 4 : 6), grua: p.bodega.grua });
   const lineal = mo.tipo === 'DI' ? {} : { doble, dobleLineal: doble, rot: doble ? 0 : 180 };
   // Cae a un pasillo de grua de lo que ya hay, para que se pueda cargar sin moverlo
-  const r = lugarLibre(normalizar({ ...base, id: nuevoId(), ...lineal }), p.racks, p.bodega, mo.tipo === 'AR' ? DISTANCIAS.pasilloAR.valor : grua.value.pasillo);
+  let r = lugarLibre(normalizar({ ...base, id: nuevoId(), ...lineal }), p.racks, p.bodega, mo.tipo === 'AR' ? DISTANCIAS.pasilloAR.valor : grua.value.pasillo);
+  // Un cuerpo simple suelto (para armar desde ahí): a la esquina de arriba a la izquierda, espalda al muro, si está libre
+  if (cuerpos === 1 && !doble && mo.tipo !== 'DI') {
+    const c = caja(contorno(p.bodega)), esquina = { x: c.x0 + 0.2, y: c.y0 + 0.2 };
+    const pegado = { ...linealArrastrado({ ...base, ...lineal }, esquina, esquina, p.bodega), id: r.id };
+    if (!conflictos([...p.racks, pegado], p.bodega).has(pegado.id)) r = pegado;
+  }
   const antes = porPoner.value;
   p.racks = [...p.racks, r];
   sel.value = r.id; elementoSel.value = null;
@@ -1375,7 +1426,7 @@ function agregarLineal(modeloId: string, doble: boolean, cuerpos?: number) {
 function avisoDescuento(que: string, antes: number) {
   const u = demanda.value.unidadPos, d = antes - porPoner.value, ahora = porPoner.value;
   const cambio = d > 0 ? `descuenta ${n(d)} ${u}` : d < 0 ? `suma ${n(-d)} ${u} por poner` : 'tu demanda ya estaba cubierta';
-  avisoFaltan.value = `${que}: ${cambio}. ${ahora > 0 ? `Te faltan ${n(ahora)} ${u}.` : 'Ya cubres lo que pediste ✓'}`;
+  avisoFaltan.value = `${que}: ${cambio}. ${ahora > 0 ? `Te faltan ${n(ahora)} ${u}.` : '✓ Ya cumples con lo que pediste.'}`;
 }
 // Pasar un lineal a simple o doble: la espalda queda en su lugar; demanda y accesorios se recalculan solos
 function cambiarDoble(r: any, doble: boolean) {

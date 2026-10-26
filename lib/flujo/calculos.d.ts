@@ -10,7 +10,7 @@ export function conteoTotal(racks: Obj[]): { cuerpos: number; marcos: number; pa
 export function resultadoModelo(modelo: Obj, opciones?: { pallets?: Obj[]; cajas?: Obj[]; grua?: string; gruaDatos?: Obj; altura?: number | null; ocupacion?: number }): any;
 export const OCUPACION: { min: number; max: number; defecto: number };
 export function conOcupacion(unidades: number, ocupacion?: number): number;
-export function nivelesMaximos(modelo: Obj, opciones?: { pallets?: Obj[]; altura?: number | null; grua?: string; gruaDatos?: Obj }): number;
+export function nivelesMaximos(modelo: Obj, opciones?: { pallets?: Obj[]; cajas?: Obj[]; altura?: number | null; grua?: string; gruaDatos?: Obj }): number;
 export function ubicarModelos(bodega: Obj, modelos: Obj[], cuerposPorModelo: Record<string, number>, opciones?: { pallets?: Obj[]; cajas?: Obj[]; nuevoId: () => string; existentes?: Obj[] }): { racks: any[]; faltan: Record<string, number> };
 export function racksAlDia(racks: Obj[], modelos: Obj[], opciones?: { pallets?: Obj[]; cajas?: Obj[]; grua?: string }): { racks: any[]; huellaCambio: boolean };
 export function queCotizar(modelos: Obj[], racks: Obj[]): any[];
@@ -21,7 +21,7 @@ export function zonaManiobra(bodega: Obj, e: Obj): Obj | null;
 export function conManiobras(bodega: Obj): any[];
 export function bandejaCajas(datos: { frente?: number; fondo?: number; altoEntre?: number; caja: Obj; largoEnFrente?: boolean }): { cols: number; filas: number; camas: number; cajas: number; kg: number; largoEnFrente: boolean; limite: 'apilable' | 'altura' | 'peso' | null };
 export function firmaCajasAR(modelo: Obj, cajas?: Obj[]): string;
-export function mejorBandeja(modelo: Obj, opciones?: { cajas?: Obj[]; altura?: number | null }): { bandeja: number; frente: number; niveles: number; camasRepisa: number; cuerpos: number; m2: number; alto: number; porBandeja: number } | null;
+export function mejorBandeja(modelo: Obj, opciones?: { cajas?: Obj[]; altura?: number | null }): { bandeja: number; frente: number; niveles: number; camasRepisa: number; altoAngulo: number; cuerpos: number; m2: number; alto: number; porBandeja: number } | null;
 export function motivoNoCabe(n: Obj, racks: Obj[], bodega: Obj): string | null;
 export function previaBloque(r: Obj, opciones: { largo?: number; profundidad?: number; espalda?: boolean; pasillo?: number | null }, racks: Obj[], bodega: Obj, nuevoId?: () => string): any[];
 export function alargarHastaMuro<T extends Obj>(r: T, racks: Obj[], bodega: Obj, sentido?: 1 | -1): T;

@@ -30,6 +30,12 @@
       <line :x1="0" :x2="W" :y1="y(0)" :y2="y(0)" stroke="#a3a3a3" stroke-width="1" />
       <!-- Marcos -->
       <rect v-for="(xp, i) in pilares" :key="`p${i}`" :x="xp - 3" :y="y(m.alto)" width="6" :height="y(0) - y(m.alto)" fill="#9ca3af" rx="1" />
+      <!-- Perforación del pilar (selectivo cada 76,2 mm) o del ángulo (cada 20 mm). Si a esta escala no se alcanza
+           a ver cada una, se dibuja una de cada tantas para que se lea la perforación -->
+      <line
+        v-for="(xp, i) in (tipo === 'drivein' ? [] : pilares)" :key="`h${i}`" :x1="xp" :x2="xp" :y1="y(0) - perforacion.inicio" :y2="y(m.alto)"
+        stroke="#f8fafc" :stroke-width="tipo === 'anra' ? 1.6 : 2" :stroke-dasharray="perforacion.patron" pointer-events="none"
+      />
 
       <template v-if="tipo === 'selectivo'">
         <!-- El rack se levanta nivel por nivel cuando cambia (la clave reinicia la animacion) -->
@@ -73,7 +79,7 @@
       <g font-size="10" fill="#334155" font-family="Inter, system-ui, sans-serif">
         <!-- Alto de marco a la izquierda -->
         <line :x1="x0 - 22" :x2="x0 - 22" :y1="y(0)" :y2="y(m.alto)" stroke="#334155" stroke-width="0.8" marker-start="url(#fl-f)" marker-end="url(#fl-f)" />
-        <text :x="x0 - 26" :y="(y(0) + y(m.alto)) / 2" text-anchor="middle" :transform="`rotate(-90 ${x0 - 26} ${(y(0) + y(m.alto)) / 2})`">marco {{ fm(m.alto) }} m</text>
+        <text :x="x0 - 26" :y="(y(0) + y(m.alto)) / 2" text-anchor="middle" :transform="`rotate(-90 ${x0 - 26} ${(y(0) + y(m.alto)) / 2})`">{{ tipo === 'anra' ? 'ángulo' : 'marco' }} {{ fm(m.alto) }} m</text>
         <!-- Distancia entre vigas (primer paso) a la derecha -->
         <template v-if="pasoCota && !editable">
           <line :x1="x0 + ancho + 16" :x2="x0 + ancho + 16" :y1="y(pasoCota.a)" :y2="y(pasoCota.b)" stroke="#334155" stroke-width="0.8" marker-start="url(#fl-f)" marker-end="url(#fl-f)" />
@@ -113,6 +119,15 @@ const tope = computed(() => Math.max(props.m.altoConCarga ?? props.m.alto, props
 const y = (v: number) => H - abajo - (v / tope.value) * (H - abajo - arriba);
 const largo = computed(() => (tipo.value === 'selectivo' ? props.m.viga : tipo.value === 'drivein' ? props.m.anchoCalle : props.m.frente));
 const pilares = computed(() => [x0, x0 + ancho]);
+// Paso de la perforación en pantalla (px): ángulo ranurado 20 mm, selectivo RACK.pasoPerforado (76,2 mm)
+const perforacion = computed(() => {
+  const metro = (H - abajo - arriba) / tope.value;
+  const pasoM = tipo.value === 'anra' ? 0.02 : RACK.pasoPerforado.valor;
+  const cada = Math.max(1, Math.ceil(3.5 / (pasoM * metro)));
+  const pasoPx = pasoM * metro * cada, agujero = Math.min(pasoPx * 0.55, tipo.value === 'anra' ? 2.4 : 1.6);
+  const inicio = (tipo.value === 'anra' ? 0.02 : RACK.primeraPerforacion.valor) * metro;
+  return { patron: `${agujero.toFixed(2)} ${(pasoPx - agujero).toFixed(2)}`, inicio };
+});
 const fm = (v: number) => (+v.toFixed(2)).toLocaleString('es-CL');
 
 // Escala horizontal en px por m (a lo largo de la viga o calle)

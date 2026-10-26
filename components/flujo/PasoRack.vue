@@ -114,13 +114,21 @@
               <p class="mt-1 text-xs text-neutral-500">Máximo {{ maxNiveles }} por {{ limite }}.</p>
             </div>
             <div v-if="mod.tipo === 'AR'" class="sm:col-span-2">
-              <p class="fl-sub">Fondo de la bandeja</p>
+              <p class="fl-sub">Altura del ángulo <FlujoInfo>El ángulo viene perforado cada 20 mm y se corta a la medida. Los de catálogo son de 2,0, 2,5 y 3,0 m.</FlujoInfo></p>
+              <div class="mt-2 grid grid-cols-4 gap-2">
+                <button v-for="a in ANRA_ANGULOS" :key="a" type="button" :class="['fl-chip !text-sm', altoAngulo === a && 'fl-chip--sel']" :aria-pressed="altoAngulo === a" @click="cambiarAngulo(a)">{{ fm(a) }} m</button>
+                <label :class="['fl-chip !text-sm !gap-1', !ANRA_ANGULOS.includes(altoAngulo) && 'fl-chip--sel']">
+                  <input :value="ANRA_ANGULOS.includes(altoAngulo) ? '' : fm(altoAngulo)" type="number" min="1" max="3" step="0.02" placeholder="Otra" aria-label="Altura del ángulo a medida (m)" class="w-12 bg-transparent text-center outline-none" @change="cambiarAngulo(Number(($event.target as HTMLInputElement).value.replace(',', '.')))"><span>m</span>
+                </label>
+              </div>
+              <p v-if="res.m.excedeAlto" class="mt-1 text-xs text-amber-800">Con {{ mod.niveles }} repisas tus cajas no caben en un ángulo de {{ fm(altoAngulo) }} m: baja las repisas o sube el ángulo.</p>
+              <p class="fl-sub mt-4">Fondo de la bandeja</p>
               <div class="mt-2 grid grid-cols-4 gap-2">
                 <button v-for="f in ANRA_FONDOS" :key="f" type="button" :class="['fl-chip !text-sm', (mod.bandeja ?? 0.4) === f && 'fl-chip--sel']" @click="cambiar({ bandeja: f })">{{ f * 1000 }} mm</button>
               </div>
               <p class="fl-sub mt-4">Cajas apiladas por repisa</p>
               <FlujoNumero :valor="mod.camasRepisa ?? 1" :min="1" :max="maxCamas" etiqueta="cajas por repisa" @cambio="cambiar({ camasRepisa: $event })" />
-              <p class="mt-1 text-xs text-neutral-500">Tu caja aguanta {{ maxCamas }} de alto. Entre repisas: {{ Math.round((res.m.altoEntre ?? 0) * 100) }} cm · estantería de {{ fm(res.m.alto) }} m</p>
+              <p class="mt-1 text-xs text-neutral-500">Tu caja aguanta {{ maxCamas }} de alto. Entre repisas: {{ Math.round((res.m.altoEntre ?? 0) * 100) }} cm · ángulo de {{ fm(res.m.alto) }} m</p>
               <label class="fl-campo mt-4">
                 <span>Ancho del carro de carga (cm) <FlujoInfo>El pasillo es el ancho del carro + 30 cm (mínimo 1,2 m).</FlujoInfo></span>
                 <input :value="mod.anchoCarro ? Math.round(mod.anchoCarro * 100) : ''" type="number" min="30" max="200" step="any" placeholder="Sin carro" class="form-input" @change="cambiar({ anchoCarro: Number(($event.target as HTMLInputElement).value) / 100 || null })">
@@ -221,7 +229,7 @@
               <dd><FlujoContador :valor="res.cuerpos" /></dd>
               <p class="text-xs text-neutral-500">{{ res.m.nivelesY.length }} repisas por cuerpo<template v-if="mod.doble"> · {{ res.modulos }} por lado</template></p>
             </div>
-            <div class="fl-dato"><dt>Alto de la estantería</dt><dd>{{ fm(res.alto) }} m</dd></div>
+            <div class="fl-dato"><dt>Altura del ángulo</dt><dd>{{ fm(res.m.alto) }} m</dd><p v-if="res.alto > res.m.alto + 0.01" class="text-xs text-neutral-500">Con las cajas de arriba: {{ fm(res.alto) }} m</p></div>
             <div class="fl-dato"><dt>Guardas</dt><dd><FlujoContador :valor="res.capacidadCajas" /> <span class="text-sm font-normal text-neutral-500">cajas</span></dd><p class="text-xs text-neutral-500">Necesitas {{ n(res.total) }} cajas</p></div>
           </dl>
           <dl v-else class="mt-3 grid grid-cols-2 gap-2">
@@ -280,7 +288,7 @@ import { TIPOS, gruaDriveIn } from '~/lib/rack3d/planificador.js';
 import { resultadoModelo, nivelesMaximos, mezclaPorDefecto, mejorBandeja, firmaCajasAR } from '~/lib/flujo/calculos.js';
 import { recomendarProductos } from '~/lib/flujo/recomendacion.js';
 import { RACK, GRUAS, CAPACIDADES } from '~/lib/rack3d/parametrosTecnicos.js';
-import { ANRA_FRENTES, ANRA_FONDOS } from '~/lib/rack3d/medidas.js';
+import { ANRA_FRENTES, ANRA_FONDOS, ANRA_ANGULOS, ANRA_ANGULO_DEFECTO, ANRA_ALTURA } from '~/lib/rack3d/medidas.js';
 import { ALTOS_TUNEL, altoTunelGrua } from '~/lib/rack3d/rutas.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
@@ -351,8 +359,8 @@ const mod = computed(() => p.modeloActual as Modelo | null);
 const catalogo = computed(() => (mod.value?.tipo === 'AR' ? p.cajas : p.pallets) as any[]);
 const tiposModelo = computed(() => p.pallets.filter((t) => (mod.value?.cantidades[t.id] ?? 0) > 0));
 const res = computed(() => (mod.value ? resultadoModelo(mod.value, { pallets: p.pallets, cajas: p.cajas, grua: p.bodega.grua, gruaDatos: gruaDatos.value, ocupacion: p.bodega.ocupacion }) as any : null));
-const maxNiveles = computed(() => (mod.value ? nivelesMaximos(mod.value, { pallets: p.pallets, altura: p.bodega.altura, grua: p.bodega.grua, gruaDatos: gruaDatos.value }) : 1));
-const limite = computed(() => (mod.value?.tipo === 'AR' ? 'altura de la estantería' : p.bodega.altura ? 'tu techo y lo que levanta tu grúa (altura y peso)' : 'lo que levanta tu grúa (altura y peso)'));
+const maxNiveles = computed(() => (mod.value ? nivelesMaximos(mod.value, { pallets: p.pallets, cajas: p.cajas, altura: p.bodega.altura, grua: p.bodega.grua, gruaDatos: gruaDatos.value }) : 1));
+const limite = computed(() => (mod.value?.tipo === 'AR' ? `tus cajas en un ángulo de ${fm(altoAngulo.value)} m` : p.bodega.altura ? 'tu techo y lo que levanta tu grúa (altura y peso)' : 'lo que levanta tu grúa (altura y peso)'));
 // Grua del cliente: lo que dice su placa (si no la sabe, la típica de su tipo de equipo)
 const gruaDatos = computed(() => ({ gruaLevante: (p.bodega as any).gruaLevante ?? null, gruaKg: (p.bodega as any).gruaKg ?? null }));
 const eqTipico = computed(() => (GRUAS as any)[p.bodega.grua] ?? GRUAS.contrapeso);
@@ -362,15 +370,25 @@ function placa(campo: 'gruaLevante' | 'gruaKg', e: Event) {
   (p.bodega as any)[campo] = v > 0 ? v : null;
 }
 // ─── Angulo ranurado: bandeja propuesta (la que ocupa menos piso) y cajas para el dibujo ───
+const altoAngulo = computed(() => Number((mod.value as any)?.altoAngulo) || ANRA_ANGULO_DEFECTO);
 const mmTxt = (v: number) => Math.round(v * 1000).toLocaleString('es-CL');
 const propuesta = computed(() => (mod.value?.tipo === 'AR' ? mejorBandeja(mod.value, { cajas: p.cajas, altura: p.bodega.altura }) : null));
 const enPropuesta = computed(() => {
   const b = propuesta.value, m = mod.value as any;
-  return !b || (m.bandeja === b.bandeja && m.frente === b.frente && m.niveles === b.niveles && (m.camasRepisa ?? 1) === b.camasRepisa);
+  return !b || (m.bandeja === b.bandeja && m.frente === b.frente && m.niveles === b.niveles && (m.camasRepisa ?? 1) === b.camasRepisa && (m.altoAngulo ?? ANRA_ANGULO_DEFECTO) === b.altoAngulo);
 });
 function usarPropuesta() {
   const b = propuesta.value;
-  if (b && mod.value) cambiar({ bandeja: b.bandeja, frente: b.frente, niveles: b.niveles, camasRepisa: b.camasRepisa, altoEntre: null });
+  if (b && mod.value) cambiar({ bandeja: b.bandeja, frente: b.frente, niveles: b.niveles, camasRepisa: b.camasRepisa, altoAngulo: b.altoAngulo, altoEntre: null });
+}
+// Altura del ángulo: la elige el cliente (catálogo o a medida cada 20 mm); con las cajas se vuelve a proponer
+// la bandeja y las repisas dentro de esa altura
+function cambiarAngulo(v: number) {
+  const m = mod.value as any;
+  if (!m || !(v > 0)) return;
+  const alto = Math.min(ANRA_ALTURA.max, Math.max(ANRA_ALTURA.min, Math.round((v * 1000) / ANRA_ALTURA.paso) * ANRA_ALTURA.paso)) / 1000;
+  const b = mejorBandeja({ ...m, altoAngulo: alto }, { cajas: p.cajas, altura: p.bodega.altura });
+  cambiar(b ? { bandeja: b.bandeja, frente: b.frente, niveles: b.niveles, camasRepisa: b.camasRepisa, altoAngulo: b.altoAngulo, altoEntre: null } : { altoAngulo: alto });
 }
 const maxCamas = computed(() => Math.max(1, Math.min(8, ...p.cajas.filter((c) => (mod.value?.cantidades[c.id] ?? 0) > 0).map((c) => Math.round(c.apilable || 1)))));
 const cajasDibujo = computed(() => (mod.value?.tipo === 'AR' && res.value?.porTipo
@@ -393,7 +411,7 @@ function sincronizarCantidades() {
       const firma = firmaCajasAR({ ...m, cantidades }, p.cajas);
       if ((m as any).propuestaAR !== firma) {
         const b = mejorBandeja({ ...m, cantidades }, { cajas: p.cajas, altura: p.bodega.altura });
-        p.cambiarModelo(m.id, { ...(b ? { bandeja: b.bandeja, frente: b.frente, niveles: b.niveles, camasRepisa: b.camasRepisa, altoEntre: null } : {}), propuestaAR: firma } as any);
+        p.cambiarModelo(m.id, { ...(b ? { bandeja: b.bandeja, frente: b.frente, niveles: b.niveles, camasRepisa: b.camasRepisa, altoAngulo: b.altoAngulo, altoEntre: null } : {}), propuestaAR: firma } as any);
       }
     }
   });
