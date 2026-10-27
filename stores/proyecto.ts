@@ -3,6 +3,7 @@
 // Se guarda solo en este navegador (localStorage) con un id de sesion para "Continuar donde quede".
 import { defineStore } from 'pinia';
 import { nuevoTipo } from '~/lib/rack3d/mezcla.js';
+import { consulta } from '~/lib/flujo/consulta.js';
 
 export const PASOS = [
   // La bodega se dibuja primero (prompt v3 §1): todo lo que sigue se valida contra ella. Los accesorios van
@@ -147,7 +148,7 @@ export const useProyecto = defineStore('proyecto', {
       } catch { /* sin almacenamiento */ }
       // Atribucion: se guarda la primera vez que llega con parametros
       try {
-        const q = new URLSearchParams(location.search);
+        const q = new URLSearchParams(consulta());
         const utm: Record<string, string> = {};
         ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'fbclid', 'li_fat_id'].forEach((k) => { const v = q.get(k); if (v) utm[k] = v.slice(0, 120); });
         if (Object.keys(utm).length) this.utm = { ...this.utm, ...utm };

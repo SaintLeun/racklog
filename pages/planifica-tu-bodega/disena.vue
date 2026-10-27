@@ -91,6 +91,7 @@ import { diseñoDesdeUrl, aplicarDiseño, limpiarUrl, pideRecorrido } from '~/li
 import { leerVariante } from '~/composables/useVariante';
 import { MENSAJE_INICIO, estadosDiseño, pideRegistroAntes } from '~/lib/flujo/conversion.js';
 import { racksAlDia, cantidadesAlDia, conPilares } from '~/lib/flujo/calculos.js';
+import { consulta } from '~/lib/flujo/consulta.js';
 import { useProyecto, PASOS, type Paso } from '~/stores/proyecto';
 import {
   FlujoPasoOperacion, LazyFlujoPasoPallets, LazyFlujoPasoRack, LazyFlujoPasoAccesorios, LazyFlujoPasoBodega, LazyFlujoPasoRevisa, LazyFlujoPasoCotiza,
@@ -212,10 +213,28 @@ function dejarCompartido() {
   compartido.value = null;
   limpiarUrl();
 }
+// El 3D (three.js y la escena, ~1,4 MB) se descarga en segundo plano apenas hay un momento libre: al llegar al
+// primer paso con 3D ya está en caché y la vista aparece antes (rendimiento, 27-10)
+// Y si el cliente todavía está en un paso sin 3D, se deja el motor gráfico precalentado (materiales compilados en
+// segundo plano con una bodega de muestra): el primer 3D sale sin la espera de compilar
+function precargar3D() {
+  const bajar = () => Promise.all([
+    import('~/lib/rack3d/visor.js'), import('~/lib/rack3d/bodega.js'), import('~/lib/rack3d/planificador.js'),
+    import('~/lib/rack3d/construir.js'), import('~/lib/rack3d/medidas.js'),
+  ]).then(([visor, bodega, plan]) => {
+    if (['bodega', 'accesorios', 'revisa'].includes(p.paso)) return;
+    const muestra = { ancho: 20, largo: 24, altura: 8, forma: null, grua: p.bodega.grua || 'contrapeso', elementos: [] };
+    const rack = plan.normalizar({ id: 'muestra', tipo: 'RS', cuerpos: 4, niveles: 3, doble: true, rot: 0, x: 10, y: 8 });
+    return visor.precalentar(bodega.construirBodega(muestra, [rack], { pallets: [] }));
+  }).catch(() => { /* se reintenta al abrir el 3D */ });
+  if ('requestIdleCallback' in window) (window as any).requestIdleCallback(bajar, { timeout: 4000 });
+  else setTimeout(bajar, 1500);
+}
 onMounted(async () => {
+  precargar3D();
   p.cargar();
   // Modo prueba: solo mientras la URL lo pida; el correo de prueba hace que Kommo lo marque PRUEBA
-  p.prueba = new URLSearchParams(location.search).get('prueba') === '1';
+  p.prueba = new URLSearchParams(consulta()).get('prueba') === '1';
   if (p.prueba && !p.lead.correo) p.lead.correo = 'comercial+prueba@racklog.cl';
   // Link a un diseño (?d=...): se carga ese diseño (sin datos personales) y se limpia la URL
   try {
@@ -250,7 +269,7 @@ onBeforeUnmount(() => {
 
 // La demo de la landing trae alto de pallet, cantidad, altura y equipo: se precargan si no hay datos
 function aplicarDemo() {
-  const q = new URLSearchParams(location.search);
+  const q = new URLSearchParams(consulta());
   const EQ: Record<string, [string, string]> = {
     'apilador-manual': ['manual', 'manual'], 'apilador-electrico': ['apiladora', 'electrico'],
     'grua-horquilla': ['contrapeso', 'grua'], retractil: ['retractil', 'retractil'],

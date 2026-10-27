@@ -171,6 +171,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { GRUAS } from '~/lib/rack3d/parametrosTecnicos.js';
 import { formatoM, TIPOS } from '~/lib/rack3d/planificador.js';
+import { consulta } from '~/lib/flujo/consulta.js';
 import {
   MENSAJE_INICIO, PORQUE, PIERDE, ESTIMADO, PESOS_TIPICOS, ALTURAS_TIPICAS, TOLERANCIA_MEDIDAS, TEXTO_INGENIERIA,
   estadosExpres, leadExpres, payloadLead, enviarLead, ofertaRescate,
@@ -331,7 +332,7 @@ async function enviar({ visita }: { visita: boolean }) {
 const CLAVE = 'racklog-expres-v1';
 watch([e, cliente, paso], () => { try { sessionStorage.setItem(CLAVE, JSON.stringify({ e, cliente, paso: paso.value })); } catch { /* lleno o bloqueado */ } }, { deep: true });
 onMounted(() => {
-  const q = new URLSearchParams(location.search);
+  const q = new URLSearchParams(consulta());
   prueba.value = q.get('prueba') === '1';
   ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'fbclid', 'li_fat_id'].forEach((k) => { const v = q.get(k); if (v) utm.value[k] = v.slice(0, 120); });
   try {
