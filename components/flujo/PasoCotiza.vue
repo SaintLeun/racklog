@@ -29,7 +29,7 @@
         class="mt-5"
         :cliente="p.lead" :estados="estados" :abandono-medidas="p.abandonoMedidas"
         :posiciones="cifra.n" :unidad="cifra.unidad" :ganas="ganas"
-        entregables="El PDF de tu diseño (con resumen ejecutivo para gerencia) y el link para seguir editándolo"
+        entregables="El PDF de tu diseño (con resumen ejecutivo para gerencia), el link para seguir editándolo y un video recorrido de tu bodega que te envía tu ejecutivo"
         :texto-boton="preparando ? 'Preparando tu diseño…' : textoCta" :enviando="preparando" :error="errorEnvio"
         @enviar="enviar"
       />
@@ -42,7 +42,7 @@
     <section v-else class="fl-card text-center">
       <p class="text-5xl" aria-hidden="true">✓</p>
       <h1 class="fl-titulo mt-3">¡Listo, {{ primerNombre }}!</h1>
-      <p class="mx-auto mt-2 max-w-md text-neutral-700">Recibimos tu diseño. Tu ejecutivo te envía la cotización formal en <b>máximo 24 horas</b>: fabricación, montaje e ingeniería.</p>
+      <p class="mx-auto mt-2 max-w-md text-neutral-700">Recibimos tu diseño. Tu ejecutivo te envía la cotización formal en <b>máximo 24 horas</b>: fabricación, montaje e ingeniería, junto con un video recorrido de tu bodega.</p>
       <p v-if="visitaPedida" class="mx-auto mt-2 max-w-md text-sm text-neutral-600">Tu ejecutivo te contacta para coordinar {{ visitaPedida === 'visita' ? 'la visita técnica' : 'la validación de tus medidas' }}.</p>
       <p class="mx-auto mt-2 max-w-md text-sm text-neutral-600">{{ correoLink === 'ok' ? `Te enviamos el link para seguir tu diseño a ${p.lead.correo}.` : correoLink === 'error' ? 'No pudimos enviarte el link por correo: cópialo abajo.' : '' }}</p>
       <div class="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
@@ -69,7 +69,7 @@ import { queCotizar } from '~/lib/flujo/calculos.js';
 import { cifraPrincipal, porConfirmar, resumenDiseño, descargar, nombreArchivo, logoCliente } from '~/lib/flujo/exportar.js';
 import { vistasPorRol } from '~/lib/flujo/perfiles.js';
 import { capturaGuardada } from '~/lib/flujo/captura.js';
-import { enlaceDiseño } from '~/lib/flujo/enlace.js';
+import { enlaceDiseño, enlaceRecorrido } from '~/lib/flujo/enlace.js';
 import { validarRut } from '~/lib/tour/reglas.js';
 import { MENSAJE_INICIO, TEXTO_INGENIERIA, configConversion, estadosDiseño, payloadLead, enviarLead, ofertaRescate } from '~/lib/flujo/conversion.js';
 
@@ -127,6 +127,7 @@ const correoLink = ref<'' | 'ok' | 'error'>('');
 const ERRORES: Record<string, string> = {
   rate_limit: 'Recibimos muchas solicitudes desde tu conexión. Espera un minuto e inténtalo de nuevo.',
   too_large: 'El plano es muy pesado. Inténtalo de nuevo o escríbenos por WhatsApp.',
+  rut: 'Revisa el RUT de tu empresa: sin un RUT válido no podemos enviarte la cotización ni tu diseño.',
 };
 async function enviar({ visita }: { visita: boolean }) {
   if (preparando.value) return;
@@ -138,10 +139,11 @@ async function enviar({ visita }: { visita: boolean }) {
       new Promise<File[]>((ok) => setTimeout(() => ok([]), 9000)),
     ]).catch(() => [] as File[]);
     const l = p.lead;
-    const rut = l.rut ? validarRut(l.rut) : null;
+    const rut = validarRut(l.rut);
     p.flags = [...new Set([...p.flags.filter((f) => f !== 'persona_natural_con_giro'), ...(rut?.ok && rut.personaNatural ? ['persona_natural_con_giro'] : [])])];
     const item = producto(visita);
-    const r = await enviarLead(payloadLead({ nombre: l.nombre, correo: l.correo, empresa: l.empresa, rut: l.rut, telefono: l.telefono }, item), archivos);
+    const linkDiseno = await enlaceRecorrido(p.$state).catch(() => '');
+    const r = await enviarLead(payloadLead({ nombre: l.nombre, correo: l.correo, empresa: l.empresa, rut: l.rut, telefono: l.telefono }, item, { linkDiseno }), archivos);
     if (!r.ok) {
       errorEnvio.value = ERRORES[r.error ?? ''] ?? 'No pudimos enviar tu diseño. Inténtalo de nuevo o escríbenos por WhatsApp al +56 9 3240 3819.';
       marcar('quote_error', { error: r.error });
@@ -165,7 +167,7 @@ async function enviar({ visita }: { visita: boolean }) {
     preparando.value = false;
   }
 }
-// El link "continúa tu diseño" llega por correo (mismo servicio que "Guardar y seguir después")
+// El link "continúa tu diseño" llega por correo (solo después del registro con RUT)
 async function enviarLinkPorCorreo() {
   try {
     const link = await enlaceDiseño(p.$state);

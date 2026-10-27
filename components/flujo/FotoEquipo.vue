@@ -9,7 +9,7 @@
         :class="['fl-opcion !gap-1 !p-2', valor === o.v && !noSe && 'fl-opcion--sel']" :aria-pressed="valor === o.v && !noSe"
         @click="emit('elegir', o.v, false)"
       >
-        <img v-if="FOTOS_REALES.includes(o.foto) && !sinFoto[o.v]" :src="`/assets/images/equipos/${o.foto}.webp`" alt="" width="240" height="160" loading="lazy" class="aspect-[3/2] w-full rounded-lg bg-neutral-100 object-contain" @error="sinFoto[o.v] = true">
+        <img v-if="FOTOS_REALES.includes(o.foto) && !sinFoto[o.v]" :src="`/assets/images/equipos/${o.foto}.webp`" alt="" width="240" height="160" loading="lazy" class="aspect-[3/2] w-full rounded-lg bg-white object-contain" @error="sinFoto[o.v] = true">
         <svg v-else viewBox="0 0 120 80" class="aspect-[3/2] w-full rounded-lg bg-neutral-50" aria-hidden="true">
           <g fill="none" stroke-linecap="round" stroke-linejoin="round">
             <path d="M6 72h108" stroke="#d4d4d4" stroke-width="2" />

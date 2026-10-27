@@ -70,12 +70,25 @@ prueba('sin precios en el lead ni en los textos', () => {
   assert.match(C.TEXTO_INGENIERIA, /NCh2369/); assert.match(C.TEXTO_INGENIERIA, /ANSI MH16\.1/);
   assert.doesNotMatch(C.TEXTO_INGENIERIA, /resiste/i);
 });
-const payload = C.payloadLead({ nombre: 'Ana Pérez', correo: 'ana@empresa.cl', rut: '' }, lead);
-prueba('payload con el formato de send-email (type quote, RUT opcional)', () => {
+const payload = C.payloadLead({ nombre: 'Ana Pérez', correo: 'ana@empresa.cl', rut: '76.086.428-5' }, lead);
+prueba('payload con el formato de send-email (type quote, con RUT)', () => {
   assert.equal(payload.type, 'quote');
-  assert.equal(payload.data.customerRut, '');
+  assert.equal(payload.data.customerRut, '76.086.428-5');
   assert.equal(payload.data.products[0].config['Vía'], 'exprés');
 });
+{
+  // RUT obligatorio (dueño 27-10): sin RUT o con uno inválido no se llama a la API
+  const llamadas = [];
+  const fetcher = async (url, init) => { llamadas.push(init); return { ok: true, status: 200, json: async () => ({ status: 'success' }) }; };
+  for (const rut of ['', '   ', '76.086.428-4']) {
+    const r = await C.enviarLead(C.payloadLead({ nombre: 'Ana', correo: 'ana@empresa.cl', rut }, lead), [], { fetcher });
+    assert.deepEqual(r, { ok: false, error: 'rut' }, `RUT "${rut}"`);
+  }
+  assert.equal(llamadas.length, 0);
+  assert.equal(C.rutFalla(''), C.MSG_RUT_FALTA);
+  assert.equal(C.rutFalla('76.086.428-5'), null);
+  ok++; console.log('ok - enviarLead: sin RUT válido no envía nada');
+}
 {
   const llamadas = [];
   const fetcher = async (url, init) => { llamadas.push(init); return llamadas.length === 1 ? { ok: false, status: 502, json: async () => ({}) } : { ok: true, status: 200, json: async () => ({ status: 'success', reference: 'QT-1' }) }; };

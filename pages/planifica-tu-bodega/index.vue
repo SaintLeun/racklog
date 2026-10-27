@@ -16,24 +16,26 @@
           <p class="mt-5 max-w-xl text-lg leading-relaxed text-neutral-300">
             Gratis y sin instalar nada. Ingeniería Racklog valida tu diseño con cálculo estructural antes de cotizar.
           </p>
-          <!-- Dos puertas (prompt de conversión §B): en el celular la vía exprés va primero -->
-          <p class="mt-8 font-semibold text-white">¿Lo diseñamos nosotros (2 min) o lo diseñas tú (10 min)?</p>
-          <div class="mt-3 flex flex-col gap-3 sm:flex-row">
-            <NuxtLink to="/planifica-tu-bodega/expres" class="btn btn-primary btn-lg lg:hidden" @click="marcar('cta_click', { ubicacion: 'hero', via: 'expres' })">
-              Lo diseñan ustedes · 2 min
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
-            </NuxtLink>
+          <!-- Un botón principal y la otra vía como alternativa en una línea (revisión 27-10: sin la pregunta
+               "¿lo diseñamos nosotros o lo diseñas tú?"). En el celular la vía exprés va primero (conversión §B) -->
+          <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             <NuxtLink to="/planifica-tu-bodega/disena" class="btn btn-primary btn-lg hidden lg:inline-flex" @click="marcar('cta_click', { ubicacion: 'hero', via: 'diseno' })">
-              Lo diseño yo · 10 min
+              Diseñar mi bodega
               <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </NuxtLink>
-            <NuxtLink to="/planifica-tu-bodega/disena" class="btn btn-ghost-light btn-lg lg:hidden" @click="marcar('cta_click', { ubicacion: 'hero', via: 'diseno' })">
-              Lo diseño yo · 10 min
+            <NuxtLink to="/planifica-tu-bodega/expres" class="btn btn-primary btn-lg lg:hidden" @click="marcar('cta_click', { ubicacion: 'hero', via: 'expres' })">
+              Que la diseñen ustedes
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
             </NuxtLink>
-            <NuxtLink to="/planifica-tu-bodega/expres" class="btn btn-ghost-light btn-lg hidden lg:inline-flex" @click="marcar('cta_click', { ubicacion: 'hero', via: 'expres' })">
-              Lo diseñan ustedes · 2 min
-            </NuxtLink>
+            <span class="hidden text-sm text-neutral-400 lg:inline">Unos 10 minutos, con 2D y 3D</span>
+            <span class="text-sm text-neutral-400 lg:hidden">4 preguntas, unos 2 minutos</span>
           </div>
+          <p class="mt-4 max-w-xl text-[15px] text-neutral-300">
+            <span class="hidden lg:inline">¿Sin tiempo o sin medidas a mano?
+              <NuxtLink to="/planifica-tu-bodega/expres" class="font-semibold text-white underline decoration-brand-400 underline-offset-4 hover:decoration-2" @click="marcar('cta_click', { ubicacion: 'hero', via: 'expres' })">Respóndenos 4 preguntas y la diseñamos nosotros</NuxtLink>.</span>
+            <span class="lg:hidden">¿Prefieres dibujarla tú?
+              <NuxtLink to="/planifica-tu-bodega/disena" class="font-semibold text-white underline decoration-brand-400 underline-offset-4" @click="marcar('cta_click', { ubicacion: 'hero', via: 'diseno' })">Diseña tu bodega paso a paso</NuxtLink>.</span>
+          </p>
           <p class="mt-3 max-w-xl text-sm text-neutral-400">Mientras más sepamos de tu bodega y tu operación, más precisa y rápida es tu cotización — sin esperar visitas ni mediciones.</p>
           <div class="mt-4 flex flex-col gap-3 sm:flex-row">
             <a :href="WHATSAPP" target="_blank" rel="noopener noreferrer" class="btn btn-ghost-light btn-lg active:scale-[.98]" @click="marcar('whatsapp_click', { ubicacion: 'hero' })">
@@ -294,8 +296,6 @@
 
 <script lang="ts" setup>
 import { modularSelectivo } from '~/lib/tour/pallet.js';
-// Misma URL (con hash) que usa main.css: precargarla evita que el titulo cambie de alto al llegar la fuente (CLS)
-import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
 
 definePageMeta({ layout: 'landing' });
 
@@ -307,8 +307,6 @@ usePageSeo({
   image: '/assets/images/og-planifica-tu-bodega.png',
   imageAlt: 'Diseña tu bodega y recibe tu cotización en máximo 24 horas: planificador 3D de Racklog',
 });
-
-useHead({ link: [{ rel: 'preload', as: 'font', type: 'font/woff2', href: interLatin, crossorigin: '' }] });
 
 // ─── A/B (composables/useVariante.ts; apagado por defecto) ───
 const varTitulo = useVariante('titulo');

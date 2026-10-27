@@ -1,4 +1,36 @@
-@import "@fontsource-variable/inter";
+/* Inter: un solo archivo (variable, subset latin: cubre todo el español). Se precarga en app.vue
+   con la misma URL. Los demas subsets de fontsource (cirilico, griego, vietnamita, latin-ext) no se
+   usan y cada uno que llegaba provocaba otro reflow. Las flechas y simbolos (→ ✓) no estan en
+   ningun subset de Inter: siempre salen de la fuente del sistema. */
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* Mismo archivo con el nombre "Inter" que usan los SVG y el canvas (font-family="Inter, ...") */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* Fallback con las metricas de Inter: mientras llega la fuente el texto ya ocupa lo mismo, asi el
+   swap no cambia tamaños ni corre lineas. Medido con fontTools sobre el woff2 de Inter (wght 400)
+   contra Arial/Liberation Sans y Roboto (Android), con frecuencia de letras del español: ambos dan
+   106,7 %, por eso sirve un solo bloque. */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial"), local("ArialMT"), local("Liberation Sans"), local("Arimo"), local("Roboto");
+  size-adjust: 106.66%;
+  ascent-override: 90.83%;
+  descent-override: 22.62%;
+  line-gap-override: 0%;
+}
 @import "tailwindcss";
 
 /* =========================================================================
@@ -8,7 +40,7 @@
    ========================================================================= */
 
 @theme {
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Inter Variable", "Inter Fallback", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   /* Naranjo de marca (brand-700 lleva texto blanco (5.2:1, AA); brand-600 solo para iconos y acentos) */
   --color-brand-50: #fff7ed;

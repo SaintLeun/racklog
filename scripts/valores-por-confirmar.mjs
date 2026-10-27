@@ -17,8 +17,10 @@ const via = await cargar('lib/rack3d/viabilidad.js');
 
 const FUENTES = [
   ['Equipos (pasillo m, levante m, kg nominal, curva de capacidad residual)', 'lib/rack3d/parametrosTecnicos.js', 'GRUAS', pt.GRUAS],
+  ['Viga a piso del selectivo (cara de arriba, m; qué equipos la piden está en GRUAS.vigaPiso)', 'lib/rack3d/parametrosTecnicos.js', 'VIGA_PISO', pt.VIGA_PISO],
   ['Grúa dentro del drive-in (holgura y medidas típicas, m)', 'lib/rack3d/parametrosTecnicos.js', 'GRUA_DRIVE_IN', pt.GRUA_DRIVE_IN],
   ['Distancias de seguridad (m)', 'lib/rack3d/parametrosTecnicos.js', 'DISTANCIAS', pt.DISTANCIAS],
+  ['Portones y andenes: lo que ocupan hacia adentro (m)', 'lib/rack3d/parametrosTecnicos.js', 'ACCESOS', pt.ACCESOS],
   ['Capacidades por nivel (kg)', 'lib/rack3d/parametrosTecnicos.js', 'CAPACIDADES', pt.CAPACIDADES],
   ['Accesorios y seguridad', 'lib/rack3d/accesorios.js', 'PARAMETROS_ACCESORIOS', acc.PARAMETROS_ACCESORIOS],
   ['Radio de giro de cada equipo (m)', 'lib/rack3d/rutas.js', 'RADIO_GIRO', rutas.RADIO_GIRO],

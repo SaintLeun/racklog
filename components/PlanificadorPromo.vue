@@ -5,10 +5,7 @@
         <!-- Texto -->
         <div>
           <span class="eyebrow">
-            <span class="relative flex h-2 w-2" aria-hidden="true">
-              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-75 motion-reduce:animate-none"></span>
-              <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-600"></span>
-            </span>
+            <span class="inline-flex h-2 w-2 rounded-full bg-brand-600" aria-hidden="true"></span>
             Nuevo · Gratis y sin registro
           </span>
           <h2 id="promo-planificador" class="section-title">

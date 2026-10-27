@@ -19,8 +19,10 @@
       <!-- Niveles con su carga -->
       <g v-for="(n, i) in niveles" :key="i">
         <rect v-if="n.viga" :x="x0" :y="y(n.y) - 2" :width="ancho" height="4" :fill="tipo === 'AR' ? '#60a5fa' : '#f97316'" />
+        <!-- Un pallet por posición del nivel: con 2 por nivel se ven 2 (revisión 27-10) -->
         <rect
-          :x="x0 + 8" :y="y(n.y + n.carga)" :width="ancho - 16" :height="Math.max(1, y(n.y) - y(n.y + n.carga) - (n.viga ? 2 : 0))"
+          v-for="k in porNivel" :key="k"
+          :x="x0 + 6 + (k - 1) * ((ancho - 12) / porNivel) + 2" :y="y(n.y + n.carga)" :width="(ancho - 12) / porNivel - 4" :height="Math.max(1, y(n.y) - y(n.y + n.carga) - (n.viga ? 2 : 0))"
           :fill="n.color ?? (tipo === 'AR' ? '#dbeafe' : '#e7c9a0')" :stroke="tipo === 'AR' ? '#93c5fd' : '#b45309'" stroke-width="0.8"
         />
       </g>
@@ -52,12 +54,15 @@ const holgura = computed(() => (altura.value ? altura.value - alto.value : 0));
 const holguraMin = DISTANCIAS.holguraTecho.valor;
 const nivelMasAlto = computed(() => alturaUltimoNivel(props.rack));
 
+// Pallets que se ven de frente en cada nivel (selectivo); drive-in y ángulo ranurado, uno
+const porNivel = computed(() => (m.value.tipo === 'selectivo' ? Math.max(1, m.value.palletsPorViga || 1) : 1));
 const niveles = computed(() => {
   const d = m.value;
   if (d.tipo === 'anra') return d.nivelesY.map((v: number, i: number) => ({ y: v, viga: true, carga: Math.min(0.28, (d.nivelesY[i + 1] ?? d.alto) - v - 0.04) }));
   const carga = d.pallet?.alto ?? 1.2;
   if (d.tipo === 'drivein') return [0, ...d.cartelasY].map((v: number, i: number) => ({ y: v, viga: i > 0, carga }));
-  return [0, ...d.nivelesY].map((v: number, i: number) => ({ y: v, viga: i > 0, carga: d.altosCarga?.[i] ?? carga, color: d.coloresCarga?.[i] ?? null }));
+  // Con viga a piso la primera carga también va sobre una viga (a ~30 cm)
+  return [...(d.piso === false ? [] : [0]), ...d.nivelesY].map((v: number, i: number) => ({ y: v, viga: d.piso === false || i > 0, carga: d.altosCarga?.[i] ?? carga, color: d.coloresCarga?.[i] ?? null }));
 });
 
 // Si sobra altura para un nivel mas (con la holgura al techo), se sugiere

@@ -11,7 +11,7 @@
         <p :class="resumen.viable ? 'text-green-800' : 'text-red-800'">
           {{ resumen.viable
             ? (resumen.advierte ? `Se puede fabricar y montar. Revisa ${resumen.advierte} ${resumen.advierte === 1 ? 'sugerencia' : 'sugerencias'}.` : 'Se puede fabricar y montar tal como está.')
-            : 'Resuélvelos con un toque para poder cotizar.' }}
+            : 'Resuélvelos aquí o cotiza igual: tu ejecutivo los revisa contigo.' }}
         </p>
         <p class="mt-1 text-sm" :class="resumen.viable ? 'text-green-800' : 'text-red-800'">{{ TEXTO_INGENIERIA }}</p>
         <TransitionGroup tag="ul" name="fl-lista" class="mt-4 space-y-2">
@@ -72,11 +72,21 @@
         </div>
       </section>
 
-      <!-- Vista 3D grande: la bodega con sus racks y la grua operando -->
+      <!-- Vista 3D grande con el tour guiado (revisión 27-10 §7): bodega, lo que ya tiene, carga, altura, maquinaria y cierre -->
       <div class="fl-card mt-6 !p-0 overflow-hidden">
+        <div v-if="guion.escenas.length" class="flex flex-wrap items-center gap-2 border-b border-neutral-200 px-4 py-3">
+          <p class="mr-auto text-sm text-neutral-700">
+            <b class="text-neutral-900">Recorrido de tu bodega</b> · {{ guion.escenas.length }} escenas, unos {{ Math.round(guion.duracion / 1000) }} s
+            <span v-if="modoRecorrido" class="block text-brand-800">Para el ejecutivo: descarga el video y envíale el link al cliente junto con la cotización.</span>
+          </p>
+          <button v-if="!enTour" type="button" class="btn btn-primary !min-h-10 !px-4 !text-sm" :disabled="grabandoTour" @click="verTour">Ver el recorrido</button>
+          <button v-if="modoRecorrido && visorRef?.puedeGrabar" type="button" class="btn btn-secondary !min-h-10 !px-4 !text-sm" :disabled="grabandoTour || enTour" :aria-busy="grabandoTour" @click="descargarTour">
+            {{ grabandoTour ? 'Grabando video…' : 'Descargar video' }}
+          </button>
+        </div>
         <div class="h-[60vh] min-h-[380px]">
           <ClientOnly>
-            <Visor3D ref="visorRef" :bodega="p.bodega" :racks="p.racks" :foco="foco" etiqueta="Vista 3D de tu bodega" />
+            <Visor3D ref="visorRef" :bodega="p.bodega" :racks="p.racks" :foco="foco" :guion="guion.escenas.length ? guion : null" etiqueta="Vista 3D de tu bodega" />
           </ClientOnly>
         </div>
       </div>
@@ -138,7 +148,7 @@
             <p class="fl-leyenda">Qué cotizar</p>
             <div v-for="q in co.cotizar" :key="q.modelo" class="mt-3">
               <p class="font-semibold text-neutral-900">{{ q.nombre }}</p>
-              <ul class="mt-1 list-disc space-y-0.5 pl-5 text-neutral-700"><li v-for="(l, i) in q.lineas" :key="i">{{ l }}<FlujoInfo v-if="l.includes('pares de vigas')" class="ml-1">Código del perfil de viga de Racklog: el número es la altura del perfil en mm (70, 100, 125 o 150). Lo elige el cálculo según el peso de tus pallets.</FlujoInfo></li></ul>
+              <ul class="mt-1 list-disc space-y-0.5 pl-5 text-neutral-700"><li v-for="(l, i) in q.lineas" :key="i">{{ l }}</li></ul>
             </div>
             <template v-if="co.accesorios.length">
               <p class="fl-leyenda mt-6">Accesorios</p>
@@ -159,9 +169,53 @@
         </div>
       </div>
 
+      <!-- Al final del flujo: sumar estanterías de los otros productos (dueño 27-10). Se arman y ubican como el primero -->
+      <section v-if="otros.length" class="fl-card mt-8" aria-labelledby="fl-otros">
+        <h2 id="fl-otros" class="text-lg font-bold text-neutral-900">¿También necesitas otro tipo de estantería?</h2>
+        <p class="mt-1 text-sm text-neutral-600">Súmala a este mismo diseño y te cotizamos todo junto.</p>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+          <div v-for="o in otros" :key="o.tipo" class="flex gap-3 rounded-xl p-3 ring-1 ring-neutral-200">
+            <img :src="o.imagen" alt="" width="112" height="84" class="h-20 w-28 flex-shrink-0 rounded-lg bg-neutral-100 object-cover" loading="lazy">
+            <div class="min-w-0">
+              <p class="font-semibold text-neutral-900">{{ o.nombre }}</p>
+              <p class="text-sm text-neutral-600">{{ o.uso }}</p>
+              <button v-if="eligiendo !== o.tipo" type="button" class="fl-btn-sec mt-2 !min-h-9 !w-auto !px-3 !text-sm" :disabled="o.bloqueado" @click="eligiendo = o.tipo">+ Agregar {{ o.nombre.toLowerCase() }}</button>
+              <p v-if="o.aviso" class="mt-1 text-xs text-amber-800">{{ o.aviso }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Con qué carga va: el mismo pallet o uno nuevo; en ángulo ranurado, las mismas cajas o cambiarlas (dueño 27-10) -->
+        <div v-if="eligiendo" class="mt-4 rounded-xl bg-brand-50/60 p-4 ring-1 ring-brand-200" aria-live="polite">
+          <template v-if="eligiendo !== 'AR'">
+            <p class="font-semibold text-neutral-900">¿Qué pallet va en el {{ nombreDe(eligiendo).toLowerCase() }}?</p>
+            <div class="mt-3 grid gap-2 sm:grid-cols-2">
+              <button v-for="t in p.pallets" :key="t.id" type="button" class="fl-opcion !min-h-0 !p-3 text-left" @click="conPallet(eligiendo, t.id)">
+                <span class="block text-sm font-semibold text-neutral-900">El mismo: {{ t.nombre }}</span>
+                <span class="block text-xs text-neutral-600">{{ fm(t.frente) }} × {{ fm(t.fondo) }} m · {{ fm(t.alto) }} m de alto · {{ n(t.peso) }} kg</span>
+              </button>
+              <button type="button" class="fl-opcion !min-h-0 !p-3 text-left" @click="conPallet(eligiendo, null)">
+                <span class="block text-sm font-semibold text-neutral-900">+ Configurar un pallet nuevo</span>
+                <span class="block text-xs text-neutral-600">Medidas, alto y peso del otro pallet</span>
+              </button>
+            </div>
+          </template>
+          <template v-else>
+            <p class="font-semibold text-neutral-900">¿Qué cajas van en las bandejas?</p>
+            <p v-if="cajasBase.length" class="mt-1 text-sm text-neutral-700">Proyectamos con {{ cajasBase.length === 1 ? 'tu caja' : 'tus cajas' }}: {{ cajasBase.map((c) => `${cm(c.largo)} × ${cm(c.ancho)} × ${cm(c.alto)} cm`).join(' · ') }}.</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button v-if="cajasBase.length" type="button" class="fl-btn !min-h-10 !w-auto !px-4 !text-sm" @click="conCajas(true)">Usar las mismas cajas</button>
+              <button type="button" :class="[cajasBase.length ? 'fl-btn-sec' : 'fl-btn', '!min-h-10 !w-auto !px-4 !text-sm']" @click="conCajas(false)">{{ cajasBase.length ? 'Cambiar las cajas' : 'Configurar mis cajas' }}</button>
+            </div>
+          </template>
+          <button type="button" class="mt-3 text-sm font-medium text-neutral-500 underline underline-offset-2" @click="eligiendo = null">Cancelar</button>
+        </div>
+      </section>
+
+      <!-- Nadie se queda atascado: con puntos por resolver igual se cotiza; el lead llega con "Viabilidad: con puntos por
+           resolver" y el ejecutivo los revisa con el cliente (antes, un aviso sin arreglo de un toque bloqueaba aquí) -->
       <FlujoAcciones
-        texto="Pedir mi cotización" :deshabilitado="!resumen.viable"
-        motivo="Resuelve los puntos en rojo para cotizar." @atras="emit('atras')" @siguiente="seguir"
+        :texto="resumen.viable ? 'Pedir mi cotización' : 'Cotizar igual'" @atras="emit('atras')" @siguiente="seguir"
       />
   </div>
 </template>
@@ -169,13 +223,14 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
 import { useProyecto } from '~/stores/proyecto';
-import { normalizar, formatoM } from '~/lib/rack3d/planificador.js';
+import { normalizar, formatoM, TIPOS, gruaDriveIn } from '~/lib/rack3d/planificador.js';
 import { GRUAS } from '~/lib/rack3d/parametrosTecnicos.js';
 import { revisarDiseno, resumenViabilidad, aplicarArreglo } from '~/lib/rack3d/viabilidad.js';
 import { vistasPorRol, focoDiseño } from '~/lib/flujo/perfiles.js';
 import { guardarCaptura } from '~/lib/flujo/captura.js';
 import { auditarDiseno } from '~/lib/flujo/auditoria.js';
 import { TEXTO_INGENIERIA } from '~/lib/flujo/conversion.js';
+import { guionTour } from '~/lib/flujo/guion.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();
@@ -204,7 +259,80 @@ const conRacklog = computed(() => g.value.conRacklog as number);
 const mas = computed(() => g.value.masPct as number);
 
 // La foto del 3D que ya está armado queda guardada para el link compartido
-const visorRef = ref<{ captura: () => string | null } | null>(null);
+const visorRef = ref<{
+  captura: () => string | null; puedeGrabar: boolean; detenerTour: () => void;
+  verTour: () => Promise<boolean>; grabarTour: () => Promise<{ blob: Blob; extension: string } | null>;
+} | null>(null);
+// Tour guiado: una escena por tema, con los números de la misma cuenta que el resumen
+const guion = computed(() => guionTour(p) as { escenas: any[]; duracion: number });
+const enTour = ref(false), grabandoTour = ref(false);
+
+// Productos que todavía no están en el diseño: se ofrecen al final para cotizar todo junto
+const USO: Record<string, string> = {
+  RS: 'Pallets con acceso directo a cada uno: muchos productos distintos.',
+  DI: 'Muchos pallets de un mismo producto, guardados uno detrás de otro.',
+  AR: 'Cajas y productos sueltos que se sacan a mano.',
+};
+const otros = computed(() => (['RS', 'DI', 'AR'] as const)
+  .filter((t) => !p.modelos.some((m) => m.tipo === t))
+  .map((t) => {
+    const di = t === 'DI' ? gruaDriveIn({ grua: p.bodega.grua }) as { puede: boolean; motivo?: string } : null;
+    return { tipo: t, nombre: (TIPOS as any)[t].nombre as string, imagen: (TIPOS as any)[t].imagen as string, uso: USO[t],
+      // Drive-in con un equipo que no entra a la calle: no se ofrece (en el rack quedaba bloqueado sin salida)
+      bloqueado: !!(di && !di.puede),
+      aviso: di && !di.puede ? `Tu equipo no sirve para drive-in${di.motivo ? `: ${di.motivo}` : ''}. Cámbialo en el paso 1 si tienes otro.` : '' };
+  }));
+const eligiendo = ref<'RS' | 'DI' | 'AR' | null>(null);
+const nombreDe = (t: string) => (TIPOS as any)[t].nombre as string;
+const cm = (v: number) => Math.round(v * 100);
+// Cajas para el ángulo ranurado: las que ya cargó o, si no, las de sus pallets armados desde caja
+const cajasBase = computed(() => (p.cajas.length ? p.cajas
+  : p.pallets.filter((t) => t.desdeCaja && t.caja).map((t) => ({ ...t.caja!, nombre: `Caja de ${t.nombre}` }))) as any[]);
+function ir(paso: 'pallets' | 'rack', t: string, como: string) {
+  marcar('agregar_producto', { tipo: t, desde: 'revisa', como });
+  eligiendo.value = null;
+  // Se arma (paso 4) y se ubica (paso 5) como el primero; con pallet o cajas nuevas, antes el paso 3
+  p.ir(paso);
+  window.scrollTo({ top: 0 });
+}
+function conPallet(t: 'RS' | 'DI', idPallet: string | null) {
+  const pallet = idPallet ? p.pallets.find((x) => x.id === idPallet) : p.agregarPallet({ nombre: `Pallet ${p.pallets.length + 1}` });
+  const m = p.agregarModelo(t);
+  // Solo ese pallet en la estantería nueva; la cantidad se pregunta al armarla (o viene del pallet nuevo)
+  p.cambiarModelo(m.id, { cantidades: { [pallet!.id]: idPallet ? 0 : pallet!.cantidad } });
+  ir(idPallet ? 'rack' : 'pallets', t, idPallet ? 'mismo_pallet' : 'pallet_nuevo');
+}
+function conCajas(mismas: boolean) {
+  if (!p.cajas.length) {
+    if (mismas) cajasBase.value.forEach((c: any) => p.agregarCaja({ nombre: c.nombre, largo: c.largo, ancho: c.ancho, alto: c.alto, peso: c.peso, apilable: c.apilable }));
+    else p.agregarCaja();
+  }
+  const m = p.agregarModelo('AR');
+  p.cambiarModelo(m.id, { cantidades: Object.fromEntries(p.cajas.map((c) => [c.id, c.cantidad])) });
+  if (!mismas) useState('pallets-abrir-cajas', () => false).value = true;
+  ir(mismas ? 'rack' : 'pallets', 'AR', mismas ? 'mismas_cajas' : 'cambiar_cajas');
+}
+// El video lo graba y lo envía el ejecutivo (link del lead, ?recorrido=1); el cliente ve el recorrido en pantalla
+const modoRecorrido = useState('modo-recorrido', () => false);
+async function verTour() {
+  if (!visorRef.value) return;
+  enTour.value = true;
+  marcar('tour_video', { accion: 'ver' });
+  try { await visorRef.value.verTour(); } finally { enTour.value = false; }
+}
+async function descargarTour() {
+  if (!visorRef.value || grabandoTour.value) return;
+  grabandoTour.value = true;
+  try {
+    const r = await visorRef.value.grabarTour();
+    if (!r?.blob.size) return;
+    const url = URL.createObjectURL(r.blob);
+    const a = Object.assign(document.createElement('a'), { href: url, download: `recorrido-tu-bodega-racklog.${r.extension}` });
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    marcar('tour_video', { accion: 'descargar', formato: r.extension });
+  } finally { grabandoTour.value = false; }
+}
 function seguir() {
   try { guardarCaptura(p, visorRef.value?.captura() ?? null); } catch { /* sin foto: el paso 7 la arma */ }
   emit('siguiente');

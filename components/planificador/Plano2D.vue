@@ -17,7 +17,7 @@
     @pointerup="soltar"
     @pointercancel="soltar"
     @pointerleave="cursorPincel = null"
-    @wheel.prevent="rueda"
+    @wheel="rueda"
   >
     <defs>
       <pattern :id="`${uid}-grilla`" :width="grillaFina" :height="grillaFina" patternUnits="userSpaceOnUse">
@@ -49,7 +49,7 @@
       />
       <polyline
         v-if="puntosDibujo.length"
-        :points="[...puntosDibujo, ...(cursor ? [cursor] : [])].map((p) => `${p.x},${p.y}`).join(' ')"
+        :points="[...puntosDibujo, ...(cursorDib ? [cursorDib] : [])].map((p) => `${p.x},${p.y}`).join(' ')"
         fill="rgba(234, 88, 12, 0.08)" stroke="#374151" stroke-width="0.15" stroke-linejoin="round" pointer-events="none"
       />
       <circle
@@ -58,6 +58,11 @@
         :fill="i === 0 && puntosDibujo.length >= 3 ? '#ea580c' : '#374151'"
         @pointerdown.stop="i === 0 && puntosDibujo.length >= 3 ? emit('cerrar-contorno') : presionarFondo($event)"
       />
+      <!-- Metros escritos: el muro queda de ese largo hacia donde apunta el cursor (Enter lo fija) -->
+      <g v-if="cursorDib && largoEscrito && cursorDib !== cursor" pointer-events="none">
+        <circle :cx="cursorDib.x" :cy="cursorDib.y" :r="0.25 * k" fill="#ea580c" />
+        <text :x="cursorDib.x + 0.5 * k" :y="cursorDib.y - 0.5 * k" v-bind="TEXTO_COTA" :font-size="14 * mpp" fill="#c2410c" text-anchor="start">{{ formatoM(largoEscrito) }} m · Enter para fijar</text>
+      </g>
       <template v-if="cursor">
         <circle :cx="cursor.x" :cy="cursor.y" :r="0.18 * k" fill="#ea580c" pointer-events="none" />
         <!-- Ajuste activo: esquina o punto medio -->
@@ -67,7 +72,7 @@
           :transform="ajuste === 'medio' ? `rotate(45 ${cursor.x} ${cursor.y})` : ''"
         />
         <text
-          v-if="textoCursor" :x="cursor.x + 0.5 * k" :y="cursor.y - 0.5 * k"
+          v-if="textoCursor && !largoEscrito" :x="cursor.x + 0.5 * k" :y="cursor.y - 0.5 * k"
           v-bind="TEXTO_COTA" fill="#0369a1" text-anchor="start"
         >{{ textoCursor }}</text>
       </template>
@@ -103,6 +108,13 @@
         :x="p.f.x0" :y="p.f.y0" :width="p.f.x1 - p.f.x0" :height="p.f.y1 - p.f.y0"
         :fill="p.ok ? '#14b8a6' : '#ef4444'" :fill-opacity="p.ok ? 0.08 : 0.16" pointer-events="none"
       />
+      <!-- Qué es el área de color (dueño 27-10): "pasillo grúa 3,2 m"; si es angosto, cuánto pide y cuánto queda -->
+      <template v-if="!dibujando && !cotasTodas">
+        <text
+          v-for="t in textosPasillo" :key="`pt-${t.id}`" :x="t.x" :y="t.y" v-bind="TEXTO_COTA" :fill="t.ok ? '#0f766e' : '#b91c1c'"
+          text-anchor="middle" dominant-baseline="central" :transform="t.vertical ? `rotate(-90 ${t.x} ${t.y})` : undefined"
+        >{{ t.texto }}</text>
+      </template>
 
       <!-- Pilares, portones, andenes, oficinas y zonas bloqueadas -->
       <g
@@ -116,12 +128,17 @@
         @focus="!trazando && !agregandoCruce && emit('seleccionar-elemento', el.id)"
       >
         <template v-for="d in [dibujoElemento(el)]" :key="d.clave">
+          <!-- Pilar: es chico; se toma con el dedo desde un área invisible de ~28 px -->
+          <rect
+            v-if="el.clase === 'pilar'" :x="el.x - Math.max(el.ancho / 2, 14 * mpp)" :y="el.y - Math.max(el.alto / 2, 14 * mpp)"
+            :width="Math.max(el.ancho, 28 * mpp)" :height="Math.max(el.alto, 28 * mpp)" fill="transparent"
+          />
           <!-- Base -->
           <rect
             v-bind="rectSvg(el)"
             :fill="d.relleno" :fill-opacity="d.opacidad"
-            :stroke="elementoSel === el.id ? '#0f172a' : d.borde"
-            :stroke-width="elementoSel === el.id ? 0.12 : d.grosor"
+            :stroke="enSeleccion(el) ? '#0f172a' : d.borde"
+            :stroke-width="enSeleccion(el) ? (el.clase === 'pilar' ? 3 * mpp : 0.12) : d.grosor"
             :stroke-dasharray="d.punteado"
           />
           <!-- Detalle por clase -->
@@ -211,6 +228,9 @@
           <path v-if="f.pallets" :d="f.pallets" fill="#fff" fill-opacity="0.85" :stroke="colorDe(r).linea" stroke-width="0.025" pointer-events="none" />
           <path v-if="f.vigas" :d="f.vigas" fill="none" :stroke="colorDe(r).borde" :stroke-width="Math.max(0.05, 1.5 * mpp)" pointer-events="none" />
           <path v-if="f.marcos" :d="f.marcos" :fill="colorDe(r).borde" pointer-events="none" />
+          <!-- Posiciones que se pierden por un pilar (dentro o tapando la entrada): tachadas -->
+          <path v-if="f.perdidos" :d="f.perdidos" fill="#e2e8f0" stroke="#64748b" stroke-width="0.025" pointer-events="none" />
+          <path v-if="f.tachas" :d="f.tachas" fill="none" stroke="#64748b" :stroke-width="Math.max(0.03, 1.2 * mpp)" pointer-events="none" />
           <!-- Divisiones (cuerpos, calles o filas) -->
           <line
             v-for="(l, j) in f.lineas" :key="j"
@@ -238,7 +258,26 @@
         </template>
       </g>
 
-      <!-- Pilares dentro de un selectivo doble: se ven encima del rack (ahí se pierde una columna de pallets) -->
+      <!-- Flechas del rack elegido: se tiran para alargarlo (extremos) o sumar filas (costados), sin números -->
+      <g v-if="flechasSel" :aria-hidden="true">
+        <g
+          v-for="h in flechasSel" :key="h.tipo + h.s" :data-flecha="h.tipo + (h.s > 0 ? '+' : '-')"
+          :class="h.tipo === 'largo' ? (h.ux ? 'cursor-ew-resize' : 'cursor-ns-resize') : (h.ux ? 'cursor-ns-resize' : 'cursor-ew-resize')"
+          style="touch-action: none"
+          @pointerdown.stop="tomarFlecha($event, h)"
+        >
+          <circle :cx="h.x" :cy="h.y" :r="22 * mpp" fill="transparent" />
+          <circle :cx="h.x" :cy="h.y" :r="13 * mpp" :fill="h.tipo === 'largo' ? '#ea580c' : '#0f172a'" stroke="#fff" :stroke-width="2 * mpp" />
+          <path :d="flechaManilla(h)" fill="#fff" pointer-events="none" />
+        </g>
+      </g>
+
+      <!-- Guías del imán: el rack se pegó a esto -->
+      <g v-if="guiasRack?.length" pointer-events="none">
+        <line v-for="(g, j) in guiasRack" :key="`gi${j}`" :x1="g.x1" :y1="g.y1" :x2="g.x2" :y2="g.y2" stroke="#db2777" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="6 4" />
+      </g>
+
+      <!-- Pilares dentro de un selectivo: se ven encima del rack (ahí se pierden esas posiciones) -->
       <g v-if="!dibujando" pointer-events="none">
         <template v-for="el in pilaresEnRacks" :key="`pr-${el.id}`">
           <rect v-bind="rectSvg(el)" fill="#475569" stroke="#fff" :stroke-width="Math.max(0.03, 1 * mpp)" />
@@ -410,9 +449,10 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import { rectangulo, rectElemento, medidasRack, describir, contorno, caja, cotasRack, cotasElemento, formatoM, PASO, ELEMENTOS, pilarDentro } from '~/lib/rack3d/planificador.js';
+import { rectangulo, rectElemento, medidasRack, describir, contorno, caja, cotasRack, cotasElemento, formatoM, PASO, ELEMENTOS, pilarDentro, perdidasPorPilares } from '~/lib/rack3d/planificador.js';
 import { pasilloEn, franjaPasillo } from '~/lib/rack3d/pasillos.js';
 import { radioGiro } from '~/lib/rack3d/rutas.js';
+import { hojasPorton } from '~/lib/flujo/calculos.js';
 
 export interface RackPlano {
   id: string;
@@ -436,13 +476,15 @@ export interface RackPlano {
   mastilGrua?: number | null;
   anchoGrua?: number | null;
   fondos?: number;
+  // Ángulo ranurado: cajas de una repisa vistas desde arriba
+  cajasPlanta?: { cols: number; filas: number } | null;
 }
 export interface Punto { x: number; y: number }
-export interface Elemento { forma?: 'cuadrado' | 'circular' | 'H'; aberturas?: number[]; grupo?: string; muro?: string; altoPorton?: number; id: string; clase: 'pilar' | 'porton' | 'anden' | 'oficina' | 'zona' | 'pasilloGrua' | 'pasilloPeatonal' | 'grua'; x: number; y: number; ancho: number; alto: number; modelo?: string; nombre?: string }
+export interface Elemento { forma?: 'cuadrado' | 'circular' | 'H'; aberturas?: number[]; grupo?: string; muro?: string; altoPorton?: number; abre?: 'batiente' | 'corredera' | 'cortina'; hacia?: 'adentro' | 'afuera'; padre?: string; esManiobra?: boolean; id: string; clase: 'pilar' | 'porton' | 'anden' | 'oficina' | 'zona' | 'zonaCarga' | 'pasilloGrua' | 'pasilloPeatonal' | 'grua'; x: number; y: number; ancho: number; alto: number; modelo?: string; nombre?: string }
 // Calculado por lib/rack3d/pasillos.js
 export interface Pasillo {
   id: string; x0: number; y0: number; x1: number; y1: number; eje: 'x' | 'y';
-  libre: number; minimo: number; ok: boolean; racks: string[]; vecino: string | null;
+  libre: number; libreGeom?: number; angosta?: { clase: string; id: string | null; x: number; y: number; distancia: number } | null; minimo: number; ok: boolean; racks: string[]; vecino: string | null;
 }
 
 const props = defineProps<{
@@ -495,8 +537,18 @@ const props = defineProps<{
   sugerenciasTunel?: Array<{ rackId: string; cuerpo: number; altoLibre: number; ahorro: number; nuevos: number; x: number; y: number }>;
   // Grúa que se arrastra desde la paleta (centro, huella y radio de giro, m)
   fantasmaGrua?: { x: number; y: number; ancho: number; alto: number; radio: number } | null;
+  // Flechas sobre el rack elegido para alargarlo o sumar filas tirando de ellas (y el texto de lo que pasa)
+  flechasRack?: boolean;
+  // Flechas que no van (p. ej. 'filas+' si no cabe otra fila hacia ese lado)
+  flechasNo?: string[];
+  // Guías del imán mientras se arrastra un rack (a qué se pegó: muro, otro rack, pasillo exacto)
+  guiasRack?: Array<{ x1: number; y1: number; x2: number; y2: number }>;
   // Dibujar un lineal arrastrando: arma el rack entre donde aprieta (a) y donde va el puntero (b), con su texto
   pincel?: ((a: Punto, b: Punto) => (RackPlano & { texto?: string }) | null) | null;
+  // Dibujo del contorno: metros escritos para el muro que se está tirando (va hacia donde apunta el cursor)
+  largoEscrito?: number | null;
+  // Pilares de una grilla (mismo grupo): se eligen, se miden y se mueven juntos
+  bloquePilares?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -510,6 +562,9 @@ const emit = defineEmits<{
   'seleccionar-muro': [i: number | null];
   // Fin de un arrastre de rack o esquina: la pagina lo guarda en el historial (deshacer)
   'fin-cambio': [];
+  // Tirando de una flecha del rack elegido: `metros` hacia afuera desde donde apretó (negativo = hacia adentro),
+  // siempre sobre el rack como estaba al apretar; `fin` al soltar
+  'estirar-rack': [orig: RackPlano, tipo: 'largo' | 'filas', s: number, metros: number, fin: boolean];
   'punto-calibracion': [p: Punto];
   'seleccionar-elemento': [id: string | null];
   'mover-elemento': [id: string, x: number, y: number];
@@ -588,7 +643,11 @@ function acercar(factor: number, foco?: Punto) {
   centro.value = z === 1 ? null : { x: f.x + (c.x - f.x) * (zoom.value / z), y: f.y + (c.y - f.y) * (zoom.value / z) };
   zoom.value = z;
 }
+// La rueda sola baja la página (como el plano de producción: no se descuadra). Solo con Ctrl (o el pellizco
+// del trackpad, que llega con Ctrl) acerca o aleja; para el resto están los botones + / − / Ajustar
 function rueda(e: WheelEvent) {
+  if (!e.ctrlKey && !e.metaKey) return;
+  e.preventDefault();
   acercar(e.deltaY < 0 ? 1.15 : 1 / 1.15, aPlano(e));
 }
 // Punto de la pantalla (clientX/Y) en metros del plano, o null si cae fuera del plano (paleta → plano)
@@ -598,24 +657,84 @@ function aPlanoCliente(x: number, y: number): Punto | null {
   const q = aPlano({ clientX: x, clientY: y });
   return { x: q.x, y: q.y };
 }
-defineExpose({ restablecerVista, acercar, zoom, aPlanoCliente });
 
 // ─── Capa de accesorios: tamaño real, con un mínimo de ~4 px de pantalla para que se vean sin zoom ───
 const anchoPx = ref(800);
+const altoPx = ref(600);
+const relleno = ref({ x: 0, y: 0 });
 let obs: ResizeObserver | null = null;
 onMounted(() => {
   if (!svgRef.value || typeof ResizeObserver === 'undefined') return;
-  obs = new ResizeObserver(([e]) => { anchoPx.value = e.contentRect.width || 800; });
+  const cs = getComputedStyle(svgRef.value);
+  relleno.value = { x: parseFloat(cs.paddingLeft) || 0, y: parseFloat(cs.paddingTop) || 0 };
+  let cuadro = 0;
+  obs = new ResizeObserver(([e]) => {
+    const w = Math.round(e.contentRect.width || 800), h = Math.round(e.contentRect.height || 600);
+    if (Math.abs(w - anchoPx.value) < 3 && Math.abs(h - altoPx.value) < 3) return;   // sin vaivén de letras por 1–2 px
+    cancelAnimationFrame(cuadro);
+    cuadro = requestAnimationFrame(() => { anchoPx.value = w; altoPx.value = h; });
+  });
   obs.observe(svgRef.value);
 });
 onBeforeUnmount(() => obs?.disconnect());
 const fm = computed(() => Math.max(1, (vista.value.w / Math.max(200, anchoPx.value)) * 4 / 0.06));
 // Metros por pixel de pantalla (para dibujar a tamaño fijo en pantalla: flechas, manillas, textos mínimos)
+// Del tamaño medido (no del que tenga el lienzo en cada instante): las letras no cambian mientras nada cambia
 const mpp = computed(() => {
-  void anchoPx.value;
-  const r = svgRef.value?.getBoundingClientRect(), v = vista.value;
-  return r && r.width && r.height ? Math.max(v.w / r.width, v.h / r.height) : v.w / 800;
+  const v = vista.value;
+  return Math.max(v.w / Math.max(50, anchoPx.value), v.h / Math.max(50, altoPx.value));
 });
+// ─── Flechas del rack elegido ───
+const rackElegido = computed(() => props.racks.find((r) => r.id === props.seleccion) ?? null);
+const estiro = ref<{ h: any; orig: RackPlano; inicio: Punto; puntero: number } | null>(null);
+const moviendo = ref(false);
+// Extremos (largo) y costados (filas), 18 px por fuera del rack; d = hacia afuera
+const flechasSel = computed(() => {
+  const r = rackElegido.value;
+  if (!props.flechasRack || !r || props.pincel || props.dibujando || props.trazando || props.agregandoCruce) return null;
+  const q = rectangulo(r), ux = !(r.rot === 90 || r.rot === 270), g = 20 * mpp.value;
+  const cx = q.x0 + q.ancho / 2, cy = q.y0 + q.alto / 2;
+  const enX = (s: number) => ({ x: s < 0 ? q.x0 - g : q.x0 + q.ancho + g, y: cy, dx: s, dy: 0 });
+  const enY = (s: number) => ({ x: cx, y: s < 0 ? q.y0 - g : q.y0 + q.alto + g, dx: 0, dy: s });
+  return [-1, 1].flatMap((s) => [
+    { tipo: 'largo', s, ux, ...(ux ? enX(s) : enY(s)) },
+    { tipo: 'filas', s, ux, ...(ux ? enY(s) : enX(s)) },
+  ]).filter((h) => !props.flechasNo?.includes(h.tipo + (h.s > 0 ? '+' : '-')));
+});
+function flechaManilla(h: { x: number; y: number; dx: number; dy: number }) {
+  const k = mpp.value, t = { x: h.x + h.dx * 7 * k, y: h.y + h.dy * 7 * k }, b = { x: h.x - h.dx * 5 * k, y: h.y - h.dy * 5 * k };
+  const n = { x: -h.dy * 6 * k, y: h.dx * 6 * k };
+  return `M${t.x} ${t.y}L${b.x + n.x} ${b.y + n.y}L${b.x - n.x} ${b.y - n.y}Z`;
+}
+function tomarFlecha(e: PointerEvent, h: any) {
+  if (e.button !== 0 || !rackElegido.value) return;
+  const p = aPlano(e);
+  estiro.value = { h, orig: { ...rackElegido.value }, inicio: { x: p.x, y: p.y }, puntero: e.pointerId };
+  moviendo.value = true;
+  svgRef.value?.setPointerCapture(e.pointerId);
+}
+function moverFlecha(e: PointerEvent, fin = false) {
+  const st = estiro.value!, p = aPlano(e);
+  const metros = (p.x - st.inicio.x) * st.h.dx + (p.y - st.inicio.y) * st.h.dy;
+  emit('estirar-rack', st.orig, st.h.tipo, st.h.s, metros, fin);
+}
+// Caja del rack elegido en px, desde la esquina del lienzo (para el menú que flota sobre él)
+const cajaRack = computed(() => {
+  const r = rackElegido.value;
+  if (!r) return null;
+  const q = rectangulo(r), v = vista.value, W = anchoPx.value, H = altoPx.value, k = Math.min(W / v.w, H / v.h);
+  const ox = relleno.value.x + (W - v.w * k) / 2, oy = relleno.value.y + (H - v.h * k) / 2;
+  return { x: ox + (q.x0 - v.x) * k, y: oy + (q.y0 - v.y) * k, w: q.ancho * k, h: q.alto * k, W: W + 2 * relleno.value.x, H: H + 2 * relleno.value.y };
+});
+// Punta del muro que se está tirando: el cursor o, con metros escritos, ese largo hacia el cursor
+const cursorDib = computed(() => {
+  const c = cursor.value, pts = puntosDibujo.value, L = props.largoEscrito;
+  if (!c || !pts.length || !(L && L > 0)) return c;
+  const u = pts[pts.length - 1], d = Math.hypot(c.x - u.x, c.y - u.y);
+  if (d < 1e-6) return c;
+  return { x: +(u.x + ((c.x - u.x) / d) * L).toFixed(2), y: +(u.y + ((c.y - u.y) / d) * L).toFixed(2) };
+});
+defineExpose({ restablecerVista, acercar, zoom, aPlanoCliente, cajaRack, moviendo, cursorDibujo: cursorDib });
 // La U de la canillera mira hacia el pasillo (n); sin dirección, hacia arriba
 const anguloMarca = (mk: any) => (Math.atan2(-(mk.nx ?? 0), mk.ny ?? -1) * 180) / Math.PI;
 
@@ -643,7 +762,7 @@ const ladoSel = computed(() => {
   return { a: poly[i], b: poly[(i + 1) % poly.length] };
 });
 const murosDibujo = computed(() => {
-  const pts = [...puntosDibujo.value, ...(cursor.value ? [cursor.value] : [])];
+  const pts = [...puntosDibujo.value, ...(cursorDib.value ? [cursorDib.value] : [])];
   return pts.length >= 2 ? medidasLados(pts, false) : [];
 });
 
@@ -665,6 +784,57 @@ function posCota(c: { x1: number; y1: number; x2: number; y2: number; valor: num
 // Símbolo de cada elemento en planta (en metros, como el resto del plano)
 const MODELOS: Record<string, string> = { transpaleta: 'Transpaleta', apiladora: 'Apiladora', contrapeso: 'Contrapeso', retractil: 'Retráctil' };
 const circulo = (cx: number, cy: number, r: number) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`;
+// Pilares de la misma grilla que el elegido (si se mueven en bloque): ids y caja que los encierra
+const grupoPilaresSel = computed(() => {
+  const els = props.bodega.elementos ?? [], e = els.find((x) => x.id === props.elementoSel);
+  if (!props.bloquePilares || !e || e.clase !== 'pilar' || !e.grupo) return null;
+  const g = els.filter((x) => x.clase === 'pilar' && x.grupo === e.grupo);
+  if (g.length < 2) return null;
+  const rs = g.map((x) => rectElemento(x));
+  const x0 = Math.min(...rs.map((r) => r.x0)), y0 = Math.min(...rs.map((r) => r.y0));
+  const x1 = Math.max(...rs.map((r) => r.x0 + r.ancho)), y1 = Math.max(...rs.map((r) => r.y0 + r.alto));
+  return { ids: new Set(g.map((x) => x.id)), caja: { id: '_bloque', clase: 'zona', x: (x0 + x1) / 2, y: (y0 + y1) / 2, ancho: x1 - x0, alto: y1 - y0 } };
+});
+const enSeleccion = (el: Elemento) => el.id === props.elementoSel || !!grupoPilaresSel.value?.ids.has(el.id);
+// Muro en que está un portón o andén y su vano: inicio en la línea del muro, sentido a lo largo y normal hacia adentro
+function vanoEn(el: Elemento) {
+  const c = caja(contorno(props.bodega)), p = rectElemento(el);
+  const d: Record<string, number> = { arriba: el.y - c.y0, abajo: c.y1 - el.y, izquierda: el.x - c.x0, derecha: c.x1 - el.x };
+  const muro = el.muro ?? Object.entries(d).sort((a, b) => a[1] - b[1])[0][0];
+  const x1 = p.x0 + p.ancho, y1 = p.y0 + p.alto;
+  if (muro === 'abajo') return { muro, s: { x: p.x0, y: y1 }, t: { x: 1, y: 0 }, n: { x: 0, y: -1 }, ancho: p.ancho, fondo: p.alto, largoMuro: c.x1 - c.x0, dist: p.x0 - c.x0 };
+  if (muro === 'arriba') return { muro, s: { x: p.x0, y: p.y0 }, t: { x: 1, y: 0 }, n: { x: 0, y: 1 }, ancho: p.ancho, fondo: p.alto, largoMuro: c.x1 - c.x0, dist: p.x0 - c.x0 };
+  if (muro === 'izquierda') return { muro, s: { x: p.x0, y: p.y0 }, t: { x: 0, y: 1 }, n: { x: 1, y: 0 }, ancho: p.alto, fondo: p.ancho, largoMuro: c.y1 - c.y0, dist: p.y0 - c.y0 };
+  return { muro, s: { x: x1, y: p.y0 }, t: { x: 0, y: 1 }, n: { x: -1, y: 0 }, ancho: p.alto, fondo: p.ancho, largoMuro: c.y1 - c.y0, dist: p.y0 - c.y0 };
+}
+// Portón en planta según cómo abre: batiente (hojas y su barrido), corredera (hoja corrida junto al muro) o cortina
+function dibujoPorton(el: Elemento) {
+  const v = vanoEn(el), sg = el.hacia === 'afuera' ? -1 : 1, nx = v.n.x * sg, ny = v.n.y * sg;
+  const P = (a: number, b = 0) => ({ x: v.s.x + v.t.x * a + nx * b, y: v.s.y + v.t.y * a + ny * b });
+  if (el.abre === 'batiente') {
+    let arcos = '', hojas = '';
+    hojasPorton(v.ancho).forEach((h) => {
+      const H = P(h.desde), C = P(h.desde === 0 ? h.largo : h.desde - h.largo), O = P(h.desde, h.largo);
+      const cruz = (O.x - H.x) * (C.y - H.y) - (O.y - H.y) * (C.x - H.x);
+      arcos += `M${O.x} ${O.y}A${h.largo} ${h.largo} 0 0 ${cruz > 0 ? 1 : 0} ${C.x} ${C.y}`;
+      // Hoja abierta: rectángulo delgado desde la bisagra
+      const e = 0.05, ax = v.t.x * e, ay = v.t.y * e;
+      hojas += `M${H.x - ax} ${H.y - ay}L${O.x - ax} ${O.y - ay}L${O.x + ax} ${O.y + ay}L${H.x + ax} ${H.y + ay}Z`;
+    });
+    return { arcos, hojas };
+  }
+  if (el.abre === 'corredera') {
+    // La hoja queda al lado del vano (a la derecha o abajo; si no cabe, al otro lado), pegada al muro
+    const lado = v.dist + 2 * v.ancho <= v.largoMuro + 1e-6 ? 1 : -1;
+    const a0 = lado > 0 ? v.ancho : -v.ancho, a1 = lado > 0 ? 2 * v.ancho : 0;
+    const q0 = P(a0, 0.12), q1 = P(a1, 0.12), m = P(v.ancho / 2, 0.12), f = P(v.ancho / 2 + lado * 0.6, 0.12);
+    const flecha = `M${m.x} ${m.y}L${f.x} ${f.y}M${f.x - v.t.x * lado * 0.25 + nx * 0.18} ${f.y - v.t.y * lado * 0.25 + ny * 0.18}L${f.x} ${f.y}L${f.x - v.t.x * lado * 0.25 - nx * 0.18} ${f.y - v.t.y * lado * 0.25 - ny * 0.18}`;
+    const e = 0.06;
+    const hojas = `M${q0.x - nx * e} ${q0.y - ny * e}L${q1.x - nx * e} ${q1.y - ny * e}L${q1.x + nx * e} ${q1.y + ny * e}L${q0.x + nx * e} ${q0.y + ny * e}Z`;
+    return { arcos: flecha, hojas };
+  }
+  return null;
+}
 function dibujoElemento(el: Elemento) {
   const p = rectElemento(el), def = ELEMENTOS[el.clase];
   const x0 = p.x0, y0 = p.y0, x1 = p.x0 + p.ancho, y1 = p.y0 + p.alto, w = p.ancho, h = p.alto;
@@ -699,9 +869,27 @@ function dibujoElemento(el: Elemento) {
       return { ...base, opacidad: 0.7, trazo: `M${nx} ${ny}h${nw}v${h * 0.45 - s2}h${-nw}Z M${el.x} ${ny - 0.6}l-0.35 0.4m0.35 -0.4l0.35 0.4m-0.35 -0.4v1.1`, grosorTrazo: 0.04,
         relleno2: franjas, color2: '#111827' };
     }
-    case 'porton':
+    case 'porton': {
+      const pt = dibujoPorton(el);
+      if (pt) return { ...base, opacidad: 0.9, trazo: pt.arcos, grosorTrazo: 0.05, trazoPunteado: el.abre === 'batiente' ? '0.25 0.15' : undefined, relleno2: pt.hojas, color2: def.color, etiqueta: '' };
       return { ...base, opacidad: 0.9, trazo: largoV ? `M${el.x} ${y0}V${y1}` : `M${x0} ${el.y}H${x1}`, grosorTrazo: 0.06, trazoPunteado: '0.4 0.2' };
+    }
     case 'zona':
+      if (el.padre) {
+        // Franja libre delante de un portón o andén: achurado suave, con su profundidad escrita (no bloquea a la vista)
+        const padre = (props.bodega.elementos ?? []).find((x) => x.id === el.padre);
+        const v = padre ? vanoEn(padre) : null, enY = v ? v.n.y !== 0 : h <= w;
+        const prof = enY ? h : w, paso = 0.7;
+        let achurado = '';
+        for (let t = paso; t < w + h; t += paso) {
+          const ax = x0 + Math.min(t, w), ay = y0 + Math.max(0, t - w), bx = x0 + Math.max(0, t - h), by = y0 + Math.min(t, h);
+          achurado += `M${ax} ${ay}L${bx} ${by}`;
+        }
+        if (!el.esManiobra) return { ...base, relleno: '#94a3b8', opacidad: 0.12, borde: 'transparent', grosor: 0, trazo: achurado, grosorTrazo: 0.02, etiqueta: '' };
+        return { ...base, relleno: '#f8fafc', opacidad: 0.6, borde: '#64748b', grosor: 0.04, punteado: '0.25 0.15', trazo: achurado, grosorTrazo: 0.02,
+          // Andén: además de la maniobra, cuánto ocupa en total hacia adentro (rampa niveladora + maniobra)
+          etiqueta: padre?.clase === 'anden' ? `${formatoM(prof)} m maniobra · ${formatoM(prof + (enY ? padre.alto : padre.ancho))} m hacia adentro` : `${formatoM(prof)} m`, clave: 'maniobra' };
+      }
       return { ...base, punteado: '0.3 0.15', trazo: `M${x0} ${y0}L${x1} ${y1}M${x1} ${y0}L${x0} ${y1}` };
     case 'pasilloGrua': {
       // Líneas de borde amarillas y flechas de sentido por el centro
@@ -769,6 +957,16 @@ type Cota = { a: string; x1: number; y1: number; x2: number; y2: number };
 const pasilloDe = (c: Cota) => (c.a !== 'elemento' && props.pasillos ? pasilloEn(props.pasillos, (c.x1 + c.x2) / 2, (c.y1 + c.y2) / 2) as Pasillo | null : null);
 // Pasillo dibujado solo en el ancho que pide el equipo; lo demas hasta el muro es area libre
 const franjas = computed(() => (props.pasillos ?? []).map((p) => ({ ...p, f: franjaPasillo(p) })));
+// Etiqueta dentro de cada pasillo, a lo largo y solo si cabe en pantalla (~6,5 px por letra)
+const textosPasillo = computed(() => franjas.value.map((p) => {
+  const ancho = p.f.x1 - p.f.x0, alto = p.f.y1 - p.f.y0, vertical = alto > ancho;
+  const largo = Math.max(ancho, alto), corto = Math.min(ancho, alto);
+  const ar = p.racks.some((id) => props.racks.find((r) => r.id === id)?.tipo === 'AR');
+  const que = ar ? 'pasillo' : 'pasillo grúa';
+  const texto = p.ok ? `${que} ${formatoM(p.minimo)} m` : `${ar ? 'necesita' : 'tu grúa necesita'} ${formatoM(p.minimo)} m · ${p.angosta?.clase === 'pilar' ? 'por un pilar quedan' : 'aquí quedan'} ${formatoM(p.libre)} m`;
+  const cabe = texto.length * 6.5 * mpp.value < largo - 0.4 && corto >= 12 * mpp.value;
+  return cabe ? { id: p.id, x: (p.f.x0 + p.f.x1) / 2, y: (p.f.y0 + p.f.y1) / 2, vertical, ok: p.ok, texto } : null;
+}).filter((t): t is NonNullable<typeof t> => !!t));
 const esLibre = (c: Cota) => (franjaPasillo(pasilloDe(c) as any).libreSobrante ?? 0) > 0.01;
 const colorCota = (c: Cota) => {
   if (c.a === 'elemento') return '#0369a1';
@@ -784,7 +982,12 @@ const cotas = computed(() => {
   if (props.dibujando) return [];
   const vistas = new Set<string>();
   const sel = props.cotasTodas ? [] : (props.bodega.elementos ?? []).filter((e: Elemento) => e.id === props.elementoSel);
-  return [...conCotas.value.flatMap((r) => cotasRack(r, props.racks, props.bodega)), ...sel.flatMap((e: Elemento) => cotasElemento(e, props.bodega))].filter((c): c is NonNullable<typeof c> => {
+  // Grilla de pilares elegida en bloque: cotas del bloque entero a los muros
+  const g = grupoPilaresSel.value;
+  const deElementos = g
+    ? cotasElemento(g.caja, { ...props.bodega, elementos: (props.bodega.elementos ?? []).filter((e) => !g.ids.has(e.id)) })
+    : sel.flatMap((e: Elemento) => cotasElemento(e, props.bodega));
+  return [...conCotas.value.flatMap((r) => cotasRack(r, props.racks, props.bodega)), ...deElementos].filter((c): c is NonNullable<typeof c> => {
     if (!c) return false;
     const clave = [c.x1, c.y1, c.x2, c.y2].map((v) => v.toFixed(2)).sort().join();
     if (vistas.has(clave)) return false;
@@ -799,6 +1002,7 @@ const medidasRacks = computed(() => (props.dibujando ? [] : conCotas.value.map((
 
 const trazo = computed(() => contorno(props.bodega).map((p: Punto, i: number) => `${i ? 'L' : 'M'}${p.x} ${p.y}`).join(' ') + ' Z');
 
+const hayPilares = computed(() => (props.bodega.elementos ?? []).some((el) => el.clase === 'pilar'));
 const pilaresEnRacks = computed(() => (props.bodega.elementos ?? []).filter((el) => el.clase === 'pilar' && props.racks.some((r) => (r as any).pilares && pilarDentro(r, el))));
 
 function figura(r: RackPlano) {
@@ -863,19 +1067,21 @@ function figura(r: RackPlano) {
     }
   } else if (r.tipo === 'AR') {
     // Planta de una estantería: poste de ángulo en cada esquina de cada cuerpo, borde de la repisa al frente
-    // y atrás, y dos cajas por repisa (si se alcanzan a ver)
+    // y atrás, y las cajas de la repisa como quedan vistas desde arriba (columnas × filas). No son pallets:
+    // sin el dato de la caja, la repisa queda lisa
     const poste = Math.min(pasoCuerpo * 0.18, Math.max(0.05, 3 * mpp.value));
+    const cols = Math.max(0, Math.round(r.cajasPlanta?.cols ?? 0)), filas = Math.max(0, Math.round(r.cajasPlanta?.filas ?? 0));
     for (const [v0, v1] of caras) {
       vigas += `M${seg(0, v0, L, v0).slice(0, 2).join(' ')}L${seg(0, v0, L, v0).slice(2).join(' ')}M${seg(0, v1, L, v1).slice(0, 2).join(' ')}L${seg(0, v1, L, v1).slice(2).join(' ')}`;
       for (let j = 0; j <= n; j++) {
         const u = Math.min(L - poste, Math.max(0, j * pasoCuerpo - poste / 2));
         marcos += ps(u, v0, u + poste, v0 + poste) + ps(u, v1 - poste, u + poste, v1);
       }
-      if (pasoCuerpo / mpp.value >= 10) {
-        const ancho = (pasoCuerpo - poste) / 2;
-        for (let j = 0; j < n; j++) for (let q = 0; q < 2; q++) {
-          const u0 = j * pasoCuerpo + poste / 2 + q * ancho + ancho * 0.1;
-          pallets += ps(u0, v0 + (v1 - v0) * 0.15, u0 + ancho * 0.8, v1 - (v1 - v0) * 0.15);
+      const ancho = (pasoCuerpo - poste) / Math.max(1, cols), hondo = (v1 - v0 - 2 * poste) / Math.max(1, filas);
+      if (cols && filas && Math.min(ancho, hondo) / mpp.value >= 4) {
+        for (let j = 0; j < n; j++) for (let c = 0; c < cols; c++) for (let f = 0; f < filas; f++) {
+          const u0 = j * pasoCuerpo + poste / 2 + c * ancho + ancho * 0.08, w0 = v0 + poste + f * hondo + hondo * 0.08;
+          pallets += ps(u0, w0, u0 + ancho * 0.84, w0 + hondo * 0.84);
         }
       }
     }
@@ -887,7 +1093,17 @@ function figura(r: RackPlano) {
       }
     }
   }
-  return { ...p, lineas, entrada, tunel, vigasTunel, vigas, marcos, pallets, clave: `${r.id}-${m.tipo}` };
+  // Rack sobre pilar (dueño 27-10): los huecos donde cae un pilar o cuya entrada tapa quedan tachados (no
+  // guardan pallets); el resto del rack sigue igual
+  let perdidos = '', tachas = '';
+  if (r.tipo === 'RS' && hayPilares.value) {
+    for (const h of perdidasPorPilares(r, props.bodega).huecos) {
+      perdidos += ps(h.u0, h.v0 + 0.03, h.u1, h.v1 - 0.03);
+      const a = aPlanoLocal(h.u0, h.v0 + 0.03), b = aPlanoLocal(h.u1, h.v1 - 0.03), c = aPlanoLocal(h.u0, h.v1 - 0.03), d = aPlanoLocal(h.u1, h.v0 + 0.03);
+      tachas += `M${a[0]} ${a[1]}L${b[0]} ${b[1]}M${c[0]} ${c[1]}L${d[0]} ${d[1]}`;
+    }
+  }
+  return { ...p, lineas, entrada, tunel, vigasTunel, vigas, marcos, pallets, perdidos, tachas, clave: `${r.id}-${m.tipo}` };
 }
 
 // Coordenadas del puntero en metros de la bodega
@@ -1207,7 +1423,9 @@ function moverPuntero(e: PointerEvent) {
     return;
   }
   if (manilla && e.pointerId === manilla.puntero) { moverManilla(e); return; }
+  if (estiro.value && e.pointerId === estiro.value.puntero) { moverFlecha(e); return; }
   if (!arrastre || e.pointerId !== arrastre.puntero) return;
+  if (arrastre.tipo === 'rack') moviendo.value = true;
   const destino = { x: p.x + arrastre.dx, y: p.y + arrastre.dy };
   if (arrastre.tipo === 'rack') emit('mover', arrastre.id, destino.x, destino.y);
   else if (arrastre.tipo === 'elemento') emit('mover-elemento', arrastre.id, redondear(destino.x, PASO), redondear(destino.y, PASO));
@@ -1230,9 +1448,15 @@ function soltar(e: PointerEvent) {
     paneo.value = false;
     return;
   }
+  if (estiro.value && e.pointerId === estiro.value.puntero) {
+    if (e.type === 'pointerup') moverFlecha(e, true);
+    else emit('estirar-rack', estiro.value.orig, estiro.value.h.tipo, estiro.value.h.s, 0, true);
+    estiro.value = null;
+  }
   if (arrastre || manilla) emit('fin-cambio');
   arrastre = null;
   manilla = null;
+  moviendo.value = false;
 }
 
 function teclado(e: KeyboardEvent, r: RackPlano) {

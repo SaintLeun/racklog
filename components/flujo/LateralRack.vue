@@ -61,8 +61,8 @@ const x = (z: number) => (W - 30 - ancho.value * k.value) / 2 + (z + vol.value) 
 const y = (v: number) => H - abajo - v * k.value;
 const niveles = computed(() => {
   const m = props.m;
-  return [0, ...m.nivelesY].map((yv: number, i: number) => {
-    const piso = i === 0;
+  return [...(m.piso === false ? [] : [0]), ...m.nivelesY].map((yv: number, i: number) => {
+    const piso = i === 0 && m.piso !== false;
     return { y: yv, piso, base: piso ? 0 : yv + (m.altoViga ?? 0.1) / 2, alto: m.altosCarga?.[i] ?? m.pallet.alto };
   });
 });

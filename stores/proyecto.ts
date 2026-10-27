@@ -55,10 +55,15 @@ export interface Modelo {
   tunel?: { cuerpo: number | null; altoLibre: number } | null;
   fondos?: number; techoGrua?: number | null; mastilGrua?: number | null; anchoGrua?: number | null;
   bandeja?: number; frente?: number;
-  // Angulo ranurado: cajas apiladas por repisa (define la altura entre repisas) y carro de carga (m)
-  camasRepisa?: number; altoEntre?: number | null; altoAngulo?: number | null; anchoCarro?: number | null;
+  // Angulo ranurado (paso 4): `niveles` son los niveles de carga (+ la bandeja del tope que cierra el estante),
+  // alto del ángulo (m), orientación de la caja (null = la que pone más) y carro de carga (m). Las cajas apiladas
+  // salen de lo que aguanta la caja (paso 3), acotado por el espacio entre bandejas
+  altoEntre?: number | null; altoAngulo?: number | null; anchoCarro?: number | null; largoEnFrente?: boolean | null;
+  propuestaAR?: string | null;
   // Vigas movidas a mano (m, centro de cada viga; selectivo)
   vigasY?: number[] | null;
+  // Primer nivel sobre viga a piso (selectivo). null/ausente = lo que pide el equipo (GRUAS.vigaPiso)
+  vigaPiso?: boolean | null;
   // Cuantos de cada tipo (pallet o caja) van en este modelo
   cantidades: Record<string, number>;
 }
@@ -189,7 +194,7 @@ export const useProyecto = defineStore('proyecto', {
         ? { id: 'm' + id(), nombre, tipo, doble: true, niveles: 3, porViga: 2, sobrante: 0.3, mezcla: [], planos: [], tunel: null, cantidades: {} }
         : tipo === 'DI'
           ? { id: 'm' + id(), nombre, tipo, doble: false, niveles: 3, fondos: 5, techoGrua: null, mastilGrua: null, anchoGrua: null, cantidades: {} }
-          : { id: 'm' + id(), nombre, tipo, doble: false, niveles: 5, bandeja: 0.4, frente: 0.92, cantidades: {} };
+          : { id: 'm' + id(), nombre, tipo, doble: false, niveles: 4, bandeja: 0.4, frente: 0.9, altoAngulo: 2, cantidades: {} };
       // Por defecto lleva todo el catalogo que corresponde
       const lista = tipo === 'AR' ? this.cajas : this.pallets;
       lista.forEach((t) => { base.cantidades[t.id] = this.modelos.length ? 0 : t.cantidad; });
@@ -214,5 +219,6 @@ export const useProyecto = defineStore('proyecto', {
 /** Campos de un modelo que lleva cada rack ubicado (lo demas es posicion y cuerpos) */
 export function camposDeModelo(m: Modelo) {
   const { id: _id, nombre: _n, cantidades: _c, ...resto } = m;
-  return { ...resto, modelo: m.id };
+  // Angulo ranurado: los niveles del modelo son de carga (el rack lleva además la bandeja del tope)
+  return { ...resto, modelo: m.id, ...(m.tipo === 'AR' ? { nivelesCarga: m.niveles, altoAngulo: m.altoAngulo ?? 2 } : {}) };
 }

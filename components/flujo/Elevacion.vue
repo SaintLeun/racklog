@@ -15,7 +15,7 @@
         <text :x="planta.x0 + planta.w / 2" :y="planta.y0 + planta.h + 28" text-anchor="middle" font-weight="600">frente {{ fm(m.frente) }} m</text>
         <line :x1="planta.x0 + planta.w + 14" :x2="planta.x0 + planta.w + 14" :y1="planta.y0" :y2="planta.y0 + planta.h" stroke="#334155" stroke-width="0.8" marker-start="url(#fl-fp)" marker-end="url(#fl-fp)" />
         <text :x="planta.x0 + planta.w + 26" :y="planta.y0 + planta.h / 2" text-anchor="middle" font-weight="600" :transform="`rotate(90 ${planta.x0 + planta.w + 26} ${planta.y0 + planta.h / 2})`">fondo {{ fm(m.fondo) }} m</text>
-        <text v-if="principal" :x="W / 2" :y="14" text-anchor="middle" font-weight="600">{{ principal.cols * principal.filas }} cajas por cama: {{ principal.cols }} al frente × {{ principal.filas }} al fondo</text>
+        <text v-if="principal" :x="W / 2" :y="14" text-anchor="middle" font-weight="600">Desde arriba: {{ principal.cols }} al frente × {{ principal.filas }} al fondo</text>
       </g>
       <rect x="0" :y="HP - 22" :width="W" height="22" fill="#ecfdf5" />
       <text :x="W / 2" :y="HP - 7" text-anchor="middle" font-size="11" fill="#047857" font-family="Inter, system-ui, sans-serif">↑ pasillo: las cajas se sacan por el frente</text>
@@ -68,10 +68,14 @@
         </g>
       </template>
       <template v-else>
-        <!-- Angulo ranurado: cada repisa con sus cajas, como van (al frente y apiladas) -->
+        <!-- Angulo ranurado: bandejas a espacios iguales dentro del angulo (la de arriba cierra el estante) y las
+             cajas de cada nivel dentro de su espacio: ninguna sobre el tope -->
+        <line v-if="m.alto > ALTURA_MANO + 0.05" :x1="x0 - 8" :x2="x0 + ancho + 8" :y1="y(ALTURA_MANO)" :y2="y(ALTURA_MANO)" stroke="#d97706" stroke-width="0.8" stroke-dasharray="3 3" />
+        <text v-if="m.alto > ALTURA_MANO + 0.05" :x="x0 + ancho + 10" :y="y(ALTURA_MANO) + 3" font-size="8" fill="#b45309" font-family="Inter, system-ui, sans-serif">1,8 m · mano</text>
         <g v-for="(r, i) in repisas" :key="`b${i}-${firma}`" class="fl-nivel" :style="{ '--i': i }">
           <rect v-for="(b, k) in r.cajas" :key="k" :x="b.x" :y="b.y" :width="b.w" :height="b.h" :fill="b.color" stroke="#7a5a2e" stroke-width="0.6" rx="1" />
-          <rect :x="x0" :y="y(r.y) - 2" :width="ancho" height="4" fill="#94a3b8" />
+          <rect :x="x0" :y="y(r.base + r.espesor)" :width="ancho" :height="Math.max(3, y(r.base) - y(r.base + r.espesor))" :fill="r.tope ? '#64748b' : '#94a3b8'" />
+          <text v-if="!r.tope" :x="x0 - 5" :y="y(r.base + r.espesor) - 4" font-size="8" text-anchor="end" fill="#64748b" font-family="Inter, system-ui, sans-serif">{{ i + 1 }}</text>
         </g>
       </template>
 
@@ -80,12 +84,16 @@
         <!-- Alto de marco a la izquierda -->
         <line :x1="x0 - 22" :x2="x0 - 22" :y1="y(0)" :y2="y(m.alto)" stroke="#334155" stroke-width="0.8" marker-start="url(#fl-f)" marker-end="url(#fl-f)" />
         <text :x="x0 - 26" :y="(y(0) + y(m.alto)) / 2" text-anchor="middle" :transform="`rotate(-90 ${x0 - 26} ${(y(0) + y(m.alto)) / 2})`">{{ tipo === 'anra' ? 'ángulo' : 'marco' }} {{ fm(m.alto) }} m</text>
+        <!-- Angulo ranurado: espacio libre real entre dos bandejas (el de un nivel del medio) -->
+        <template v-if="tipo === 'anra' && libreCota">
+          <line :x1="x0 + ancho + 16" :x2="x0 + ancho + 16" :y1="y(libreCota.a)" :y2="y(libreCota.b)" stroke="#334155" stroke-width="0.8" marker-start="url(#fl-f)" marker-end="url(#fl-f)" />
+          <text :x="x0 + ancho + 21" :y="(y(libreCota.a) + y(libreCota.b)) / 2 - 2">{{ Math.round((libreCota.b - libreCota.a) * 100) }} cm</text>
+          <text :x="x0 + ancho + 21" :y="(y(libreCota.a) + y(libreCota.b)) / 2 + 9" font-size="8" fill="#64748b">libres</text>
+        </template>
         <!-- Distancia entre vigas (primer paso) a la derecha -->
-        <template v-if="pasoCota && !editable">
+        <template v-else-if="pasoCota && !editable">
           <line :x1="x0 + ancho + 16" :x2="x0 + ancho + 16" :y1="y(pasoCota.a)" :y2="y(pasoCota.b)" stroke="#334155" stroke-width="0.8" marker-start="url(#fl-f)" marker-end="url(#fl-f)" />
           <text :x="x0 + ancho + 21" :y="(y(pasoCota.a) + y(pasoCota.b)) / 2 + 3">{{ fm(pasoCota.b - pasoCota.a) }} m</text>
-          <text v-if="tipo === 'anra'" :x="x0 + ancho + 21" :y="(y(pasoCota.a) + y(pasoCota.b)) / 2 + 14" font-size="8" fill="#64748b">entre</text>
-          <text v-if="tipo === 'anra'" :x="x0 + ancho + 21" :y="(y(pasoCota.a) + y(pasoCota.b)) / 2 + 23" font-size="8" fill="#64748b">repisas</text>
         </template>
         <!-- Largo de viga abajo -->
         <line :x1="x0" :x2="x0 + ancho" :y1="y(0) + 16" :y2="y(0) + 16" stroke="#334155" stroke-width="0.8" marker-start="url(#fl-f)" marker-end="url(#fl-f)" />
@@ -110,12 +118,8 @@ const props = defineProps<{ m: Record<string, any>; editable?: boolean; cajas?: 
 const emit = defineEmits<{ vigas: [nivelesY: number[]] }>();
 const W = 300, H = 280, x0 = 62, ancho = 160, arriba = 14, abajo = 40;   // deja lugar a "espacio 1,76 m" a la derecha
 const tipo = computed(() => props.m.tipo as 'selectivo' | 'drivein' | 'anra');
-// Angulo ranurado: la repisa de arriba tambien lleva cajas (se ven sobre el angulo)
-const cargaArriba = computed(() => {
-  const t = (props.cajas ?? []).find((x) => x.cajas > 0);
-  return tipo.value === 'anra' && t ? (props.m.nivelesY?.at(-1) ?? 0) + 0.02 + t.camas * t.c.alto : 0;
-});
-const tope = computed(() => Math.max(props.m.altoConCarga ?? props.m.alto, props.m.alto, cargaArriba.value) * 1.02);
+const ALTURA_MANO = 1.8;
+const tope = computed(() => Math.max(props.m.altoConCarga ?? props.m.alto, props.m.alto) * 1.02);
 const y = (v: number) => H - abajo - (v / tope.value) * (H - abajo - arriba);
 const largo = computed(() => (tipo.value === 'selectivo' ? props.m.viga : tipo.value === 'drivein' ? props.m.anchoCalle : props.m.frente));
 const pilares = computed(() => [x0, x0 + ancho]);
@@ -202,7 +206,7 @@ function tomar(e: PointerEvent, i: number) {
 const CARTON = ['#d6a964', '#b98d4f', '#e3c08a', '#a8794a'];
 const tiposCaja = computed(() => (props.cajas ?? []).filter((x) => x.cajas > 0).map((x, i) => ({ ...x, color: x.color ?? CARTON[i % CARTON.length] })));
 const principal = computed(() => tiposCaja.value[0] ?? null);
-// Que tipo va en cada repisa: en proporcion a las bandejas que necesita cada uno (al menos una)
+// Que tipo va en cada nivel: en proporcion a los niveles que necesita cada uno (al menos uno)
 function reparto(n: number) {
   const t = tiposCaja.value;
   if (!t.length) return [] as number[];
@@ -214,26 +218,35 @@ function reparto(n: number) {
 }
 // Caja vista de frente: ancho segun la orientacion (largo o ancho al frente)
 const anchoFrente = (x: CajaBandeja) => (x.largoEnFrente ? x.c.largo : x.c.ancho);
+// Cada bandeja (base y espesor, m) y, en los niveles de carga, sus cajas dentro del espacio hasta la de arriba
 const repisas = computed(() => {
   if (tipo.value !== 'anra') return [];
-  const ys: number[] = props.m.nivelesY ?? [];
-  const asignado = reparto(ys.length);
-  return ys.map((yv, i) => {
-    const t = tiposCaja.value[asignado[i]];
+  const m = props.m, esp = m.espesorBandeja ?? 0.04;
+  const bases: number[] = m.bandejasY ?? (m.nivelesY ?? []).map((v: number) => v - esp / 2);
+  const carga = Math.min(m.nivelesCarga ?? bases.length, bases.length);
+  const asignado = reparto(carga);
+  return bases.map((base, i) => {
+    const t = i < carga ? tiposCaja.value[asignado[i]] : null;
     const cajas: { x: number; y: number; w: number; h: number; color: string }[] = [];
-    // La repisa de arriba es el techo de la estanteria: tambien lleva cajas
     if (t) {
       const w = anchoFrente(t) * kx.value, h = Math.abs(y(t.c.alto) - y(0));
-      const libre = ancho - t.cols * w, xi = x0 + libre / 2;
+      const libre = ancho - t.cols * w, xi = x0 + libre / 2, piso = base + esp;
       const porCama = t.cols * t.filas;
       for (let c = 0; c < t.camas; c++) {
         // De frente se ve una caja por columna (las de atras quedan ocultas); la cama incompleta (peso) se ve corta
         const enCama = Math.min(t.cols, Math.ceil(Math.max(0, t.cajas - c * porCama) / Math.max(1, t.filas)));
-        for (let k = 0; k < enCama; k++) cajas.push({ x: xi + k * w + 0.6, y: y(yv + 0.02 + (c + 1) * t.c.alto), w: w - 1.2, h: h - 0.6, color: t.color });
+        for (let k = 0; k < enCama; k++) cajas.push({ x: xi + k * w + 0.6, y: y(piso + (c + 1) * t.c.alto), w: w - 1.2, h: h - 0.6, color: t.color });
       }
     }
-    return { y: yv, cajas };
+    return { base, espesor: esp, tope: i >= carga, cajas };
   });
+});
+// Espacio libre entre bandejas: el de un nivel del medio (el de abajo lleva el sobrante de la perforacion)
+const libreCota = computed(() => {
+  const r = repisas.value;
+  if (r.length < 2) return null;
+  const i = r.length > 2 ? 1 : 0;
+  return { a: r[i].base + r[i].espesor, b: r[i + 1].base };
 });
 // Planta de una bandeja (angulo ranurado)
 const HP = 230;

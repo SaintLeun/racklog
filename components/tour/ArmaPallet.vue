@@ -227,10 +227,10 @@
               <div class="ap-dato"><span>Distancia entre vigas</span><b>{{ cm(m.paso) }} cm</b></div>
               <div class="ap-dato"><span>Niveles de vigas</span><b>{{ m.niveles }} <small class="font-normal text-neutral-500">+ piso</small></b></div>
               <div class="ap-dato"><span>Pallets por cuerpo</span><b>{{ m.porCuerpo }}</b></div>
-              <div class="ap-dato"><span>Viga</span><b>{{ dec(m.viga) }} m</b></div>
-              <div class="ap-dato"><span>Carga por par de vigas</span><b :class="m.uso > 1 ? 'text-red-700' : m.uso > 0.85 ? 'text-amber-700' : 'text-green-700'">{{ kg(m.cargaParVigas) }}</b></div>
+              <!-- De la viga solo el largo; el perfil y la capacidad por par los define ingeniería (dueño 27-10) -->
+              <div class="ap-dato"><span>Largo de viga</span><b>{{ dec(m.viga) }} m</b></div>
               <p v-if="m.limitadoPor === 'grua'" class="text-xs font-medium text-amber-700">Tu equipo no alcanza más alto: el techo daría para más niveles.</p>
-              <p v-if="m.uso > 1" class="text-xs font-medium text-red-700">El par de vigas estándar no aguanta ese peso: usamos vigas reforzadas.</p>
+              <p v-if="m.uso > 1" class="text-xs font-medium text-amber-700">Pallet pesado: ingeniería Racklog ajusta las vigas para ese peso.</p>
             </div>
           </div>
           <p class="mt-3 text-xs text-neutral-500">Medidas referenciales: un ingeniero de Racklog las confirma con la norma sísmica antes de cotizar.</p>
@@ -327,7 +327,6 @@ const especificacion = computed(() => {
     ['Pares de vigas', `${c * mm.niveles} de ${dec(mm.viga)} m`],
     ['Niveles', `${mm.niveles} de vigas + piso`],
     ['Distancia entre vigas', `${cm(mm.paso)} cm`],
-    ['Carga por par de vigas', kg(mm.cargaParVigas)],
     ['Posiciones de pallet', String(c * mm.porCuerpo)],
     ['Pallet', `${base.value.frente.toLocaleString('es-CL')} × ${base.value.fondo.toLocaleString('es-CL')} m · ${cm(p.value.alto)} cm · ${kg(p.value.peso)}`],
   ];

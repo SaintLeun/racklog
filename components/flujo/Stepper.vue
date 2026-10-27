@@ -10,7 +10,7 @@
       <div class="h-full rounded-full bg-brand-600 transition-[width] duration-500 ease-[cubic-bezier(.2,.8,.2,1)]" :style="{ width: `${((indice + 1) / PASOS.length) * 100}%` }" />
     </div>
     <!-- En pantalla grande: los pasos con nombre; se puede volver a los ya visitados -->
-    <ol class="mt-3 hidden grid-cols-7 gap-1 md:grid">
+    <ol class="mt-2 hidden grid-cols-8 gap-1 md:grid">
       <li v-for="(p, i) in PASOS" :key="p.k">
         <button
           type="button"
@@ -33,7 +33,8 @@ const props = defineProps<{ indice: number; alcanzado: number }>();
 const emit = defineEmits<{ ir: [paso: Paso] }>();
 // Con ángulo ranurado (solo cajas) el paso 2 es "Tus cajas"
 const proyecto = useProyecto();
-const nombre = (i: number) => (PASOS[i].k === 'pallets' && proyecto.sistema === 'AR' && !proyecto.pallets.length ? 'Tus cajas' : PASOS[i].t);
+const soloCajas = computed(() => (proyecto.modelos.length ? proyecto.modelos.every((m) => m.tipo === 'AR') : proyecto.sistema === 'AR'));
+const nombre = (i: number) => (PASOS[i].k === 'pallets' && soloCajas.value ? 'Tus cajas' : PASOS[i].k === 'rack' && soloCajas.value ? 'Arma tu estante' : PASOS[i].t);
 // Minutos que quedan desde este paso (redondeado hacia arriba)
 const falta = computed(() => {
   const m = PASOS.slice(props.indice).reduce((t, p) => t + p.min, 0);

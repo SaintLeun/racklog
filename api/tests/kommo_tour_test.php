@@ -55,8 +55,9 @@ function buscar(array $reqs, string $method, string $path): ?array {
 // Mismo formato que arma components/flujo/PasoCotiza.vue + ContactModal.vue
 [$tour] = validateQuoteData([
     'customerName' => 'Ana Pérez',
-    'customerEmail' => 'ana@example.com',
+    'customerEmail' => 'ana@example.com', 'customerRut' => '76.086.428-5',
     'customerPhone' => '+56 9 1234 5678',
+    'linkDiseno' => 'https://racklog.cl/planifica-tu-bodega/disena?d=abc&recorrido=1',
     'products' => [[
         'name' => 'Diseño de bodega (Planifica tu bodega)',
         'quantity' => 1,
@@ -93,7 +94,7 @@ for ($i = 1; $i <= 35; $i++) $config["Pallet P{$i}"] = "10 u · 1,2 m";
 $config['Etiqueta'] = 'tour-logistico';
 $config['Puntaje del lead'] = '80/100';
 $config['Campaña'] = str_repeat('utm_campaign=larga · ', 8);
-[$grande] = validateQuoteData(['customerName' => 'C', 'customerEmail' => 'c@example.com',
+[$grande] = validateQuoteData(['customerName' => 'C', 'customerEmail' => 'c@example.com', 'customerRut' => '76.086.428-5',
     'products' => [['name' => 'Diseño', 'config' => $config]]]);
 check('Etiqueta y Puntaje no se cortan', ($grande['products'][0]['config']['Etiqueta'] ?? '') === 'tour-logistico'
     && ($grande['products'][0]['config']['Puntaje del lead'] ?? '') === '80/100');
@@ -189,6 +190,16 @@ $GLOBALS['KOMMO_HTTP_MOCK'] = function () { throw new RuntimeException('caida');
 $res = procesarLeadTour($tour, 'quote', 'QT-1', $lead, [], $ahora);
 check('excepcion atrapada', in_array('excepcion: caida', $res['errores'], true));
 unset($GLOBALS['KOMMO_HTTP_MOCK']);
+
+echo "Video recorrido (dueño 27-10: lo envía el ejecutivo)\n";
+check('link del diseño aceptado', $tour['linkDiseno'] === 'https://racklog.cl/planifica-tu-bodega/disena?d=abc&recorrido=1');
+check('nota de Kommo con el link del recorrido', str_contains(textoNotaTour($tour, 'QT-1'), 'Video recorrido: ') && str_contains(textoNotaTour($tour, 'QT-1'), 'recorrido=1'));
+[$ajeno] = validateQuoteData(['customerName' => 'D', 'customerEmail' => 'd@example.com', 'linkDiseno' => 'https://otro.cl/planifica-tu-bodega/disena?d=x',
+    'products' => [['name' => 'Rack', 'quantity' => 1, 'price' => 0]]]);
+check('link a otro sitio descartado', $ajeno['linkDiseno'] === '');
+require_once __DIR__ . '/../utils/escape.php';
+require_once __DIR__ . '/../partials/template_quote.php';
+check('correo interno con el botón del recorrido', str_contains(recorridoSection($tour), 'Abrir diseño y grabar el recorrido') && recorridoSection($ajeno) === '');
 
 $BEARER_TOKEN = 'PON_AQUI_EL_TOKEN_ROTADO';
 check('sin token no hace nada', procesarLeadTour($tour, 'quote', 'QT-1', $lead) === null);

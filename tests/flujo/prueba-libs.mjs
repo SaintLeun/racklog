@@ -179,10 +179,13 @@ prueba('otras reglas: carga, levante, choque, peatonal, ángulo, drive-in, túne
   const regla = (x) => v.filter((a) => a.regla === x);
   assert.ok(regla('carga')[0]?.arreglo?.cambio?.porViga === 1);
   assert.ok(regla('levante').length >= 1);
-  assert.ok(regla('choque').some((a) => a.ids.includes('P')));
-  // Dueño 26-10: en un selectivo doble el pilar puede quedar dentro (pierde una columna de un lado), no choca
+  // Dueño 26 y 27-10: un selectivo (simple o doble) puede pasar sobre un pilar (pierde esas posiciones), no choca
+  assert.ok(!regla('choque').some((a) => a.ids.includes('P')));
   const v2 = V.revisarDiseno({ bodega: b, racks: racks.map((r) => (r.id === 'P' ? { ...r, doble: true } : r)), pallets, accesorios: { quitados: [] } });
   assert.ok(!v2.some((a) => a.regla === 'choque' && a.ids.includes('P')));
+  // Ángulo ranurado sobre el pilar: sigue siendo choque
+  const v3 = V.revisarDiseno({ bodega: b, racks: racks.map((r) => (r.id === 'P' ? { ...r, tipo: 'AR', niveles: 4 } : r)), pallets, accesorios: { quitados: [] } });
+  assert.ok(v3.some((a) => a.regla === 'choque' && a.ids.includes('P')));
   assert.ok(regla('peatonal').length === 1);
   assert.ok(regla('bandeja')[0].nivel === 'bloquea' && regla('escalera')[0].nivel === 'advierte');
   assert.ok(regla('altoDriveIn')[0].nivel === 'bloquea' && regla('gruaDriveIn')[0].nivel === 'advierte');

@@ -49,7 +49,35 @@ function validRut(string $rut): bool {
     return $m[2] === $dv;
 }
 
+// Link al diseño del flujo (solo racklog.cl): "continuar" y el lead del diseño, para que el ejecutivo grabe el recorrido.
+// localhost solo en desarrollo (servidor local o pruebas por consola)
+const CONTINUAR_HOSTS = ['racklog.cl', 'www.racklog.cl', 'localhost'];
+const CONTINUAR_RUTA = '/planifica-tu-bodega/disena';
+
+/** El link es del flujo en un host permitido; devuelve el link limpio o null */
+function linkDeDiseno($link): ?string {
+    if (!is_string($link) || strlen($link) > 8000) {
+        return null;
+    }
+    $u = parse_url($link);
+    if (!$u || !in_array($u['scheme'] ?? '', ['https', 'http'], true) || !in_array(strtolower($u['host'] ?? ''), CONTINUAR_HOSTS, true)) {
+        return null;
+    }
+    $local = strtolower($u['host']) === 'localhost';
+    if ($local && PHP_SAPI !== 'cli' && !str_starts_with(strtolower($_SERVER['HTTP_HOST'] ?? ''), 'localhost')) {
+        return null;
+    }
+    if (($u['scheme'] === 'http' || isset($u['port'])) && !$local) {
+        return null;
+    }
+    if (isset($u['user']) || isset($u['pass']) || rtrim($u['path'] ?? '', '/') !== CONTINUAR_RUTA) {
+        return null;
+    }
+    return $link;
+}
+
 // Adjuntos: mismos limites que el formulario (ContactModal.vue)
+
 const ATTACHMENT_MAX_FILES = 3;
 const ATTACHMENT_MAX_TOTAL_BYTES = 5 * 1024 * 1024;
 const ATTACHMENT_TYPES = [
@@ -155,6 +183,21 @@ function validateContactData($data): array {
     ], null];
 }
 
+/** Productos de una cotizacion del tour "Planifica tu bodega" (etiqueta, origen o lead_origin) */
+function esCotizacionTour(array $products): bool {
+    foreach ($products as $product) {
+        $config = is_array($product['config'] ?? null) ? $product['config'] : [];
+        if (
+            ($config['Etiqueta'] ?? null) === 'tour-logistico'
+            || str_starts_with((string) ($config['Origen'] ?? ''), 'Planifica tu bodega')
+            || ($config['lead_origin'] ?? null) === 'planifica-tu-bodega'
+        ) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function validateQuoteData($data): array {
     if (!is_array($data)) {
         return [null, 'Datos de cotizacion invalidos'];
@@ -212,6 +255,13 @@ function validateQuoteData($data): array {
         ];
     }
 
+    // "Planifica tu bodega" (via diseño, via expres y registro al inicio): RUT OBLIGATORIO (dueño 27-10).
+    // Solo empresas reales en la base: sin RUT no se registra la cotizacion ni se envia el diseño.
+    // Mismo criterio que configTour() (kommo_tour.php) para reconocer el lead del tour.
+    if ($rut === '' && esCotizacionTour($products)) {
+        return [null, 'RUT requerido'];
+    }
+
     $cartTotal = filter_var($data['cartTotal'] ?? 0, FILTER_VALIDATE_FLOAT);
 
     return [[
@@ -221,6 +271,8 @@ function validateQuoteData($data): array {
         'customerCompany' => cleanString($data['customerCompany'] ?? null, 150) ?? '',
         'customerRut' => $rut,
         'customerComments' => cleanString($data['customerComments'] ?? null, 5000) ?? '',
+        // Diseño del cliente abierto en el recorrido: el ejecutivo graba el video y se lo envía (dueño 27-10)
+        'linkDiseno' => linkDeDiseno($data['linkDiseno'] ?? null) ?? '',
         'products' => $products,
         'cartTotal' => $cartTotal === false ? 0 : max(0, $cartTotal),
     ], null];

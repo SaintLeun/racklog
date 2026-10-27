@@ -21,19 +21,33 @@
       <!-- Si sabe: elige sistema y equipo -->
       <section v-else-if="vista === 'elegir'" key="elegir">
         <h1 class="fl-titulo">¿Qué rack quieres?</h1>
-        <div class="mt-6 grid gap-3 sm:grid-cols-3">
-          <button
-            v-for="(t, k) in TIPOS" :key="k" type="button"
-            :class="['fl-opcion !p-0 overflow-hidden', p.sistema === k && 'fl-opcion--sel']"
-            :aria-pressed="p.sistema === k"
-            @click="p.sistema = k as Sistema"
-          >
-            <img :src="t.imagen" :alt="''" width="400" height="300" class="aspect-[4/3] w-full bg-neutral-100 object-cover" loading="lazy" @error="sinImagen">
-            <span class="block px-4 pb-4 pt-3">
-              <span class="block font-semibold text-neutral-900">{{ t.nombre }}</span>
-              <span class="mt-1 block text-sm text-neutral-600">{{ t.asesoria.sirve }}</span>
-            </span>
-          </button>
+        <!-- Al elegir uno, los otros se apagan y al lado va cómo funciona el elegido (revisión 27-10) -->
+        <div class="mt-6 grid gap-4 lg:grid-cols-[1fr_17rem]">
+          <div class="grid gap-3 sm:grid-cols-3">
+            <button
+              v-for="(t, k) in TIPOS" :key="k" type="button"
+              :class="['fl-opcion relative !p-0 overflow-hidden transition', p.sistema === k ? 'fl-opcion--sel' : p.sistema && 'opacity-45 grayscale hover:opacity-80 hover:grayscale-0']"
+              :aria-pressed="p.sistema === k"
+              @click="p.sistema = k as Sistema"
+            >
+              <img :src="t.imagen" :alt="''" width="400" height="300" class="aspect-[4/3] w-full bg-neutral-100 object-cover" loading="lazy" @error="sinImagen">
+              <span v-if="p.sistema === k" class="absolute right-2 top-2 inline-flex h-7 items-center gap-1 rounded-full bg-brand-600 px-2.5 text-xs font-bold text-white shadow" aria-hidden="true">
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>Elegido
+              </span>
+              <span class="block px-4 pb-4 pt-3">
+                <span class="block font-semibold text-neutral-900">{{ t.nombre }}</span>
+                <span class="mt-1 block text-sm text-neutral-600">{{ t.asesoria.sirve }}</span>
+              </span>
+            </button>
+          </div>
+          <aside v-if="p.sistema" class="rounded-2xl bg-white p-4 ring-1 ring-brand-200" aria-live="polite">
+            <p class="text-xs font-semibold uppercase tracking-wider text-brand-700">Cómo funciona</p>
+            <p class="mt-1 font-bold text-neutral-900">{{ TIPOS[p.sistema].nombre }}</p>
+            <ul class="mt-2 space-y-1.5 text-sm text-neutral-700">
+              <li v-for="(t, i) in COMO_FUNCIONA[p.sistema]" :key="i" class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand-500" aria-hidden="true" />{{ t }}</li>
+            </ul>
+          </aside>
+          <p v-else class="hidden self-center text-sm text-neutral-500 lg:block">Toca uno y te contamos cómo funciona.</p>
         </div>
         <fieldset v-if="p.sistema && p.sistema !== 'AR'" class="mt-8">
           <legend class="fl-pregunta">¿Con qué equipo mueves los pallets?</legend>
@@ -47,7 +61,7 @@
         <p v-if="diSinEquipo" class="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-900">
           El drive-in no se puede usar con tu equipo: {{ diSinEquipo }}. Necesitas grúa horquilla, retráctil o apilador eléctrico; o elige rack selectivo.
         </p>
-        <FlujoAcciones :deshabilitado="!p.sistema || !!diSinEquipo" :motivo="diSinEquipo ? 'El drive-in necesita otro equipo.' : 'Elige un sistema para seguir.'" @atras="p.sabe = null" @siguiente="confirmarEleccion" />
+        <FlujoAcciones :atras="!p.sistema" :deshabilitado="!p.sistema || !!diSinEquipo" :motivo="diSinEquipo ? 'El drive-in necesita otro equipo.' : 'Elige un sistema para seguir.'" @atras="p.sabe = null" @siguiente="confirmarEleccion" />
       </section>
 
       <!-- Preguntas, una por pantalla -->
@@ -178,7 +192,8 @@ const previa = computed(() => (recomendar({ ...TIPICO, ...p.respuestas }).sistem
 const rec = computed(() => (p.sabe === false && p.pregunta >= preguntas.value.length ? recomendar(p.respuestas) : null));
 // Empieza por las preguntas; "Ya sé lo que quiero" es el atajo a elegir el sistema
 const vista = computed(() => {
-  if (p.sabe === null) return 'inicio';
+  // Con un producto ya elegido (desde la ficha del producto o al volver) no tiene lógica el "No, ayúdenme"
+  if (p.sabe === null) return p.sistema ? 'elegir' : 'inicio';
   if (p.sabe) return 'elegir';
   return p.pregunta < preguntas.value.length ? 'pregunta' : 'resultado';
 });
@@ -213,6 +228,24 @@ function elegirEquipo(v: string, noSe = false) {
   p.bodega.grua = GRUA[v];
   p.flags = noSe ? [...new Set([...p.flags, 'no_se:equipo'])] : p.flags.filter((f) => f !== 'no_se:equipo');
 }
+// Leyenda corta del rack elegido (al lado de las tarjetas)
+const COMO_FUNCIONA: Record<Sistema, string[]> = {
+  RS: [
+    'Cada pallet tiene su lugar y la grúa llega directo a cualquiera, sin mover otros.',
+    'Sirve para muchos productos distintos y para pedidos que salen todos los días.',
+    'Va en filas simples contra el muro o dobles espalda con espalda, con un pasillo para la grúa.',
+  ],
+  DI: [
+    'La grúa entra a calles dentro del rack y deja los pallets uno detrás de otro.',
+    'Guarda más pallets en el mismo piso porque casi no tiene pasillos.',
+    'El último que entra es el primero que sale: va un producto por calle.',
+  ],
+  AR: [
+    'Estantes de ángulo perforado con bandejas, para cajas y productos que se sacan a mano.',
+    'Las bandejas se suben o bajan cada 2 cm, a la medida de tus cajas.',
+    'No necesita grúa: se trabaja a la altura de la mano.',
+  ],
+};
 // Los equipos por foto, con el valor del tour (respuestas.equipo)
 const FOTOS = [
   { v: 'grua', t: 'Grúa horquilla', d: 'contrapeso, a gas o eléctrica', dibujo: 'contrapeso', foto: 'contrapeso' },

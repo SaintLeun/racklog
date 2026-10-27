@@ -47,8 +47,13 @@
     <!-- Cotas: largo (de un cuerpo) y fondo total -->
     <g class="pl-txt" fill="#334155">
       <text :x="x0 + (tipo === 'selectivo' ? (0.05 + m.viga / 2) : tipo === 'drivein' ? m.anchoCalle / 2 : m.frente / 2) * k" :y="y0 + fondoTotal * k + 14" text-anchor="middle">
-        {{ tipo === 'selectivo' ? `viga ${fm(m.viga)} m` : tipo === 'drivein' ? `calle ${fm(m.anchoCalle)} m` : `bandeja ${fm(m.frente)} m` }}
+        {{ tipo === 'selectivo' ? `viga ${fm(m.viga)} m` : tipo === 'drivein' ? '' : `bandeja ${fm(m.frente)} m` }}
       </text>
+      <!-- Drive-in: ancho total del bloque, lo que define si cabe en la bodega -->
+      <template v-if="tipo === 'drivein'">
+        <line :x1="x0" :x2="x0 + largoDibujo * k" :y1="y0 + fondoTotal * k + 8" :y2="y0 + fondoTotal * k + 8" stroke="#334155" stroke-width="0.8" />
+        <text :x="x0 + (largoDibujo * k) / 2" :y="y0 + fondoTotal * k + 21" text-anchor="middle">{{ n }} {{ n === 1 ? 'calle' : 'calles' }} · ancho total {{ fm(largoDibujo) }} m</text>
+      </template>
       <text :x="x0 + largoDibujo * k + 10" :y="y0 + (fondoTotal * k) / 2" :transform="`rotate(90 ${x0 + largoDibujo * k + 10} ${y0 + (fondoTotal * k) / 2})`" text-anchor="middle">
         fondo {{ fm(fondoTotal) }} m
       </text>
@@ -65,8 +70,8 @@ const W = 300, H = 230;
 const sep = SEPARACION_DOBLE;
 const fm = (v: number) => (+(+v).toFixed(2)).toLocaleString('es-CL');
 const tipo = computed(() => props.m.tipo as 'selectivo' | 'drivein' | 'anra');
-// Se dibujan hasta 3 cuerpos (o calles): con eso se entiende el modulo
-const n = computed(() => Math.min(3, tipo.value === 'drivein' ? props.m.calles : props.m.cuerpos));
+// Se dibujan hasta 3 cuerpos (con eso se entiende el modulo); el drive-in, el bloque entero (todas sus calles)
+const n = computed(() => (tipo.value === 'drivein' ? Math.max(1, props.m.calles) : Math.min(3, props.m.cuerpos)));
 const filas = computed(() => (props.m.doble ? 2 : 1));
 const paso = computed(() => props.m.viga);   // de eje a eje de pilar
 const palF = computed(() => (tipo.value === 'anra' ? 0 : Math.min(props.m.pallet.frente, tipo.value === 'drivein' ? props.m.anchoCalle - 0.15 : (props.m.viga - 0.1) / props.m.palletsPorViga - 0.05)));

@@ -106,7 +106,7 @@
 /* Esqueletos de carga: brillo que pasa (no un gris plano) y entrada en cascada */
 .fl-esq { border-radius: .75rem; background: linear-gradient(90deg, #ededed 0%, #f7f7f7 40%, #ededed 80%) 0 0 / 300% 100%; animation: fl-brillo 1.4s ease-in-out infinite; }
 .fl-esq-tarjeta { border-radius: 1rem; background: #fff; padding: 1.25rem; outline: 1px solid #f0f0f0; }
-.fl-esq-cascada > *, .fl-cascada > *, .fl-cascada > section > *, .fl-cascada > div > section > * { animation: fl-cae .38s cubic-bezier(.2, .8, .2, 1) both; }
+.fl-esq-cascada > *, .fl-cascada > *, .fl-cascada > section > *, .fl-cascada > div > section > * { animation: fl-cae .38s cubic-bezier(.2, .8, .2, 1) backwards; /* backwards, no both: un transform que queda puesto ancla la barra fija de Siguiente a la sección */ }
 .fl-esq-cascada > :nth-child(2), .fl-cascada > :nth-child(2), .fl-cascada > section > :nth-child(2), .fl-cascada > div > section > :nth-child(2) { animation-delay: 50ms; }
 .fl-esq-cascada > :nth-child(3), .fl-cascada > :nth-child(3), .fl-cascada > section > :nth-child(3), .fl-cascada > div > section > :nth-child(3) { animation-delay: 100ms; }
 .fl-esq-cascada > :nth-child(4), .fl-cascada > :nth-child(4), .fl-cascada > section > :nth-child(4), .fl-cascada > div > section > :nth-child(4) { animation-delay: 150ms; }
@@ -120,3 +120,12 @@
   .fl-esq-cascada > *, .fl-cascada > *, .fl-cascada > section > *, .fl-cascada > div > section > * { animation: none; }
   .fl-paso-enter-from, .fl-paso-leave-to, .fl-sub-enter-from, .fl-sub-leave-to, .fl-lista-enter-from, .fl-lista-leave-to { transform: none; }
 }
+
+/* Barra de "Atrás / Siguiente" fija abajo en todos los pasos (revisión 27-10) */
+.fl-acciones {
+  position: fixed; inset-inline: 0; bottom: 0; z-index: 35;
+  background: rgb(255 255 255 / .96); border-top: 1px solid #e5e5e5; backdrop-filter: blur(6px);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+/* Un campo que se enfoca (p. ej. el RUT con error) queda bajo la cabecera fija de pasos y sobre la barra de Siguiente */
+.fl-campo, .form-input, [role=alert] { scroll-margin-top: 13rem; scroll-margin-bottom: 6rem; }

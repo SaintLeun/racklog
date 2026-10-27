@@ -1,5 +1,6 @@
 <template>
-  <div class="relative left-1/2 w-[min(1152px,calc(100vw-2rem))] -translate-x-1/2">
+  <div class="w-[min(1152px,calc(100vw-2rem))] ml-[calc(50%-min(576px,50vw-1rem))]">
+    <!-- Centrado con margen y no con transform: un transform ancla la barra fija de Siguiente a este bloque -->
     <!-- Mas ancho que la columna del paso: el 3D necesita espacio (al lado en escritorio, arriba en celular) -->
     <h1 class="fl-titulo">Accesorios y seguridad</h1>
     <p class="fl-bajada">Te proponemos lo que tu rack necesita para operar seguro. Puedes quitar o cambiar la cantidad, o arrastrar más al 3D.</p>

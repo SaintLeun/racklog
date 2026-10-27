@@ -1,6 +1,7 @@
 <template>
   <!-- Registro al final (prompt de conversión §C): nombre y correo de empresa a cambio del PDF, el link y la
-       cotización en 24 h. RUT opcional; la comuna distingue RM de regiones para el rescate (§I) -->
+       cotización en 24 h. RUT OBLIGATORIO (dueño 27-10: solo empresas reales; sin RUT no se envía nada); la comuna
+       distingue RM de regiones para el rescate (§I) -->
   <form class="fl-card" novalidate @submit.prevent="enviar">
     <!-- Certezas sin precio (§F) -->
     <p class="fl-leyenda">Lo que recibes</p>
@@ -15,18 +16,19 @@
     <p v-if="pr.sinVisita" class="mt-2 text-sm font-medium text-green-800">Con esta información tu ejecutivo cotiza directo, sin visita previa.</p>
 
     <h2 class="mt-6 text-[20px] font-bold leading-tight text-neutral-900">{{ titulo }}</h2>
-    <div class="mt-4 grid gap-4 sm:grid-cols-2">
+    <!-- items-start: cada campo con su etiqueta arriba y el input justo debajo, aunque el de al lado tenga ayuda -->
+    <div class="mt-4 grid items-start gap-x-4 gap-y-5 sm:grid-cols-2">
       <label class="fl-campo"><span>Nombre</span><input id="rf-nombre" v-model.trim="cliente.nombre" autocomplete="name" class="form-input" :class="e.nombre && 'fl-error'" @input="corregir('nombre')"><small v-if="e.nombre" class="fl-msg">{{ e.nombre }}</small></label>
       <label class="fl-campo"><span>Correo de tu empresa</span><input id="rf-correo" v-model.trim="cliente.correo" type="email" autocomplete="email" placeholder="tu@empresa.cl" class="form-input" :class="e.correo && 'fl-error'" @input="corregir('correo')"><small v-if="e.correo" class="fl-msg">{{ e.correo }}</small><em v-else class="text-sm not-italic text-neutral-500">Ahí te llega el link y la cotización.</em></label>
+      <label class="fl-campo"><span>RUT de la empresa</span><input id="rf-rut" v-model="cliente.rut" placeholder="76.123.456-7" inputmode="text" autocomplete="off" required aria-required="true" class="form-input" :class="e.rut && 'fl-error'" @blur="cliente.rut = cliente.rut ? formatearRut(cliente.rut) : ''" @input="corregir('rut')"><small v-if="e.rut" class="fl-msg">{{ e.rut }}</small><em v-else class="text-sm not-italic text-neutral-500">La cotización formal sale a nombre de tu empresa. Persona con giro: tu RUT.</em></label>
+      <label class="fl-campo"><span>Empresa <span class="font-normal text-neutral-500">(opcional)</span></span><input id="rf-empresa" v-model.trim="cliente.empresa" autocomplete="organization" class="form-input"></label>
+      <label class="fl-campo"><span>Celular <span class="font-normal text-neutral-500">(opcional)</span></span><input id="rf-telefono" v-model="cliente.telefono" type="tel" autocomplete="tel" placeholder="9 1234 5678" class="form-input" :class="e.telefono && 'fl-error'" @input="corregir('telefono')"><small v-if="e.telefono" class="fl-msg">{{ e.telefono }}</small></label>
       <label class="fl-campo">
         <span>Comuna de tu bodega</span>
         <input id="rf-comuna" v-model.trim="cliente.comuna" list="rf-comunas" autocomplete="address-level2" placeholder="Escribe y elige, ej. Quilicura" class="form-input" :class="e.comuna && 'fl-error'" @input="corregir('comuna')" @change="corregir('comuna')">
         <datalist id="rf-comunas"><option v-for="c in COMUNAS" :key="c.comuna" :value="c.comuna">{{ c.region }}</option></datalist>
         <small v-if="e.comuna" class="fl-msg">{{ e.comuna }}</small><em v-else class="text-sm not-italic text-neutral-500">Para saber cómo validamos tus medidas.</em>
       </label>
-      <label class="fl-campo"><span>RUT de la empresa <span class="font-normal text-neutral-500">(opcional)</span></span><input id="rf-rut" v-model="cliente.rut" placeholder="76.123.456-7" class="form-input" :class="e.rut && 'fl-error'" @blur="cliente.rut = cliente.rut ? formatearRut(cliente.rut) : ''" @input="corregir('rut')"><small v-if="e.rut" class="fl-msg">{{ e.rut }}</small></label>
-      <label class="fl-campo"><span>Empresa <span class="font-normal text-neutral-500">(opcional)</span></span><input id="rf-empresa" v-model.trim="cliente.empresa" autocomplete="organization" class="form-input"></label>
-      <label class="fl-campo"><span>Celular <span class="font-normal text-neutral-500">(opcional)</span></span><input id="rf-telefono" v-model="cliente.telefono" type="tel" autocomplete="tel" placeholder="9 1234 5678" class="form-input" :class="e.telefono && 'fl-error'" @input="corregir('telefono')"><small v-if="e.telefono" class="fl-msg">{{ e.telefono }}</small></label>
     </div>
 
     <!-- Visita técnica solo como rescate: aparece si se atascó (2+ "No lo sé" clave o sin medidas) -->
@@ -54,8 +56,8 @@
 
 <script lang="ts" setup>
 import { reactive, ref, computed, watch } from 'vue';
-import { validarCorreo, validarRut, validarTelefono, formatearRut } from '~/lib/tour/reglas.js';
-import { COMUNAS, NORMAS, TEXTO_INGENIERIA, buscarComuna, ofertaRescate, pideRescate, precision } from '~/lib/flujo/conversion.js';
+import { validarCorreo, validarTelefono, formatearRut } from '~/lib/tour/reglas.js';
+import { COMUNAS, NORMAS, TEXTO_INGENIERIA, buscarComuna, ofertaRescate, pideRescate, precision, rutFalla } from '~/lib/flujo/conversion.js';
 
 type Cliente = { nombre: string; correo: string; comuna: string; rut: string; empresa: string; telefono: string };
 const props = withDefaults(defineProps<{
@@ -82,14 +84,15 @@ watch(() => !!(rescate.value && oferta.value), (v) => {
 }, { immediate: true });
 
 const e = reactive<Record<string, string>>({});
-const CAMPOS = ['nombre', 'correo', 'comuna', 'rut', 'telefono', 'privacidad'] as const;
+// En el orden en que se ven (el foco va al primero que falta)
+const CAMPOS = ['nombre', 'correo', 'rut', 'telefono', 'comuna', 'privacidad'] as const;
 type Campo = typeof CAMPOS[number];
 function fallo(c: Campo): string | null {
   const l = props.cliente;
   if (c === 'nombre') return l.nombre.length < 2 ? 'Escribe tu nombre.' : null;
   if (c === 'correo') { const r = validarCorreo(l.correo); return r.ok ? null : r.msg!; }
   if (c === 'comuna') return buscarComuna(l.comuna) ? null : 'Elige tu comuna de la lista (o "Otra comuna (fuera de la RM)").';
-  if (c === 'rut') { if (!l.rut.trim()) return null; const r = validarRut(l.rut); return r.ok ? null : r.msg!; }
+  if (c === 'rut') return rutFalla(l.rut);
   if (c === 'telefono') { if (!l.telefono.trim()) return null; const r = validarTelefono(l.telefono); return r.ok ? null : r.msg!; }
   return privacidad.value ? null : 'Acepta la política de privacidad para enviarte la cotización.';
 }
@@ -100,12 +103,15 @@ function enviar() {
   const primero = CAMPOS.find((c) => fallo(c));
   if (primero) {
     e[primero] = fallo(primero)!;
-    document.getElementById(`rf-${primero}`)?.focus();
+    // Centrado: con focus() solo, el campo podía quedar detrás de la cabecera fija de pasos
+    const el = document.getElementById(`rf-${primero}`);
+    el?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    el?.focus({ preventScroll: true });
     return;
   }
   const c = buscarComuna(props.cliente.comuna)!;
   props.cliente.comuna = c.comuna;
-  if (props.cliente.rut) props.cliente.rut = formatearRut(props.cliente.rut);
+  props.cliente.rut = formatearRut(props.cliente.rut);
   if (props.cliente.telefono) props.cliente.telefono = validarTelefono(props.cliente.telefono).valor!;
   emit('enviar', { visita: rescate.value && visita.value });
 }

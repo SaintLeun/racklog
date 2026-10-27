@@ -1,5 +1,5 @@
 // Paso 5 (dueño 26-10): el cliente dibuja cada lineal arrastrando, del largo y por el muro que quiera, y un
-// pilar puede quedar dentro de un selectivo doble perdiendo una columna de un solo lado
+// pilar puede quedar dentro de un selectivo perdiendo solo sus posiciones
 // node tests/flujo/prueba-pincel.mjs
 import assert from 'node:assert';
 const b = process.argv[2] || process.cwd();
@@ -30,9 +30,9 @@ assert.equal(pl.conflictos([doble], conPilar).size, 0, 'doble con pilar adentro'
 const [anotado] = k.conPilares([doble], conPilar);
 assert.equal(anotado.pilares, 1);
 assert.equal(k.conteoRack(doble).posiciones - k.conteoRack(anotado).posiciones, 4, 'pierde 3 niveles + piso de un lado');
-// Simple y drive-in: el pilar sigue chocando
+// Simple (dueño 27-10): tampoco choca, pierde su columna (prueba-pilar.mjs). Drive-in: el pilar sigue chocando
 const simple = pl.normalizar({ ...doble, doble: false });
-assert.equal(pl.conflictos([simple], { ...bod, elementos: [{ ...pilar, y: caja(simple).y0 + 0.5 }] }).size, 1);
+assert.equal(pl.conflictos([simple], { ...bod, elementos: [{ ...pilar, y: caja(simple).y0 + 0.5 }] }).size, 0);
 const di = pl.normalizar({ tipo: 'DI', cuerpos: 3, niveles: 3, rot: 0, x: 15, y: 10, id: 'd' });
 assert.equal(pl.conflictos([di], { ...bod, elementos: [{ ...pilar, x: 15, y: 10 }] }).size, 1);
 // Se quita el pilar: recupera sus posiciones
@@ -83,7 +83,7 @@ for (const tipo of ['RS', 'DI', 'AR']) {
     assert.ok(pl.conflictos([otro], bod).size === 1 || !pl.rackDentro(otro, bod, 0.1), `${tipo}: uno más ya no cabe dejando 10 cm`);
     const filas = k.maxBloque(ambos, { largo: 1, profundidad: 1, pasillo: tipo === 'AR' ? 1 : null }, 'profundidad', [ambos], bod);
     console.log(`${tipo}${doble ? ' doble' : ''}: 1 → ${ambos.cuerpos} ${tipo === 'DI' ? 'calles' : 'cuerpos'}, ${filas} filas hasta el muro`);
-    assert.ok(filas >= (tipo === 'DI' ? 1 : 2));
+    assert.ok(filas >= (tipo === 'DI' || doble ? 1 : 2));   // el doble necesita pasillo por los dos lados, también contra el muro
   }
 }
 // Un rack en el camino corta el alargue; un pilar dentro de un doble no
@@ -96,4 +96,41 @@ for (const tipo of ['RS', 'DI', 'AR']) {
   const conPilar = { ...bod, elementos: [{ id: 'p', clase: 'pilar', x: 12, y: qu.y0 + 0.4, ancho: 0.4, alto: 0.4 }] };
   assert.ok(pl.rectangulo(k.alargarHastaMuro(uno, [uno], conPilar, 1)).x0 + pl.rectangulo(k.alargarHastaMuro(uno, [uno], conPilar, 1)).ancho > 12.2, 'pilar dentro del doble no corta');
 }
+// Recién girado contra un muro (pegado a menos de 10 cm): igual se alarga a lo largo, sin salir de la bodega
+{
+  const uno = pl.normalizar({ id: 'g', tipo: 'RS', cuerpos: 1, niveles: 3, doble: true, rot: 90, x: 0, y: 6 });
+  const pegado = { ...uno, x: +(pl.rectangulo(uno).ancho / 2 + 0.02).toFixed(3) };
+  const largo = k.alargarHastaMuro(pegado, [pegado], bod, 1);
+  assert.ok(largo.cuerpos > 3, 'girado contra el muro también se alarga');
+  assert.ok(pl.rackDentro(largo, bod, 0));
+}
+// Flechas de filas: con `sentido` las filas van solo hacia ese lado
+{
+  const uno = pl.normalizar({ id: 's', tipo: 'RS', cuerpos: 2, niveles: 3, doble: true, rot: 0, x: 10, y: 15 });
+  const abajo = k.previaBloque(uno, { largo: 1, profundidad: 3, sentido: 1 }, [uno], bod);
+  const arriba = k.previaBloque(uno, { largo: 1, profundidad: 3, sentido: -1 }, [uno], bod);
+  assert.ok(abajo.every((c) => c.rack.y > uno.y) && arriba.every((c) => c.rack.y < uno.y), 'sentido de las filas');
+}
+// Arrastrar más allá del muro: el lineal se corta 10 cm antes (no queda dentro de la muralla), en los 4 sentidos
+for (const tipo of ['RS', 'AR']) {
+  const base = pl.normalizar({ id: 'p', tipo, cuerpos: 1, niveles: 3, doble: false, rot: 0, x: 0, y: 0 });
+  for (const [a, b] of [[{ x: 5, y: 10 }, { x: 5, y: 45 }], [{ x: 5, y: 10 }, { x: 5, y: -20 }], [{ x: 10, y: 5 }, { x: 60, y: 5 }], [{ x: 10, y: 5 }, { x: -30, y: 5 }]]) {
+    const r = k.linealArrastrado(base, a, b, bod);
+    assert.ok(pl.rackDentro(r, bod, 0.1 - 1e-6), `${tipo} ${JSON.stringify(b)}: dentro de la bodega`);
+  }
+}
 console.log('desde un cuerpo: pruebas ok');
+// Doble AR en el centro de una bodega angosta con simples en los dos muros: queda donde se arrastró (no se
+// pega al muro de atrás del simple ni se monta encima)
+{
+  const bod5 = { ancho: 10, largo: 5, altura: 4, forma: null, elementos: [], grua: 'contrapeso' };
+  const ar = { tipo: 'AR', cuerpos: 10, nivelesCarga: 4, bandeja: 0.6, frente: 0.92, doble: false };
+  const s1 = pl.normalizar({ ...ar, id: 's1', rot: 180, x: 5, y: 0.402 }), s2 = pl.normalizar({ ...ar, id: 's2', rot: 0, x: 5, y: 4.6 });
+  const d = k.linealArrastrado({ ...ar, cuerpos: 1, doble: true, dobleLineal: true }, { x: 1, y: 2.5 }, { x: 8, y: 2.5 }, bod5, [s1, s2]);
+  assert.strictEqual(d.y, 2.5, 'doble AR donde se arrastró');
+  assert.deepStrictEqual([...pl.conflictos([s1, s2, { ...d, id: 'd' }], bod5)], [], 'doble AR sin superponerse');
+  // Arrastrado pegado a un simple: se corre lo justo para no pisarlo
+  const p = k.linealArrastrado({ ...ar, cuerpos: 1, doble: true, dobleLineal: true }, { x: 1, y: 1.2 }, { x: 8, y: 1.2 }, bod5, [s1, s2]);
+  assert.deepStrictEqual([...pl.conflictos([s1, s2, { ...p, id: 'p' }], bod5)], [], 'junto al simple sin superponerse');
+}
+console.log('doble entre racks: pruebas ok');

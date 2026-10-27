@@ -38,10 +38,19 @@ prueba('dibujo, rack, layout y Revisa (3D) no esperan el registro', () => {
   assert.match(cotiza, /<FlujoRegistroFinal/);
   assert.doesNotMatch(cotiza, /deshabilitado="[^"]*registrado/);
 });
-prueba('el registro final pide nombre, correo y comuna; RUT opcional', () => {
+prueba('el registro final pide nombre, correo, RUT (obligatorio, dueño 27-10) y comuna', () => {
   const rf = leer('/components/flujo/RegistroFinal.vue');
-  assert.match(rf, /CAMPOS = \['nombre', 'correo', 'comuna', 'rut', 'telefono', 'privacidad'\]/);
-  assert.match(rf, /if \(c === 'rut'\) \{ if \(!l\.rut\.trim\(\)\) return null;/, 'RUT vacío es válido');
+  assert.match(rf, /CAMPOS = \['nombre', 'correo', 'rut', 'telefono', 'comuna', 'privacidad'\]/);
+  assert.match(rf, /if \(c === 'rut'\) return rutFalla\(l\.rut\);/, 'RUT vacío no pasa');
+  assert.doesNotMatch(rf, /RUT de la empresa <span[^>]*>\(opcional\)/);
+  // Campos alineados: la grilla no estira las etiquetas (el input queda pegado a su etiqueta)
+  assert.match(rf, /grid items-start/);
+  // Registro al inicio (A/B): también obligatorio
+  const ri = leer('/components/flujo/Registro.vue');
+  assert.match(ri, /if \(c === 'rut'\) return rutFalla\(l\.rut\);/);
+  assert.equal(C.rutFalla(''), C.MSG_RUT_FALTA);
+  assert.match(C.rutFalla('76.086.428-4'), /dígito verificador/);
+  assert.equal(C.rutFalla('76.086.428-5'), null);
 });
 
 // ─── Página ejecutiva: hoy → con Racklog, m² recuperados y años de crecimiento cubiertos ───

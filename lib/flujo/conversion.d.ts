@@ -32,6 +32,8 @@ export function leadExpres(e: Obj, opciones?: { nombreGrua?: (k: string) => stri
 export function estadosExpres(e: Obj): Estados;
 export function estadosDiseño(p: Obj): Estados;
 export function estadosDiseno(p: Obj): Estados;
-export function payloadLead(cliente: { nombre: string; correo: string; empresa?: string; rut?: string; telefono?: string; comentarios?: string }, producto: { name: string; config: Record<string, string | number> }): Obj;
+export function payloadLead(cliente: { nombre: string; correo: string; empresa?: string; rut?: string; telefono?: string; comentarios?: string }, producto: { name: string; config: Record<string, string | number> }, opciones?: { linkDiseno?: string }): Obj;
 export const URL_LEAD: string;
 export function enviarLead(payload: Obj, archivos?: File[], opciones?: { url?: string; fetcher?: typeof fetch }): Promise<{ ok: boolean; referencia?: string; error?: string }>;
+export const MSG_RUT_FALTA: string;
+export function rutFalla(rut: string | null | undefined): string | null;

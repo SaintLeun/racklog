@@ -22,7 +22,8 @@ const m3 = paso3.m;
 console.log(`paso 3: marco ${mm(m3.alto)}, vigas ${m3.nivelesY.map((y) => y.toFixed(3)).join(' / ')}, carga ${mm(paso3.alto)}`);
 console.log('qué cotizar:', q.lineas.join(' · '));
 assert.ok(m3.alto > 5.5, `con pallet 1,65 m y 3 niveles el marco debe pasar 5,5 m (da ${m3.alto})`);
-assert.ok(q.lineas.some((l) => l.includes(`marcos de ${mm(m3.alto)}`)), 'Qué cotizar con otro alto de marco que el paso 3');
+// Qué cotizar solo da cantidades (dueño 26-10): sin alto de marco ni perfil de viga
+assert.ok(q.lineas.some((l) => /^\d+ marcos$/.test(l)) && q.lineas.every((l) => !/marcos de|perfil de/.test(l)), 'Qué cotizar: marcos y vigas solo en cantidad');
 racks.forEach((r) => {
   const m = pl.medidasRack(r);
   assert.equal(m.alto, m3.alto, 'alto de marco distinto en el plano');

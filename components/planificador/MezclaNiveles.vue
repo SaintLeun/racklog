@@ -56,8 +56,8 @@ const y = (v: number) => H - 6 - (v / Math.max(m.value.altoConCarga ?? m.value.a
 const fm = (v: number) => formatoM(v);
 const porId = computed(() => new Map(props.tipos.map((t) => [t.id, t])));
 
-const alturas = computed(() => [0, ...m.value.nivelesY].map((base: number, i: number) => ({
-  base, alto: m.value.altosCarga?.[i] ?? 1.2, nombre: i === 0 ? 'Piso' : `Nivel ${i}`, tipo: porId.value.get(props.rack.mezcla?.[i]),
+const alturas = computed(() => (m.value.bases ?? [0, ...m.value.nivelesY]).map((base: number, i: number) => ({
+  base, alto: m.value.altosCarga?.[i] ?? 1.2, nombre: i === 0 ? (m.value.piso === false ? 'Viga a piso' : 'Piso') : `Nivel ${i}`, tipo: porId.value.get(props.rack.mezcla?.[i]),
 })));
 
 function asignar(i: number, id: string | null) {

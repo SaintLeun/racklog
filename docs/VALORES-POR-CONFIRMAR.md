@@ -4,7 +4,7 @@ Archivo generado por `node scripts/valores-por-confirmar.mjs` a partir del códi
 Cada valor de esta lista se muestra en el flujo con la etiqueta **referencial**. Para confirmarlo, Técnica Racklog
 corrige el valor en el archivo indicado, cambia `confirmado: false` por `confirmado: true` y se vuelve a correr el script.
 
-Pendientes: **34**.
+Pendientes: **42**.
 
 ## Equipos (pasillo m, levante m, kg nominal, curva de capacidad residual)
 
@@ -13,10 +13,18 @@ Pendientes: **34**.
 | Dato | Valor actual | Confirmado por Racklog |
 |---|---|---|
 | transpaleta (Transpaleta) | pasillo: 2 · levante: 0.2 · kg: 2500 · curva: [[0.2,2500]] | ☐ |
-| manual (Apilador manual) | pasillo: 2.4 · levante: 3 · kg: 1000 · curva: [[1.6,1000],[3,600]] | ☐ |
-| apiladora (Apiladora eléctrica) | pasillo: 2.4 · levante: 4.5 · kg: 1200 · curva: [[3,1200],[4.5,900]] | ☐ |
+| manual (Apilador manual) | pasillo: 2.4 · levante: 3 · kg: 1000 · curva: [[1.6,1000],[3,600]] · vigaPiso: true | ☐ |
+| apiladora (Apiladora eléctrica) | pasillo: 2.4 · levante: 4.5 · kg: 1200 · curva: [[3,1200],[4.5,900]] · vigaPiso: true | ☐ |
 | contrapeso (Grúa horquilla contrapeso) | pasillo: 3.5 · levante: 6 · kg: 2500 · curva: [[3.3,2500],[4.5,2200],[6,1800]] | ☐ |
-| retractil (Grúa retráctil) | pasillo: 2.8 · levante: 10 · kg: 1600 · curva: [[6,1600],[8,1350],[10,1000]] | ☐ |
+| retractil (Grúa retráctil) | pasillo: 2.8 · levante: 10 · kg: 1600 · curva: [[6,1600],[8,1350],[10,1000]] · vigaPiso: true | ☐ |
+
+## Viga a piso del selectivo (cara de arriba, m; qué equipos la piden está en GRUAS.vigaPiso)
+
+`lib/rack3d/parametrosTecnicos.js` → `VIGA_PISO`
+
+| Dato | Valor actual | Confirmado por Racklog |
+|---|---|---|
+| altura | 0.3 | ☐ |
 
 ## Grúa dentro del drive-in (holgura y medidas típicas, m)
 
@@ -37,6 +45,20 @@ Pendientes: **34**.
 | rackPilar | 0.1 | ☐ |
 | pasilloPersona | 1.2 | ☐ |
 | pasilloAR | valor: 1 · min: 0.8 · max: 1.5 | ☐ |
+| bocaPosicion | 1 | ☐ |
+
+## Portones y andenes: lo que ocupan hacia adentro (m)
+
+`lib/rack3d/parametrosTecnicos.js` → `ACCESOS`
+
+| Dato | Valor actual | Confirmado por Racklog |
+|---|---|---|
+| anchoAnden | 3 | ☐ |
+| niveladorAnden | 2.5 | ☐ |
+| anchoPorton | 4 | ☐ |
+| maniobraMinima | 2 | ☐ |
+| hojaBatienteMax | 2.5 | ☐ |
+| correderaFondo | 0.3 | ☐ |
 
 ## Capacidades por nivel (kg)
 
