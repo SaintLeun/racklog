@@ -106,6 +106,7 @@ function producto(visita: boolean) {
   if (textoAcc.value) config['Accesorios'] = textoAcc.value;
   p.pallets.forEach((t) => { config[`Pallet ${t.nombre}`] = `${t.cantidad} u · ${formatoM(t.alto)} m · ${t.peso} kg · ${t.frente}×${t.fondo} m`; });
   p.cajas.forEach((c) => { config[`Caja ${c.nombre}`] = `${c.cantidad} u · ${Math.round(c.largo * 100)}×${Math.round(c.ancho * 100)}×${Math.round(c.alto * 100)} cm · ${c.peso} kg`; });
+  if (p.bodega.sinGrua?.length) config['Pasillos sin grúa'] = `El cliente marcó ${p.bodega.sinGrua.length} ${p.bodega.sinGrua.length === 1 ? 'pasillo cerrado' : 'pasillos cerrados'} como "por aquí no circula la grúa": revisar el acceso`;
   config['Viabilidad'] = resumen.value.viable ? `Viable${resumen.value.advierte ? ` (${resumen.value.advierte} sugerencias)` : ''}` : 'Con puntos por resolver';
   const flags = p.flags.filter((f) => !f.startsWith('no_se:'));
   if (flags.length) config['Flags'] = flags.join(', ');

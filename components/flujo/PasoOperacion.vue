@@ -7,7 +7,8 @@
         <p class="mt-2 text-neutral-600">Si no lo sabes, no importa: te hacemos 8 preguntas simples sobre tu bodega y te decimos cuál conviene.</p>
         <p class="mt-2 text-sm text-neutral-500">{{ MENSAJE_INICIO }}</p>
         <div class="mt-6 grid gap-3 sm:grid-cols-2">
-          <button type="button" class="fl-opcion fl-opcion--sel !p-5 text-left" @click="empezar(false)">
+          <!-- Ninguna tarjeta parte marcada: solo se destaca lo que el cliente elige (dueño 27-10) -->
+          <button type="button" class="fl-opcion !p-5 text-left" @click="empezar(false)">
             <span class="block text-lg font-bold text-neutral-900">No, ayúdenme</span>
             <span class="mt-1 block text-neutral-600">Respondes 8 preguntas (unos 2 minutos) y te recomendamos el sistema.</span>
           </button>
@@ -61,7 +62,6 @@
         <p v-if="diSinEquipo" class="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-900">
           El drive-in no se puede usar con tu equipo: {{ diSinEquipo }}. Necesitas grúa horquilla, retráctil o apilador eléctrico; o elige rack selectivo.
         </p>
-        <FlujoAcciones :atras="!p.sistema" :deshabilitado="!p.sistema || !!diSinEquipo" :motivo="diSinEquipo ? 'El drive-in necesita otro equipo.' : 'Elige un sistema para seguir.'" @atras="p.sabe = null" @siguiente="confirmarEleccion" />
       </section>
 
       <!-- Preguntas, una por pantalla -->
@@ -105,7 +105,6 @@
           <summary>¿Por qué te preguntamos esto?</summary>
           <p>{{ actual.tip }}</p>
         </details>
-        <FlujoAcciones :texto="'Saltar'" @atras="p.pregunta ? volverPregunta() : (p.sabe = null)" @siguiente="responder(TIPICO[actual.clave], true)" />
         </div>
       </section>
 
@@ -137,9 +136,14 @@
         </button>
         <!-- Una sola mención al ingeniero, al final -->
         <p class="mt-4 rounded-xl bg-neutral-100 px-3 py-2 text-sm text-neutral-600">Es una primera recomendación: en el paso 3 la afinamos producto por producto con tus pallets{{ p.flags.includes('revisar_asesor') ? ' y un ingeniero de Racklog revisa tu caso antes de cotizar' : '' }}.</p>
-        <FlujoAcciones texto="Seguir con mis pallets" @atras="volverPregunta" @siguiente="emit('siguiente')" />
       </section>
     </Transition>
+    <!-- La barra va fuera de la transición: con el translateY de la vista que entra, una barra fija adentro se
+         anclaba a la sección y Atrás/Saltar saltaban de lugar entre preguntas (dueño 27-10). Así queda siempre abajo -->
+    <FlujoAcciones
+      v-if="acciones" :texto="acciones.texto" :atras="acciones.atras" :deshabilitado="acciones.deshabilitado" :motivo="acciones.motivo"
+      @atras="acciones.alAtras" @siguiente="acciones.alSiguiente"
+    />
   </div>
 </template>
 
@@ -196,6 +200,25 @@ const vista = computed(() => {
   if (p.sabe === null) return p.sistema ? 'elegir' : 'inicio';
   if (p.sabe) return 'elegir';
   return p.pregunta < preguntas.value.length ? 'pregunta' : 'resultado';
+});
+
+// Barra de Atrás / Siguiente de cada vista (una sola instancia, fuera de la transición)
+const acciones = computed(() => {
+  if (vista.value === 'elegir') return {
+    texto: 'Siguiente', atras: !p.sistema, deshabilitado: !p.sistema || !!diSinEquipo.value,
+    motivo: diSinEquipo.value ? 'El drive-in necesita otro equipo.' : 'Elige un sistema para seguir.',
+    alAtras: () => { p.sabe = null; }, alSiguiente: confirmarEleccion,
+  };
+  if (vista.value === 'pregunta' && actual.value) return {
+    texto: 'Saltar', atras: true, deshabilitado: false, motivo: '',
+    alAtras: () => { if (p.pregunta) volverPregunta(); else p.sabe = null; },
+    alSiguiente: () => responder(TIPICO[actual.value!.clave], true),
+  };
+  if (vista.value === 'resultado' && rec.value) return {
+    texto: 'Seguir con mis pallets', atras: true, deshabilitado: false, motivo: '',
+    alAtras: volverPregunta, alSiguiente: () => emit('siguiente'),
+  };
+  return null;
 });
 
 function responder(v: string, noSe = false) {

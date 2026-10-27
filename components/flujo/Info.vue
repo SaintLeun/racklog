@@ -7,6 +7,7 @@
     >?</button>
     <Teleport to="body">
       <span v-if="abierto" ref="globo" role="tooltip" class="fixed z-[60] rounded-lg bg-neutral-900 px-3 py-2 text-sm font-normal normal-case leading-snug tracking-normal text-white shadow-lg" :style="estilo">
+        <FlujoGuia lugar="globo" />
         <slot />
       </span>
     </Teleport>

@@ -59,9 +59,15 @@
         <div class="mt-4 grid grid-cols-2 gap-3">
           <div class="rounded-xl bg-neutral-50 p-3">
             <p class="text-sm text-neutral-500">Tu bodega hoy</p>
-            <p v-if="hoy" class="text-2xl font-bold text-neutral-700">{{ n(hoy) }} <span class="text-sm font-normal">posiciones</span></p>
-            <label v-else class="mt-1 block text-sm text-neutral-600">¿Cuántas posiciones tienes hoy?
-              <input type="number" min="0" class="form-input mt-1 !h-10" @change="p.posicionesHoy = Math.max(0, Number(($event.target as HTMLInputElement).value) || 0)">
+            <template v-if="hoy && !editandoHoy">
+              <p class="text-2xl font-bold text-neutral-700">{{ n(hoy) }} <span class="text-sm font-normal">posiciones</span></p>
+              <!-- De dónde sale el número (perfiles.js hoyDe), para que se pueda corregir si no calza -->
+              <p class="text-xs text-neutral-500">
+                {{ FUENTE_HOY[g.hoyFuente] }}<button v-if="g.hoyFuente !== 'dibujo'" type="button" class="ml-1 font-medium text-brand-700 underline underline-offset-2" @click="editandoHoy = true">Cambiar</button>
+              </p>
+            </template>
+            <label v-else class="mt-1 block text-sm text-neutral-600">¿Cuántas posiciones de pallet tienes hoy?
+              <input type="number" min="0" class="form-input mt-1 !h-10" :value="p.posicionesHoy || ''" @change="p.posicionesHoy = Math.max(0, Number(($event.target as HTMLInputElement).value) || 0); editandoHoy = false">
             </label>
           </div>
           <div class="rounded-xl bg-brand-50 p-3 ring-1 ring-brand-200">
@@ -75,6 +81,7 @@
       <!-- Vista 3D grande con el tour guiado (revisión 27-10 §7): bodega, lo que ya tiene, carga, altura, maquinaria y cierre -->
       <div class="fl-card mt-6 !p-0 overflow-hidden">
         <div v-if="guion.escenas.length" class="flex flex-wrap items-center gap-2 border-b border-neutral-200 px-4 py-3">
+          <FlujoGuia lugar="tour" />
           <p class="mr-auto text-sm text-neutral-700">
             <b class="text-neutral-900">Recorrido de tu bodega</b> · {{ guion.escenas.length }} escenas, unos {{ Math.round(guion.duracion / 1000) }} s
             <span v-if="modoRecorrido" class="block text-brand-800">Para el ejecutivo: descarga el video y envíale el link al cliente junto con la cotización.</span>
@@ -105,11 +112,16 @@
               <template v-if="g.hoy">De <b>{{ n(g.hoy) }}</b> a <b class="text-brand-800">{{ n(g.conRacklog) }}</b> posiciones: <b class="text-green-700">+{{ n(g.mas) }} (+{{ g.masPct }} %)</b></template>
               <template v-else><b class="text-brand-800">{{ n(g.conRacklog) }}</b> posiciones con Racklog. Dinos cuántas tienes hoy (arriba) para comparar.</template>
             </p>
+            <p v-if="g.hoy" class="mt-1 text-sm text-neutral-500">Hoy: {{ FUENTE_HOY[g.hoyFuente]?.toLowerCase() }}. Comparamos posiciones de pallet con posiciones de pallet, contadas igual.</p>
+            <p v-if="g.cajasConRacklog" class="mt-2 text-neutral-800">
+              Ángulo ranurado: <template v-if="g.cajasHoy">de <b>{{ n(g.cajasHoy) }}</b> a </template><b class="text-brand-800">{{ n(g.cajasConRacklog) }}</b> cajas<span class="text-sm text-neutral-500"> (va aparte: no son posiciones de pallet)</span>
+            </p>
             <p class="fl-leyenda mt-6">Crecimiento</p>
             <div class="mt-2 flex flex-wrap items-center gap-2 text-sm text-neutral-700">
               Tu operación crece al año:
               <button v-for="c in [0, 0.1, 0.2, 0.3]" :key="c" type="button" :class="['fl-chip !min-h-9 !w-auto !px-3 !text-sm', p.crecimiento === c && 'fl-chip--sel']" @click="p.crecimiento = c">{{ Math.round(c * 100) }} %</button>
             </div>
+            <p v-if="g.ocupacion < 1" class="mt-2 text-sm text-neutral-500">Lo que necesitas va con un {{ Math.round(g.ocupacion * 100) }} % de ocupación (nadie llena todas sus posiciones), la misma que usaste al diseñar.</p>
             <dl class="mt-3 grid grid-cols-3 gap-3">
               <div v-for="x in g.anios" :key="x.t" class="fl-dato">
                 <dt>{{ x.t }} necesitas</dt><dd>{{ n(x.necesitas) }}</dd>
@@ -136,12 +148,12 @@
             <ul class="mt-2 space-y-1 text-neutral-800">
               <li v-for="a in bo.alturas" :key="a.nombre">{{ a.nombre }}: niveles en {{ a.niveles.join(' · ') }} m (marco de {{ a.marco }} m)</li>
             </ul>
-            <dl class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
+            <dl v-if="bo.conPallets" class="mt-6 grid grid-cols-2 gap-3 md:grid-cols-3">
               <div class="fl-dato"><dt>Pasillos</dt><dd>{{ bo.pasillos.n }}</dd><p class="text-xs text-neutral-500">de {{ bo.pasillos.anchos.join(' / ') || '—' }} m</p></div>
               <div class="fl-dato"><dt>Tu equipo pide<FlujoReferencial :de="GRUAS[p.bodega.grua as keyof typeof GRUAS] ?? GRUAS.contrapeso" /></dt><dd>{{ fm(bo.pasillos.pide) }} m</dd><p :class="['text-xs font-medium', bo.pasillos.angostos ? 'text-red-700' : 'text-green-700']">{{ bo.pasillos.angostos ? `${bo.pasillos.angostos} angosto(s)` : 'Todos los pasillos sirven ✓' }}</p></div>
               <div class="fl-dato"><dt>Nivel más alto</dt><dd>{{ fm(bo.nivelMax) }} m</dd><p :class="['text-xs font-medium', bo.alcanza ? 'text-green-700' : 'text-red-700']">{{ bo.alcanza ? `Tu ${bo.equipo.toLowerCase()} llega (${fm(bo.levante)} m) ✓` : `Tu equipo llega a ${fm(bo.levante)} m` }}</p></div>
             </dl>
-            <p class="mt-3 text-sm text-neutral-500">En la vista 3D de arriba ves la grúa trabajando en tus pasillos.</p>
+            <p v-if="bo.conPallets" class="mt-3 text-sm text-neutral-500">En la vista 3D de arriba ves la grúa trabajando en tus pasillos.</p>
           </template>
           <!-- Compras: especificación para comparar proveedores -->
           <template v-else>
@@ -257,6 +269,10 @@ const co = computed(() => vistas.value.compras);
 const hoy = computed(() => g.value.hoy as number);
 const conRacklog = computed(() => g.value.conRacklog as number);
 const mas = computed(() => g.value.masPct as number);
+const editandoHoy = ref(false);
+const FUENTE_HOY: Record<string, string> = {
+  dibujo: 'Lo que dibujaste en "Hoy"', dijo: 'Lo que nos dijiste', importaciones: 'De tus importaciones', conserva: 'Los racks que conservas',
+};
 
 // La foto del 3D que ya está armado queda guardada para el link compartido
 const visorRef = ref<{

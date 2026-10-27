@@ -9,6 +9,7 @@
     <!-- Arriba del botón para no tapar el campo de la pregunta (useGlobo) -->
     <Teleport to="body">
       <span v-if="abierto" ref="globo" role="tooltip" class="fixed z-[60] rounded-lg bg-neutral-900 px-3 py-2 text-sm font-normal normal-case leading-snug tracking-normal text-white shadow-lg" :style="estilo">
+        <FlujoGuia lugar="globo" />
         <slot>Valor típico de la industria. Antes de cotizar, ingeniería Racklog lo valida con cálculo estructural según NCh2369 (diseño sísmico) y ANSI MH16.1.</slot>
       </span>
     </Teleport>

@@ -25,7 +25,10 @@ const cerca = (a, b, t = 0.02) => Math.abs(a - b) < t;
   const qm = q({ ...mov, x: m2.x, y: m2.y });
   assert.ok(cerca(qm.x0, qb.x0), 'alinea el inicio');
   assert.ok(cerca(qb.y0 - qm.y1, P), `pasillo exacto: ${qb.y0 - qm.y1}`);
-  assert.ok(m2.guias.length === 2);
+  assert.ok(m2.guias.length >= 2);
+  // Guías tipo Figma: también el otro borde alineado (mismo largo: inicio y final)
+  assert.ok(m2.guias.filter((g) => g.x1 === g.x2).length >= 2, 'inicio y final alineados');
+  assert.deepEqual(A.guiasRack({ ...mov, x: m2.x, y: m2.y }, [base, mov]).length >= 2, true, 'guías desde la posición final');
   // Lejos de todo: no se mueve
   const m3 = A.imanRack(mov, [base, mov], bod, 20, 33);
   assert.equal(m3.x, 20); assert.equal(m3.y, 33);
@@ -49,19 +52,37 @@ const cerca = (a, b, t = 0.02) => Math.abs(a - b) < t;
   assert.ok(cerca(e2.y0 - e1.y1, 0.1, 0.03), `espalda con espalda ${e2.y0 - e1.y1}`);
   console.log('ordenar: ok,', o.movidos, 'movidos');
 }
-// Pasillo sin salida: dos filas de muro a muro con pasillo entre ellas → aviso; abrir conexión lo arregla
+// Pasillo sin salida: dos filas de muro a muro con pasillo entre ellas → aviso; abrir conexión lo arregla.
+// Regla del dueño 27-10: por la punta basta el paso de la grúa cargada (ancho o pallet + holgura), no el pasillo de trabajo
 {
-  const largo = (n) => pl.rectangulo(pl.normalizar({ tipo: 'RS', cuerpos: n, niveles: 3, rot: 0 })).ancho;
-  let n = 1; while (largo(n + 1) <= 29.8) n++;
-  const w = largo(n);
-  const a = R('a', { rot: 180, cuerpos: n, x: 0.1 + w / 2, y: 0.7 });
-  const qa = q(a);
-  const bq = R('b', { rot: 0, cuerpos: n, x: 0.1 + w / 2, y: qa.y1 + P + 0.6 });
-  const sin = A.pasillosSinSalida([a, bq], bod);
-  assert.equal(sin.length, 1, 'avisa el pasillo cerrado');
-  const abierto = A.abrirConexion([a, bq], bod, sin[0].filas, sin[0].lado);
-  assert.equal(A.pasillosSinSalida(abierto, bod).length, 0, 'con la conexión ya tiene salida');
-  assert.ok(abierto.every((r) => q(r).x1 <= 30 - P + 0.01), 'deja el pasillo de la grúa junto al muro');
-  console.log(`sin salida: ${n} cuerpos → ${abierto.map((r) => r.cuerpos).join(', ')}`);
+  const n = 8;
+  const w = pl.rectangulo(pl.normalizar({ tipo: 'RS', cuerpos: n, niveles: 3, rot: 0 })).ancho;
+  const filas = (punta) => {
+    const bd = { ...bod, ancho: +(0.1 + w + punta).toFixed(2) };
+    const a = R('a', { rot: 180, cuerpos: n, x: 0.1 + w / 2, y: 0.7 });
+    const bq = R('b', { rot: 0, cuerpos: n, x: 0.1 + w / 2, y: q(a).y1 + P + 0.6 });
+    return { bd, racks: [a, bq] };
+  };
+  const paso = A.pasoCirculacion(R('x', {}), bod);
+  assert.ok(paso < P, `el paso por la punta (${paso}) es menor que el pasillo de trabajo (${P})`);
+  const c1 = filas(1.5);
+  const sin = A.pasillosSinSalida(c1.racks, c1.bd);
+  assert.equal(sin.length, 1, 'con 1,5 m en la punta la grúa cargada no pasa: avisa');
+  assert.ok(cerca(sin[0].puntas[1], 1.5, 0.05), `informa lo que queda en la punta: ${sin[0].puntas}`);
+  const c2 = filas(paso + 0.1);
+  assert.equal(A.pasillosSinSalida(c2.racks, c2.bd).length, 0, 'con el paso de la grúa en una punta no avisa, aunque sea menos que el pasillo de trabajo');
+  const abierto = A.abrirConexion(c1.racks, c1.bd, sin[0].filas, sin[0].lado);
+  assert.equal(A.pasillosSinSalida(abierto, c1.bd).length, 0, 'con la conexión ya tiene salida');
+  console.log(`sin salida: paso por la punta ${paso} m (pasillo ${P} m); acortadas a ${abierto.map((r) => r.cuerpos).join(', ')}`);
+}
+// Doble contra el muro (dueño 27-10): sin equipo de doble profundidad va simple
+{
+  const C = await import(b + '/lib/flujo/calculos.js');
+  const base = pl.normalizar({ tipo: 'RS', cuerpos: 1, niveles: 3, doble: true, dobleLineal: true, rot: 0, x: 0, y: 0 });
+  const pegado = C.linealArrastrado(base, { x: 0.3, y: 0.3 }, { x: 10, y: 0.3 }, bod, []);
+  assert.ok(A.dobleContraMuro(pegado, bod), 'doble pegado al muro: no sirve');
+  assert.ok(!A.dobleContraMuro(C.conDoble(pegado, false), bod), 'pasado a simple queda bien, con la espalda al muro');
+  assert.ok(!A.dobleContraMuro(C.linealArrastrado(base, { x: 0.3, y: 12 }, { x: 10, y: 12 }, bod, []), bod), 'doble al medio: bien');
+  console.log('doble contra el muro: ok');
 }
 console.log('alinear: pruebas ok');

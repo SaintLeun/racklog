@@ -272,7 +272,7 @@
         </g>
       </g>
 
-      <!-- Guías del imán: el rack se pegó a esto -->
+      <!-- Guías del imán (tipo Figma): todo con lo que quedó alineado. Las distancias en vivo son las cotas -->
       <g v-if="guiasRack?.length" pointer-events="none">
         <line v-for="(g, j) in guiasRack" :key="`gi${j}`" :x1="g.x1" :y1="g.y1" :x2="g.x2" :y2="g.y2" stroke="#db2777" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="6 4" />
       </g>
@@ -379,7 +379,7 @@
         <text
           v-bind="TEXTO_COTA" :fill="colorCota(c)" dominant-baseline="central"
           :x="posCota(c).x" :y="posCota(c).y" :transform="posCota(c).rot" :text-anchor="posCota(c).anchor"
-        >{{ pasilloDe(c) ? (esLibre(c) ? 'área libre ' : 'pasillo ') : c.a === 'elemento' ? 'libre ' : '' }}{{ formatoM(c.valor) }} m</text>
+        >{{ textoCota(c) }}</text>
       </g>
       <!-- Medidas del rack en planta, sobre su esquina (lejos de las cotas, que salen del centro de cada lado) -->
       <text
@@ -543,6 +543,9 @@ const props = defineProps<{
   flechasNo?: string[];
   // Guías del imán mientras se arrastra un rack (a qué se pegó: muro, otro rack, pasillo exacto)
   guiasRack?: Array<{ x1: number; y1: number; x2: number; y2: number }>;
+  // Paso libre (m) que necesita la grúa cargada para pasar por la punta del rack elegido (alinear.js
+  // pasoCirculacion). Con él, la cota de cada cabecera dice si pasa o no
+  pasoLateral?: number | null;
   // Dibujar un lineal arrastrando: arma el rack entre donde aprieta (a) y donde va el puntero (b), con su texto
   pincel?: ((a: Punto, b: Punto) => (RackPlano & { texto?: string }) | null) | null;
   // Dibujo del contorno: metros escritos para el muro que se está tirando (va hacia donde apunta el cursor)
@@ -774,8 +777,10 @@ const TEXTO_COTA = computed((): Record<string, any> => ({
 }));
 
 // Donde va el numero de una cota: al centro de la linea, o al costado si la linea es corta
-function posCota(c: { x1: number; y1: number; x2: number; y2: number; valor: number }) {
+function posCota(c: { x1: number; y1: number; x2: number; y2: number; valor: number; lateral?: boolean }) {
   const mx = (c.x1 + c.x2) / 2, my = (c.y1 + c.y2) / 2, horizontal = c.y1 === c.y2;
+  // Paso por la cabecera: el texto va corrido de la línea para no montarse con las flechas de estirar el rack
+  if (pasoDe(c as Cota)) return horizontal ? { x: mx, y: my + 0.95 * k.value, rot: '', anchor: 'middle' } : { x: mx + 0.6 * k.value, y: my, rot: '', anchor: 'start' };
   const corta = c.valor < 2.6 * k.value;
   if (corta) return horizontal ? { x: mx, y: my - 0.3 * k.value, rot: '', anchor: 'middle' } : { x: mx + 0.25 * k.value, y: my, rot: '', anchor: 'start' };
   return { x: mx, y: my, rot: horizontal ? '' : `rotate(-90 ${mx} ${my})`, anchor: 'middle' };
@@ -953,12 +958,24 @@ const rectSvg = (el: Elemento) => { const p = rectElemento(el); return { x: p.x0
 const diagonal = (el: Elemento) => { const p = rectElemento(el); return { x1: p.x0, y1: p.y0, x2: p.x0 + p.ancho, y2: p.y0 + p.alto }; };
 
 // Una cota es de pasillo si cae dentro de uno (las de costado o espalda no lo son)
-type Cota = { a: string; x1: number; y1: number; x2: number; y2: number };
+type Cota = { a: string; x1: number; y1: number; x2: number; y2: number; valor?: number; hasta?: string | null; lateral?: boolean };
+// Cabecera con paso para la grúa: ¿pasa cargada entre el marco y el muro (o lo que haya)? (dueño 27-10)
+const pasoDe = (c: Cota) => (c.lateral && props.pasoLateral && !pasilloDe(c) ? { ok: (c.valor ?? 0) >= props.pasoLateral - 0.005, pide: props.pasoLateral } : null);
+function textoCota(c: Cota & { valor: number }) {
+  const v = `${formatoM(c.valor)} m`, paso = pasoDe(c);
+  if (pasilloDe(c)) return `${esLibre(c) ? 'área libre' : 'pasillo'} ${v}`;
+  if (paso) return paso.ok ? `paso ${v} ✓` : `${v}: no pasa (pide ${formatoM(paso.pide)} m)`;
+  if (c.hasta) return `${v} a ${c.hasta}`;
+  return c.a === 'elemento' ? `libre ${v}` : v;
+}
 const pasilloDe = (c: Cota) => (c.a !== 'elemento' && props.pasillos ? pasilloEn(props.pasillos, (c.x1 + c.x2) / 2, (c.y1 + c.y2) / 2) as Pasillo | null : null);
 // Pasillo dibujado solo en el ancho que pide el equipo; lo demas hasta el muro es area libre
 const franjas = computed(() => (props.pasillos ?? []).map((p) => ({ ...p, f: franjaPasillo(p) })));
 // Etiqueta dentro de cada pasillo, a lo largo y solo si cabe en pantalla (~6,5 px por letra)
-const textosPasillo = computed(() => franjas.value.map((p) => {
+// Si una cota ya mide ese pasillo (rack elegido) la etiqueta se calla: las dos caían en el mismo centro y se
+// leía "pasillo grúapasillo 2,65 m" (video del dueño 27-10)
+const pasillosConCota = computed(() => new Set(cotas.value.map((c) => (pasilloDe(c) as any)?.id).filter(Boolean)));
+const textosPasillo = computed(() => franjas.value.filter((p) => !pasillosConCota.value.has(p.id)).map((p) => {
   const ancho = p.f.x1 - p.f.x0, alto = p.f.y1 - p.f.y0, vertical = alto > ancho;
   const largo = Math.max(ancho, alto), corto = Math.min(ancho, alto);
   const ar = p.racks.some((id) => props.racks.find((r) => r.id === id)?.tipo === 'AR');
@@ -969,6 +986,8 @@ const textosPasillo = computed(() => franjas.value.map((p) => {
 }).filter((t): t is NonNullable<typeof t> => !!t));
 const esLibre = (c: Cota) => (franjaPasillo(pasilloDe(c) as any).libreSobrante ?? 0) > 0.01;
 const colorCota = (c: Cota) => {
+  const paso = pasoDe(c);
+  if (paso) return paso.ok ? '#0f766e' : '#b45309';
   if (c.a === 'elemento') return '#0369a1';
   const p = pasilloDe(c);
   return !p ? '#334155' : !p.ok ? '#dc2626' : esLibre(c) ? '#64748b' : '#0f766e';
@@ -1096,7 +1115,7 @@ function figura(r: RackPlano) {
   // Rack sobre pilar (dueño 27-10): los huecos donde cae un pilar o cuya entrada tapa quedan tachados (no
   // guardan pallets); el resto del rack sigue igual
   let perdidos = '', tachas = '';
-  if (r.tipo === 'RS' && hayPilares.value) {
+  if (hayPilares.value) {
     for (const h of perdidasPorPilares(r, props.bodega).huecos) {
       perdidos += ps(h.u0, h.v0 + 0.03, h.u1, h.v1 - 0.03);
       const a = aPlanoLocal(h.u0, h.v0 + 0.03), b = aPlanoLocal(h.u1, h.v1 - 0.03), c = aPlanoLocal(h.u0, h.v1 - 0.03), d = aPlanoLocal(h.u1, h.v0 + 0.03);

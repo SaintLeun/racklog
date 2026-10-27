@@ -4,6 +4,7 @@
 import { defineStore } from 'pinia';
 import { nuevoTipo } from '~/lib/rack3d/mezcla.js';
 import { consulta } from '~/lib/flujo/consulta.js';
+import { palletsSinCajas } from '~/lib/tour/pallet.js';
 
 export const PASOS = [
   // La bodega se dibuja primero (prompt v3 §1): todo lo que sigue se valida contra ella. Los accesorios van
@@ -33,7 +34,8 @@ export interface TipoPallet {
   sinPallet?: boolean; sobresale?: number;
   // Productos distintos (SKU) que comparten este tipo de pallet (pallets por SKU = cantidad / skus)
   skus?: number;
-  // Armado desde la caja (paso 2): medidas en m, kg por caja, cuantas aguanta apiladas y orientacion
+  // Armado desde la caja: ya no se usa en selectivo ni drive-in (solo alto y peso del pallet cargado, dueño
+  // 27-10). Queda por los diseños guardados antes; al cargarlos pasan a alto y peso directos (palletsSinCajas)
   desdeCaja?: boolean;
   caja?: { largo: number; ancho: number; alto: number; peso: number; apilable: number; orientacion: 'auto' | 'largo' | 'ancho' };
   // Cantidad desde importaciones (contenedor, cuantos por llegada, semanas entre llegadas y en bodega)
@@ -101,7 +103,9 @@ function inicial() {
     modeloSel: null as string | null,
     // Paso 4: los propuestos que el cliente quito y las cantidades que cambio a mano
     // manuales: los que el cliente arrastro al 3D (lib/rack3d/accesorios.js, encajarAccesorio)
-    accesorios: { quitados: [] as string[], cantidades: {} as Record<string, number>, medidas: {} as Record<string, number>, manuales: [] as any[] },
+    // desea: respuesta a "¿Deseas agregar accesorios de seguridad?" (null = no ha respondido); con No, quitados lleva
+    // todos los opcionales y previos guarda lo que habia por si vuelve a decir Sí
+    accesorios: { quitados: [] as string[], cantidades: {} as Record<string, number>, medidas: {} as Record<string, number>, manuales: [] as any[], desea: null as boolean | null, previos: null as string[] | null },
     // Paso 5: misma forma que el planificador (lib/rack3d/planificador.js)
     bodega: {
       ancho: 20, largo: 30, altura: 8 as number | null, forma: null as { x: number; y: number }[] | null,
@@ -113,6 +117,9 @@ function inicial() {
       // Factor de ocupación (60–85 %): posiciones necesarias = pallets ÷ factor (prompt v3 §6)
       ocupacion: 0.8,
       pallets: [] as any[],
+      // Pasillos cerrados que el cliente marcó "por aquí no circula la grúa" (clave: ids de sus filas, ordenados).
+      // No se avisan más y le llegan al ejecutivo en el lead (dueño 27-10)
+      sinGrua: [] as string[],
     },
     racks: [] as any[],
     // Layout de hoy (antes/después): se dibuja aparte, no se cotiza
@@ -145,6 +152,7 @@ export const useProyecto = defineStore('proyecto', {
       try {
         const g = JSON.parse(localStorage.getItem(CLAVE) || 'null');
         if (g && g.version === 1) this.$patch({ ...inicial(), ...g, lead: { ...inicial().lead, ...g.lead }, bodega: { ...inicial().bodega, ...g.bodega }, accesorios: { ...inicial().accesorios, ...g.accesorios } });
+        palletsSinCajas(this.pallets);
       } catch { /* sin almacenamiento */ }
       // Atribucion: se guarda la primera vez que llega con parametros
       try {
@@ -173,10 +181,10 @@ export const useProyecto = defineStore('proyecto', {
     },
     // ─── Paso 2 ───
     agregarPallet(base: Partial<TipoPallet> = {}) {
-      // Por defecto se arma desde una caja tipica (60 × 40 × 30 cm, 15 kg, aguanta 5 apiladas)
+      // Pallet de ejemplo con alto y peso directos (1,2 m y 800 kg cargado): en selectivo y drive-in no hay cajas
       const t = {
         ...nuevoTipo(this.pallets.length), frente: 1.0, fondo: 1.2, alto: 1.2, peso: 800, cantidad: 100,
-        desdeCaja: true, caja: { largo: 0.6, ancho: 0.4, alto: 0.3, peso: 15, apilable: 5, orientacion: 'auto' }, ejemplo: true, ...base,
+        desdeCaja: false, ejemplo: true, ...base,
       } as TipoPallet;
       this.pallets.push(t);
       return t;

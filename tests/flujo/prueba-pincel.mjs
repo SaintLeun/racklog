@@ -30,11 +30,13 @@ assert.equal(pl.conflictos([doble], conPilar).size, 0, 'doble con pilar adentro'
 const [anotado] = k.conPilares([doble], conPilar);
 assert.equal(anotado.pilares, 1);
 assert.equal(k.conteoRack(doble).posiciones - k.conteoRack(anotado).posiciones, 4, 'pierde 3 niveles + piso de un lado');
-// Simple (dueño 27-10): tampoco choca, pierde su columna (prueba-pilar.mjs). Drive-in: el pilar sigue chocando
+// Simple (dueño 27-10): tampoco choca, pierde su columna (prueba-pilar.mjs). Drive-in (video 27-10): tampoco, pierde
+// la calle del pilar hacia el fondo
 const simple = pl.normalizar({ ...doble, doble: false });
 assert.equal(pl.conflictos([simple], { ...bod, elementos: [{ ...pilar, y: caja(simple).y0 + 0.5 }] }).size, 0);
 const di = pl.normalizar({ tipo: 'DI', cuerpos: 3, niveles: 3, rot: 0, x: 15, y: 10, id: 'd' });
-assert.equal(pl.conflictos([di], { ...bod, elementos: [{ ...pilar, x: 15, y: 10 }] }).size, 1);
+assert.equal(pl.conflictos([di], { ...bod, elementos: [{ ...pilar, x: 15, y: 10 }] }).size, 0);
+assert.ok(pl.perdidasPorPilares(di, { ...bod, elementos: [{ ...pilar, x: 15, y: 10 }] }).perdidas > 0);
 // Se quita el pilar: recupera sus posiciones
 assert.equal(k.conPilares([anotado], bod)[0].pilares, 0);
 console.log('pincel: pruebas ok');

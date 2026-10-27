@@ -146,7 +146,7 @@
 
     <!-- Tus tipos de pallet: se arrastran al nivel donde van (o se tocan y se toca el nivel) -->
     <div v-if="editable && tiposLista.length > 1" class="mt-3">
-      <p class="text-sm font-semibold text-neutral-800">Arrastra cada pallet al nivel donde lo quieres <span class="font-normal text-neutral-500">(o tócalo y toca el nivel)</span></p>
+      <p class="text-sm font-semibold text-neutral-800">Arrastra cada pallet a su nivel</p>
       <div class="mt-2 flex gap-2 overflow-x-auto pb-1">
         <button
           v-for="t in tiposLista" :key="t.id" type="button"
@@ -169,7 +169,7 @@
     </div>
     <p v-if="editable && niveles >= maxNiveles" class="mt-2 text-sm text-neutral-600">No cabe otro nivel por {{ limite }}.</p>
     <p v-if="editable" class="mt-2 text-xs text-neutral-500">
-      Sube o baja un nivel arrastrando su viga (el círculo naranjo de la derecha). Los números a la derecha son el espacio libre sobre cada pallet.
+      Arrastra el círculo naranjo para subir o bajar una viga.
       <button v-if="vigasManuales" type="button" class="font-semibold text-brand-700 underline" @click="emit('vigas', null)">Volver a las alturas calculadas</button>
     </p>
   </div>

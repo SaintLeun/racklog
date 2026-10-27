@@ -1,6 +1,6 @@
 <template>
   <div :class="!dosColumnas && 'mx-auto max-w-3xl'">
-    <!-- Con un pallet armado en 3D usa todo el ancho (3D a la izquierda); si no, una columna legible -->
+    <!-- Pallets: todo el ancho (vista de frente a la izquierda en escritorio); cajas: una columna legible -->
     <h1 class="fl-titulo">{{ conCajas ? 'Tus cajas' : 'Tus pallets' }}</h1>
     <p class="fl-bajada">
       {{ conCajas
@@ -10,7 +10,7 @@
 
     <!-- Pallets -->
     <TransitionGroup v-if="!conCajas" tag="div" name="fl-lista" class="mt-4 space-y-4">
-      <article v-for="(t, i) in p.pallets" :id="`pallet-${t.id}`" :key="t.id" :class="['fl-card', t.ejemplo && 'fl-ejemplo', t.desdeCaja && t.caja && 'fl-pallet-dos']" @input.capture="t.ejemplo = false" @change.capture="t.ejemplo = false">
+      <article v-for="(t, i) in p.pallets" :id="`pallet-${t.id}`" :key="t.id" :class="['fl-card fl-pallet-dos', t.ejemplo && 'fl-ejemplo']" @input.capture="t.ejemplo = false" @change.capture="t.ejemplo = false">
         <p v-if="t.ejemplo" class="fl-ancho -mx-1 mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
           <span>Llenamos este pallet con un <b>ejemplo</b>. Cámbialo por tus medidas, o usa "No sé" donde no sepas.</span>
           <button type="button" class="font-semibold underline underline-offset-2" @click="t.ejemplo = false">Son mis datos</button>
@@ -20,143 +20,75 @@
           <input v-model.trim="t.nombre" class="fl-input-titulo" :aria-label="`Nombre del pallet ${i + 1}`">
           <button v-if="p.pallets.length > 1" type="button" class="fl-quitar" :aria-label="`Quitar ${t.nombre}`" @click="p.pallets.splice(i, 1)">Quitar</button>
         </div>
-        <!-- Pallet en 3D grande, arriba: se ve sin scroll en el celular y cambia con cada dato -->
-        <div v-if="t.desdeCaja && t.caja" class="fl-pallet-3d mt-3">
-          <div class="aspect-square w-full sm:aspect-[16/10] lg:aspect-square">
-            <FlujoPallet3D
-              :frente="t.frente" :fondo="t.fondo" :caja="t.caja" :etiqueta="`Pallet de ${t.nombre} armado con sus cajas`"
-              :alto="t.alto" :cols="armado(t)?.cols ?? 0" :filas="armado(t)?.filas ?? 0" :camas="armado(t)?.camas ?? 0" :largo-en-frente="armado(t)?.largoEnFrente ?? true"
+        <!-- El pallet visto de frente (como desde el pasillo): cambia con cada dato. En escritorio queda fijo a la izquierda -->
+        <div class="fl-pallet-vista mt-3 rounded-xl bg-[#f6f7f9] px-3 pb-2 pt-3">
+          <div class="mx-auto max-w-[300px] lg:max-w-[360px]">
+            <FlujoPalletFrente
+              :frente="t.frente" :alto="t.alto" :peso="t.peso" :color="t.color" :nombre="t.nombre"
+              :sin-pallet="!!t.sinPallet" :sobresale="t.sobresale ?? 0" :peso-estimado="!!t.noSe?.includes('peso')"
             />
           </div>
-          <!-- Resultado en una linea: cuantas por cama, camas, total, alto y peso -->
-          <div v-if="armado(t) && !errCajaTxt(t)" class="fl-resumen mt-3" aria-live="polite">
-            <p class="text-[17px] font-semibold text-neutral-900">
-              {{ armado(t)!.cols * armado(t)!.filas }} por cama × {{ armado(t)!.camas }} {{ armado(t)!.camas === 1 ? 'cama' : 'camas' }} = {{ n(armado(t)!.cajas) }} cajas
-            </p>
-            <p class="mt-0.5 text-neutral-700">
-              <b class="font-semibold">{{ fm(armado(t)!.alto) }} m</b> de alto · <b class="font-semibold">{{ n(armado(t)!.peso) }} kg</b> con la tarima
-            </p>
-            <p class="mt-1 text-sm text-neutral-500">
-              {{ armado(t)!.cols }} al frente × {{ armado(t)!.filas }} al fondo.
-              {{ armado(t)!.limite === 'apilable' ? `Llega a ${armado(t)!.camas} camas porque la caja aguanta ${t.caja.apilable} apiladas.` : 'Llega hasta 1,8 m de alto, el máximo para un pallet.' }}
-            </p>
-          </div>
-          <p v-else class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-800" role="alert">{{ errCajaTxt(t) || 'Esa caja no cabe en el pallet: revisa sus medidas.' }}</p>
+          <p class="text-center text-sm text-neutral-600">Visto desde el pasillo · {{ fm1(t.fondo) }} m de fondo hacia adentro del rack</p>
         </div>
 
         <!-- 1. El pallet: frente (lo que se ve desde el pasillo) y fondo (lo que entra al rack), con las medidas de siempre -->
         <section class="mt-5">
           <h3 class="fl-paso-t"><span class="fl-num">1</span>¿De qué medida es tu pallet?</h3>
-          <div class="mt-2 grid items-start gap-4" :class="!t.desdeCaja && 'sm:grid-cols-[1fr_220px]'">
-            <div>
-              <div class="grid grid-cols-2 gap-2">
-                <div v-for="lado in (['frente', 'fondo'] as const)" :key="lado" class="fl-campo">
-                  <span class="!text-sm">{{ lado === 'frente' ? 'Frente' : 'Fondo' }}
-                    <FlujoInfo>{{ lado === 'frente' ? 'El lado que ves desde el pasillo: por ahí entran las horquillas de la grúa.' : 'Lo que el pallet entra hacia adentro del rack. Define el fondo del marco.' }}</FlujoInfo>
-                  </span>
-                  <select :value="otraMedida(t, lado) ? 'otra' : t[lado]" class="form-input" :class="err(t)[lado] && 'fl-error'" :aria-label="`${lado === 'frente' ? 'Frente' : 'Fondo'} del pallet`" @change="elegirMedida(t, lado, $event)">
-                    <option v-for="m in LADOS" :key="m" :value="m">{{ fm1(m) }} m</option>
-                    <option value="otra">Otra medida</option>
-                  </select>
-                  <span v-if="otraMedida(t, lado)" class="flex items-center gap-2">
-                    <input :value="borrador[`${t.id}-${lado}`] ?? String(t[lado] || '').replace('.', ',')" type="text" inputmode="decimal" maxlength="5" class="form-input" :class="err(t)[lado] && 'fl-error'" :aria-label="`${lado === 'frente' ? 'Frente' : 'Fondo'} del pallet en metros`" @input="escribirMedida(t, lado, $event)">
-                    <span class="text-sm text-neutral-500">m</span>
-                  </span>
-                  <small v-if="err(t)[lado]" class="fl-msg">{{ err(t)[lado] }}</small>
-                </div>
-              </div>
-              <p v-if="nombrePallet(t)" class="mt-2 text-sm text-neutral-600">{{ nombrePallet(t) }}</p>
+          <div class="mt-2 grid grid-cols-2 gap-2">
+            <div v-for="lado in (['frente', 'fondo'] as const)" :key="lado" class="fl-campo">
+              <span class="!text-sm">{{ lado === 'frente' ? 'Frente' : 'Fondo' }}
+                <FlujoInfo>{{ lado === 'frente' ? 'El lado que ves desde el pasillo: por ahí entran las horquillas de la grúa.' : 'Lo que el pallet entra hacia adentro del rack. Define el fondo del marco.' }}</FlujoInfo>
+              </span>
+              <select :value="otraMedida(t, lado) ? 'otra' : t[lado]" class="form-input" :class="err(t)[lado] && 'fl-error'" :aria-label="`${lado === 'frente' ? 'Frente' : 'Fondo'} del pallet`" @change="elegirMedida(t, lado, $event)">
+                <option v-for="m in LADOS" :key="m" :value="m">{{ fm1(m) }} m</option>
+                <option value="otra">Otra medida</option>
+              </select>
+              <span v-if="otraMedida(t, lado)" class="flex items-center gap-2">
+                <input :value="borrador[`${t.id}-${lado}`] ?? String(t[lado] || '').replace('.', ',')" type="text" inputmode="decimal" maxlength="5" class="form-input" :class="err(t)[lado] && 'fl-error'" :aria-label="`${lado === 'frente' ? 'Frente' : 'Fondo'} del pallet en metros`" @input="escribirMedida(t, lado, $event)">
+                <span class="text-sm text-neutral-500">m</span>
+              </span>
+              <small v-if="err(t)[lado]" class="fl-msg">{{ err(t)[lado] }}</small>
             </div>
-            <!-- Con el pallet en 3D arriba, la planta sobra (el 3D tiene la vista desde arriba) -->
-            <div v-if="!t.desdeCaja" class="flex justify-center"><FlujoPalletPlanta :frente="t.frente" :fondo="t.fondo" /></div>
           </div>
+          <p v-if="nombrePallet(t)" class="mt-2 text-sm text-neutral-600">{{ nombrePallet(t) }}</p>
         </section>
 
-        <!-- 2. Como viene cargado: con cajas iguales (se arma en 3D y salen el alto y el peso) o ya sabe el alto y el peso -->
+        <!-- 2. Alto y peso del pallet ya cargado: con eso se calculan los niveles y las vigas -->
         <section class="mt-5">
-          <h3 class="fl-paso-t"><span class="fl-num">2</span>¿Qué lleva encima?</h3>
-          <div class="mt-2 grid grid-cols-2 gap-2" role="group" aria-label="Cómo definir la carga">
-            <button type="button" :class="['fl-chip !min-h-14 !flex-col !gap-0 !text-sm', t.desdeCaja && 'fl-chip--sel']" :aria-pressed="!!t.desdeCaja" @click="usarCajas(t)">
-              Cajas iguales<span class="text-xs font-normal opacity-80">te calculamos alto y peso</span>
-            </button>
-            <button type="button" :class="['fl-chip !min-h-14 !flex-col !gap-0 !text-sm', !t.desdeCaja && 'fl-chip--sel']" :aria-pressed="!t.desdeCaja" @click="t.desdeCaja = false">
-              Otra carga<span class="text-xs font-normal opacity-80">ya sé el alto y el peso</span>
-            </button>
+          <h3 class="fl-paso-t"><span class="fl-num">2</span>¿Cuánto mide de alto y cuánto pesa, ya cargado?</h3>
+          <div class="mt-2 grid gap-4 sm:grid-cols-2">
+            <div class="fl-campo">
+              <span class="!text-sm">Alto del pallet cargado (m)
+                <FlujoInfo>Del piso a lo más alto de la carga, con la tarima incluida.</FlujoInfo>
+              </span>
+              <div class="flex gap-2">
+                <input v-model.number="t.alto" type="number" min="0.3" max="2.5" step="0.05" inputmode="decimal" class="form-input" :class="err(t).alto && 'fl-error'" :aria-label="`Alto del ${t.nombre} cargado, en metros`" @input="sabe(t, 'alto')">
+                <button type="button" :class="['fl-nose', t.noSe?.includes('alto') && 'fl-nose--sel']" @click="noSe(t, 'alto', 1.2)">No lo sé</button>
+              </div>
+              <small v-if="err(t).alto" class="fl-msg">{{ err(t).alto }}</small>
+              <em class="text-xs not-italic text-neutral-500">{{ t.noSe?.includes('alto') ? `${ESTIMADO}. ${PIERDE}` : PORQUE.medidasPallet }}</em>
+            </div>
+            <div class="fl-campo">
+              <span class="!text-sm">Peso del pallet cargado (kg)
+                <FlujoInfo>Lo que pesa un pallet lleno: la carga más la tarima. Si varía, pon el más pesado.</FlujoInfo>
+              </span>
+              <div class="flex gap-2">
+                <input v-model.number="t.peso" type="number" min="1" max="2000" step="10" inputmode="numeric" class="form-input" :class="err(t).peso && 'fl-error'" :aria-label="`Peso del ${t.nombre} cargado, en kilos`" @input="sabe(t, 'peso')">
+                <button type="button" :class="['fl-nose', t.noSe?.includes('peso') && 'fl-nose--sel']" @click="noSe(t, 'peso', t.noSe?.includes('peso') ? t.peso : 1000)">No lo sé</button>
+              </div>
+              <small v-if="err(t).peso" class="fl-msg">{{ err(t).peso }}</small>
+              <!-- "No lo sé" (prompt de conversión §D): rangos típicos; queda estimado -->
+              <div v-if="t.noSe?.includes('peso')" class="grid grid-cols-3 gap-1.5">
+                <button v-for="o in PESOS_TIPICOS" :key="o.v" type="button" :class="['fl-chip !min-h-9 !flex-col !gap-0 !text-sm leading-tight', t.peso === o.kg && 'fl-chip--sel']" @click="t.peso = o.kg">{{ o.t }}<span class="text-[11px] font-normal text-neutral-500">~{{ o.kg.toLocaleString('es-CL') }} kg</span></button>
+              </div>
+              <em class="text-xs not-italic text-neutral-500">{{ t.noSe?.includes('peso') ? `${ESTIMADO}. ${PIERDE}` : PORQUE.peso }}</em>
+            </div>
           </div>
         </section>
-
-        <template v-if="t.desdeCaja && t.caja">
-          <!-- 3. La caja, en milimetros (como viene en la ficha del producto), con su tope -->
-          <section class="mt-5">
-            <h3 class="fl-paso-t"><span class="fl-num">3</span>¿Cuánto mide cada caja?</h3>
-            <div class="mt-2 grid grid-cols-3 gap-2">
-              <label v-for="d in DIM_CAJA" :key="d.k" class="fl-campo">
-                <span class="!text-sm">{{ d.t }} (mm)</span>
-                <input :value="mm(t.caja[d.k])" type="text" inputmode="numeric" maxlength="4" class="form-input" :class="errCaja(t)[d.k] && 'fl-error'" @input="ponerMm(t, d.k, $event)">
-              </label>
-            </div>
-            <small v-if="errCaja(t).largo || errCaja(t).ancho || errCaja(t).alto" class="fl-msg mt-1 block" role="alert">{{ errCaja(t).largo || errCaja(t).ancho || errCaja(t).alto }}</small>
-            <p v-else class="mt-1 text-xs text-neutral-500">En este pallet cabe una caja de hasta {{ n(Math.max(t.frente, t.fondo) * 1000) }} × {{ n(Math.min(t.frente, t.fondo) * 1000) }} mm y {{ n(ALTO_CARGA * 1000) }} mm de alto.</p>
-            <div class="mt-3 grid grid-cols-2 gap-2">
-              <label class="fl-campo">
-                <span class="!text-sm">Kg por caja</span>
-                <input v-model.number="t.caja.peso" type="number" min="0.1" max="1000" step="0.5" inputmode="decimal" class="form-input" :class="errCaja(t).peso && 'fl-error'">
-              </label>
-              <div class="fl-campo">
-                <span class="!text-sm">Aguanta apiladas <FlujoInfo>Cuántas cajas se pueden poner una sobre otra sin que se aplaste la de abajo. Define las camas del pallet.</FlujoInfo></span>
-                <div class="flex gap-2">
-                  <input v-model.number="t.caja.apilable" type="number" min="1" max="60" step="1" inputmode="numeric" class="form-input" :class="errCaja(t).apilable && 'fl-error'" @input="sabe(t, 'apilable')">
-                  <button type="button" :class="['fl-nose', t.noSe?.includes('apilable') && 'fl-nose--sel']" @click="t.caja.apilable = 5; marcarNoSe(t, 'apilable')">No sé</button>
-                </div>
-              </div>
-            </div>
-            <small v-if="errCaja(t).peso || errCaja(t).apilable" class="fl-msg mt-1 block" role="alert">{{ errCaja(t).peso || errCaja(t).apilable }}</small>
-          </section>
-          <!-- 4. Como van: las dos orientaciones con cuantas entran por cama -->
-          <section v-if="!errCajaTxt(t)" class="mt-5">
-            <h3 class="fl-paso-t"><span class="fl-num">4</span>¿Cómo las pones en el pallet?</h3>
-            <div class="mt-2 grid grid-cols-2 gap-2">
-              <button
-                v-for="o in orientaciones({ frente: t.frente, fondo: t.fondo }, t.caja)" :key="String(o.largoEnFrente)" type="button"
-                :class="['fl-chip !min-h-12 !flex-col !text-sm', (armado(t)?.largoEnFrente ?? true) === o.largoEnFrente && 'fl-chip--sel']"
-                :aria-pressed="(armado(t)?.largoEnFrente ?? true) === o.largoEnFrente"
-                :disabled="!o.cajas" @click="t.caja.orientacion = o.largoEnFrente ? 'largo' : 'ancho'"
-              >
-                <span>{{ o.largoEnFrente ? 'Largo al frente' : 'Ancho al frente' }}</span>
-                <span class="text-xs font-normal opacity-80">{{ o.cajas ? `${o.cols} × ${o.filas} = ${o.cajas} por cama` : 'no cabe así' }}</span>
-              </button>
-            </div>
-          </section>
-        </template>
-
-        <div v-else class="mt-4 grid gap-4 sm:grid-cols-2">
-          <div class="fl-campo">
-            <span>Alto con la carga (m)</span>
-            <div class="flex gap-2">
-              <input v-model.number="t.alto" type="number" min="0.3" max="2.5" step="0.05" inputmode="decimal" class="form-input" :class="err(t).alto && 'fl-error'" :aria-label="`Alto del ${t.nombre} en metros`" @input="sabe(t, 'alto')">
-              <button type="button" :class="['fl-nose', t.noSe?.includes('alto') && 'fl-nose--sel']" @click="noSe(t, 'alto', 1.2)">No lo sé</button>
-            </div>
-            <small v-if="err(t).alto" class="fl-msg">{{ err(t).alto }}</small>
-            <em class="text-xs not-italic text-neutral-500">{{ t.noSe?.includes('alto') ? `${ESTIMADO}. ${PIERDE}` : PORQUE.medidasPallet }}</em>
-          </div>
-          <div class="fl-campo">
-            <span>Peso con la carga (kg)</span>
-            <div class="flex gap-2">
-              <input v-model.number="t.peso" type="number" min="1" max="2000" step="10" inputmode="numeric" class="form-input" :class="err(t).peso && 'fl-error'" :aria-label="`Peso del ${t.nombre} en kilos`" @input="sabe(t, 'peso')">
-              <button type="button" :class="['fl-nose', t.noSe?.includes('peso') && 'fl-nose--sel']" @click="noSe(t, 'peso', t.noSe?.includes('peso') ? t.peso : 1000)">No lo sé</button>
-            </div>
-            <small v-if="err(t).peso" class="fl-msg">{{ err(t).peso }}</small>
-            <!-- "No lo sé" (prompt de conversión §D): rangos típicos; queda estimado -->
-            <div v-if="t.noSe?.includes('peso')" class="grid grid-cols-3 gap-1.5">
-              <button v-for="o in PESOS_TIPICOS" :key="o.v" type="button" :class="['fl-chip !min-h-9 !flex-col !gap-0 !text-sm leading-tight', t.peso === o.kg && 'fl-chip--sel']" @click="t.peso = o.kg">{{ o.t }}<span class="text-[11px] font-normal text-neutral-500">~{{ o.kg.toLocaleString('es-CL') }} kg</span></button>
-            </div>
-            <em class="text-xs not-italic text-neutral-500">{{ t.noSe?.includes('peso') ? `${ESTIMADO}. ${PIERDE}` : PORQUE.peso }}</em>
-          </div>
-        </div>
 
         <!-- Cuantos pallets y de cuantos productos -->
         <section class="mt-6 border-t border-neutral-100 pt-5">
-          <h3 class="fl-paso-t"><span class="fl-num">{{ t.desdeCaja ? 5 : 3 }}</span>¿Cuántos pallets así vas a guardar?</h3>
+          <h3 class="fl-paso-t"><span class="fl-num">3</span>¿Cuántos pallets así vas a guardar?</h3>
           <label class="fl-campo mt-2">
             <span class="sr-only">Pallets de este tipo</span>
             <span class="flex gap-2">
@@ -171,33 +103,6 @@
             <p>En tu bodega de {{ n(caben.m2) }} m² caben unos <b>{{ n(caben.pallets) }} pallets</b> en selectivo doble de {{ caben.niveles }} {{ caben.niveles === 1 ? 'nivel' : 'niveles' }}.</p>
             <button type="button" class="fl-btn-sec mt-2 w-full !min-h-10 !text-sm" @click="usarLoQueCabe(t)">Usar {{ n(Math.max(1, caben.pallets - otros(t))) }} pallets (queda estimado)</button>
           </div>
-          <!-- Cuantos pallets: desde las importaciones (contenedores que llegan y lo que tardan en salir) -->
-          <details v-if="t.desdeCaja && t.caja" class="fl-mas mt-3 rounded-xl bg-neutral-50 px-3" :open="!!t.importacion">
-            <summary @click="t.importacion ??= { contenedor: 'c40', n: 1, entre: 8, bodega: 8, actuales: 0, margen: 0.1, crecimiento: 0.2 }">¿No sabes cuántos? Calcúlalo desde tus importaciones</summary>
-            <div v-if="t.importacion" class="space-y-3 pb-3">
-              <div class="grid grid-cols-3 gap-2">
-                <button v-for="(c, k) in CONTENEDORES" :key="k" type="button" :class="['fl-chip !min-h-10 !text-sm', t.importacion.contenedor === k && 'fl-chip--sel']" @click="t.importacion.contenedor = k">{{ c.t }}</button>
-              </div>
-              <div class="grid grid-cols-2 gap-2">
-                <label class="fl-campo"><span class="!text-sm">Contenedores por llegada</span><input v-model.number="t.importacion.n" type="number" min="1" class="form-input"></label>
-                <label class="fl-campo"><span class="!text-sm">Llegan cada</span>
-                  <select v-model.number="t.importacion.entre" class="form-input"><option v-for="s in SEMANAS" :key="s.v" :value="s.v">{{ s.t }}</option></select>
-                </label>
-                <label class="fl-campo"><span class="!text-sm">Tarda en salir</span>
-                  <select v-model.number="t.importacion.bodega" class="form-input"><option v-for="s in SEMANAS" :key="s.v" :value="s.v">{{ s.t }}</option></select>
-                </label>
-                <label class="fl-campo"><span class="!text-sm">Posiciones que ya tienes</span><input v-model.number="t.importacion.actuales" type="number" min="0" class="form-input"></label>
-                <label class="fl-campo"><span class="!text-sm">Margen (%)</span><input :value="Math.round(t.importacion.margen * 100)" type="number" min="0" max="100" class="form-input" @input="t.importacion.margen = (Number(($event.target as HTMLInputElement).value) || 0) / 100"></label>
-                <label class="fl-campo"><span class="!text-sm">Crecimiento anual (%)</span><input :value="Math.round(t.importacion.crecimiento * 100)" type="number" min="0" max="200" class="form-input" @input="t.importacion.crecimiento = (Number(($event.target as HTMLInputElement).value) || 0) / 100"></label>
-              </div>
-              <div v-if="demanda(t)" class="rounded-lg bg-white p-3 text-sm text-neutral-700 ring-1 ring-neutral-200">
-                <p>{{ n(demanda(t)!.cajas) }} cajas en bodega · {{ n(demanda(t)!.pallets) }} pallets</p>
-                <p class="mt-1 font-semibold text-neutral-900">Necesitas {{ n(demanda(t)!.necesarias) }} posiciones hoy: te faltan {{ n(demanda(t)!.aCrecer) }}</p>
-                <p class="mt-1 text-neutral-500">En 1 año: {{ n(demanda(t)!.en1) }} · en 2 años: {{ n(demanda(t)!.en2) }}</p>
-                <button type="button" class="fl-btn mt-3 !min-h-10 w-full !text-sm" @click="t.cantidad = Math.max(1, demanda(t)!.aCrecer)">Usar las {{ n(demanda(t)!.aCrecer) }} que faltan</button>
-              </div>
-            </div>
-          </details>
           <!-- Lo que ya respondió en el paso 1: no se vuelve a preguntar (se puede cambiar) -->
           <div v-if="usaDichos(i)" class="mt-4 rounded-xl bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
             <p class="font-semibold text-neutral-800">Lo que nos dijiste</p>
@@ -298,6 +203,8 @@
       {{ conCajas ? 'Volver a mis pallets' : 'También guardo cajas a mano (ángulo ranurado)' }}
     </button>
 
+    <!-- Lugar para el aviso fijo de abajo: sin esto tapaba el link de las cajas a mano y no se podía llegar a él -->
+    <div v-if="preguntaEjemplo" class="h-48" aria-hidden="true" />
     <!-- Antes de avanzar con el pallet de ejemplo, se pregunta (no se cotiza un ejemplo sin que lo sepa) -->
     <!-- Fijo sobre la barra de Siguiente: al final de la página no se veía y parecía que el botón no hacía nada -->
     <div v-if="preguntaEjemplo" class="fixed inset-x-0 bottom-[4.5rem] z-40 mx-auto w-[min(36rem,calc(100vw-2rem))] rounded-2xl bg-amber-50 p-4 text-amber-950 shadow-xl ring-1 ring-amber-200" role="alertdialog" aria-labelledby="fl-ejemplo-t">
@@ -314,20 +221,19 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, watch, watchEffect, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useProyecto, type TipoPallet, type TipoCaja } from '~/stores/proyecto';
 import { ROTACION } from '~/lib/rack3d/mezcla.js';
 import { PREGUNTAS } from '~/lib/tour/reglas.js';
 import { PESOS_TIPICOS, ESTIMADO, PIERDE, PORQUE } from '~/lib/flujo/conversion.js';
-import { armarPallet, orientaciones, demandaImportacion, CONTENEDORES, ALTO_MAX_PALLET, ALTO_BASE } from '~/lib/tour/pallet.js';
+import { palletsSinCajas } from '~/lib/tour/pallet.js';
 import { UMBRALES } from '~/lib/flujo/recomendacion.js';
-// Peso maximo de un pallet cargado (el mismo tope del pallet sin cajas)
-const PESO_MAX = 2000;
 import { mejorBandeja, resultadoModelo, palletsQueCaben } from '~/lib/flujo/calculos.js';
 
 const emit = defineEmits<{ siguiente: []; atras: [] }>();
 const p = useProyecto();
-const dosColumnas = computed(() => !conCajas.value && p.pallets.some((t) => t.desdeCaja && t.caja));
+// Pallets: la vista de frente a la izquierda y los datos a la derecha (todo el ancho); cajas: una columna legible
+const dosColumnas = computed(() => !conCajas.value);
 // Abierto solo si viene de Revisa a cambiar las cajas del ángulo ranurado agregado (un pallet nuevo queda a la vista)
 const abrirCajas = useState('pallets-abrir-cajas', () => false);
 const verCajas = ref(abrirCajas.value);
@@ -338,6 +244,8 @@ const soloCajas = computed(() => (p.modelos.length ? p.modelos.every((m) => m.ti
 const conCajas = computed(() => soloCajas.value || verCajas.value);
 
 onMounted(() => {
+  // Pallets armados desde cajas (diseños de antes): selectivo y drive-in van solo con alto y peso cargado
+  palletsSinCajas(p.pallets);
   // Valores por defecto: se puede avanzar con "Siguiente" sin tocar nada
   if (p.sistema === 'AR' && !p.cajas.length) p.agregarCaja();
   if (p.sistema !== 'AR' && !p.pallets.length) p.agregarPallet({ nombre: 'Pallet 1', ...desdePaso1() });
@@ -369,8 +277,7 @@ const preguntaEjemplo = ref(false);
 const textoEjemplo = computed(() => {
   const t = p.pallets.find((x) => x.ejemplo);
   if (!t) return '';
-  const c = t.desdeCaja && t.caja ? `caja de ${mm(t.caja.largo)} × ${mm(t.caja.ancho)} × ${mm(t.caja.alto)} mm y ${n(t.caja.peso)} kg, ` : '';
-  return `Pusimos ${c}${n(t.cantidad)} pallets de ${fm(t.alto)} m de alto`;
+  return `Pusimos ${n(t.cantidad)} pallets de ${fm1(t.frente)} × ${fm1(t.fondo)} m, ${fm(t.alto)} m de alto y ${n(t.peso)} kg cargados`;
 });
 function cambiarEjemplo() {
   preguntaEjemplo.value = false;
@@ -416,45 +323,6 @@ function escribirMedida(t: TipoPallet, lado: 'frente' | 'fondo', e: Event) {
   t[lado] = Number(limpio.replace(',', '.')) || 0;
 }
 
-// ─── La caja en milimetros, con tope y mensaje ───
-const ALTO_CARGA = +(ALTO_MAX_PALLET - ALTO_BASE).toFixed(3);   // alto de cajas sobre la tarima (1,65 m)
-const DIM_CAJA = [{ k: 'largo', t: 'Largo' }, { k: 'ancho', t: 'Ancho' }, { k: 'alto', t: 'Alto' }] as const;
-const mm = (v: number) => (v > 0 ? String(Math.round(v * 1000)) : '');
-// Solo numeros, hasta 4 cifras (9.999 mm): lo que pase del pallet lo explica errCaja
-function ponerMm(t: TipoPallet, k: 'largo' | 'ancho' | 'alto', e: Event) {
-  const el = e.target as HTMLInputElement, limpio = el.value.replace(/\D/g, '').slice(0, 4);
-  if (el.value !== limpio) el.value = limpio;
-  t.caja![k] = limpio ? Number(limpio) / 1000 : 0;
-}
-function errCaja(t: TipoPallet) {
-  const e: Record<string, string> = {}, c = t.caja;
-  if (!t.desdeCaja || !c) return e;
-  const mayor = Math.round(Math.max(t.frente, t.fondo) * 1000), menor = Math.round(Math.min(t.frente, t.fondo) * 1000);
-  const L = Math.round(c.largo * 1000), A = Math.round(c.ancho * 1000), H = Math.round(c.alto * 1000);
-  const N = (v: number) => v.toLocaleString('es-CL');
-  // El lado mayor de la caja va en el lado mayor del pallet: se valida por lado mayor y menor
-  const [cMayor, cMenor] = L >= A ? [L, A] : [A, L];
-  const kMayor = L >= A ? 'largo' : 'ancho', kMenor = L >= A ? 'ancho' : 'largo';
-  if (!L) e.largo = 'Falta el largo de la caja.';
-  if (!A) e.ancho = 'Falta el ancho de la caja.';
-  if (L && A) {
-    if (cMayor > mayor) e[kMayor] = `Esa caja no cabe en el pallet: de ${kMayor} cabe hasta ${N(mayor)} mm (el pallet mide ${N(Math.round(t.frente * 1000))} × ${N(Math.round(t.fondo * 1000))} mm).`;
-    else if (cMenor > menor) e[kMenor] = `Esa caja no cabe en el pallet: con ${N(cMayor)} mm de ${kMayor}, de ${kMenor} cabe hasta ${N(cMayor > menor ? menor : mayor)} mm.`;
-    else if (Math.min(L, A) < 10) e[L < A ? 'largo' : 'ancho'] = 'Mínimo 10 mm.';
-  }
-  if (!H) e.alto = 'Falta el alto de la caja.';
-  else if (H > ALTO_CARGA * 1000) e.alto = `Esa caja es más alta que lo que se carga en un pallet: de alto cabe hasta ${N(ALTO_CARGA * 1000)} mm.`;
-  else if (H < 10) e.alto = 'Mínimo 10 mm de alto.';
-  if (!(c.peso > 0)) e.peso = 'Pon cuánto pesa una caja (en kg).';
-  else if (c.peso > 1000) e.peso = 'Una caja de más de 1.000 kg no se carga así: revisa el peso.';
-  else {
-    const a = armado(t);
-    if (a && a.peso > PESO_MAX) e.peso = `Así el pallet pesa ${n(a.peso)} kg y el máximo es ${N(PESO_MAX)} kg: baja el peso o las cajas apiladas.`;
-  }
-  if (!(Number.isInteger(c.apilable) && c.apilable >= 1 && c.apilable <= 60)) e.apilable = 'Apiladas: un número entero entre 1 y 60.';
-  return e;
-}
-const errCajaTxt = (t: TipoPallet) => { const e = errCaja(t); return e.largo || e.ancho || e.alto || e.peso || e.apilable || ''; };
 // Pallets por producto y lo que significa (mismos umbrales que la recomendacion del paso 4)
 function porProducto(t: TipoPallet) {
   if (!(t.cantidad >= 1) || !(t.skus && t.skus >= 1) || t.skus > t.cantidad) return null;
@@ -486,15 +354,6 @@ function sabe(t: TipoPallet, campo: string) {
   t.noSe = (t.noSe ?? []).filter((c) => c !== campo);
 }
 
-// ─── Pallet armado desde la caja (se guarda en el proyecto: t.caja) ───
-const CAJA_TIPICA = { largo: 0.6, ancho: 0.4, alto: 0.3, peso: 15, apilable: 5, orientacion: 'auto' as const };
-function armado(t: TipoPallet) {
-  const c = t.caja;
-  if (!c || !(c.largo > 0 && c.ancho > 0 && c.alto > 0)) return null;
-  const largoEnFrente = c.orientacion === 'largo' ? true : c.orientacion === 'ancho' ? false : undefined;
-  const r = armarPallet({ base: { frente: t.frente, fondo: t.fondo }, caja: c, pesoCaja: c.peso || 0, apilable: c.apilable || 1, largoEnFrente });
-  return r.cajas > 0 ? r : null;
-}
 // ─── Angulo ranurado: la bandeja de esta caja (la del modelo si ya la armó en el paso 3; si no, la que ocupa menos piso) ───
 const mmTxt = (v: number) => Math.round(v * 1000).toLocaleString('es-CL');
 const fmA = (v: number) => (+(+v).toFixed(2)).toLocaleString('es-CL', { minimumFractionDigits: 1 });
@@ -517,36 +376,6 @@ function calcularBandeja(c: TipoCaja) {
 // Una vez por cambio (la busqueda prueba varias bandejas): no en cada uso del template
 const bandejas = computed(() => Object.fromEntries(p.cajas.map((c) => [c.id, calcularBandeja(c)])));
 const bandejaDe = (c: TipoCaja) => bandejas.value[c.id] ?? null;
-const SEMANAS = [{ v: 1, t: '1 semana' }, { v: 2, t: '2 semanas' }, { v: 4, t: '1 mes' }, { v: 8, t: '2 meses' }, { v: 13, t: '3 meses' }, { v: 26, t: '6 meses' }, { v: 52, t: '1 año' }];
-function demanda(t: TipoPallet) {
-  const a = armado(t), i = t.importacion;
-  if (!a || !i || !t.caja) return null;
-  return demandaImportacion({ contenedor: i.contenedor, nContenedores: i.n, caja: t.caja, pesoCaja: t.caja.peso, apilable: t.caja.apilable, semanasEntre: i.entre, semanasBodega: i.bodega, cajasPorPallet: a.cajas, actuales: i.actuales, margen: i.margen, crecimiento: i.crecimiento });
-}
-function usarCajas(t: TipoPallet) {
-  t.caja ??= { ...CAJA_TIPICA };
-  t.desdeCaja = true;
-}
-function marcarNoSe(t: TipoPallet, campo: string) {
-  t.noSe = [...new Set([...(t.noSe ?? []), campo])];
-}
-// Con la caja definida, el alto y el peso del pallet salen del armado (y se ven al instante)
-watchEffect(() => {
-  p.pallets.forEach((t) => {
-    if (!t.desdeCaja) return;
-    const a = armado(t);
-    if (!a) return;
-    const alto = +a.alto.toFixed(2), peso = Math.round(a.peso);
-    if (t.alto !== alto) t.alto = alto;
-    if (t.peso !== peso) t.peso = peso;
-  });
-});
-let marcado = false;
-watch(() => p.pallets.map((t) => (t.desdeCaja && t.caja ? JSON.stringify(t.caja) : '')).join(), () => {
-  if (marcado) return;
-  marcado = true;
-  marcar('pallet_armado', {});
-});
 
 // Errores en linea: no se avanza con datos invalidos
 function err(t: TipoPallet) {
@@ -560,8 +389,6 @@ function err(t: TipoPallet) {
   else if (t.skus && t.cantidad >= 1 && t.skus > t.cantidad) e.skus = `No pueden ser más productos que pallets (${n(t.cantidad)}).`;
   if (!(t.frente >= 0.6 && t.frente <= 1.6)) e.frente = `El frente de un pallet va de 0,6 a 1,6 m${t.frente > 1.6 ? ': más grande no entra en un rack de pallets' : ''}.`;
   if (!(t.fondo >= 0.6 && t.fondo <= 1.6)) e.fondo = `El fondo de un pallet va de 0,6 a 1,6 m${t.fondo > 1.6 ? ': más grande no entra en un rack de pallets' : ''}.`;
-  // Armado desde la caja: el alto y el peso salen solos; el error se muestra en la caja
-  if (t.desdeCaja) { delete e.alto; delete e.peso; Object.assign(e, errCaja(t)); }
   return e;
 }
 const valido = computed(() => (conCajas.value
@@ -580,12 +407,12 @@ function marcar(event: string, datos: Record<string, unknown>) {
 </script>
 
 <style scoped>
-/* Escritorio: el pallet en 3D queda fijo a la izquierda y los datos a la derecha (menos scroll) */
+/* Escritorio: el pallet visto de frente queda fijo a la izquierda y los datos a la derecha (menos scroll) */
 @media (min-width: 1024px) {
   .fl-pallet-dos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 1.5rem; }
   .fl-pallet-dos > * { grid-column: 2; }
   .fl-pallet-dos > .fl-ancho { grid-column: 1 / -1; }
-  .fl-pallet-dos > .fl-pallet-3d { grid-column: 1; grid-row: span 30; position: sticky; top: 11rem; align-self: start; }
+  .fl-pallet-dos > .fl-pallet-vista { grid-column: 1; grid-row: span 30; position: sticky; top: 11rem; align-self: start; }
 }
 .fl-paso-t { display: flex; align-items: center; gap: .5rem; font-size: 15px; font-weight: 600; color: #262626; }
 .fl-num { display: inline-flex; height: 1.5rem; width: 1.5rem; flex-shrink: 0; align-items: center; justify-content: center; border-radius: 9999px; background: #fff7ed; color: #c2410c; font-size: .8rem; font-weight: 700; box-shadow: inset 0 0 0 1px #fed7aa; }

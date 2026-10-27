@@ -60,14 +60,16 @@ for (const rot of [0, 90, 180, 270]) {
   const b2 = con([pil(q.x0 + 2 * m.viga + 0.65, (q.y0 + q.y1) / 2)]);
   assert.equal(k.conteoRack(r).posiciones - pos(r, b2), 4 - m.tunel.quitadas);
 }
-// Alargar hasta el muro pasa sobre el pilar (simple), y un drive-in o ángulo ranurado siguen chocando
+// Alargar hasta el muro pasa sobre el pilar (simple). Ángulo ranurado sobre el pilar (video 27-10): no choca,
+// pierde el módulo (prueba-video-27-10.mjs)
 {
   const r = pl.normalizar({ id: 's', tipo: 'RS', cuerpos: 2, niveles: 3, doble: false, rot: 0, x: 3, y: 10 });
   const b2 = con([pil(12, 10)]);
   const largo = k.alargarHastaMuro(r, [r], b2, 1);
   assert.ok(caja(largo).x1 > 25, 'el lineal sigue más allá del pilar');
   const ar = pl.normalizar({ id: 'a', tipo: 'AR', cuerpos: 3, niveles: 4, rot: 0, x: 12, y: 10 });
-  assert.equal(pl.conflictos([ar], b2).size, 1, 'ángulo ranurado sobre pilar: choque');
+  assert.equal(pl.conflictos([ar], b2).size, 0, 'ángulo ranurado sobre pilar: no choca');
+  assert.equal(pl.perdidasPorPilares(ar, b2).huecos.length, 1, 'pierde el módulo donde cae');
 }
 // Sin pilares: no pierde nada y conPilares no cambia el arreglo dos veces
 {

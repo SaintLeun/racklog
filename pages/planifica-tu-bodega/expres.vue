@@ -186,9 +186,10 @@ useHead({ meta: [{ name: 'robots', content: 'noindex' }] });
 
 const n = (v: number) => Math.round(v).toLocaleString('es-CL');
 const fm = (v: number) => formatoM(v);
+// Fotos reales de bodegas (las mismas del paso 1); antes eran renders 3D del catálogo (dueño 27-10: nada generado)
 const GUARDA = [
-  { v: 'pallets', t: 'Pallets', d: 'Los mueves con grúa o apilador. Rack selectivo o drive-in.', img: '/assets/images/rack_selectivo.webp' },
-  { v: 'cajas', t: 'Cajas o bultos', d: 'Los mueves a mano. Estantería de ángulo ranurado.', img: '/assets/images/anra_body.webp' },
+  { v: 'pallets', t: 'Pallets', d: 'Los mueves con grúa o apilador. Rack selectivo o drive-in.', img: TIPOS.RS.imagen },
+  { v: 'cajas', t: 'Cajas o bultos', d: 'Los mueves a mano. Estantería de ángulo ranurado.', img: TIPOS.AR.imagen },
 ] as const;
 const RAPIDOS: Record<string, number[]> = { pallets: [50, 100, 300, 1000], cajas: [200, 500, 1000, 3000] };
 
