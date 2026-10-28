@@ -19,6 +19,11 @@ Pedido del dueño: el mono de la hoja de poses en 3D, explicando la herramienta 
   (`INICIO` en `lib/flujo/asistente.js`) con botón "Diseñar mi bodega".
 - `components/flujo/PorQue.vue` + `porQueDe()`: viga y niveles (paso 4), posiciones necesarias y pasillo (paso 5).
 
+## Parecido con la hoja (28-10, tarde)
+- R de Racklog en una calcomanía al frente del casco (en el domo se deformaba y no se leía); casco más alto.
+- Ojos más grandes con brillo, cejas gruesas y amables (antes quedaban bajo el ala del casco).
+- Pilares más anchos y perforaciones más grandes, que se ven aun con el robot chico.
+
 ## Pendiente / por confirmar con el dueño
 - Afinar el parecido con la hoja (proporciones, casco) según lo que diga al verlo.
 - Más "¿Por qué?" si los pide (p. ej. sistema recomendado en el paso 1, fondo del marco).
