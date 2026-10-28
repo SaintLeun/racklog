@@ -7,27 +7,6 @@ require_once __DIR__ . '/../utils/rate_limit.php';
 require_once __DIR__ . '/../utils/validation.php';
 require_once __DIR__ . '/../utils/logger.php';
 
-const CONTINUAR_HOSTS = ['racklog.cl', 'www.racklog.cl', 'localhost'];
-const CONTINUAR_RUTA = '/planifica-tu-bodega/disena';
-
-/** El link es del flujo en un host permitido; devuelve el link limpio o null */
-function linkDeDiseno($link): ?string {
-    if (!is_string($link) || strlen($link) > 8000) {
-        return null;
-    }
-    $u = parse_url($link);
-    if (!$u || !in_array($u['scheme'] ?? '', ['https', 'http'], true) || !in_array(strtolower($u['host'] ?? ''), CONTINUAR_HOSTS, true)) {
-        return null;
-    }
-    if (($u['scheme'] === 'http') && strtolower($u['host']) !== 'localhost') {
-        return null;
-    }
-    if (!str_starts_with(rtrim($u['path'] ?? '', '/'), CONTINUAR_RUTA)) {
-        return null;
-    }
-    return $link;
-}
-
 function handleContinuar(string $method): void {
     if ($method !== 'POST') {
         header('Allow: POST, OPTIONS');

@@ -1,17 +1,21 @@
 <template>
-  <!-- Un solo boton principal por paso, y "Atras" -->
-  <div class="mt-8 flex items-center justify-between gap-3">
-    <button v-if="atras" type="button" class="fl-btn-sec" @click="emit('atras')">Atrás</button>
-    <span v-else />
-    <button
-      type="button"
-      class="fl-btn"
-      :aria-disabled="deshabilitado || undefined"
-      :class="deshabilitado && 'opacity-50'"
-      @click="deshabilitado ? emit('bloqueado') : emit('siguiente')"
-    >{{ texto }}</button>
+  <!-- Un solo botón principal por paso, y "Atrás". Fijo abajo en todos los pasos (revisión 27-10: había
+       que bajar mucho para encontrar "Siguiente"). El espacio lo reserva el padding inferior de la página -->
+  <div class="fl-acciones" role="group" aria-label="Avanzar en el diseño">
+    <!-- En el celular el motivo va en su propia línea arriba (al lado de los botones se partía en 4-5 líneas) -->
+    <div class="container-page flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5">
+      <button v-if="atras" type="button" class="fl-btn-sec" @click="emit('atras')">Atrás</button>
+      <p v-if="motivo && deshabilitado" class="order-first w-full text-center text-xs leading-tight text-red-700 sm:order-none sm:w-auto sm:min-w-0 sm:flex-1 sm:text-right sm:text-sm" role="status">{{ motivo }}</p>
+      <span :class="['flex-1', motivo && deshabilitado && 'sm:hidden']" />
+      <button
+        type="button"
+        class="fl-btn"
+        :aria-disabled="deshabilitado || undefined"
+        :class="deshabilitado && 'opacity-50'"
+        @click="deshabilitado ? emit('bloqueado') : emit('siguiente')"
+      >{{ texto }}</button>
+    </div>
   </div>
-  <p v-if="motivo && deshabilitado" class="mt-2 text-right text-sm text-red-700" role="status">{{ motivo }}</p>
 </template>
 
 <script lang="ts" setup>

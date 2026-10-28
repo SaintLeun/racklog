@@ -16,6 +16,7 @@ export function piezasBaranda(largo: number): { modulos: number; ajuste: number 
 export function proponerAccesorios(datos: { bodega: Obj; racks?: Obj[]; pallets?: Obj[] }): any[];
 export type ManualAccesorio = { id: string; tipo: string; rackId: string | null; modelo?: string | null; orden?: number | null; lugar: Obj | null; marca: Obj };
 export const TIPOS_MANUALES: string[];
+export const ACCESORIOS_SEGURIDAD: string[];
 export function aplicarAjustes(lista: any[], ajustes?: { quitados?: string[]; cantidades?: Record<string, number>; medidas?: Record<string, number>; manuales?: ManualAccesorio[] }): any[];
 export function resolverManual(m: ManualAccesorio, racks?: Obj[] | null): Obj | null;
 export function lugaresAccesorio(tipo: string, datos: { bodega: Obj; racks?: Obj[] }): any[];

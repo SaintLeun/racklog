@@ -13,7 +13,10 @@
       />
       <iframe
         v-if="playerSrc"
-        class="yt-cover pointer-events-none"
+        ref="player"
+        class="yt-cover pointer-events-none transition-opacity duration-700"
+        :class="videoListo ? 'opacity-100' : 'opacity-0'"
+        @load="escucharVideo"
         tabindex="-1"
         aria-hidden="true"
         :src="playerSrc"
@@ -139,7 +142,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import ContactModal from '~/components/ContactModal.vue';
 
 const isContactModalOpen = ref(false);
@@ -175,8 +178,30 @@ function loadVideo() {
     `&loop=1&playlist=${YT_ID}` +
     `&playsinline=1&modestbranding=1` +
     `&rel=0&iv_load_policy=3&disablekb=1` +
-    `&fs=0&enablejsapi=0&origin=${origin}`;
+    `&fs=0&enablejsapi=1&origin=${origin}`;
+  window.addEventListener('message', alMensaje);
 }
+
+// El video queda oculto sobre la foto hasta que esta reproduciendo: antes se montaba de golpe (cuadro negro,
+// miniatura) y la portada saltaba al cargar, al volver a la pestaña y en cada vuelta del bucle
+const player = ref(null);
+const videoListo = ref(false);
+const YT_ORIGEN = 'https://www.youtube-nocookie.com';
+function escucharVideo() {
+  // Pide al reproductor que avise su estado (API de iframe de YouTube, sin cargar su script)
+  player.value?.contentWindow?.postMessage(JSON.stringify({ event: 'listening', id: 'hero', channel: 'widget' }), YT_ORIGEN);
+}
+function alMensaje(e) {
+  if (e.origin !== YT_ORIGEN) return;
+  let d;
+  try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch { return; }
+  const estado = d?.event === 'onStateChange' ? d.info : d?.info?.playerState;
+  // 1 reproduciendo: se muestra. -1 sin partir, 0 terminado, 5 en cola: vuelve la foto (sin negro entre vueltas).
+  // En pausa o cargando (2, 3) queda el ultimo cuadro, sin parpadeo
+  if (estado === 1) videoListo.value = true;
+  else if (estado === -1 || estado === 0 || estado === 5) videoListo.value = false;
+}
+onBeforeUnmount(() => window.removeEventListener('message', alMensaje));
 
 onMounted(() => {
   // Cargar el video solo cuando la pagina ya termino de cargar

@@ -126,6 +126,16 @@
               </ul>
               <button type="button" class="mt-2 text-sm font-medium text-brand-700 underline underline-offset-2" @click="paso = 0">Cambiar mis respuestas</button>
             </div>
+            <!-- Al final: sumar otras estanterías a la misma cotización (dueño 27-10) -->
+            <fieldset class="fl-card mt-5">
+              <legend class="fl-leyenda">¿Te cotizamos también otra estantería? <span class="font-normal normal-case text-neutral-500">(opcional)</span></legend>
+              <div class="mt-3 grid gap-2 sm:grid-cols-3">
+                <button v-for="o in OTRAS" :key="o.v" type="button" :class="['fl-opcion !p-0 overflow-hidden text-left', tambien.includes(o.v) && 'fl-opcion--sel']" :aria-pressed="tambien.includes(o.v)" @click="alternarTambien(o.v)">
+                  <img :src="o.img" alt="" width="240" height="120" class="aspect-[2/1] w-full bg-neutral-100 object-cover" loading="lazy">
+                  <span class="block px-3 pb-3 pt-2"><span class="block text-sm font-semibold text-neutral-900">{{ tambien.includes(o.v) ? '✓ ' : '+ ' }}{{ o.t }}</span><span class="block text-xs text-neutral-600">{{ o.d }}</span></span>
+                </button>
+              </div>
+            </fieldset>
             <FlujoRegistroFinal
               class="mt-5" :cliente="cliente" :estados="estados" :abandono-medidas="abandonoMedidas"
               :enviando="enviando" :error="error" @enviar="enviar"
@@ -160,7 +170,8 @@
 <script lang="ts" setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { GRUAS } from '~/lib/rack3d/parametrosTecnicos.js';
-import { formatoM } from '~/lib/rack3d/planificador.js';
+import { formatoM, TIPOS } from '~/lib/rack3d/planificador.js';
+import { consulta } from '~/lib/flujo/consulta.js';
 import {
   MENSAJE_INICIO, PORQUE, PIERDE, ESTIMADO, PESOS_TIPICOS, ALTURAS_TIPICAS, TOLERANCIA_MEDIDAS, TEXTO_INGENIERIA,
   estadosExpres, leadExpres, payloadLead, enviarLead, ofertaRescate,
@@ -175,9 +186,10 @@ useHead({ meta: [{ name: 'robots', content: 'noindex' }] });
 
 const n = (v: number) => Math.round(v).toLocaleString('es-CL');
 const fm = (v: number) => formatoM(v);
+// Fotos reales de bodegas (las mismas del paso 1); antes eran renders 3D del catálogo (dueño 27-10: nada generado)
 const GUARDA = [
-  { v: 'pallets', t: 'Pallets', d: 'Los mueves con grúa o apilador. Rack selectivo o drive-in.', img: '/assets/images/rack_selectivo.webp' },
-  { v: 'cajas', t: 'Cajas o bultos', d: 'Los mueves a mano. Estantería de ángulo ranurado.', img: '/assets/images/anra_body.webp' },
+  { v: 'pallets', t: 'Pallets', d: 'Los mueves con grúa o apilador. Rack selectivo o drive-in.', img: TIPOS.RS.imagen },
+  { v: 'cajas', t: 'Cajas o bultos', d: 'Los mueves a mano. Estantería de ángulo ranurado.', img: TIPOS.AR.imagen },
 ] as const;
 const RAPIDOS: Record<string, number[]> = { pallets: [50, 100, 300, 1000], cajas: [200, 500, 1000, 3000] };
 
@@ -194,6 +206,16 @@ const pesoExacto = ref<number | null>(null);
 const alturaExacta = ref<number | null>(null);
 const cliente = reactive({ nombre: '', correo: '', comuna: '', rut: '', empresa: '', telefono: '' });
 const paso = ref(0);
+// Otras estanterías que pide cotizar junto con lo principal (van al lead como "También cotizar")
+const OTRAS = (['RS', 'DI', 'AR'] as const).map((v) => ({
+  v, t: (TIPOS as any)[v].nombre as string, img: (TIPOS as any)[v].imagen as string,
+  d: { RS: 'Acceso directo a cada pallet', DI: 'Muchos pallets de un mismo producto', AR: 'Cajas y productos sueltos, a mano' }[v],
+}));
+const tambien = ref<string[]>([]);
+function alternarTambien(v: string) {
+  tambien.value = tambien.value.includes(v) ? tambien.value.filter((x) => x !== v) : [...tambien.value, v];
+  marcar('agregar_producto', { tipo: v, desde: 'expres', activo: tambien.value.includes(v) });
+}
 const abandonoMedidas = ref(false);
 const prueba = ref(false);
 const utm = ref<Record<string, string>>({});
@@ -282,10 +304,12 @@ async function enviar({ visita }: { visita: boolean }) {
     const lead = leadExpres({ ...e, comuna: cliente.comuna, visita, archivos: archivos.value.length }, {
       nombreGrua: (k: string) => (GRUAS as any)[k]?.nombre ?? k, prueba: prueba.value, utm: utm.value,
     });
+    if (tambien.value.length) lead.config['También cotizar'] = OTRAS.filter((o) => tambien.value.includes(o.v)).map((o) => o.t).join(', ');
     const r = await enviarLead(payloadLead(cliente, lead), archivos.value);
     if (!r.ok) {
       error.value = r.error === 'rate_limit' ? 'Recibimos muchas solicitudes desde tu conexión. Espera un minuto e inténtalo de nuevo.'
         : r.error === 'too_large' ? 'Los archivos pesan mucho. Quita uno e inténtalo de nuevo.'
+          : r.error === 'rut' ? 'Revisa el RUT de tu empresa: sin un RUT válido no podemos enviarte la cotización.'
           : 'No pudimos enviar tus datos. Inténtalo de nuevo o escríbenos por WhatsApp al +56 9 3240 3819.';
       marcar('quote_error', { via: 'expres', error: r.error });
       return;
@@ -309,7 +333,7 @@ async function enviar({ visita }: { visita: boolean }) {
 const CLAVE = 'racklog-expres-v1';
 watch([e, cliente, paso], () => { try { sessionStorage.setItem(CLAVE, JSON.stringify({ e, cliente, paso: paso.value })); } catch { /* lleno o bloqueado */ } }, { deep: true });
 onMounted(() => {
-  const q = new URLSearchParams(location.search);
+  const q = new URLSearchParams(consulta());
   prueba.value = q.get('prueba') === '1';
   ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'fbclid', 'li_fat_id'].forEach((k) => { const v = q.get(k); if (v) utm.value[k] = v.slice(0, 120); });
   try {

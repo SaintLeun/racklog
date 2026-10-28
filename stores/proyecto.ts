@@ -3,6 +3,8 @@
 // Se guarda solo en este navegador (localStorage) con un id de sesion para "Continuar donde quede".
 import { defineStore } from 'pinia';
 import { nuevoTipo } from '~/lib/rack3d/mezcla.js';
+import { consulta } from '~/lib/flujo/consulta.js';
+import { palletsSinCajas } from '~/lib/tour/pallet.js';
 
 export const PASOS = [
   // La bodega se dibuja primero (prompt v3 §1): todo lo que sigue se valida contra ella. Los accesorios van
@@ -32,7 +34,8 @@ export interface TipoPallet {
   sinPallet?: boolean; sobresale?: number;
   // Productos distintos (SKU) que comparten este tipo de pallet (pallets por SKU = cantidad / skus)
   skus?: number;
-  // Armado desde la caja (paso 2): medidas en m, kg por caja, cuantas aguanta apiladas y orientacion
+  // Armado desde la caja: ya no se usa en selectivo ni drive-in (solo alto y peso del pallet cargado, dueño
+  // 27-10). Queda por los diseños guardados antes; al cargarlos pasan a alto y peso directos (palletsSinCajas)
   desdeCaja?: boolean;
   caja?: { largo: number; ancho: number; alto: number; peso: number; apilable: number; orientacion: 'auto' | 'largo' | 'ancho' };
   // Cantidad desde importaciones (contenedor, cuantos por llegada, semanas entre llegadas y en bodega)
@@ -55,10 +58,15 @@ export interface Modelo {
   tunel?: { cuerpo: number | null; altoLibre: number } | null;
   fondos?: number; techoGrua?: number | null; mastilGrua?: number | null; anchoGrua?: number | null;
   bandeja?: number; frente?: number;
-  // Angulo ranurado: cajas apiladas por repisa (define la altura entre repisas) y carro de carga (m)
-  camasRepisa?: number; altoEntre?: number | null; altoAngulo?: number | null; anchoCarro?: number | null;
+  // Angulo ranurado (paso 4): `niveles` son los niveles de carga (+ la bandeja del tope que cierra el estante),
+  // alto del ángulo (m), orientación de la caja (null = la que pone más) y carro de carga (m). Las cajas apiladas
+  // salen de lo que aguanta la caja (paso 3), acotado por el espacio entre bandejas
+  altoEntre?: number | null; altoAngulo?: number | null; anchoCarro?: number | null; largoEnFrente?: boolean | null;
+  propuestaAR?: string | null;
   // Vigas movidas a mano (m, centro de cada viga; selectivo)
   vigasY?: number[] | null;
+  // Primer nivel sobre viga a piso (selectivo). null/ausente = lo que pide el equipo (GRUAS.vigaPiso)
+  vigaPiso?: boolean | null;
   // Cuantos de cada tipo (pallet o caja) van en este modelo
   cantidades: Record<string, number>;
 }
@@ -95,7 +103,9 @@ function inicial() {
     modeloSel: null as string | null,
     // Paso 4: los propuestos que el cliente quito y las cantidades que cambio a mano
     // manuales: los que el cliente arrastro al 3D (lib/rack3d/accesorios.js, encajarAccesorio)
-    accesorios: { quitados: [] as string[], cantidades: {} as Record<string, number>, medidas: {} as Record<string, number>, manuales: [] as any[] },
+    // desea: respuesta a "¿Deseas agregar accesorios de seguridad?" (null = no ha respondido); con No, quitados lleva
+    // todos los opcionales y previos guarda lo que habia por si vuelve a decir Sí
+    accesorios: { quitados: [] as string[], cantidades: {} as Record<string, number>, medidas: {} as Record<string, number>, manuales: [] as any[], desea: null as boolean | null, previos: null as string[] | null },
     // Paso 5: misma forma que el planificador (lib/rack3d/planificador.js)
     bodega: {
       ancho: 20, largo: 30, altura: 8 as number | null, forma: null as { x: number; y: number }[] | null,
@@ -107,6 +117,9 @@ function inicial() {
       // Factor de ocupación (60–85 %): posiciones necesarias = pallets ÷ factor (prompt v3 §6)
       ocupacion: 0.8,
       pallets: [] as any[],
+      // Pasillos cerrados que el cliente marcó "por aquí no circula la grúa" (clave: ids de sus filas, ordenados).
+      // No se avisan más y le llegan al ejecutivo en el lead (dueño 27-10)
+      sinGrua: [] as string[],
     },
     racks: [] as any[],
     // Layout de hoy (antes/después): se dibuja aparte, no se cotiza
@@ -139,10 +152,11 @@ export const useProyecto = defineStore('proyecto', {
       try {
         const g = JSON.parse(localStorage.getItem(CLAVE) || 'null');
         if (g && g.version === 1) this.$patch({ ...inicial(), ...g, lead: { ...inicial().lead, ...g.lead }, bodega: { ...inicial().bodega, ...g.bodega }, accesorios: { ...inicial().accesorios, ...g.accesorios } });
+        palletsSinCajas(this.pallets);
       } catch { /* sin almacenamiento */ }
       // Atribucion: se guarda la primera vez que llega con parametros
       try {
-        const q = new URLSearchParams(location.search);
+        const q = new URLSearchParams(consulta());
         const utm: Record<string, string> = {};
         ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'fbclid', 'li_fat_id'].forEach((k) => { const v = q.get(k); if (v) utm[k] = v.slice(0, 120); });
         if (Object.keys(utm).length) this.utm = { ...this.utm, ...utm };
@@ -167,10 +181,10 @@ export const useProyecto = defineStore('proyecto', {
     },
     // ─── Paso 2 ───
     agregarPallet(base: Partial<TipoPallet> = {}) {
-      // Por defecto se arma desde una caja tipica (60 × 40 × 30 cm, 15 kg, aguanta 5 apiladas)
+      // Pallet de ejemplo con alto y peso directos (1,2 m y 800 kg cargado): en selectivo y drive-in no hay cajas
       const t = {
         ...nuevoTipo(this.pallets.length), frente: 1.0, fondo: 1.2, alto: 1.2, peso: 800, cantidad: 100,
-        desdeCaja: true, caja: { largo: 0.6, ancho: 0.4, alto: 0.3, peso: 15, apilable: 5, orientacion: 'auto' }, ejemplo: true, ...base,
+        desdeCaja: false, ejemplo: true, ...base,
       } as TipoPallet;
       this.pallets.push(t);
       return t;
@@ -189,7 +203,7 @@ export const useProyecto = defineStore('proyecto', {
         ? { id: 'm' + id(), nombre, tipo, doble: true, niveles: 3, porViga: 2, sobrante: 0.3, mezcla: [], planos: [], tunel: null, cantidades: {} }
         : tipo === 'DI'
           ? { id: 'm' + id(), nombre, tipo, doble: false, niveles: 3, fondos: 5, techoGrua: null, mastilGrua: null, anchoGrua: null, cantidades: {} }
-          : { id: 'm' + id(), nombre, tipo, doble: false, niveles: 5, bandeja: 0.4, frente: 0.92, cantidades: {} };
+          : { id: 'm' + id(), nombre, tipo, doble: false, niveles: 4, bandeja: 0.4, frente: 0.9, altoAngulo: 2, cantidades: {} };
       // Por defecto lleva todo el catalogo que corresponde
       const lista = tipo === 'AR' ? this.cajas : this.pallets;
       lista.forEach((t) => { base.cantidades[t.id] = this.modelos.length ? 0 : t.cantidad; });
@@ -214,5 +228,6 @@ export const useProyecto = defineStore('proyecto', {
 /** Campos de un modelo que lleva cada rack ubicado (lo demas es posicion y cuerpos) */
 export function camposDeModelo(m: Modelo) {
   const { id: _id, nombre: _n, cantidades: _c, ...resto } = m;
-  return { ...resto, modelo: m.id };
+  // Angulo ranurado: los niveles del modelo son de carga (el rack lleva además la bandeja del tope)
+  return { ...resto, modelo: m.id, ...(m.tipo === 'AR' ? { nivelesCarga: m.niveles, altoAngulo: m.altoAngulo ?? 2 } : {}) };
 }

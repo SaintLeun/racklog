@@ -5,6 +5,8 @@
   <Cta />
   <ProductsSection />
   <Gallery />
+  <!-- RACKLOG se presenta y cuenta cómo funciona el planificador (dueño 28-10) -->
+  <ClientOnly><FlujoGuiaInicio destino="/planifica-tu-bodega" /></ClientOnly>
 </template>
 
 <script setup lang="ts">

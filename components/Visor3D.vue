@@ -35,6 +35,14 @@
       <button type="button" class="mt-3 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-neutral-800 shadow-sm ring-1 ring-neutral-200 hover:bg-neutral-50" @click="iniciar">Reintentar</button>
     </div>
 
+    <!-- Tour guiado en vivo (paso 7): los textos van dibujados en el lienzo; aquí solo el botón para salir -->
+    <button
+      v-if="estado === 'listo' && enTour"
+      type="button"
+      class="absolute right-3 top-3 z-10 inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-sm font-semibold text-neutral-800 shadow-sm ring-1 ring-black/10 hover:bg-neutral-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
+      @click="detenerTour"
+    >Detener recorrido</button>
+
     <template v-else-if="estado === 'listo' && !adelanto">
       <p
         v-if="!paleta"
@@ -121,7 +129,8 @@
             @click="verVista(v.id)"
           >{{ v.nombre }}</button>
         </div>
-        <div class="flex gap-1.5">
+        <!-- Con guion (paso 7) el recorrido y el video se piden desde la página: aquí no se repiten -->
+        <div v-if="!guion" class="flex gap-1.5">
           <button
             type="button"
             class="inline-flex items-center gap-1.5 rounded-lg bg-white/90 px-2.5 py-1.5 text-xs font-medium text-neutral-700 shadow-sm ring-1 ring-black/10 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 disabled:opacity-60"
@@ -185,6 +194,8 @@ const props = defineProps<{
   paleta?: boolean;
   // Accesorio a resaltar en el 3D ('canilleras', 'proteccionBastidor', 'barandas'…) o null
   resaltado?: string | null;
+  // Paso 7: guion del tour en video (lib/flujo/guion.js); el padre lo reproduce o lo graba con verTour/grabarTour
+  guion?: { escenas: any[] } | null;
 }>();
 
 // Planificador: los racks se pueden arrastrar en 3D
@@ -379,8 +390,32 @@ watch(claveModelo, () => {
   });
 });
 
+// ─── Tour guiado (paso 7): en vivo o grabado en video con los textos encima ───
+const enTour = ref(false);
+async function verTour(): Promise<boolean> {
+  if (!visor || !props.guion?.escenas?.length || estado.value !== 'listo') return false;
+  // En vivo respeta "reducir movimiento": sin vuelos de cámara (el video grabado no cambia)
+  const reducido = !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if (!reducido && !operando.value) alternarOperacion();
+  vistaActiva.value = '';
+  enTour.value = true;
+  try { return await visor.tour(props.guion, { reducido }); } finally { enTour.value = false; }
+}
+function detenerTour() { visor?.detenerTour(); }
+async function grabarTour(): Promise<{ blob: Blob; extension: string } | null> {
+  if (!visor || !props.guion?.escenas?.length || estado.value !== 'listo' || grabando.value) return null;
+  if (!operando.value) alternarOperacion();
+  vistaActiva.value = '';
+  grabando.value = true;
+  enTour.value = true;
+  try { return await visor.grabarTour(props.guion); } catch (e) { console.warn('Video 3D:', e); return null; } finally { grabando.value = false; enTour.value = false; }
+}
+
 // El planificador la usa para poner la vista 3D en el PDF
 defineExpose({
+  verTour, detenerTour, grabarTour,
+  get listo() { return estado.value === 'listo'; },
+  get puedeGrabar() { return puedeGrabar.value; },
   captura: () => (visor && estado.value === 'listo' ? visor.captura() : null),
   // Las tarjetas de accesorios (paso 4) inician el arrastre desde fuera del 3D
   iniciarArrastre: (tipo: string, e: PointerEvent) => iniciarArrastre(tipo, e),

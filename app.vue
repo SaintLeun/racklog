@@ -5,6 +5,10 @@
 </template>
 
 <script setup lang="ts">
+// Misma URL (con hash) que el @font-face de main.css. Se precarga en todas las paginas para que
+// Inter llegue junto al HTML y no cambie el texto minutos despues en conexiones lentas (CLS)
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url';
+
 const route = useRoute();
 const { siteUrl } = useRuntimeConfig().public;
 
@@ -18,6 +22,7 @@ useHead(() => ({
 }));
 
 useHead({
+  link: [{ rel: 'preload', as: 'font', type: 'font/woff2', href: interLatin, crossorigin: '' }],
   script: [
     {
       type: 'application/ld+json',

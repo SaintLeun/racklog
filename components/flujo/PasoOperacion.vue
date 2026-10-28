@@ -7,7 +7,8 @@
         <p class="mt-2 text-neutral-600">Si no lo sabes, no importa: te hacemos 8 preguntas simples sobre tu bodega y te decimos cuál conviene.</p>
         <p class="mt-2 text-sm text-neutral-500">{{ MENSAJE_INICIO }}</p>
         <div class="mt-6 grid gap-3 sm:grid-cols-2">
-          <button type="button" class="fl-opcion fl-opcion--sel !p-5 text-left" @click="empezar(false)">
+          <!-- Ninguna tarjeta parte marcada: solo se destaca lo que el cliente elige (dueño 27-10) -->
+          <button type="button" class="fl-opcion !p-5 text-left" @click="empezar(false)">
             <span class="block text-lg font-bold text-neutral-900">No, ayúdenme</span>
             <span class="mt-1 block text-neutral-600">Respondes 8 preguntas (unos 2 minutos) y te recomendamos el sistema.</span>
           </button>
@@ -21,19 +22,33 @@
       <!-- Si sabe: elige sistema y equipo -->
       <section v-else-if="vista === 'elegir'" key="elegir">
         <h1 class="fl-titulo">¿Qué rack quieres?</h1>
-        <div class="mt-6 grid gap-3 sm:grid-cols-3">
-          <button
-            v-for="(t, k) in TIPOS" :key="k" type="button"
-            :class="['fl-opcion !p-0 overflow-hidden', p.sistema === k && 'fl-opcion--sel']"
-            :aria-pressed="p.sistema === k"
-            @click="p.sistema = k as Sistema"
-          >
-            <img :src="t.imagen" :alt="''" width="400" height="300" class="aspect-[4/3] w-full bg-neutral-100 object-cover" loading="lazy" @error="sinImagen">
-            <span class="block px-4 pb-4 pt-3">
-              <span class="block font-semibold text-neutral-900">{{ t.nombre }}</span>
-              <span class="mt-1 block text-sm text-neutral-600">{{ t.asesoria.sirve }}</span>
-            </span>
-          </button>
+        <!-- Al elegir uno, los otros se apagan y al lado va cómo funciona el elegido (revisión 27-10) -->
+        <div class="mt-6 grid gap-4 lg:grid-cols-[1fr_17rem]">
+          <div class="grid gap-3 sm:grid-cols-3">
+            <button
+              v-for="(t, k) in TIPOS" :key="k" type="button"
+              :class="['fl-opcion relative !p-0 overflow-hidden transition', p.sistema === k ? 'fl-opcion--sel' : p.sistema && 'opacity-45 grayscale hover:opacity-80 hover:grayscale-0']"
+              :aria-pressed="p.sistema === k"
+              @click="p.sistema = k as Sistema"
+            >
+              <img :src="t.imagen" :alt="''" width="400" height="300" class="aspect-[4/3] w-full bg-neutral-100 object-cover" loading="lazy" @error="sinImagen">
+              <span v-if="p.sistema === k" class="absolute right-2 top-2 inline-flex h-7 items-center gap-1 rounded-full bg-brand-600 px-2.5 text-xs font-bold text-white shadow" aria-hidden="true">
+                <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>Elegido
+              </span>
+              <span class="block px-4 pb-4 pt-3">
+                <span class="block font-semibold text-neutral-900">{{ t.nombre }}</span>
+                <span class="mt-1 block text-sm text-neutral-600">{{ t.asesoria.sirve }}</span>
+              </span>
+            </button>
+          </div>
+          <aside v-if="p.sistema" class="rounded-2xl bg-white p-4 ring-1 ring-brand-200" aria-live="polite">
+            <p class="text-xs font-semibold uppercase tracking-wider text-brand-700">Cómo funciona</p>
+            <p class="mt-1 font-bold text-neutral-900">{{ TIPOS[p.sistema].nombre }}</p>
+            <ul class="mt-2 space-y-1.5 text-sm text-neutral-700">
+              <li v-for="(t, i) in COMO_FUNCIONA[p.sistema]" :key="i" class="flex gap-2"><span class="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-brand-500" aria-hidden="true" />{{ t }}</li>
+            </ul>
+          </aside>
+          <p v-else class="hidden self-center text-sm text-neutral-500 lg:block">Toca uno y te contamos cómo funciona.</p>
         </div>
         <fieldset v-if="p.sistema && p.sistema !== 'AR'" class="mt-8">
           <legend class="fl-pregunta">¿Con qué equipo mueves los pallets?</legend>
@@ -47,7 +62,6 @@
         <p v-if="diSinEquipo" class="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-900">
           El drive-in no se puede usar con tu equipo: {{ diSinEquipo }}. Necesitas grúa horquilla, retráctil o apilador eléctrico; o elige rack selectivo.
         </p>
-        <FlujoAcciones :deshabilitado="!p.sistema || !!diSinEquipo" :motivo="diSinEquipo ? 'El drive-in necesita otro equipo.' : 'Elige un sistema para seguir.'" @atras="p.sabe = null" @siguiente="confirmarEleccion" />
       </section>
 
       <!-- Preguntas, una por pantalla -->
@@ -91,7 +105,6 @@
           <summary>¿Por qué te preguntamos esto?</summary>
           <p>{{ actual.tip }}</p>
         </details>
-        <FlujoAcciones :texto="'Saltar'" @atras="p.pregunta ? volverPregunta() : (p.sabe = null)" @siguiente="responder(TIPICO[actual.clave], true)" />
         </div>
       </section>
 
@@ -123,9 +136,14 @@
         </button>
         <!-- Una sola mención al ingeniero, al final -->
         <p class="mt-4 rounded-xl bg-neutral-100 px-3 py-2 text-sm text-neutral-600">Es una primera recomendación: en el paso 3 la afinamos producto por producto con tus pallets{{ p.flags.includes('revisar_asesor') ? ' y un ingeniero de Racklog revisa tu caso antes de cotizar' : '' }}.</p>
-        <FlujoAcciones texto="Seguir con mis pallets" @atras="volverPregunta" @siguiente="emit('siguiente')" />
       </section>
     </Transition>
+    <!-- La barra va fuera de la transición: con el translateY de la vista que entra, una barra fija adentro se
+         anclaba a la sección y Atrás/Saltar saltaban de lugar entre preguntas (dueño 27-10). Así queda siempre abajo -->
+    <FlujoAcciones
+      v-if="acciones" :texto="acciones.texto" :atras="acciones.atras" :deshabilitado="acciones.deshabilitado" :motivo="acciones.motivo"
+      @atras="acciones.alAtras" @siguiente="acciones.alSiguiente"
+    />
   </div>
 </template>
 
@@ -178,9 +196,29 @@ const previa = computed(() => (recomendar({ ...TIPICO, ...p.respuestas }).sistem
 const rec = computed(() => (p.sabe === false && p.pregunta >= preguntas.value.length ? recomendar(p.respuestas) : null));
 // Empieza por las preguntas; "Ya sé lo que quiero" es el atajo a elegir el sistema
 const vista = computed(() => {
-  if (p.sabe === null) return 'inicio';
+  // Con un producto ya elegido (desde la ficha del producto o al volver) no tiene lógica el "No, ayúdenme"
+  if (p.sabe === null) return p.sistema ? 'elegir' : 'inicio';
   if (p.sabe) return 'elegir';
   return p.pregunta < preguntas.value.length ? 'pregunta' : 'resultado';
+});
+
+// Barra de Atrás / Siguiente de cada vista (una sola instancia, fuera de la transición)
+const acciones = computed(() => {
+  if (vista.value === 'elegir') return {
+    texto: 'Siguiente', atras: !p.sistema, deshabilitado: !p.sistema || !!diSinEquipo.value,
+    motivo: diSinEquipo.value ? 'El drive-in necesita otro equipo.' : 'Elige un sistema para seguir.',
+    alAtras: () => { p.sabe = null; }, alSiguiente: confirmarEleccion,
+  };
+  if (vista.value === 'pregunta' && actual.value) return {
+    texto: 'Saltar', atras: true, deshabilitado: false, motivo: '',
+    alAtras: () => { if (p.pregunta) volverPregunta(); else p.sabe = null; },
+    alSiguiente: () => responder(TIPICO[actual.value!.clave], true),
+  };
+  if (vista.value === 'resultado' && rec.value) return {
+    texto: 'Seguir con mis pallets', atras: true, deshabilitado: false, motivo: '',
+    alAtras: volverPregunta, alSiguiente: () => emit('siguiente'),
+  };
+  return null;
 });
 
 function responder(v: string, noSe = false) {
@@ -213,6 +251,24 @@ function elegirEquipo(v: string, noSe = false) {
   p.bodega.grua = GRUA[v];
   p.flags = noSe ? [...new Set([...p.flags, 'no_se:equipo'])] : p.flags.filter((f) => f !== 'no_se:equipo');
 }
+// Leyenda corta del rack elegido (al lado de las tarjetas)
+const COMO_FUNCIONA: Record<Sistema, string[]> = {
+  RS: [
+    'Cada pallet tiene su lugar y la grúa llega directo a cualquiera, sin mover otros.',
+    'Sirve para muchos productos distintos y para pedidos que salen todos los días.',
+    'Va en filas simples contra el muro o dobles espalda con espalda, con un pasillo para la grúa.',
+  ],
+  DI: [
+    'La grúa entra a calles dentro del rack y deja los pallets uno detrás de otro.',
+    'Guarda más pallets en el mismo piso porque casi no tiene pasillos.',
+    'El último que entra es el primero que sale: va un producto por calle.',
+  ],
+  AR: [
+    'Estantes de ángulo perforado con bandejas, para cajas y productos que se sacan a mano.',
+    'Las bandejas se suben o bajan cada 2 cm, a la medida de tus cajas.',
+    'No necesita grúa: se trabaja a la altura de la mano.',
+  ],
+};
 // Los equipos por foto, con el valor del tour (respuestas.equipo)
 const FOTOS = [
   { v: 'grua', t: 'Grúa horquilla', d: 'contrapeso, a gas o eléctrica', dibujo: 'contrapeso', foto: 'contrapeso' },

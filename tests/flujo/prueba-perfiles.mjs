@@ -21,7 +21,7 @@ assert.deepEqual(v.gerencia.anios.map((x) => x.necesitas), [75, 83, 91]);
 assert.ok(v.gerencia.libre > 1000, 'espacio libre en positivo');
 assert.ok(v.bodega.productos[0].niveles.startsWith('piso'), v.bodega.productos[0].niveles);
 assert.ok(v.bodega.alcanza);
-assert.ok(v.compras.cotizar[0].lineas.some((l) => /\(perfil de \d+ mm, [\d.]+ mm de largo\)/.test(l)), 'viga sin explicar');
+assert.ok(v.compras.cotizar[0].lineas.some((l) => /^\d+ pares de vigas de [\d,]+ m$/.test(l)), 'de la viga solo el largo (dueño 27-10)');
 // Bloque A: la altura del nivel más alto es la misma en el paso 3, Bodega y PDF
 const paso3 = k.resultadoModelo(modelo, { pallets });
 assert.equal(v.bodega.alturas[0].niveles.at(-1), paso3.ultimaViga.toFixed(2).replace('.', ','));

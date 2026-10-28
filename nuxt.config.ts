@@ -68,6 +68,9 @@ export default defineNuxtConfig({
         { name: "twitter:card", content: "summary_large_image" },
       ],
       link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
+      // Guarda la consulta con que llegó (?d=…, UTM…) antes de que la app corra: al hidratar una página
+      // compilada, vue-router la quita un instante (lib/flujo/consulta.js)
+      script: [{ innerHTML: "window.__consultaInicial={ruta:location.pathname,q:location.search}", tagPosition: "head" }],
     },
   },
 

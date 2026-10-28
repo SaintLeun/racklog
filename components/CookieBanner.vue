@@ -11,9 +11,10 @@
       aria-modal="false"
       aria-labelledby="cookie-banner-title"
       aria-describedby="cookie-banner-text"
-      class="fixed inset-x-0 bottom-0 z-[60] p-4 sm:p-6"
+      class="pointer-events-none fixed inset-x-0 bottom-0 z-[60] p-4 sm:p-6"
     >
-      <div class="card mx-auto max-w-3xl p-5 shadow-2xl shadow-neutral-900/15 sm:p-6">
+      <!-- La franja es transparente: solo la tarjeta recibe clics (antes tapaba los botones del hero) -->
+      <div class="card pointer-events-auto mx-auto max-w-3xl p-5 shadow-2xl shadow-neutral-900/15 sm:p-6">
         <div class="flex items-start gap-4">
           <span class="icon-tile hidden sm:inline-flex" aria-hidden="true">
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

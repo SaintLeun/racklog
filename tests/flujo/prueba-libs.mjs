@@ -57,6 +57,44 @@ prueba('cabecera contra el muro: sin protección en ese lado', () => {
   assert.equal(prot.cantidad, 1);
 });
 
+prueba('canilleras solo en caras frontales (dueño 27-10): ninguna en los costados del marco de cabecera', () => {
+  [true, false].forEach((doble) => {
+    const racks = filasRack(doble);
+    const c = A.proponerAccesorios({ bodega, racks, pallets: [] }).find((a) => a.id === 'canilleras');
+    // rot 0: el frente mira arriba (y); una canillera lateral miraria en x
+    assert.ok(c.marcas.every((k) => k.nx === 0 && Math.abs(k.ny) === 1), 'canillera mirando a un costado');
+    // Cada una pegada a una cara de carga del rack, no a una cabecera
+    const caras = racks.flatMap((r) => { const q = rectangulo(r); return [q.y0, q.y0 + q.alto]; });
+    assert.ok(c.marcas.every((k) => caras.some((y) => Math.abs(k.y - y) < 0.2)));
+    // Manuales: tampoco se ofrece un lugar en el costado
+    const lugares = A.lugaresAccesorio('canilleras', { bodega, racks });
+    assert.ok(lugares.length && lugares.every((l) => l.lugar.ns === 0));
+  });
+});
+
+prueba('protección de bastidor solo donde pasa la grúa: cabecera a 1,5 m del muro no lleva, a 4 m sí', () => {
+  const r = { tipo: 'RS', rot: 0, cuerpos: 4, niveles: 3, doble: false, id: 'M' };
+  const p = rectangulo({ ...r, x: 0, y: 0 });
+  const conLibre = (libre) => {
+    const racks = [{ ...r, x: +(libre + p.ancho / 2).toFixed(2), y: 10 }];
+    return A.cabecerasExpuestas(racks[0], racks, bodega).length;
+  };
+  assert.equal(conLibre(1.5), 1);   // solo la del otro lado (40 m libres)
+  assert.equal(conLibre(4), 2);
+  // Equipo de pasillo angosto (transpaleta, 2 m): a 2,5 m del muro sí pasa
+  const t = { ...bodega, grua: 'transpaleta' };
+  const racks = [{ ...r, x: +(2.5 + p.ancho / 2).toFixed(2), y: 10 }];
+  assert.equal(A.cabecerasExpuestas(racks[0], racks, t).length, 2);
+});
+
+prueba('sin accesorios de seguridad (respondió No): fuera del texto de la cotización, separadores siguen', () => {
+  const lista = A.proponerAccesorios({ bodega, racks: filasRack(true), pallets: [] });
+  const sin = A.aplicarAjustes(lista, { quitados: A.ACCESORIOS_SEGURIDAD });
+  const texto = A.textoAccesorios(sin);
+  assert.doesNotMatch(texto, /canillera|protecci|baranda|malla/i);
+  assert.match(texto, /separador/);
+});
+
 prueba('pasillo peatonal de 20 m: 40 m de baranda', () => {
   const b = { ...bodega, elementos: [{ id: 'p1', clase: 'pasilloPeatonal', x: 5, y: 15, ancho: 1.2, alto: 20 }] };
   const lista = A.proponerAccesorios({ bodega: b, racks: [] });
@@ -179,10 +217,13 @@ prueba('otras reglas: carga, levante, choque, peatonal, ángulo, drive-in, túne
   const regla = (x) => v.filter((a) => a.regla === x);
   assert.ok(regla('carga')[0]?.arreglo?.cambio?.porViga === 1);
   assert.ok(regla('levante').length >= 1);
-  assert.ok(regla('choque').some((a) => a.ids.includes('P')));
-  // Dueño 26-10: en un selectivo doble el pilar puede quedar dentro (pierde una columna de un lado), no choca
+  // Dueño 26 y 27-10: un selectivo (simple o doble) puede pasar sobre un pilar (pierde esas posiciones), no choca
+  assert.ok(!regla('choque').some((a) => a.ids.includes('P')));
   const v2 = V.revisarDiseno({ bodega: b, racks: racks.map((r) => (r.id === 'P' ? { ...r, doble: true } : r)), pallets, accesorios: { quitados: [] } });
   assert.ok(!v2.some((a) => a.regla === 'choque' && a.ids.includes('P')));
+  // Ángulo ranurado sobre el pilar (video 27-10): tampoco choca, pierde el módulo
+  const v3 = V.revisarDiseno({ bodega: b, racks: racks.map((r) => (r.id === 'P' ? { ...r, tipo: 'AR', niveles: 4 } : r)), pallets, accesorios: { quitados: [] } });
+  assert.ok(!v3.some((a) => a.regla === 'choque' && a.ids.includes('P')));
   assert.ok(regla('peatonal').length === 1);
   assert.ok(regla('bandeja')[0].nivel === 'bloquea' && regla('escalera')[0].nivel === 'advierte');
   assert.ok(regla('altoDriveIn')[0].nivel === 'bloquea' && regla('gruaDriveIn')[0].nivel === 'advierte');

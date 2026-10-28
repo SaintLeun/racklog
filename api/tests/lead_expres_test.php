@@ -62,7 +62,7 @@ function payload(?string $archivo, array $base): array {
     return $base;
 }
 $fijo = [
-    'customerName' => 'Ana Pérez', 'customerEmail' => 'ana@empresa.cl',
+    'customerName' => 'Ana Pérez', 'customerEmail' => 'ana@empresa.cl', 'customerRut' => '76.086.428-5',
     'products' => [[ 'name' => 'Cotización exprés (Planifica tu bodega)', 'quantity' => 1, 'price' => 0, 'quoteOnly' => true, 'config' => [
         'Origen' => 'Planifica tu bodega (vía exprés)', 'Vía' => 'exprés', 'Comuna' => 'Quilicura (RM)', 'Precisión' => 'media (66 %)',
         'Datos por confirmar' => 'peso del pallet; medidas de la bodega', 'Visita técnica' => 'solicitada (RM)', 'Etiqueta' => 'tour-logistico',
@@ -70,6 +70,15 @@ $fijo = [
 ];
 [$lead, $err] = validateQuoteData(payload($argv[1] ?? null, $fijo));
 check('payload valido para la API', $err === null);
+
+// RUT obligatorio en el tour (dueño 27-10): sin RUT o con uno invalido no se registra nada
+$sinRut = payload($argv[1] ?? null, $fijo);
+$sinRut['customerRut'] = '';
+check('tour sin RUT: rechazado (RUT requerido)', validateQuoteData($sinRut)[1] === 'RUT requerido');
+$sinRut['customerRut'] = '76.086.428-4';
+check('tour con RUT invalido: rechazado', validateQuoteData($sinRut)[1] === 'RUT invalido');
+$otro = ['customerName' => 'Ana', 'customerEmail' => 'ana@empresa.cl', 'products' => [['name' => 'Rack selectivo', 'quantity' => 1, 'price' => 0, 'config' => ['Origen' => 'Cotizador']]]];
+check('cotizacion fuera del tour: RUT sigue opcional', validateQuoteData($otro)[1] === null);
 $config = $lead['products'][0]['config'] ?? [];
 $confirmar = array_filter(array_map('trim', explode(';', (string) ($config['Datos por confirmar'] ?? ''))));
 $visitaRM = str_starts_with((string) ($config['Visita técnica'] ?? ''), 'solicitada');

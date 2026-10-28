@@ -228,6 +228,9 @@ function textoNotaTour(array $data, string $referencia): string {
     if (!empty($data['adjuntos'])) {
         $lineas[] = 'Archivos: ' . implode(', ', $data['adjuntos']);
     }
+    if (!empty($data['linkDiseno'])) {
+        $lineas[] = 'Video recorrido: abre el diseño, pulsa "Descargar video" y envíaselo al cliente: ' . $data['linkDiseno'];
+    }
     $lineas[] = 'Promesa: cotización en máximo 24 horas.';
     return implode("\n", $lineas);
 }

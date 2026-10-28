@@ -85,4 +85,10 @@ console.log('túnel por rack: pruebas ok');
   assert.equal(R3.rutas.filter((x) => x.llega).length, R3.rutas.length, 'con túneles en línea llega a todos: ' + R3.rutas.map((x) => x.llega).join());
   console.log(`  túneles en línea: ${linea.length} filas, llega a ${R3.rutas.length} de ${R3.rutas.length} pasillos`);
 }
+// Con viga a piso cada carga quitada en el túnel también quita su par de vigas (revisión 27-10)
+{
+  const r = pl.normalizar({ id: 'r', tipo: 'RS', cuerpos: 5, niveles: 3, doble: false, rot: 0, x: 10, y: 10, vigaPiso: true, tunel: { cuerpo: 2, altoLibre: 2.5 } });
+  const m = pl.medidasRack(r), sinTunel = k.conteoRack({ ...r, tunel: null });
+  assert.equal(sinTunel.paresVigas - k.conteoRack(r).paresVigas, m.tunel.quitadas, 'viga a piso: un par menos por carga quitada');
+}
 console.log('túneles en línea: pruebas ok');

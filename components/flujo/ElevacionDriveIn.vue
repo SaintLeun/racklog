@@ -16,7 +16,8 @@
       <line :x1="0" :x2="W" :y1="y(0)" :y2="y(0)" stroke="#9ca3af" />
 
       <!-- Pallets de la calle (atrás de la grúa) -->
-      <g v-for="(n, i) in niveles" :key="`p${i}`" :opacity="n.piso ? 0.45 : 1">
+      <!-- El piso también guarda (la grúa deja los de atrás primero): se ve igual que los demás niveles -->
+      <g v-for="(n, i) in niveles" :key="`p${i}`">
         <rect :x="xc - pw / 2" :y="y(n.base + 0.15)" :width="pw" :height="y(n.base) - y(n.base + 0.15)" fill="#b7895a" />
         <rect :x="xc - pw / 2 + 2" :y="y(n.base + alto)" :width="pw - 4" :height="y(n.base + 0.15) - y(n.base + alto)" fill="url(#di-carga)" stroke="#a07a45" stroke-width="0.6" rx="1.5" />
       </g>
@@ -29,11 +30,13 @@
         <rect :x="xa + pil / 2" :y="y(yv - 0.1)" :width="riel * 0.7" :height="y(yv - 0.22) - y(yv - 0.1)" fill="#f97316" />
         <rect :x="xb - pil / 2 - riel * 0.7" :y="y(yv - 0.1)" :width="riel * 0.7" :height="y(yv - 0.22) - y(yv - 0.1)" fill="#f97316" />
       </g>
+      <!-- Número de cada nivel (el 1 es el piso) -->
+      <text v-for="(n, i) in niveles" :key="`t${i}`" :x="xa - 8" :y="y(n.base + alto / 2) + 3" font-size="9" font-weight="600" text-anchor="end" fill="#64748b" font-family="Inter, system-ui, sans-serif">{{ n.piso ? 'piso' : i + 1 }}</text>
       <!-- Arriostramiento superior -->
       <rect :x="xa - pil / 2" :y="y(m.alto)" :width="xb - xa + pil" :height="y(m.alto - 0.1) - y(m.alto)" fill="#f97316" />
 
       <!-- Grúa dentro de la calle: ruedas, chasis, mástil, techo protector y operario -->
-      <g v-if="g && g.puede" :opacity="0.95">
+      <g v-if="g && g.puede" :opacity="0.45">
         <rect :x="xc - gw / 2" :y="y(0.95)" :width="gw" :height="y(0.25) - y(0.95)" fill="#f59e0b" rx="3" />
         <rect :x="xc - gw / 2 + 2" :y="y(0.3)" :width="gw * 0.22" :height="y(0) - y(0.3)" fill="#1f2937" rx="2" />
         <rect :x="xc + gw / 2 - 2 - gw * 0.22" :y="y(0.3)" :width="gw * 0.22" :height="y(0) - y(0.3)" fill="#1f2937" rx="2" />

@@ -36,7 +36,7 @@ const cajas = [{ id: 'c1', nombre: 'Caja 1', largo: 0.6, ancho: 0.4, alto: 0.3, 
 const ar = { id: 'a1', nombre: 'AR', tipo: 'AR', doble: false, niveles: 5, bandeja: 0.4, frente: 0.92, cantidades: { c1: 500 } };
 assert.equal(k.resultadoModelo(ar, { cajas, ocupacion: 0.8 }).cuerpos, k.resultadoModelo(ar, { cajas }).cuerpos, 'AR sin factor de ocupación');
 const prop = k.mejorBandeja(ar, { cajas, altura: 8 });
-assert.equal(k.resultadoModelo({ ...ar, ...prop, altoEntre: null }, { cajas, ocupacion: 0.8 }).cuerpos, prop.cuerpos, 'propuesta AR = tarjeta');
+assert.equal(k.resultadoModelo({ ...ar, ...prop, altoEntre: null }, { cajas, ocupacion: 0.8 }).porModulo, prop.porModulo, 'propuesta AR = tarjeta');
 const cAR = k.cobertura({ racks: [], modelos: [ar], cajas, ocupacion: 0.8 });
-assert.equal(cAR.modelos[0].necesita, k.resultadoModelo(ar, { cajas }).modulos * k.resultadoModelo(ar, { cajas }).porCuerpo, 'AR: bandejas sin holgura');
+assert.equal(cAR.modelos[0].necesita, 500, 'AR: las cajas que pidió, sin holgura');
 console.log(`ocupación: ${pos} posiciones para 100 pallets → al 80 % faltan ${c8.productos[0].falta}; pruebas ok`);

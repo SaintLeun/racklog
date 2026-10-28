@@ -16,6 +16,7 @@
 //   const registro = leerVariante('registro');   // 'inicio' | 'final' | null (null = control: registro al final)
 //   Llamarla en el cliente (onMounted o un handler): en el servidor siempre devuelve null.
 
+import { consulta } from '~/lib/flujo/consulta.js';
 export const EXPERIMENTOS = {
   // Control: registro al final (prompt de conversión §C); 'inicio' = variante con registro antes de empezar
   registro: ['inicio', 'final'],
@@ -41,7 +42,7 @@ function activos(): boolean {
 
 /** Variantes pedidas en ?v= (p. ej. "costo" o "titulo:costo,cta:recibir") */
 function forzadas(): Partial<Record<Experimento, string>> {
-  const v = new URLSearchParams(location.search).get('v');
+  const v = new URLSearchParams(consulta()).get('v');
   const out: Partial<Record<Experimento, string>> = {};
   if (!v) return out;
   for (const parte of v.split(',')) {

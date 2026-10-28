@@ -216,7 +216,7 @@ function generateQuote(array $data, string $quoteRef): string {
                 </p>
                 
                 {$customerInfoHtml}
-                
+                " . recorridoSection($data) . "
                 {$commentsHtml}
                 " . attachmentsSection($data, '#3f51b5') . "
                 
@@ -236,4 +236,18 @@ function generateQuote(array $data, string $quoteRef): string {
         </div>
     </body>
     </html>";
+}
+
+/** Planifica tu bodega: link al diseño abierto en el recorrido. El ejecutivo graba el video y se lo envía al cliente */
+function recorridoSection(array $data): string {
+    $link = $data['linkDiseno'] ?? '';
+    if ($link === '') {
+        return '';
+    }
+    return "
+                <div style='background-color:#fff7ed; padding:14px; border-left:4px solid #ea580c; margin:20px 0;'>
+                    <p style='margin:0 0 8px; font-weight:600;'>Video recorrido para el cliente</p>
+                    <p style='margin:0 0 10px;'>Abre su diseño, pulsa \"Descargar video\" y envíale el link del video (Drive o WhatsApp) junto con la cotización.</p>
+                    <a href='" . esc($link) . "' style='display:inline-block; background-color:#ea580c; color:#ffffff; padding:10px 16px; border-radius:6px; text-decoration:none; font-weight:600;'>Abrir diseño y grabar el recorrido</a>
+                </div>";
 }

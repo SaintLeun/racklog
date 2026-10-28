@@ -51,13 +51,15 @@ ErrorDocument 404 /404.html
     # dominio, sumarlo aqui o el navegador la bloqueara (aviso en la consola).
     Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://*.clarity.ms https://www.google-analytics.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://connect.facebook.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://api.racklog.cl https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://*.googletagmanager.com https://*.clarity.ms https://c.bing.com https://www.google.com https://*.doubleclick.net https://www.googleadservices.com https://www.facebook.com https://connect.facebook.net; frame-src https://www.youtube-nocookie.com https://www.googletagmanager.com https://td.doubleclick.net https://www.facebook.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
 
-    # Cache: archivos versionados de Nuxt (el nombre cambia en cada build)
-    <If "%{REQUEST_URI} =~ m#^/_nuxt/#">
-        Header set Cache-Control "public, max-age=31536000, immutable"
-    </If>
     # Imagenes, videos y fuentes: 30 dias
     <If "%{REQUEST_URI} =~ m#\.(webp|avif|png|jpe?g|gif|svg|ico|mp4|webm|woff2?)$#">
         Header set Cache-Control "public, max-age=2592000"
+    </If>
+    # Cache: archivos versionados de Nuxt (el nombre cambia en cada build).
+    # Va despues de la regla de 30 dias para ganarle: Inter (/_nuxt/inter-latin-wght-normal.<hash>.woff2)
+    # quedaba con 30 dias sin immutable y el navegador la revalidaba
+    <If "%{REQUEST_URI} =~ m#^/_nuxt/#">
+        Header set Cache-Control "public, max-age=31536000, immutable"
     </If>
     # HTML y datos: siempre revalidar para ver cambios al desplegar
     <If "%{REQUEST_URI} =~ m#(\.html|/|_payload\.json|sitemap\.xml|robots\.txt)$# || %{REQUEST_URI} !~ m#\.[a-z0-9]+$#">
