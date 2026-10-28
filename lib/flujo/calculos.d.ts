@@ -10,7 +10,7 @@ export function resultadoModelo(modelo: Obj, opciones?: { pallets?: Obj[]; cajas
 export const OCUPACION: { min: number; max: number; defecto: number };
 export function conOcupacion(unidades: number, ocupacion?: number): number;
 export function nivelesMaximos(modelo: Obj, opciones?: { pallets?: Obj[]; cajas?: Obj[]; altura?: number | null; grua?: string; gruaDatos?: Obj }): number;
-export function ubicarModelos(bodega: Obj, modelos: Obj[], cuerposPorModelo: Record<string, number>, opciones?: { pallets?: Obj[]; cajas?: Obj[]; nuevoId: () => string; existentes?: Obj[] }): { racks: any[]; faltan: Record<string, number> };
+export function ubicarModelos(bodega: Obj, modelos: Obj[], cuerposPorModelo: Record<string, number>, opciones?: { pallets?: Obj[]; cajas?: Obj[]; nuevoId: () => string; existentes?: Obj[]; perimetral?: boolean; cabeceraLado?: 'izq' | 'der' | null }): { racks: any[]; faltan: Record<string, number> };
 export function racksAlDia(racks: Obj[], modelos: Obj[], opciones?: { pallets?: Obj[]; cajas?: Obj[]; grua?: string }): { racks: any[]; huellaCambio: boolean };
 export function queCotizar(modelos: Obj[], racks: Obj[]): any[];
 export function repetirBloque(r: Obj, opciones: { largo?: number; profundidad?: number; espalda?: boolean; pasillo?: number | null; sentido?: number }, racks: Obj[], bodega: Obj, nuevoId: () => string): { nuevos: any[]; omitidos: number };

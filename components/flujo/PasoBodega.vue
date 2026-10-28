@@ -301,18 +301,41 @@
               </p>
             </li>
           </ul>
-          <!-- Opcional (dueño 27-10, la vuelta de "Llenar mi bodega"): el layout de máxima capacidad como punto de
-               partida editable. El cliente sigue armando; esto solo corre si lo pide. Con racks puestos, pregunta -->
-          <button v-if="!confirmarLlenar" type="button" class="mt-3 w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 ring-1 ring-dashed ring-neutral-300 hover:bg-neutral-50" @click="llenar">
+          <!-- Autollenado (dueño 27-10, lib/flujo/autollenado.js): el layout que más guarda cumpliendo pasillos de la
+               grúa, cabecera, simples contra el muro y obstáculos, en toda la bodega o en un área marcada. Solo corre
+               si lo pide, y el resultado se edita como cualquier layout -->
+          <button v-if="!auto.abierto" type="button" class="mt-3 w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 ring-1 ring-dashed ring-neutral-300 hover:bg-neutral-50" @click="abrirAuto">
             <b class="text-brand-700">Proponme un layout</b> <span class="text-neutral-500">· llenamos tu bodega al máximo y tú lo cambias</span>
           </button>
-          <template v-else>
-            <p class="mt-3 rounded-xl bg-amber-50 px-3 py-2.5 text-sm text-amber-900" role="alert">Ya acomodaste {{ racksNuevos }} {{ racksNuevos === 1 ? 'rack' : 'racks' }}. La propuesta los reemplaza todos.</p>
-            <div class="mt-2 flex gap-2">
-              <button type="button" class="fl-btn-sec flex-1 !min-h-10 !text-sm" @click="confirmarLlenar = false">Conservar mi layout</button>
-              <button type="button" class="fl-btn-sec flex-1 !min-h-10 !text-sm !text-red-700" @click="confirmarLlenar = false; ubicar(true)">Sí, proponer</button>
+          <div v-else class="mt-3 rounded-xl bg-brand-50/50 p-3 ring-1 ring-brand-200">
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-semibold text-neutral-900">Proponme un layout</p>
+              <button type="button" class="h-8 w-8 rounded-md text-neutral-500 hover:bg-white" aria-label="Cerrar" @click="auto.abierto = false">✕</button>
             </div>
-          </template>
+            <p class="mt-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">¿Dónde?</p>
+            <div class="mt-1 grid grid-cols-2 gap-1.5">
+              <button v-for="o in [{ v: 'toda', t: 'Toda la bodega' }, { v: 'area', t: 'Solo un área' }]" :key="o.v" type="button" :class="['fl-chip !min-h-10 !text-sm', auto.donde === o.v && 'fl-chip--sel']" :aria-pressed="auto.donde === o.v" @click="auto.donde = o.v as any; auto.area = null; auto.confirmar = false">{{ o.t }}</button>
+            </div>
+            <p v-if="auto.donde === 'area'" class="mt-2 text-sm text-neutral-700">
+              <template v-if="auto.area">Área de <b>{{ fm(auto.area.x1 - auto.area.x0) }} × {{ fm(auto.area.y1 - auto.area.y0) }} m</b>. <button type="button" class="font-semibold text-brand-700 underline" @click="auto.area = null">Marcar otra</button></template>
+              <template v-else><b>Arrastra en el plano</b> un rectángulo con el área que quieres llenar.</template>
+            </p>
+            <template v-if="p.modelos.length > 1">
+              <p class="mt-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">Con qué rack</p>
+              <div class="mt-1 flex flex-wrap gap-1.5">
+                <button v-for="m in p.modelos" :key="m.id" type="button" :class="['fl-chip !min-h-9 !w-auto !px-3 !text-sm', auto.modelo === m.id && 'fl-chip--sel']" @click="auto.modelo = m.id">{{ m.nombre }}</button>
+              </div>
+            </template>
+            <p class="mt-3 text-xs font-semibold uppercase tracking-wide text-neutral-500">Filas</p>
+            <div class="mt-1 grid grid-cols-3 gap-1.5">
+              <button v-for="o in [{ v: 'auto', t: 'La mejor' }, { v: 'ancho', t: 'A lo ancho' }, { v: 'largo', t: 'A lo largo' }]" :key="o.v" type="button" :class="['fl-chip !min-h-9 !px-1 !text-sm', auto.orientacion === o.v && 'fl-chip--sel']" @click="auto.orientacion = o.v as any">{{ o.t }}</button>
+            </div>
+            <p class="mt-2 text-xs text-neutral-600">Pasillos de {{ fm(grua.pasillo) }} m para tu {{ grua.nombre.toLowerCase() }}, pasillo de cabecera para que entre a todos, simples contra el muro y nada encima de pilares de pasillo, oficinas ni portones.</p>
+            <p v-if="auto.confirmar" class="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900" role="alert">Esto reemplaza {{ porReemplazar }} {{ porReemplazar === 1 ? 'rack' : 'racks' }} que ya pusiste{{ auto.donde === 'area' ? ' en esa área' : '' }}. Puedes deshacerlo.</p>
+            <button type="button" class="fl-btn mt-3 w-full !min-h-10 !text-sm" :disabled="auto.calculando || (auto.donde === 'area' && !auto.area)" @click="llenarAuto">
+              {{ auto.calculando ? 'Probando combinaciones…' : auto.confirmar ? 'Sí, reemplazar y llenar' : 'Llenar' }}
+            </button>
+          </div>
           <div v-if="cob.productos.length > 1" class="mt-3 border-t border-neutral-100 pt-3">
             <p class="text-xs font-semibold uppercase tracking-wide text-neutral-500">Por producto</p>
             <ul class="mt-2 space-y-1.5">
@@ -398,7 +421,7 @@
               <button type="button" :class="BTN" :aria-expanded="menu === 'mas'" @click="menu = menu === 'mas' ? '' : 'mas'">Más <span aria-hidden="true">▾</span></button>
               <div v-if="menu === 'mas'" :class="MENU" role="menu">
                 <button v-if="racksNuevos > 1" type="button" role="menuitem" :class="ITEM" @click="menu = ''; alinearPasillos()">Alinear mis filas al pasillo exacto</button>
-                <button type="button" role="menuitem" :class="ITEM" @click="menu = ''; llenar()">Proponme un layout</button>
+                <button type="button" role="menuitem" :class="ITEM" @click="menu = ''; abrirAuto()">Proponme un layout</button>
                 <button v-if="demanda.faltan && p.racks.length" type="button" role="menuitem" :class="ITEM" @click="menu = ''; ubicarLosQueFaltan()">Ubicar solo lo que falta</button>
                 <button type="button" role="menuitem" :class="ITEM" @click="menu = ''; verRecorrido = !verRecorrido">{{ verRecorrido ? 'Ocultar' : 'Ver' }} el recorrido de la grúa</button>
                 <button type="button" role="menuitem" :class="ITEM" @click="menu = ''; verAccesorios = !verAccesorios">{{ verAccesorios ? 'Ocultar' : 'Ver' }} los accesorios</button>
@@ -438,7 +461,7 @@
             @mover-vertice="moverVertice" @seleccionar-muro="muroSel = $event; sel = null; elementoSel = null"
             :pasillos="listaPasillos" :marcas="enHoy ? [] : marcas" :elemento-sel="elementoSel"
             :trazando="!!trazado" :agregando-cruce="agregandoCruce" :trazo-peatonal="trazado ? { puntos: trazado.puntos, ancho: trazado.ancho } : null"
-            :pincel="pincel && !enHoy ? armarLineal : null" @pintar="pintarLineal" :guias-rack="guias" @fin-cambio="guias = []" :paso-lateral="pasoLateral"
+            :pincel="pincel && !enHoy ? armarLineal : null" @pintar="pintarLineal" :guias-rack="guias" @fin-cambio="guias = []" :marcando-area="marcandoArea" @area="auto.area = $event" :paso-lateral="pasoLateral"
             :flechas-rack="modo === 'layout' && !enHoy && !!rackSel && !rackSel.existente" :flechas-no="flechasNo" @estirar-rack="estirarRack"
             :recorridos="verRecorrido && !enHoy ? recorridos : null" :sugerencias-tunel="verRecorrido && !enHoy ? sugerencias : []" :fantasma-grua="fantasmaGrua"
             @tramo-trazo="tramoTrazo" @terminar-trazo="terminarTrazado" @aplicar-tunel="aplicarSugerencia" @girar-elemento="girarElemento"
@@ -812,6 +835,8 @@ import { GRUAS, DISTANCIAS, ACCESOS } from '~/lib/rack3d/parametrosTecnicos.js';
 import { pasillos, pasilloRequerido } from '~/lib/rack3d/pasillos.js';
 import { huella } from '~/lib/rack3d/medidas.js';
 import { bodegaParaPallets, conCuerpos, conDoble, partirRack, ubicarFaltantes, resultadoModelo, rackDeModelo, conteoRack, ubicarModelos, repetirBloque, previaBloque, previaPasillos, textoMotivos, cobertura, conteoTotal, conManiobras, maniobraDe, zonaManiobra, enMuro, muroDe, conPilares, linealArrastrado, maxBloque, alargarHastaMuro } from '~/lib/flujo/calculos.js';
+import { autollenar, racksFueraDeArea } from '~/lib/flujo/autollenado.js';
+import { useAsistente } from '~/composables/useAsistente';
 import { imanRack, guiasRack, ordenarPasillos, pasillosSinSalida, abrirConexion, distanciaFrente, dobleContraMuro, pasoCirculacion } from '~/lib/flujo/alinear.js';
 import { proponerAccesorios, aplicarAjustes } from '~/lib/rack3d/accesorios.js';
 import { ALTURAS_TIPICAS, ESTIMADO, PIERDE, PORQUE, TEXTO_INGENIERIA, TOLERANCIA_MEDIDAS } from '~/lib/flujo/conversion.js';
@@ -1685,6 +1710,29 @@ let relojAviso: ReturnType<typeof setTimeout> | null = null;
 watch(avisoFaltan, (v) => { if (relojAviso) clearTimeout(relojAviso); if (v) relojAviso = setTimeout(() => { avisoFaltan.value = ''; }, 6000); });
 // Posiciones (o cajas) que aún faltan contra lo que pidió
 const porPoner = computed(() => Math.max(0, demanda.value.necesita - demanda.value.posiciones));
+
+// ─── Asistente (el robot): le cuenta cómo va el layout y atiende lo que pide desde sus avisos ───
+const asistente = useAsistente();
+watchEffect(() => {
+  if (modo.value !== 'layout' || enHoy.value) { asistente.estado.layout = null; return; }
+  const area = Math.abs(areaPoligono(contorno(p.bodega))), usado = Math.min(area, areaOcupada(p.racks, p.bodega));
+  const conPilar = p.racks.filter((r: any) => !r.existente && r.pilares > 0 && r.tipo !== 'AR');
+  asistente.estado.layout = {
+    necesita: demanda.value.necesita, posiciones: demanda.value.posiciones, faltan: porPoner.value, unidad: demanda.value.unidadPos,
+    angostos: listaPasillos.value.filter((x: any) => !x.ok).length, choques: malos.value.size, sinSalida: sinSalida.value.length,
+    perdidasPilares: perdidasPilares.value, posicionesConPilar: conPilar.reduce((t: number, r: any) => t + contenidoTotal(r), 0),
+    libreM2: Math.max(0, Math.round((area - usado) / 10) * 10), usadoPct: area ? Math.round((usado / area) * 100) : 0,
+  };
+});
+watch(() => asistente.estado.accion, (a) => {
+  if (!a || modo.value !== 'layout') return;
+  asistente.estado.accion = null;
+  if (a.id === 'autollenar' || a.id === 'autollenar-area') {
+    abrirAuto();
+    if (a.id === 'autollenar-area') auto.donde = 'area';
+  }
+});
+onBeforeUnmount(() => { asistente.estado.layout = null; });
 // ─── ¿Ya alcanza? El cliente tiene que saber cuándo sus racks cubren los pallets que pidió ───
 const filasJustas = ref(0);
 // Lo que aún le falta al modelo de ese rack (posiciones o cajas)
@@ -1840,42 +1888,63 @@ function verConflicto() {
 // ─── Atajos opcionales (el cliente los pide; nada se ubica solo) ───
 // "Llenar mi bodega" rehace el layout nuevo: si el cliente ya puso racks, se le pregunta antes
 const faltan = ref<Record<string, number>>({});
-const confirmarLlenar = ref(false);
-const modulos = computed(() => Object.fromEntries(p.modelos.map((m) => [m.id, resultados.value[m.id].modulos])));
-let reveladoTimer: ReturnType<typeof setTimeout> | null = null;
-function llenar() {
-  if (racksNuevos.value) confirmarLlenar.value = true;
-  else ubicar(true);
-}
-// Máxima capacidad según los m²: cada modelo con lo pedido y el que más guarda llena lo que queda (va al final
-// para que los demás alcancen a ubicarse)
-const TODO_LO_QUE_QUEPA = 999;
-function ubicar(manual: boolean) {
-  const exist = p.racks.filter((r) => r.existente);
+// ─── Autollenado ───
+const auto = reactive({
+  abierto: false, donde: 'toda' as 'toda' | 'area', modelo: '' as string, orientacion: 'auto' as 'auto' | 'ancho' | 'largo',
+  area: null as null | { x0: number; y0: number; x1: number; y1: number }, calculando: false, confirmar: false,
+});
+const marcandoArea = computed(() => modo.value === 'layout' && auto.abierto && auto.donde === 'area' && !auto.area && !auto.calculando);
+function abrirAuto() {
+  // Por defecto, el modelo que más pallets lleva (el que llenaría la bodega)
   const principal = [...p.modelos].sort((a, b) => (modulos.value[b.id] ?? 0) - (modulos.value[a.id] ?? 0))[0];
-  const orden = principal ? [...p.modelos.filter((m) => m.id !== principal.id), principal] : p.modelos;
-  const cuantos = principal ? { ...modulos.value, [principal.id]: TODO_LO_QUE_QUEPA } : modulos.value;
-  const r = ubicarModelos(p.bodega, orden, cuantos, { pallets: p.pallets, cajas: p.cajas, nuevoId, existentes: exist });
-  // El principal siempre "falta" (se pidió todo lo que quepa): si no cubre lo pedido lo dice la barra de demanda
-  faltan.value = Object.fromEntries(Object.entries(r.faltan).filter(([id]) => id !== principal?.id));
+  Object.assign(auto, { abierto: true, confirmar: false, area: null, modelo: auto.modelo && p.modelos.some((m) => m.id === auto.modelo) ? auto.modelo : principal?.id ?? '' });
+  sel.value = null; elementoSel.value = null; pincel.value = null;
+  marcar('autollenado_abrir', {});
+}
+// Lo que se queda: los que ya tiene, los de otros modelos (toda la bodega) o todo lo de fuera del área
+const quedanAuto = () => (auto.donde === 'area' && auto.area
+  ? racksFueraDeArea(p.racks, auto.area)
+  : p.racks.filter((r: any) => r.existente || r.modelo !== auto.modelo));
+const porReemplazar = computed(() => p.racks.filter((r: any) => !r.existente).length - quedanAuto().filter((r: any) => !r.existente).length);
+function llenarAuto() {
+  const mo = p.modelos.find((m) => m.id === auto.modelo);
+  if (!mo || (auto.donde === 'area' && !auto.area)) return;
+  if (porReemplazar.value > 0 && !auto.confirmar) { auto.confirmar = true; return; }
+  auto.confirmar = false; auto.calculando = true;
+  // Un respiro para que se vea "Probando combinaciones…" antes del cálculo (hasta ~1 s en bodegas grandes)
+  setTimeout(() => {
+    const quedan = quedanAuto();
+    const r = autollenar(p.bodega, mo, { pallets: p.pallets, cajas: p.cajas, nuevoId, existentes: quedan, area: auto.donde === 'area' ? auto.area : null, orientacion: auto.orientacion });
+    auto.calculando = false;
+    if (!r.racks?.length) {
+      avisoAlinear.value = auto.donde === 'area' ? 'En esa área no cabe ningún rack con sus pasillos. Prueba un área más grande.' : 'No cabe ningún rack con sus pasillos.';
+      setTimeout(() => { avisoAlinear.value = ''; }, 7000);
+      return;
+    }
+    revelar(quedan, r.racks);
+    const v = r.variante;
+    avisoAlinear.value = `Probamos ${r.probadas} formas: la mejor guarda ${n(r.posiciones)} ${mo.tipo === 'AR' ? 'cajas' : 'posiciones'} (filas ${v.orientacion === 'ancho' ? 'a lo ancho' : 'a lo largo'}${v.perimetral && mo.tipo !== 'DI' && mo.doble ? ', simples contra el muro' : ''}${v.perimetral && mo.tipo === 'DI' ? ', bloques enfrentados' : ''}).${r.valido ? '' : ' Revisa lo marcado en rojo.'} Cámbialo a tu gusto.`;
+    setTimeout(() => { avisoAlinear.value = ''; }, 9000);
+    auto.area = null;
+    marcar('autollenado', { donde: auto.donde, posiciones: r.posiciones, orientacion: v.orientacion, perimetral: v.perimetral, probadas: r.probadas });
+  }, 30);
+}
+// Los racks aparecen de a uno y el contador sube (sin animar si se pide menos movimiento)
+function revelar(quedan: any[], nuevos: any[]) {
   sel.value = null;
   if (reveladoTimer) clearTimeout(reveladoTimer);
-  // Los racks aparecen de a uno y el contador sube (sin animar si se pide menos movimiento)
   const quieto = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!manual || quieto || r.racks.length < 2) {
-    p.racks = [...exist, ...r.racks];
-  } else {
-    p.racks = [...exist];
-    const paso = Math.max(60, Math.min(220, 1600 / r.racks.length));
-    const poner = (i: number) => {
-      p.racks = [...exist, ...r.racks.slice(0, i)];
-      if (i < r.racks.length) reveladoTimer = setTimeout(() => poner(i + 1), paso);
-    };
-    poner(1);
-  }
-  avisoFaltan.value = '';
-  if (manual) marcar('rack_add', { tipo: 'llenar', racks: r.racks.length });
+  if (quieto || nuevos.length < 2) { p.racks = [...quedan, ...nuevos]; return; }
+  p.racks = [...quedan];
+  const paso = Math.max(60, Math.min(220, 1600 / nuevos.length));
+  const poner = (i: number) => {
+    p.racks = [...quedan, ...nuevos.slice(0, i)];
+    if (i < nuevos.length) reveladoTimer = setTimeout(() => poner(i + 1), paso);
+  };
+  poner(1);
 }
+const modulos = computed(() => Object.fromEntries(p.modelos.map((m) => [m.id, resultados.value[m.id].modulos])));
+let reveladoTimer: ReturnType<typeof setTimeout> | null = null;
 // Solo los racks en rojo se sacan y se vuelven a poner donde quepan; lo demás no se mueve
 function reubicarConflictos() {
   const fuera = new Set([...malos.value].filter((id) => !p.racks.find((r: any) => r.id === id)?.existente));

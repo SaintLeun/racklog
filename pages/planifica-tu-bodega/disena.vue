@@ -71,15 +71,13 @@
     </main>
 
     <ClientOnly>
-      <!-- Ayuda si se queda pegado en un paso -->
-      <Transition name="fl-sub">
-        <!-- Una píldora chica en la esquina: no tapa tarjetas ni botones -->
-        <div v-if="ayuda" class="fixed bottom-20 right-3 z-40 flex max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-full bg-white py-1.5 pl-4 pr-1.5 text-sm shadow-lg ring-1 ring-black/10" role="status">
-          <span class="text-neutral-700">¿Dudas con este paso?</span>
-          <a :href="`https://wa.me/56932403819?text=${encodeURIComponent('Hola, estoy diseñando mi bodega en la web y tengo una duda en el paso: ' + PASOS[p.indice].t)}`" target="_blank" rel="noopener" class="rounded-full bg-green-600 px-3 py-1.5 font-semibold text-white hover:bg-green-700" @click="marcar('whatsapp_click', { ubicacion: 'ayuda', paso: p.paso })">WhatsApp</a>
-          <button type="button" class="flex h-8 w-8 items-center justify-center rounded-full text-lg text-neutral-500 hover:bg-neutral-100" aria-label="Cerrar ayuda" @click="ayuda = false; ayudaVista = true">×</button>
-        </div>
-      </Transition>
+      <!-- Asistente de Racklog (el robot): aparece cuando el cliente lo pide; si se queda pegado en un paso, ofrece
+           ayuda (antes era una píldora de WhatsApp: ahora WhatsApp va dentro del asistente) -->
+      <FlujoAsistente
+        v-if="!compartido" :paso="p.paso" :indice="p.indice" :titulo-paso="PASOS[p.indice].t" :invitar="ayuda"
+        :whatsapp="`https://wa.me/56932403819?text=${encodeURIComponent('Hola, estoy diseñando mi bodega en la web y tengo una duda en el paso: ' + PASOS[p.indice].t)}`"
+        @visto="ayuda = false; ayudaVista = true"
+      />
       <!-- Dentro del flujo no hay barra flotante de cotizar: solo el botón del paso y el "Cotizar" de arriba -->
     </ClientOnly>
   </div>

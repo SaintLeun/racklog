@@ -2,7 +2,7 @@
   <svg
     ref="svgRef"
     class="h-full w-full select-none"
-    :class="dibujando || trazando || agregandoCruce || pincel || herramienta === 'medir' ? 'cursor-crosshair' : (paneo ? 'cursor-grabbing' : '')"
+    :class="dibujando || trazando || agregandoCruce || pincel || marcandoArea || herramienta === 'medir' ? 'cursor-crosshair' : (paneo ? 'cursor-grabbing' : '')"
     :viewBox="`${vista.x} ${vista.y} ${vista.w} ${vista.h}`"
     preserveAspectRatio="xMidYMid meet"
     role="application"
@@ -284,6 +284,12 @@
         </template>
       </g>
 
+      <!-- Área que se está marcando para autollenar: rectángulo punteado con sus medidas -->
+      <g v-if="rectArea" pointer-events="none">
+        <rect :x="rectArea.x0" :y="rectArea.y0" :width="rectArea.x1 - rectArea.x0" :height="rectArea.y1 - rectArea.y0" fill="#ea580c" fill-opacity="0.08" stroke="#ea580c" :stroke-width="Math.max(0.05, 2 * mpp)" :stroke-dasharray="`${8 * mpp} ${5 * mpp}`" />
+        <text :x="(rectArea.x0 + rectArea.x1) / 2" :y="rectArea.y0 - 10 * mpp" v-bind="TEXTO_COTA" fill="#c2410c" text-anchor="middle">{{ formatoM(rectArea.x1 - rectArea.x0) }} × {{ formatoM(rectArea.y1 - rectArea.y0) }} m</text>
+      </g>
+
       <!-- Lineal que se está dibujando con el pincel: el rack real, sus cuerpos y cuánto aporta -->
       <g v-if="previaPincel" pointer-events="none">
         <template v-for="f in [figura(previaPincel)]" :key="f.clave">
@@ -548,6 +554,8 @@ const props = defineProps<{
   pasoLateral?: number | null;
   // Dibujar un lineal arrastrando: arma el rack entre donde aprieta (a) y donde va el puntero (b), con su texto
   pincel?: ((a: Punto, b: Punto) => (RackPlano & { texto?: string }) | null) | null;
+  // Marcar un área (autollenado): se arrastra un rectángulo y se emite 'area' con { x0, y0, x1, y1 } en metros
+  marcandoArea?: boolean;
   // Dibujo del contorno: metros escritos para el muro que se está tirando (va hacia donde apunta el cursor)
   largoEscrito?: number | null;
   // Pilares de una grilla (mismo grupo): se eligen, se miden y se mueven juntos
@@ -556,6 +564,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   seleccionar: [id: string | null];
+  area: [r: { x0: number; y0: number; x1: number; y1: number }];
   mover: [id: string, x: number, y: number];
   girar: [id: string];
   eliminar: [id: string];
@@ -1393,7 +1402,26 @@ const etiquetaPincel = computed(() => {
   return { x: b.x + 14 * mpp.value, y: b.y - 18 * mpp.value };
 });
 const enCuadro = (q: Punto) => ({ x: Math.round(q.x * 10) / 10, y: Math.round(q.y * 10) / 10 });
+// ─── Marcar un área: el rectángulo va de donde apretó a donde suelta, al cuadro de 10 cm ───
+const area = ref<{ a: Punto; b: Punto; puntero: number } | null>(null);
+// Recortado a la bodega: el área nunca pasa los muros
+const rectArea = computed(() => {
+  if (!area.value) return null;
+  const c = caja(contorno(props.bodega)), en = (v: number, a: number, b: number) => Math.min(b, Math.max(a, v));
+  return {
+    x0: en(Math.min(area.value.a.x, area.value.b.x), c.x0, c.x1), y0: en(Math.min(area.value.a.y, area.value.b.y), c.y0, c.y1),
+    x1: en(Math.max(area.value.a.x, area.value.b.x), c.x0, c.x1), y1: en(Math.max(area.value.a.y, area.value.b.y), c.y0, c.y1),
+  };
+});
+watch(() => props.marcandoArea, (v) => { if (!v) area.value = null; });
 function pincelAbajo(e: PointerEvent) {
+  if (props.marcandoArea && e.button === 0) {
+    e.stopPropagation(); e.preventDefault();
+    const q = enCuadro(aPlano(e));
+    area.value = { a: q, b: q, puntero: e.pointerId };
+    svgRef.value?.setPointerCapture(e.pointerId);
+    return;
+  }
   if (!props.pincel || props.dibujando || e.button !== 0) return;
   e.stopPropagation();
   e.preventDefault();
@@ -1426,6 +1454,7 @@ function moverPuntero(e: PointerEvent) {
     return;
   }
   const p = aPlano(e);
+  if (area.value && e.pointerId === area.value.puntero) { area.value = { ...area.value, b: enCuadro(p) }; return; }
   if (pintura.value && e.pointerId === pintura.value.puntero) {
     const movio = pintura.value.movio || Math.hypot(e.clientX - pintura.value.px, e.clientY - pintura.value.py) > 6;
     pintura.value = { ...pintura.value, b: enCuadro(p), movio };
@@ -1452,6 +1481,12 @@ function moverPuntero(e: PointerEvent) {
 }
 
 function soltar(e: PointerEvent) {
+  if (area.value && e.pointerId === area.value.puntero) {
+    const r = rectArea.value;
+    area.value = null;
+    if (e.type === 'pointerup' && r && r.x1 - r.x0 >= 2 && r.y1 - r.y0 >= 2) emit('area', r);
+    return;
+  }
   if (pintura.value && e.pointerId === pintura.value.puntero) {
     const r = previaPincel.value, { movio, rack } = pintura.value;
     pintura.value = null;

@@ -116,7 +116,18 @@
             <span><b class="text-neutral-900">Incluido: {{ numTexto(a.cantidad) }} {{ a.cantidad === 1 ? a.nombre.toLowerCase() : a.plural }}</b> de {{ mmTexto(RACK.separadorBastidor.valor) }}. Van siempre en racks dobles.</span>
           </li>
         </ul>
-        <p v-if="!lista.length" class="mt-6 text-neutral-600">Tu rack no necesita accesorios adicionales.</p>
+        <!-- Los que el sistema no propuso (p. ej. baranda sin pasillo peatonal) igual se pueden poner: se arrastran
+             al 3D desde aquí. Antes de acortar las tarjetas (27-10) esta fila existía; el dueño la echó de menos -->
+        <ul v-if="faltantes.length" class="mt-3 space-y-2">
+          <li v-for="t in faltantes" :key="t.id" class="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-dashed border-neutral-300 px-4 py-3 text-sm" @pointerenter="resaltado = t.id" @pointerleave="resaltado = null">
+            <span class="min-w-0 flex-1"><b class="text-neutral-900">{{ t.nombre }}</b><span class="block text-neutral-600">{{ t.porque }}</span></span>
+            <button
+              type="button" class="fl-arrastrar inline-flex min-h-10 cursor-grab select-none items-center gap-1.5 rounded-lg bg-white px-3 font-semibold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50 active:cursor-grabbing"
+              style="touch-action: none" :title="`Arrastra al 3D para agregar ${t.id === 'barandas' ? 'un tramo' : 'una'}`" @pointerdown="arrastrar(t.id, $event)"
+            >+ Arrastrar al 3D</button>
+          </li>
+        </ul>
+        <p v-if="!lista.length && !faltantes.length" class="mt-6 text-neutral-600">Tu rack no necesita accesorios adicionales.</p>
         <p class="mt-4 text-sm text-neutral-500">Medidas y cantidades típicas: ingeniería Racklog las valida con tu caso antes de cotizar.</p>
       </div>
     </div>
@@ -129,7 +140,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 
 import { useProyecto } from '~/stores/proyecto';
-import { proponerAccesorios, aplicarAjustes, mmTexto, numTexto, ACCESORIOS_SEGURIDAD } from '~/lib/rack3d/accesorios.js';
+import { proponerAccesorios, aplicarAjustes, mmTexto, numTexto, ACCESORIOS_SEGURIDAD, TIPOS_MANUALES } from '~/lib/rack3d/accesorios.js';
 import { RACK } from '~/lib/rack3d/parametrosTecnicos.js';
 import { resultadoModelo, ubicarModelos } from '~/lib/flujo/calculos.js';
 import { medidasRack, rectangulo } from '~/lib/rack3d/planificador.js';
@@ -216,6 +227,17 @@ const resumenSeguridad = computed(() => {
 // Accesorio resaltado en el 3D (al pasar sobre su tarjeta o su ficha de la paleta)
 const resaltado = ref<string | null>(null);
 const visorRef = ref<{ iniciarArrastre(tipo: string, e: PointerEvent): void } | null>(null);
+function arrastrar(tipo: string, e: PointerEvent) {
+  resaltado.value = tipo;
+  visorRef.value?.iniciarArrastre(tipo, e);
+}
+// Accesorios de protección que no salieron propuestos: se ofrecen igual, con el motivo en una línea
+const NO_PROPUESTO: Record<string, { nombre: string; porque: string }> = {
+  barandas: { nombre: 'Baranda de protección', porque: 'No la propusimos porque no dibujaste un pasillo peatonal. Ponla donde caminen personas o frente a una cabecera.' },
+  canilleras: { nombre: 'Canilleras', porque: 'Protegen el pie de los pilares que dan al pasillo de la grúa.' },
+  proteccionBastidor: { nombre: 'Protección de bastidor', porque: 'Protege la cabecera por donde dobla la grúa.' },
+};
+const faltantes = computed(() => TIPOS_MANUALES.filter((id) => !lista.value.some((a) => a.id === id)).map((id) => ({ id, ...NO_PROPUESTO[id] })));
 
 function alternar(id: string) {
   const q = p.accesorios.quitados;
