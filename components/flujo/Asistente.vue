@@ -7,13 +7,13 @@
   <!-- En pantallas anchas se para al lado del título del paso (dueño 28-10: "casi al lado de la pregunta"), en el
        margen izquierdo; si no cabe (celular, tablet), abajo a la izquierda -->
   <div
-    :class="['pointer-events-none fixed z-[70] flex flex-col items-start gap-2', !ancla && 'bottom-3 left-3 sm:bottom-5 sm:left-5']"
-    :style="ancla ? { top: `${ancla.top}px`, left: '12px', width: `${ancla.ancho}px` } : undefined"
+    :class="['pointer-events-none fixed z-[70] flex flex-col items-start gap-2', !junto && 'bottom-[5.5rem] left-3 sm:bottom-24 sm:left-5']"
+    :style="junto ? { top: `${junto.top}px`, left: '12px', width: `${junto.ancho}px` } : undefined"
   >
     <!-- Panel -->
     <Transition name="fl-sub">
       <section
-        v-if="estado.abierto" :class="['pointer-events-auto flex', ancla && 'order-last']" class=" max-h-[min(64vh,580px)] w-[min(390px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10"
+        v-if="estado.abierto" :class="['pointer-events-auto flex', junto && 'order-last']" class=" max-h-[min(64vh,580px)] w-[min(390px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/10"
         role="dialog" aria-label="RACKLOG, asistente de diseño"
       >
         <header class="flex items-start gap-3 border-b border-neutral-100 bg-gradient-to-b from-brand-50/70 to-white px-4 py-3">
@@ -63,26 +63,20 @@
       </section>
     </Transition>
 
-    <div :class="ancla ? 'flex w-full flex-col items-end gap-1' : 'flex items-end gap-1'">
+    <div :class="junto ? 'flex w-full flex-col items-end gap-1' : 'flex items-end gap-1'">
       <!-- RACKLOG de cuerpo entero: al tocarlo abre o cierra el panel -->
       <button
         type="button" class="pointer-events-auto relative -mb-1 flex-shrink-0 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
         :aria-label="alertas ? `RACKLOG: ${alertas} ${alertas === 1 ? 'aviso' : 'avisos'}` : estado.abierto ? 'Cerrar a RACKLOG' : 'Abrir la ayuda de RACKLOG'"
         :aria-expanded="estado.abierto" @click="estado.abierto ? (estado.abierto = false) : abrir()"
       >
-        <!-- Caminando: cuadros de lib/tour/Racklog caminando.png (de frente), uno tras otro y en espejo para cambiar
-             de pie, mientras se acerca desde el fondo -->
-        <span v-if="entrada === 'camina'" :class="['rl-llega relative block drop-shadow-[0_8px_12px_rgba(0,0,0,0.2)]', !ancla && 'h-32 w-32 sm:h-56 sm:w-56']" :style="tamaño" @animationend.self="llegó">
-          <img
-            v-for="(c, i) in CUADROS" :key="i" :src="`/assets/images/guia/camina-${c.n}.webp`" alt=""
-            :class="['absolute inset-0 h-full w-full', i !== cuadro && 'invisible']"
-            :style="{ transform: `translateY(${c.arriba ? -3 : 0}%) scaleX(${c.espejo ? -1 : 1})` }"
-          >
-        </span>
-        <img
-          v-else :src="imagenPose(poseAvatar)" alt="" width="240" height="240" :style="tamaño"
-          :class="['object-contain drop-shadow-[0_8px_12px_rgba(0,0,0,0.2)]', !ancla && 'h-32 w-32 sm:h-56 sm:w-56', entrada === 'espera' && 'invisible']"
-        >
+        <!-- RACKLOG en 3D (dueño 28-10): llega caminando desde el fondo, explica en grande y después se achica a la
+             esquina; al tocarlo vuelve a explicar -->
+        <FlujoRobot3D
+          v-if="entrada !== 'espera'" :pose="poseAvatar" :caminar="entrada === 'camina'" :hablando="hablando"
+          :class="['rl-tam drop-shadow-[0_8px_12px_rgba(0,0,0,0.2)]', !grande ? 'h-20 w-20 sm:h-24 sm:w-24' : !junto && 'h-36 w-32 sm:h-60 sm:w-56']"
+          :style="grande ? tamaño : undefined" @llego="llegó"
+        />
         <span v-if="alertas" class="absolute right-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white" aria-hidden="true">{{ alertas }}</span>
       </button>
 
@@ -90,8 +84,8 @@
       <Transition name="fl-sub">
         <div
           v-if="!estado.abierto && mensaje"
-          :class="['pointer-events-auto rounded-2xl bg-white px-3.5 py-3 text-sm shadow-xl ring-1 ring-black/10', ancla ? 'self-end rounded-tr-sm' : 'mb-8 w-[min(330px,calc(100vw-8.5rem))] rounded-bl-sm sm:mb-12 sm:w-[min(340px,calc(100vw-11rem))]']"
-          :style="ancla ? { width: `${Math.max(220, Math.min(300, ancla.ancho))}px` } : undefined" role="status"
+          :class="['pointer-events-auto rounded-2xl px-3.5 py-3 text-sm shadow-xl ring-1', guia?.tipo === 'aviso' && mensaje.tono === 'alerta' ? 'bg-red-50 ring-red-200' : 'bg-white ring-black/10', junto ? 'self-end rounded-tr-sm' : 'mb-8 w-[min(330px,calc(100vw-8.5rem))] rounded-bl-sm sm:mb-12 sm:w-[min(340px,calc(100vw-11rem))]']"
+          :style="junto ? { width: `${Math.max(220, Math.min(300, junto.ancho))}px` } : undefined" role="status"
         >
           <div class="flex items-start gap-2.5">
             <button type="button" :class="['flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ring-1', voz ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white text-neutral-500 ring-neutral-300 hover:bg-neutral-50']" :aria-pressed="voz" :aria-label="voz ? 'Silenciar a RACKLOG' : 'Escuchar a RACKLOG'" @click="alternarVoz">
@@ -102,14 +96,16 @@
               </svg>
             </button>
             <div class="min-w-0 flex-1 pt-1">
-              <p v-if="guia?.tipo === 'tema'" class="font-semibold text-neutral-900">{{ mensaje.titulo }}</p>
+              <p v-if="logro && guia?.tipo === 'tema' && guia.i === 0" class="mb-1 text-xs font-semibold uppercase tracking-wide text-green-700">{{ logro }}</p>
+              <p v-if="guia?.tipo !== 'saludo' && guia?.tipo !== 'invitar' && mensaje.titulo" class="font-semibold text-neutral-900">{{ mensaje.titulo }}</p>
               <p :class="['leading-relaxed text-neutral-800', guia?.tipo === 'saludo' && 'text-[15px] font-medium']">{{ mensaje.texto }}</p>
             </div>
             <button type="button" class="-mr-1 -mt-0.5 h-7 w-7 flex-shrink-0 rounded text-neutral-400 hover:bg-neutral-100" aria-label="Cerrar" @click="cerrarGuia">×</button>
           </div>
           <div class="mt-2.5 flex items-center justify-end gap-3">
-            <button v-if="guia?.tipo !== 'saludo'" type="button" class="font-medium text-neutral-600 underline underline-offset-2" @click="abrir">Más ayuda</button>
-            <button type="button" class="rounded-lg bg-neutral-900 px-3 py-1.5 font-semibold text-white hover:bg-neutral-800" @click="avanzarGuia">{{ textoAvanzar }}</button>
+            <button v-if="guia?.tipo === 'tema' || guia?.tipo === 'invitar'" type="button" class="font-medium text-neutral-600 underline underline-offset-2" @click="abrir">Más ayuda</button>
+            <button v-if="mensaje.accion" type="button" class="font-medium text-neutral-600 underline underline-offset-2" @click="cerrarGuia">Ahora no</button>
+            <button type="button" class="rounded-lg bg-neutral-900 px-3 py-1.5 font-semibold text-white hover:bg-neutral-800" @click="mensaje.accion ? (pedir(mensaje.accion.id), cerrarGuia()) : avanzarGuia()">{{ mensaje.accion ? mensaje.accion.texto : textoAvanzar }}</button>
           </div>
         </div>
       </Transition>
@@ -119,14 +115,15 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import { useProyecto } from '~/stores/proyecto';
 import { useAsistente } from '~/composables/useAsistente';
-import { temasDe, avisosDe, imagenPose, SALUDO, type Aviso, type Tema } from '~/lib/flujo/asistente.js';
+import { useProyecto, PASOS } from '~/stores/proyecto';
+import { temasDe, avisosDe, porQueDe, SALUDO, FIN, type Aviso, type Tema } from '~/lib/flujo/asistente.js';
 
 const props = defineProps<{ paso: string; indice: number; tituloPaso: string; invitar?: boolean; whatsapp: string }>();
 const emit = defineEmits<{ visto: [] }>();
 const p = useProyecto();
 const { estado, pedir } = useAsistente();
+const { analytics } = useConsent();
 
 const TONO = { alerta: 'bg-red-50 text-red-900 ring-red-200 hover:bg-red-100', bien: 'bg-green-50 text-green-900 ring-green-200 hover:bg-green-100', info: 'bg-white text-neutral-800 ring-neutral-200 hover:bg-neutral-50' };
 const PUNTO = { alerta: 'bg-red-600', bien: 'bg-green-600', info: 'bg-brand-500' };
@@ -157,58 +154,106 @@ function abrir() {
   marcar('asistente_abrir', { paso: props.paso });
 }
 
-// ─── Burbuja guía: saludo al entrar, después los temas del paso uno a uno ───
-const guia = ref<{ tipo: 'saludo' | 'tema' | 'invitar'; i: number } | null>(null);
-const mensaje = computed<Tema | null>(() => {
+// ─── Burbuja guía: saludo al entrar, después los temas del paso uno a uno. También salta sola con un aviso
+// nuevo (alerta o logro), con el "¿Por qué?" de un resultado y al enviar la cotización ───
+type Guia = { tipo: 'saludo' | 'tema' | 'invitar' | 'aviso' | 'porque' | 'fin'; i: number; tema?: Tema };
+const guia = ref<Guia | null>(null);
+const mensaje = computed<(Tema & Partial<Pick<Aviso, 'tono' | 'accion'>>) | null>(() => {
   const g = guia.value;
   if (!g) return null;
   if (g.tipo === 'saludo') return SALUDO;
   if (g.tipo === 'invitar') return { pose: 'piensa', titulo: '', texto: '¿Te ayudo con este paso? Tócame y te explico cómo seguir.' };
+  if (g.tipo === 'aviso') return avisos.value[g.i] ?? null;
+  if (g.tema) return g.tema;
   return temas.value[g.i] ?? null;
 });
+// Grande mientras llega o explica; si no, chico en la esquina (dueño 28-10: "llega, explica y se achica")
+const grande = computed(() => entrada.value !== 'lista' || !!mensaje.value);
+const junto = computed(() => (grande.value ? ancla.value : null));
 const textoAvanzar = computed(() => {
   const g = guia.value;
   if (g?.tipo === 'saludo') return '¡Vamos!';
   if (g?.tipo === 'invitar') return 'Sí, ayúdame';
-  return g && g.i + 1 < temas.value.length ? 'Siguiente' : 'Entendido';
+  return g?.tipo === 'tema' && g.i + 1 < temas.value.length ? 'Siguiente' : 'Entendido';
 });
 function avanzarGuia() {
   const g = guia.value;
   if (!g) return;
   if (g.tipo === 'invitar') return abrir();
   if (g.tipo === 'saludo') { guardar(CLAVE_SALUDO, '1'); guia.value = temas.value.length ? { tipo: 'tema', i: 0 } : null; return; }
-  if (g.i + 1 < temas.value.length) guia.value = { tipo: 'tema', i: g.i + 1 };
+  if (g.tipo === 'tema' && g.i + 1 < temas.value.length) guia.value = { tipo: 'tema', i: g.i + 1 };
   else cerrarGuia();
 }
 function cerrarGuia() {
   if (guia.value?.tipo === 'saludo') guardar(CLAVE_SALUDO, '1');
   if (guia.value?.tipo === 'invitar') emit('visto');
+  if (guia.value?.tipo === 'tema') logro.value = '';
   guia.value = null;
   callar();
+  setTimeout(revisarAvisos, 400);
 }
-// Entrada (dueño 28-10): al abrir la página RACKLOG llega caminando desde el fondo (chico y lejos, a saltitos, hasta
-// su lugar) y recién ahí saluda. Una sola vez, sin bucle; con "reducir movimiento" aparece directo
+// Entrada (dueño 28-10): al abrir la página RACKLOG llega caminando desde el fondo (en 3D, FlujoRobot3D) y recién ahí
+// saluda. Una sola vez, sin bucle; con "reducir movimiento" aparece directo
 const entrada = ref<'espera' | 'camina' | 'lista'>('espera');
-// Ciclo de la caminata: pie derecho adelante, paso, y lo mismo en espejo (pie izquierdo). El cuerpo sube en el paso
-const CUADROS = [{ n: 1, espejo: false, arriba: false }, { n: 3, espejo: false, arriba: true }, { n: 1, espejo: true, arriba: false }, { n: 3, espejo: true, arriba: true }];
-const cuadro = ref(0);
-let tCuadro: ReturnType<typeof setInterval> | null = null;
 function llegó() {
   if (entrada.value === 'lista') return;
-  if (tCuadro) { clearInterval(tCuadro); tCuadro = null; }
   entrada.value = 'lista';
   // Al llegar saluda (una vez por visita); si ya saludó, guía el paso donde quedó
   guia.value = !leer(CLAVE_SALUDO) ? { tipo: 'saludo', i: 0 } : temas.value.length ? { tipo: 'tema', i: 0 } : null;
 }
-const poseAvatar = computed(() => (estado.abierto ? actual.value.pose : mensaje.value?.pose ?? (alertas.value ? 'atento' : 'pulgar')));
+// Al terminar un paso celebra (un salto) antes de explicar el que sigue
+const festeja = ref(false);
+let tFesteja: ReturnType<typeof setTimeout> | null = null;
+const poseAvatar = computed(() => (festeja.value ? 'celebra' : estado.abierto ? actual.value.pose : mensaje.value?.pose ?? (alertas.value ? 'atento' : 'pulgar')));
 
-// Cada paso nuevo, RACKLOG guía desde su primer tema
-watch(() => props.paso, () => {
+// Cada paso nuevo, RACKLOG guía desde su primer tema; si avanzó, primero celebra el paso que terminó
+const logro = ref('');
+watch(() => props.indice, (nuevo, antes) => {
   estado.abierto = false;
   vista.value = { tipo: 'tema', i: 0 };
   callar();
+  vistos.clear();
+  logro.value = nuevo > antes ? `¡Listo el paso ${antes + 1}, ${PASOS[antes]?.t.toLowerCase() ?? ''}!` : '';
+  if (logro.value) {
+    festeja.value = true;
+    if (tFesteja) clearTimeout(tFesteja);
+    tFesteja = setTimeout(() => { festeja.value = false; }, 1300);
+  }
   guia.value = temas.value.length ? { tipo: 'tema', i: 0 } : null;
 });
+
+// Avisos que saltan solos (dueño 28-10): una alerta nueva (pasillo angosto, racks en rojo, sin salida) aparece
+// aunque esté explicando; un logro ("ya cumples", "tu diseño está listo") espera a que termine. Cada aviso salta una
+// vez por paso, y solo cuando el diseño se quedó quieto un momento (no a mitad de arrastrar un rack)
+const vistos = new Set<string>();
+let tAvisos: ReturnType<typeof setTimeout> | null = null;
+function revisarAvisos() {
+  if (entrada.value !== 'lista' || estado.abierto || guia.value?.tipo === 'saludo' || guia.value?.tipo === 'aviso' || guia.value?.tipo === 'porque' || guia.value?.tipo === 'fin') return;
+  const i = avisos.value.findIndex((a) => a.tono !== 'info' && !vistos.has(a.titulo) && (a.tono === 'alerta' || !guia.value));
+  if (i < 0) return;
+  vistos.add(avisos.value[i].titulo);
+  guia.value = { tipo: 'aviso', i };
+  marcar('asistente_aviso', { paso: props.paso, aviso: avisos.value[i].titulo });
+}
+watch(() => avisos.value.map((a) => a.titulo).join('|'), () => {
+  // Un aviso que ya se resolvió puede volver a saltar si reaparece
+  for (const t of [...vistos]) if (!avisos.value.some((a) => a.titulo === t)) vistos.delete(t);
+  if (guia.value?.tipo === 'aviso' && !avisos.value[guia.value.i]) guia.value = null;
+  if (tAvisos) clearTimeout(tAvisos);
+  tAvisos = setTimeout(revisarAvisos, 1500);
+});
+
+// "¿Por qué?" de un resultado (FlujoPorQue): lo explica con los números del cliente
+watch(() => estado.explicar?.t, () => {
+  const e = estado.explicar;
+  const tema = e && porQueDe(e.id, e.datos, p);
+  if (!tema) return;
+  estado.abierto = false;
+  guia.value = { tipo: 'porque', i: 0, tema };
+  marcar('asistente_porque', { paso: props.paso, resultado: e.id });
+});
+// Al enviar la cotización celebra y cuenta lo que sigue
+watch(() => p.enviado, (v) => { if (v) { estado.abierto = false; guia.value = { tipo: 'fin', i: 0, tema: FIN }; } });
 watch(() => props.invitar, (v) => { if (v && !guia.value && !estado.abierto) guia.value = { tipo: 'invitar', i: 0 }; });
 
 // ─── Voz: parte apagada; el parlante la enciende y lee el mensaje que está a la vista ───
@@ -236,27 +281,32 @@ const dicho = computed(() => {
   // Lo hablado va con exclamaciones: la voz del navegador las entona y suena alegre, no leída
   if (m === SALUDO) return '¡Hola! ¡Soy Racklog! Y estoy aquí... para ayudarte a diseñar tu bodega.';
   const t = m.titulo.trim();
-  const titulo = estado.abierto || guia.value?.tipo === 'tema' ? `${/[?!]$/.test(t) ? t : `¡${t}!`} ` : '';
+  const titulo = t && (estado.abierto || guia.value?.tipo !== 'invitar') ? `${/[?!]$/.test(t) ? t : `¡${t}!`} ` : '';
   // "RACKLOG" en mayúsculas lo deletrean algunas voces
   return (titulo + m.texto).replace(/RACKLOG/g, 'Racklog');
 });
+// Mientras suena la voz, RACKLOG mueve la boca
+const hablando = ref(false);
 function hablar(texto: string) {
   if (!texto || !('speechSynthesis' in window)) return;
   const s = window.speechSynthesis;
   s.cancel();
   const { voz: v, hombre } = vozEspañol();
   // Frase por frase: pausas naturales entre una y otra, y las voces de Google no se cortan en los textos largos
-  for (const frase of texto.match(/[^.!?…]+[.!?…]+|[^.!?…]+$/g) ?? [texto]) {
+  const frases = texto.match(/[^.!?…]+[.!?…]+|[^.!?…]+$/g) ?? [texto];
+  frases.forEach((frase, n) => {
     const u = new SpeechSynthesisUtterance(frase.trim());
+    u.onstart = () => { hablando.value = true; };
+    if (n === frases.length - 1) u.onend = u.onerror = () => { hablando.value = false; };
     if (v) u.voice = v;
     u.lang = v?.lang ?? 'es-CL';
     // Voz de personaje (dueño 28-10): alegre y juvenil, pero sin forzar el tono, que es lo que la vuelve robótica
     u.rate = 1.0;
     u.pitch = hombre ? 1.3 : 1.15;
     s.speak(u);
-  }
+  });
 }
-function callar() { if (import.meta.client && 'speechSynthesis' in window) window.speechSynthesis.cancel(); }
+function callar() { hablando.value = false; if (import.meta.client && 'speechSynthesis' in window) window.speechSynthesis.cancel(); }
 function alternarVoz() {
   voz.value = !voz.value;
   guardar(CLAVE_VOZ, voz.value ? '1' : '');
@@ -283,7 +333,8 @@ function anclar() {
   const lado = Math.min(240, ancho);
   // Nunca encima de la barra de pasos (fija arriba en los pasos de formulario)
   const piso = Math.max(72, (document.querySelector('[data-fijo-arriba]')?.getBoundingClientRect().bottom ?? 64) + 4);
-  ancla.value = ancho >= 150 ? { top: Math.max(piso, Math.round(r.top - lado * 0.3)), ancho } : null;
+  // La burbuja necesita ~220 px: si el margen es más angosto, va abajo a la izquierda
+  ancla.value = ancho >= 220 ? { top: Math.max(piso, Math.round(r.top - lado * 0.3)), ancho } : null;
 }
 const tamaño = computed(() => {
   if (!ancla.value) return undefined;
@@ -301,19 +352,19 @@ onMounted(() => {
   // Precarga la lista de voces (Chrome la entrega tarde)
   if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
   voz.value = !!leer(CLAVE_VOZ);
-  // Los cuadros de la caminata se cargan antes de partir, para que no parpadee
-  for (const n of [1, 3]) { const im = new Image(); im.src = `/assets/images/guia/camina-${n}.webp`; }
-  // Parte a caminar cuando ya sabe dónde pararse (al lado del título)
-  const quieto = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  t = setTimeout(() => {
-    if (quieto) return llegó();
-    entrada.value = 'camina';
-    tCuadro = setInterval(() => { cuadro.value = (cuadro.value + 1) % CUADROS.length; }, 170);
-    // Por si la animación no avisa al terminar (pestaña en segundo plano)
-    t = setTimeout(llegó, 3200);
-  }, 650);
+  // Parte a caminar cuando ya sabe dónde pararse (al lado del título) y el aviso de cookies ya se respondió (en el
+  // celular ocupan la misma esquina)
+  const partir = () => {
+    t = setTimeout(() => {
+      entrada.value = 'camina';
+      // Por si la caminata no avisa al terminar (pestaña en segundo plano, sin WebGL)
+      t = setTimeout(llegó, 4500);
+    }, 650);
+  };
+  if (analytics.value !== 'unset') partir();
+  else { const parar = watch(analytics, (v) => { if (v !== 'unset') { parar(); partir(); } }); }
 });
-onBeforeUnmount(() => { if (t) clearTimeout(t); if (tCuadro) clearInterval(tCuadro); if (tAncla) clearTimeout(tAncla); window.removeEventListener('resize', anclarLuego); callar(); });
+onBeforeUnmount(() => { for (const x of [t, tAncla, tAvisos, tFesteja]) if (x) clearTimeout(x); window.removeEventListener('resize', anclarLuego); callar(); });
 function marcar(event: string, datos: Record<string, unknown>) {
   const w = window as unknown as { dataLayer?: unknown[] };
   (w.dataLayer ??= []).push({ event, event_category: 'Planifica tu bodega', ...datos });
@@ -321,12 +372,6 @@ function marcar(event: string, datos: Record<string, unknown>) {
 </script>
 
 <style scoped>
-/* Llega caminando desde atrás (dueño 28-10): se acerca desde el fondo (chico a grande) mientras los cuadros de la
-   caminata se van turnando. Dura 2,4 s y se detiene: no queda en bucle */
-.rl-llega { transform-origin: 50% 100%; animation: rl-llega 2.4s cubic-bezier(.3, .6, .4, 1) both; }
-@keyframes rl-llega {
-  0% { opacity: 0; transform: translate(-70px, -56px) scale(.32); }
-  10% { opacity: 1; }
-  100% { opacity: 1; transform: none; }
-}
+/* Al achicarse a la esquina (o crecer para explicar) cambia de tamaño con una transición corta; no queda en bucle */
+.rl-tam { transition: width .35s ease, height .35s ease; }
 </style>

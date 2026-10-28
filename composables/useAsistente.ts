@@ -8,11 +8,14 @@ const estado = reactive({
   layout: null as null | Record<string, any>,
   // Acción pedida desde un aviso; el paso que la sabe hacer la toma y la limpia
   accion: null as null | { id: string; t: number },
+  // "¿Por qué?" de un resultado: qué explicar y con qué números (FlujoPorQue)
+  explicar: null as null | { id: string; datos: Record<string, any>; t: number },
 });
 
 export function useAsistente() {
   return {
     estado,
     pedir(id: string) { estado.accion = { id, t: Date.now() }; estado.abierto = false; },
+    explicar(id: string, datos: Record<string, any> = {}) { estado.explicar = { id, datos, t: Date.now() }; },
   };
 }

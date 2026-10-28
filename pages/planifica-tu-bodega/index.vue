@@ -291,6 +291,8 @@
     </section>
 
     <CtaCotizacion24 :visible="ctaVisible" :boton="textoCta" @cotizar="cotizarDesdeBarra" />
+    <!-- RACKLOG se presenta y cuenta cómo funciona (dueño 28-10) -->
+    <ClientOnly><FlujoGuiaInicio destino="/planifica-tu-bodega/disena" :arriba="ctaVisible" /></ClientOnly>
   </div>
 </template>
 

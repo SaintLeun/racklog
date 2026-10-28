@@ -30,7 +30,7 @@
           <p v-if="demanda.unidad === 'pallets'" class="mt-1 text-sm text-neutral-600">
             Para {{ n(demanda.pidio) }} pallets, llenando al
             <select :value="Math.round((p.bodega.ocupacion ?? 0.8) * 100)" class="rounded border border-neutral-300 bg-white px-0.5 text-sm font-semibold" aria-label="Factor de ocupación" @change="p.bodega.ocupacion = Number(($event.target as HTMLSelectElement).value) / 100"><option v-for="v in [60, 65, 70, 75, 80, 85]" :key="v" :value="v">{{ v }} %</option></select>
-            <FlujoInfo>Nadie llena el 100 % de sus posiciones: entra y sale mercadería, hay lotes a medio usar y se necesita espacio para mover. Con 80 %, 100 pallets piden 125 posiciones.</FlujoInfo>
+            <FlujoPorQue id="necesita" :datos="{ pidio: demanda.pidio, necesita: demanda.necesita, ocupacion: p.bodega.ocupacion ?? 0.8 }" />
           </p>
           <p v-if="perdidasPilares" class="mt-2 border-t border-neutral-100 pt-2 text-sm text-neutral-600">Los pilares te quitan <b class="text-neutral-900">{{ n(perdidasPilares) }} {{ perdidasPilares === 1 ? 'posición' : 'posiciones' }}</b> (tachadas en el plano).</p>
         </section>
@@ -180,12 +180,17 @@
             </div>
           </div>
           <form v-if="formPilares" class="mt-3" @submit.prevent="grillaPilares">
-            <p class="text-sm font-medium text-neutral-800">¿Cada cuántos metros hay un pilar?</p>
-            <div class="mt-1.5 grid grid-cols-2 gap-2">
+            <p class="text-sm font-medium text-neutral-800">¿Dónde están?</p>
+            <div class="mt-1.5 grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Dónde están los pilares">
+              <button v-for="o in [{ v: 'grilla', t: 'En toda la bodega' }, { v: 'muros', t: 'Solo en los muros' }]" :key="o.v" type="button" role="radio" :aria-checked="gp.donde === o.v" :class="['fl-chip !min-h-10 !px-2 !text-sm', gp.donde === o.v && 'fl-chip--sel']" @click="gp.donde = o.v as any">{{ o.t }}</button>
+            </div>
+            <p class="mt-3 text-sm font-medium text-neutral-800">¿Cada cuántos metros hay un pilar?</p>
+            <label v-if="gp.donde === 'muros'" class="fl-campo mt-1.5"><span class="!text-sm">Por el muro</span><span class="relative"><input v-model.number="gp.pasoX" type="number" min="2" step="0.5" inputmode="decimal" class="form-input !pr-8"><i class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm not-italic text-neutral-500">m</i></span></label>
+            <div v-else class="mt-1.5 grid grid-cols-2 gap-2">
               <label class="fl-campo"><span class="!text-sm">A lo ancho</span><span class="relative"><input v-model.number="gp.pasoX" type="number" min="2" step="0.5" inputmode="decimal" class="form-input !pr-8"><i class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm not-italic text-neutral-500">m</i></span></label>
               <label class="fl-campo"><span class="!text-sm">A lo largo</span><span class="relative"><input v-model.number="gp.pasoY" type="number" min="2" step="0.5" inputmode="decimal" class="form-input !pr-8"><i class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm not-italic text-neutral-500">m</i></span></label>
             </div>
-            <p v-if="vistaPilares.length" class="mt-1.5 text-xs text-neutral-600" aria-live="polite">{{ nxm }} = {{ vistaPilares.length }} pilares, centrados en tu bodega (los ves en el plano). Después los arrastras hasta que calcen.</p>
+            <p v-if="vistaPilares.length" class="mt-1.5 text-xs text-neutral-600" aria-live="polite">{{ gp.donde === 'muros' ? `${vistaPilares.length} pilares: uno en cada esquina y cada ${fm(gp.pasoX)} m por los muros.` : `${nxm} = ${vistaPilares.length} pilares, centrados en tu bodega.` }} Los ves en el plano y después los arrastras.</p>
             <p class="mt-3 text-sm font-medium text-neutral-800">¿De qué tamaño?</p>
             <div class="mt-1.5 grid grid-cols-2 gap-1.5" role="radiogroup" aria-label="Tamaño del pilar">
               <button v-for="t in TAMANOS_PILAR" :key="t.v" type="button" role="radio" :aria-checked="gp.tamano === t.v" :class="['fl-chip !min-h-10 !justify-start !gap-2 !px-2.5 !text-sm', gp.tamano === t.v && 'fl-chip--sel']" @click="gp.tamano = t.v">
@@ -330,7 +335,7 @@
             <div class="mt-1 grid grid-cols-3 gap-1.5">
               <button v-for="o in [{ v: 'auto', t: 'La mejor' }, { v: 'ancho', t: 'A lo ancho' }, { v: 'largo', t: 'A lo largo' }]" :key="o.v" type="button" :class="['fl-chip !min-h-9 !px-1 !text-sm', auto.orientacion === o.v && 'fl-chip--sel']" @click="auto.orientacion = o.v as any">{{ o.t }}</button>
             </div>
-            <p class="mt-2 text-xs text-neutral-600">Pasillos de {{ fm(grua.pasillo) }} m para tu {{ grua.nombre.toLowerCase() }}, pasillo de cabecera para que entre a todos, simples contra el muro y nada encima de pilares de pasillo, oficinas ni portones.</p>
+            <p class="mt-2 text-xs text-neutral-600">Pasillos de {{ fm(grua.pasillo) }} m para tu {{ grua.nombre.toLowerCase() }}, pasillo de cabecera para que entre a todos, simples contra el muro y nada encima de pilares de pasillo, oficinas ni portones. <FlujoPorQue id="pasillo" /></p>
             <p v-if="auto.confirmar" class="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900" role="alert">Esto reemplaza {{ porReemplazar }} {{ porReemplazar === 1 ? 'rack' : 'racks' }} que ya pusiste{{ auto.donde === 'area' ? ' en esa área' : '' }}. Puedes deshacerlo.</p>
             <button type="button" class="fl-btn mt-3 w-full !min-h-10 !text-sm" :disabled="auto.calculando || (auto.donde === 'area' && !auto.area)" @click="llenarAuto">
               {{ auto.calculando ? 'Probando combinaciones…' : auto.confirmar ? 'Sí, reemplazar y llenar' : 'Llenar' }}
@@ -375,7 +380,7 @@
           <span class="min-w-0 flex-1">
             <span class="block">
               <template v-if="demanda.unidad === 'pallets'">Necesitas <b>{{ n(demanda.necesita) }} posiciones</b>
-                <label class="inline-flex items-center gap-1 whitespace-nowrap opacity-80">({{ n(demanda.pidio) }} pallets al <select :value="Math.round((p.bodega.ocupacion ?? 0.8) * 100)" class="rounded border border-current/20 bg-white/70 px-0.5 text-sm font-semibold" aria-label="Factor de ocupación" @change="p.bodega.ocupacion = Number(($event.target as HTMLSelectElement).value) / 100"><option v-for="v in [60, 65, 70, 75, 80, 85]" :key="v" :value="v">{{ v }} %</option></select><FlujoInfo>Nadie llena el 100 % de sus posiciones: entra y sale mercadería, hay lotes a medio usar y se necesita espacio para mover. Con 80 %, 100 pallets piden 125 posiciones.</FlujoInfo>)</label></template>
+                <label class="inline-flex items-center gap-1 whitespace-nowrap opacity-80">({{ n(demanda.pidio) }} pallets al <select :value="Math.round((p.bodega.ocupacion ?? 0.8) * 100)" class="rounded border border-current/20 bg-white/70 px-0.5 text-sm font-semibold" aria-label="Factor de ocupación" @change="p.bodega.ocupacion = Number(($event.target as HTMLSelectElement).value) / 100"><option v-for="v in [60, 65, 70, 75, 80, 85]" :key="v" :value="v">{{ v }} %</option></select><FlujoPorQue id="necesita" :datos="{ pidio: demanda.pidio, necesita: demanda.necesita, ocupacion: p.bodega.ocupacion ?? 0.8 }" />)</label></template>
               <template v-else>Pediste <b>{{ n(demanda.necesita) }} {{ demanda.unidadPos }}</b></template>
               · en el plano <b><FlujoContador :valor="demanda.posiciones" /></b>
               <template v-if="porPoner > 0"> — <b>faltan {{ n(porPoner) }}</b></template>
@@ -767,6 +772,7 @@
                       <label class="fl-campo"><span class="!text-xs">A lo largo</span><span class="relative"><input v-model.number="gp.pasoY" type="number" min="2" step="0.5" inputmode="decimal" class="form-input !h-9 !pr-7 !text-sm"><i class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-xs not-italic text-neutral-500">m</i></span></label>
                     </div>
                     <button type="button" class="fl-btn mt-2 w-full !min-h-10 !text-sm" :disabled="!(gp.pasoX >= 2 && gp.pasoY >= 2)" @click="repetirPilar(elementoActual)">Repetir desde este ({{ repeticiones(elementoActual) }} pilares)</button>
+                    <button v-if="enElMuro(elementoActual)" type="button" class="fl-btn-sec mt-1.5 w-full !min-h-10 !text-sm" :disabled="!(gp.pasoX >= 2)" @click="repetirPilar(elementoActual, true)">Solo por los muros, cada {{ fm(gp.pasoX) }} m ({{ porMuros(elementoActual).length }})</button>
                   </template>
                   <p class="fl-panel__sec">Tamaño</p>
                   <div class="grid grid-cols-2 gap-1">
@@ -829,7 +835,7 @@ import { ref, computed, reactive, watch, watchEffect, onMounted, onBeforeUnmount
 import { useProyecto } from '~/stores/proyecto';
 import {
   ELEMENTOS, conflictos, contorno, caja, normalizar, dentroDeBodega, grillaPilaresXY, lugarLibre, formatoM, NOMBRE,
-  rectangulo, rectElemento, medidasRack, area as areaPoligono, rectLibre, lugarLibreElemento,
+  rectangulo, rectElemento, medidasRack, area as areaPoligono, rectLibre, lugarLibreElemento, rackDentro, rectEnBodega, pilaresPerimetro,
 } from '~/lib/rack3d/planificador.js';
 import { GRUAS, DISTANCIAS, ACCESOS } from '~/lib/rack3d/parametrosTecnicos.js';
 import { pasillos, pasilloRequerido } from '~/lib/rack3d/pasillos.js';
@@ -903,7 +909,7 @@ const racksPlano = computed<any[]>({
 // Muro elegido en el plano (forma de la bodega): el panel derecho deja cambiar su largo y sus esquinas
 const muroSel = ref<number | null>(null);
 // Pilares (dueño 27-10): una grilla cada X × Y m que se arrastra entera hasta calzar; tamaño por tipo, no en cm
-const gp = reactive({ pasoX: 6, pasoY: 6, tamano: 'h40' });
+const gp = reactive({ pasoX: 6, pasoY: 6, tamano: 'h40', donde: 'grilla' as 'grilla' | 'muros' });
 const TAMANOS_PILAR = [
   { v: 'h30', t: 'Hormigón 30 × 30', s: 0.3, forma: 'cuadrado' },
   { v: 'h40', t: 'Hormigón 40 × 40', s: 0.4, forma: 'cuadrado' },
@@ -1359,10 +1365,16 @@ function mover(id: string, x: number, y: number, iman = true) {
   const m = iman ? imanRack(r, racksPlano.value, p.bodega, x, y) : { x, y, atrajo: false, guias: [] };
   guias.value = m.guias;
   // Con imán no se redondea a la grilla (el pasillo quedaría 5 cm corto); igual no se sale de la bodega
-  const nuevo = m.atrajo ? dentroSinRedondear(normalizar({ ...r, x: m.x, y: m.y })) : dentroDeBodega(normalizar({ ...r, x, y }), p.bodega);
+  const nuevo = adentro(r, m.atrajo ? dentroSinRedondear(normalizar({ ...r, x: m.x, y: m.y })) : dentroDeBodega(normalizar({ ...r, x, y }), p.bodega));
   racksPlano.value = racksPlano.value.map((q) => (q.id === id ? nuevo : q));
   // Sin imán quedó redondeado a la grilla: las guías y medidas van con la posición real
   if (iman && !m.atrajo) guias.value = guiasRack(nuevo, racksPlano.value);
+}
+// Ningún rack se pasa del perímetro (dueño 28-10), también en bodegas en L o con entrantes: si la nueva posición
+// sale del contorno, se desliza por el muro (solo en x o solo en y) o se queda donde estaba
+function adentro(antes: any, nuevo: any) {
+  if (rackDentro(nuevo, p.bodega) || !rackDentro(antes, p.bodega)) return nuevo;
+  return [{ ...nuevo, y: antes.y }, { ...nuevo, x: antes.x }].find((q) => rackDentro(q, p.bodega)) ?? antes;
 }
 function dentroSinRedondear(r: any) {
   const q = rectangulo(r), c = caja(contorno(p.bodega));
@@ -1548,7 +1560,7 @@ const menu = ref<'' | 'agregar' | 'mas'>('');
 const detalle = ref(false);
 watch(sel, () => { detalle.value = false; menu.value = ''; });
 function girar(id: string) {
-  racksPlano.value = racksPlano.value.map((r) => (r.id === id ? dentroDeBodega(normalizar({ ...r, rot: (r.rot + 90) % 360 }), p.bodega) : r));
+  racksPlano.value = racksPlano.value.map((r) => (r.id === id ? adentro(r, dentroDeBodega(normalizar({ ...r, rot: (r.rot + 90) % 360 }), p.bodega)) : r));
 }
 function eliminar(id: string) {
   racksPlano.value = racksPlano.value.filter((r) => r.id !== id);
@@ -1812,6 +1824,14 @@ function armarLineal(a: Pto, b: Pto) {
   const mo = pincelModelo.value;
   if (!mo || !pincel.value) return null;
   let r = linealArrastrado(baseDe(mo, pincel.value.doble), a, b, p.bodega, racksPlano.value);
+  // En una entrante del muro el lineal no se pasa del perímetro: se acorta por la punta que sale
+  const r0 = r, q = rectangulo(r0), lado = r0.rot === 90 || r0.rot === 270;
+  for (let k = r0.cuerpos - 1; k >= 1 && !rackDentro(r, p.bodega); k--) {
+    const c0 = conCuerpos(r0, k), qc = rectangulo(c0);
+    const alFin = lado ? { ...c0, y: +(q.y0 + q.alto - qc.alto / 2).toFixed(3) } : { ...c0, x: +(q.x0 + q.ancho - qc.ancho / 2).toFixed(3) };
+    const alInicio = lado ? { ...c0, y: +(q.y0 + qc.alto / 2).toFixed(3) } : { ...c0, x: +(q.x0 + qc.ancho / 2).toFixed(3) };
+    r = [alInicio, alFin].find((x) => rackDentro(x, p.bodega)) ?? alInicio;
+  }
   // Doble pegado al muro (dueño 27-10): sin equipo de doble profundidad su cara de atrás no se carga; va simple
   const contraMuro = dobleContraMuro(r, p.bodega);
   if (contraMuro) r = conDoble(r, false);
@@ -2224,10 +2244,19 @@ function moverElemento(id: string, x: number, y: number) {
   }
   const dx = Math.min(Math.max(x - e.x, c.x0 - u.x0), c.x1 - u.x1), dy = Math.min(Math.max(y - e.y, c.y0 - u.y0), c.y1 - u.y1);
   if (Math.abs(dx) < 1e-6 && Math.abs(dy) < 1e-6) return;
-  p.bodega.elementos = p.bodega.elementos.map((q: any) => (juntos.has(q.id) ? { ...q, x: +(q.x + dx).toFixed(3), y: +(q.y + dy).toFixed(3) } : q));
+  // En bodegas con entrantes la caja no basta: se desliza por el muro o se frena antes de salir del contorno
+  const movidos = (ddx: number, ddy: number) => p.bodega.elementos.map((q: any) => (juntos.has(q.id) ? { ...q, x: +(q.x + ddx).toFixed(3), y: +(q.y + ddy).toFixed(3) } : q));
+  const ok = (els: any[]) => els.every((q: any) => !juntos.has(q.id) || elementoAdentro(q) || !elementoAdentro(p.bodega.elementos.find((o: any) => o.id === q.id)));
+  const nuevos = [movidos(dx, dy), movidos(dx, 0), movidos(0, dy)].find(ok);
+  if (!nuevos) return;
+  p.bodega.elementos = nuevos;
   sincronizarManiobras();
 }
+// Portones y andenes van en el muro; su franja de maniobra se rehace sola. Lo demás no sale del perímetro
+const elementoAdentro = (e: any) => !e || e.padre || e.clase === 'porton' || e.clase === 'anden' || rectEnBodega(rectElemento(e), p.bodega);
 function cambiarElemento(cambio: Record<string, any>, id = elementoSel.value) {
+  const antes = p.bodega.elementos.find((e: any) => e.id === id);
+  if (antes && elementoAdentro(antes) && !elementoAdentro({ ...antes, ...cambio })) return;
   p.bodega.elementos = p.bodega.elementos.map((e: any) => (e.id === id ? { ...e, ...cambio } : e));
   sincronizarManiobras();
 }
@@ -2236,7 +2265,10 @@ function quitarElemento(id: string) {
   if (elementoSel.value === id) elementoSel.value = null;
 }
 // Pilares N × M equidistantes: distancia entre ejes X/Y, centrados (mismo margen a cada muro)
-const vistaPilares = computed(() => (gp.pasoX >= 2 && gp.pasoY >= 2 ? (grillaPilaresXY(p.bodega, { pasoX: gp.pasoX, pasoY: gp.pasoY }) as any[]) : []));
+const tamPilar = () => (TAMANOS_PILAR.find((x) => x.v === gp.tamano) ?? TAMANOS_PILAR[1]).s;
+const vistaPilares = computed(() => (gp.donde === 'muros'
+  ? (gp.pasoX >= 2 ? (pilaresPerimetro(p.bodega, { paso: gp.pasoX, tam: tamPilar() }) as any[]) : [])
+  : gp.pasoX >= 2 && gp.pasoY >= 2 ? (grillaPilaresXY(p.bodega, { pasoX: gp.pasoX, pasoY: gp.pasoY }) as any[]) : []));
 const nxm = computed(() => {
   const xs = new Set(vistaPilares.value.map((q: any) => q.x)), ys = new Set(vistaPilares.value.map((q: any) => q.y));
   return `${xs.size} × ${ys.size}`;
@@ -2245,7 +2277,7 @@ function grillaPilares() {
   const c = caja(contorno(p.bodega)), t = TAMANOS_PILAR.find((x) => x.v === gp.tamano) ?? TAMANOS_PILAR[1], grupo = `pilares-${nuevoId()}`;
   const pilares = vistaPilares.value
     .map((q: any) => ({ id: nuevoId(), clase: 'pilar', grupo, x: q.x, y: q.y, ancho: t.s, alto: t.s, forma: t.forma, tamano: t.v }))
-    .filter((q) => q.x > c.x0 + 0.3 && q.x < c.x1 - 0.3 && q.y > c.y0 + 0.3 && q.y < c.y1 - 0.3);
+    .filter((q) => gp.donde === 'muros' || (q.x > c.x0 + 0.3 && q.x < c.x1 - 0.3 && q.y > c.y0 + 0.3 && q.y < c.y1 - 0.3));
   p.bodega.elementos = [...p.bodega.elementos.filter((e: any) => e.clase !== 'pilar'), ...pilares];
   // "No lo sé": queda como dato a confirmar por el ejecutivo
   p.flags = gp.tamano === 'nose' ? [...new Set([...p.flags, 'no_se:pilares'])] : p.flags.filter((f) => f !== 'no_se:pilares');
@@ -2253,7 +2285,7 @@ function grillaPilares() {
   moverPilares.value = 'todos';
   elementoSel.value = pilares[0]?.id ?? null; sel.value = null;
   vista.value = '2d';
-  marcar('elemento_add', { clase: 'pilar', cantidad: pilares.length, tamano: gp.tamano });
+  marcar('elemento_add', { clase: 'pilar', cantidad: pilares.length, tamano: gp.tamano, donde: gp.donde });
   // En el celular el plano queda arriba del formulario: se lleva la vista a los pilares recién puestos
   if (window.innerWidth < 1024) nextTick(() => (plano.value as any)?.$el?.scrollIntoView?.({ block: 'center', behavior: 'smooth' }));
 }
@@ -2289,9 +2321,12 @@ const grillaDesde = (e: any) => {
     .filter((q: any) => q.x >= c.x0 + m - 1e-6 && q.x <= c.x1 - m + 1e-6 && q.y >= c.y0 + m - 1e-6 && q.y <= c.y1 - m + 1e-6);
 };
 const repeticiones = (e: any) => (gp.pasoX >= 2 && gp.pasoY >= 2 ? grillaDesde(e).length : 0);
-function repetirPilar(e: any) {
+// Pilar pegado a un muro: la serie por el perímetro pasa por él (cada pasoX desde las esquinas en los otros muros)
+const enElMuro = (e: any) => { const c = caja(contorno(p.bodega)), m = e.ancho / 2 + 0.05; return e.x - c.x0 <= m || c.x1 - e.x <= m || e.y - c.y0 <= m || c.y1 - e.y <= m; };
+const porMuros = (e: any) => (gp.pasoX >= 2 ? (pilaresPerimetro(p.bodega, { paso: gp.pasoX, tam: e.ancho, desde: { x: e.x, y: e.y } }) as any[]) : []);
+function repetirPilar(e: any, muros = false) {
   const grupo = `pilares-${nuevoId()}`;
-  const nuevos = grillaDesde(e).map((q: any) => (Math.abs(q.x - e.x) < 0.05 && Math.abs(q.y - e.y) < 0.05
+  const nuevos = (muros ? porMuros(e) : grillaDesde(e)).map((q: any) => (Math.abs(q.x - e.x) < 0.05 && Math.abs(q.y - e.y) < 0.05
     ? { ...e, grupo } : { id: nuevoId(), clase: 'pilar', grupo, x: q.x, y: q.y, ancho: e.ancho, alto: e.alto, forma: e.forma, tamano: e.tamano }));
   if (!nuevos.some((q: any) => q.id === e.id)) nuevos.push({ ...e, grupo });
   p.bodega.elementos = [...p.bodega.elementos.filter((q: any) => q.id !== e.id), ...nuevos];

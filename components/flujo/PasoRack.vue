@@ -97,6 +97,11 @@
           </div>
           <div class="fl-dato"><dt>Alto con la carga</dt><dd>{{ fm(res.alto) }} m</dd><p class="text-xs text-neutral-500">marco {{ fm(res.m.alto) }} m</p></div>
         </dl>
+        <!-- De dónde salen la viga y los niveles: RACKLOG lo explica con los números del cliente (dueño 28-10) -->
+        <p v-if="mod.tipo === 'RS'" class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-neutral-600">
+          <span>Viga de <b class="text-neutral-900">{{ fm(res.m.viga) }} m</b><FlujoPorQue id="viga" :datos="{ porViga: res.m.palletsPorViga, frente: res.m.pallet.frente, viga: res.m.viga }" /></span>
+          <span>Hasta <b class="text-neutral-900">{{ maxNiveles }} {{ maxNiveles === 1 ? 'nivel' : 'niveles' }}</b><FlujoPorQue id="niveles" :datos="{ max: maxNiveles, altura: p.bodega.altura, limite }" /></span>
+        </p>
         <FlujoRackInteractivo
           v-if="vistaRack === 'frente' && mod.tipo === 'RS'" class="mt-3"
           :m="res.m" :mezcla="res.r.mezcla" :tipos="tiposModelo" :niveles="mod.niveles" :max-niveles="maxNiveles" :limite="limite"
@@ -190,7 +195,7 @@
             <div v-if="mod.tipo === 'DI'">
               <p class="fl-sub">Niveles, contando el piso <FlujoInfo>En drive-in el piso también guarda: la grúa deja los pallets de atrás hacia adelante. Con 3 niveles son el piso y 2 carriles.</FlujoInfo></p>
               <FlujoNumero :valor="mod.niveles" :min="1" :max="maxNiveles" etiqueta="Niveles" @cambio="cambiar({ niveles: $event, mezcla: [], vigasY: null })" />
-              <p class="mt-1 text-xs text-neutral-500">Máximo {{ maxNiveles }} por {{ limite }}.</p>
+              <p class="mt-1 text-xs text-neutral-500">Máximo {{ maxNiveles }} por {{ limite }}. <FlujoPorQue id="niveles" :datos="{ max: maxNiveles, altura: p.bodega.altura, limite }" /></p>
             </div>
           </div>
 
