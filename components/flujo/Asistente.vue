@@ -128,7 +128,8 @@ const { analytics } = useConsent();
 const TONO = { alerta: 'bg-red-50 text-red-900 ring-red-200 hover:bg-red-100', bien: 'bg-green-50 text-green-900 ring-green-200 hover:bg-green-100', info: 'bg-white text-neutral-800 ring-neutral-200 hover:bg-neutral-50' };
 const PUNTO = { alerta: 'bg-red-600', bien: 'bg-green-600', info: 'bg-brand-500' };
 
-const temas = computed<Tema[]>(() => temasDe(props.paso, p));
+// En "Arma tu layout" explica la parte en que va: primero la bodega, después los racks
+const temas = computed<Tema[]>(() => temasDe(props.paso === 'bodega' && estado.fase === 'bodega' ? 'dibujo' : props.paso, p));
 const avisos = computed<Aviso[]>(() => avisosDe(props.paso, p, { layout: estado.layout }));
 const alertas = computed(() => avisos.value.filter((a) => a.tono === 'alerta').length);
 
@@ -219,6 +220,13 @@ watch(() => props.indice, (nuevo, antes) => {
     if (tFesteja) clearTimeout(tFesteja);
     tFesteja = setTimeout(() => { festeja.value = false; }, 1300);
   }
+  guia.value = temas.value.length ? { tipo: 'tema', i: 0 } : null;
+});
+// En "Arma tu layout", al pasar de la bodega a los racks (o volver) guía desde el primer tema de esa parte
+watch(() => estado.fase, (f, antes) => {
+  if (props.paso !== 'bodega' || !f || !antes) return;
+  vista.value = { tipo: 'tema', i: 0 };
+  callar();
   guia.value = temas.value.length ? { tipo: 'tema', i: 0 } : null;
 });
 

@@ -83,7 +83,7 @@
               <div class="mt-6 grid gap-3 sm:grid-cols-2">
                 <button type="button" class="tour-opcion-grande" @click="ir('elegir')">
                   <span class="tour-icono">✓</span>
-                  <span class="block text-lg font-semibold text-neutral-900">Sí, ya sé</span>
+                  <span class="block text-lg font-semibold text-neutral-900">Sí, lo tengo claro</span>
                   <span class="block text-sm text-neutral-600">Elijo el sistema y voy directo a armar mi pallet.</span>
                 </button>
                 <button type="button" class="tour-opcion-grande" @click="empezarTour">

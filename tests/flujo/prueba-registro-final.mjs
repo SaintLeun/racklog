@@ -16,8 +16,8 @@ const leer = (r) => readFileSync(b + r, 'utf8');
 
 // Los pasos del flujo, desde el store (TypeScript): { k: 'operacion', ... }
 const PASOS = [...leer('/stores/proyecto.ts').matchAll(/\{ k: '(\w+)', t: '/g)].map((m) => m[1]);
-prueba('el store tiene los 8 pasos de la vía diseño', () => {
-  assert.deepEqual(PASOS, ['operacion', 'dibujo', 'pallets', 'rack', 'bodega', 'accesorios', 'revisa', 'cotiza']);
+prueba('el store tiene los 7 pasos de la vía diseño', () => {
+  assert.deepEqual(PASOS, ['operacion', 'pallets', 'rack', 'bodega', 'accesorios', 'revisa', 'cotiza']);
 });
 prueba('control (registro al final): ningún paso pide registro antes de mostrarse', () => {
   for (const v of [null, 'final', 'cualquiera']) for (const paso of PASOS) assert.equal(C.pideRegistroAntes(paso, { variante: v }), false, `${paso} con ${v}`);

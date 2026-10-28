@@ -6,6 +6,8 @@ import { reactive } from 'vue';
 const estado = reactive({
   abierto: false,
   layout: null as null | Record<string, any>,
+  // Parte del paso "Arma tu layout" en que va: 'bodega' (la dibuja) o 'racks' (los ubica)
+  fase: null as null | string,
   // Acción pedida desde un aviso; el paso que la sabe hacer la toma y la limpia
   accion: null as null | { id: string; t: number },
   // "¿Por qué?" de un resultado: qué explicar y con qué números (FlujoPorQue)
