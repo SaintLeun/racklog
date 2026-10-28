@@ -24,6 +24,11 @@ Pedido del dueño: el mono de la hoja de poses en 3D, explicando la herramienta 
 - Ojos más grandes con brillo, cejas gruesas y amables (antes quedaban bajo el ala del casco).
 - Pilares más anchos y perforaciones más grandes, que se ven aun con el robot chico.
 
+## Ubicación en el inicio (28-10, criterio nuestro a pedido del dueño)
+- El globo tapaba "Hablar por WhatsApp" y los botones del hero. Ahora en computador va abajo a la derecha,
+  junto al WhatsApp y sobre la imagen; en celular y tablet llega, saluda chico y explica cuando el cliente baja
+  o lo toca, con el globo más arriba que el botón flotante de WhatsApp (`components/flujo/GuiaInicio.vue`).
+
 ## Pendiente / por confirmar con el dueño
 - Afinar el parecido con la hoja (proporciones, casco) según lo que diga al verlo.
 - Más "¿Por qué?" si los pide (p. ej. sistema recomendado en el paso 1, fondo del marco).

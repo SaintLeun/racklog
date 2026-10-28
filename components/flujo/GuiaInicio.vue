@@ -1,20 +1,22 @@
 <template>
   <!-- RACKLOG en el inicio (dueño 28-10): llega caminando la primera vez, se presenta y cuenta cómo funciona la
        herramienta; después queda chico abajo a la izquierda y al tocarlo vuelve a explicar. Textos en
-       lib/flujo/asistente.js (INICIO). Bajo el aviso de cookies (z-60) y lejos del botón de WhatsApp (derecha) -->
-  <div v-if="entrada !== 'espera'" class="pointer-events-none fixed left-3 z-[55] flex items-end gap-1 sm:bottom-5 sm:left-5" :class="arriba ? 'bottom-20' : 'bottom-3'">
+       lib/flujo/asistente.js (INICIO). Bajo el aviso de cookies (z-60). Para no tapar los botones del hero: en
+       computador va abajo a la derecha (junto al WhatsApp, sobre la imagen); en celular saluda chico y explica
+       cuando el cliente baja o lo toca, con el globo sobre el botón de WhatsApp -->
+  <div v-if="entrada !== 'espera'" class="pointer-events-none fixed left-3 z-[55] flex items-end gap-1 sm:bottom-5 sm:left-5 lg:left-auto lg:right-24 lg:flex-row-reverse" :class="arriba ? 'bottom-20' : 'bottom-3'">
     <button
       type="button" class="pointer-events-auto relative -mb-1 flex-shrink-0 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       :aria-label="i === null ? 'RACKLOG: ¿cómo funciona?' : 'Cerrar a RACKLOG'" :aria-expanded="i !== null" @click="i === null ? abrir() : cerrar()"
     >
       <FlujoRobot3D
-        :pose="tema?.pose ?? 'pulgar'" :caminar="entrada === 'camina'"
+        :pose="tema?.pose ?? (pendiente ? 'saluda' : 'pulgar')" :caminar="entrada === 'camina'"
         :class="['rl-tam drop-shadow-[0_8px_12px_rgba(0,0,0,0.2)]', i === null ? 'h-20 w-20 sm:h-24 sm:w-24' : 'h-36 w-32 sm:h-56 sm:w-52']"
         @llego="llegó"
       />
     </button>
     <Transition name="fl-sub">
-      <div v-if="tema" class="pointer-events-auto mb-8 w-[min(330px,calc(100vw-9.5rem))] rounded-2xl rounded-bl-sm bg-white px-4 py-3 text-sm shadow-xl ring-1 ring-black/10 sm:mb-12" role="status">
+      <div v-if="tema" class="pointer-events-auto mb-16 w-[min(330px,calc(100vw-9.5rem))] rounded-2xl rounded-bl-sm bg-white px-4 py-3 text-sm shadow-xl ring-1 ring-black/10 sm:mb-12 lg:rounded-bl-2xl lg:rounded-br-sm" role="status">
         <div class="flex items-start gap-2">
           <div class="min-w-0 flex-1">
             <p class="font-semibold text-neutral-900">{{ tema.titulo }}</p>
@@ -42,6 +44,8 @@ const { analytics } = useConsent();
 const i = ref<number | null>(null);
 const tema = computed(() => (i.value === null ? null : INICIO[i.value]));
 const entrada = ref<'espera' | 'camina' | 'lista'>('espera');
+// En celular llega y saluda chico; explica cuando el cliente baja del hero
+const pendiente = ref(false);
 const CLAVE = 'racklog_inicio_saludo';
 // Si ya se presentó aquí, dentro del flujo no vuelve a saludar (va directo a explicar el paso)
 const CLAVE_FLUJO = 'racklog_asistente_saludo';
@@ -49,12 +53,16 @@ const CLAVE_FLUJO = 'racklog_asistente_saludo';
 function llegó() {
   if (entrada.value === 'lista') return;
   entrada.value = 'lista';
-  i.value = 0;
+  if (window.matchMedia('(min-width: 1024px)').matches || bajó()) i.value = 0;
+  else { pendiente.value = true; window.addEventListener('scroll', alBajar, { passive: true }); }
   guardar(CLAVE);
   guardar(CLAVE_FLUJO);
   marcar('asistente_inicio', {});
 }
-function abrir() { i.value = 0; marcar('asistente_abrir', { paso: 'inicio' }); }
+const bajó = () => window.scrollY > window.innerHeight * 0.5;
+function alBajar() { if (!bajó()) return; dejarDeEsperar(); i.value = 0; }
+function dejarDeEsperar() { pendiente.value = false; window.removeEventListener('scroll', alBajar); }
+function abrir() { dejarDeEsperar(); i.value = 0; marcar('asistente_abrir', { paso: 'inicio' }); }
 function cerrar() { i.value = null; }
 
 let t: ReturnType<typeof setTimeout> | null = null;
@@ -66,7 +74,7 @@ onMounted(() => {
   if (analytics.value !== 'unset') return partir();
   const parar = watch(analytics, (v) => { if (v !== 'unset') { parar(); partir(); } });
 });
-onBeforeUnmount(() => { if (t) clearTimeout(t); });
+onBeforeUnmount(() => { if (t) clearTimeout(t); dejarDeEsperar(); });
 
 function guardar(clave: string) { try { sessionStorage.setItem(clave, '1'); } catch { /* sin almacenamiento */ } }
 function leer(clave: string) { try { return sessionStorage.getItem(clave); } catch { return null; } }
