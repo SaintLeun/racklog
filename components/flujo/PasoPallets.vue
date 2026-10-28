@@ -176,7 +176,7 @@
             <p class="mt-1 text-sm text-neutral-500">
               Estante de {{ fmA(bandejaDe(c)!.estante.alto) }} m con bandeja de {{ mmTxt(bandejaDe(c)!.frente) }} × {{ mmTxt(bandejaDe(c)!.fondo) }} mm, {{ bandejaDe(c)!.largoEnFrente ? 'con el largo de la caja al frente' : 'con el ancho de la caja al frente' }}.
               {{ bandejaDe(c)!.limite === 'peso' ? 'No van más para no pasar de 250 kg.' : bandejaDe(c)!.limite === 'apilable' ? `Apiladas hasta ${bandejaDe(c)!.camas}: lo que aguanta tu caja.` : '' }}
-              En el paso 4 armas tu estante y ves cuántas caben por módulo.
+              En el paso siguiente armas tu estante y ves cuántas caben por módulo.
             </p>
           </div>
         </div>

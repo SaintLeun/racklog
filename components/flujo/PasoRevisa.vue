@@ -48,7 +48,7 @@
             </li>
           </ul>
         </div>
-        <p v-if="auditoria.fallas" class="mt-3 text-sm text-neutral-600">Vuelve a <button type="button" class="font-medium text-brand-700 underline" @click="p.ir('rack')">Arma tu rack</button> o a <button type="button" class="font-medium text-brand-700 underline" @click="p.ir('bodega')">Tu bodega</button> para corregirlo.</p>
+        <p v-if="auditoria.fallas" class="mt-3 text-sm text-neutral-600">Vuelve a <button type="button" class="font-medium text-brand-700 underline" @click="p.ir('rack')">Arma tu rack</button> o a <button type="button" class="font-medium text-brand-700 underline" @click="p.ir('bodega')">Arma tu layout</button> para corregirlo.</p>
       </details>
 
       <!-- Lo que gana, en palabras simples, y antes / despues -->

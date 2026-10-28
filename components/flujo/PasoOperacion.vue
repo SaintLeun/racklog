@@ -115,7 +115,7 @@
         <div class="fl-card mt-5">
           <img :src="TIPOS[p.sistema!].imagen" alt="" width="800" height="350" class="-mx-5 -mt-5 mb-4 aspect-[16/7] w-[calc(100%+2.5rem)] max-w-none rounded-t-2xl bg-neutral-100 object-cover" loading="lazy" @error="sinImagen">
           <p v-if="supuestos.length >= MUCHOS_NO_SE" class="font-medium text-neutral-900">
-            Como no sabías varias respuestas, partimos con lo más común en bodegas como la tuya: es el sistema más versátil y te deja sacar cualquier pallet. Lo afinamos con tus pallets en el paso 3.
+            Como no sabías varias respuestas, partimos con lo más común en bodegas como la tuya: es el sistema más versátil y te deja sacar cualquier pallet. Lo afinamos con tus pallets en el paso siguiente.
           </p>
           <ul v-else class="space-y-2 text-neutral-700">
             <li v-for="(t, i) in rec.porque" :key="i" class="flex gap-2"><span class="text-brand-600" aria-hidden="true">✓</span>{{ t }}</li>
@@ -135,7 +135,7 @@
           Elegir otro sistema
         </button>
         <!-- Una sola mención al ingeniero, al final -->
-        <p class="mt-4 rounded-xl bg-neutral-100 px-3 py-2 text-sm text-neutral-600">Es una primera recomendación: en el paso 3 la afinamos producto por producto con tus pallets{{ p.flags.includes('revisar_asesor') ? ' y un ingeniero de Racklog revisa tu caso antes de cotizar' : '' }}.</p>
+        <p class="mt-4 rounded-xl bg-neutral-100 px-3 py-2 text-sm text-neutral-600">Es una primera recomendación: en el paso siguiente la afinamos producto por producto con tus pallets{{ p.flags.includes('revisar_asesor') ? ' y un ingeniero de Racklog revisa tu caso antes de cotizar' : '' }}.</p>
       </section>
     </Transition>
     <!-- La barra va fuera de la transición: con el translateY de la vista que entra, una barra fija adentro se

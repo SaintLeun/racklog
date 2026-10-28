@@ -218,7 +218,7 @@
                   <div class="mt-1 grid grid-cols-2 gap-2">
                     <button v-for="a in ALTOS_TUNEL" :key="a.v" type="button" :class="['fl-chip !min-h-11 !flex-col !gap-0 !text-sm leading-tight', Math.abs(mod.tunel.altoLibre - a.v) < 0.01 && 'fl-chip--sel']" :aria-pressed="Math.abs(mod.tunel.altoLibre - a.v) < 0.01" @click="cambiar({ tunel: { ...mod.tunel, altoLibre: a.v } })"><b>{{ a.t }}</b><span class="text-xs font-normal">paso {{ fm(a.v) }} m</span></button>
                   </div>
-                  <p class="mt-2 text-xs text-neutral-500">Va al medio de la fila; en el paso 5 lo mueves.</p>
+                  <p class="mt-2 text-xs text-neutral-500">Va al medio de la fila; en Arma tu layout lo mueves.</p>
                   <p v-if="res && res.m.tunel && (res.m.tunel.libreReal ?? res.m.tunel.altoLibre) < altoTunelGrua(p.bodega.grua) - 0.01" class="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900" role="status">
                     Bajo la viga quedan {{ fm(res.m.tunel.libreReal ?? res.m.tunel.altoLibre) }} m: pasan personas, pero tu {{ (GRUAS as any)[p.bodega.grua]?.nombre?.toLowerCase() ?? 'equipo' }} necesita ~{{ fm(altoTunelGrua(p.bodega.grua)) }} m.
                     <button type="button" class="font-semibold underline" @click="cambiar({ tunel: { ...mod.tunel, altoLibre: altoTunelGrua(p.bodega.grua) } })">Usar {{ fm(altoTunelGrua(p.bodega.grua)) }} m</button>

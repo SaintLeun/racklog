@@ -223,10 +223,12 @@ watch(() => props.indice, (nuevo, antes) => {
   guia.value = temas.value.length ? { tipo: 'tema', i: 0 } : null;
 });
 // En "Arma tu layout", al pasar de la bodega a los racks (o volver) guía desde el primer tema de esa parte
+// Al entrar al paso la fase llega después (el paso carga diferido): si parte por la bodega, cambia de temas
 watch(() => estado.fase, (f, antes) => {
-  if (props.paso !== 'bodega' || !f || !antes) return;
+  if (props.paso !== 'bodega' || !f || (!antes && f === 'racks')) return;
   vista.value = { tipo: 'tema', i: 0 };
   callar();
+  if (antes) logro.value = '';
   guia.value = temas.value.length ? { tipo: 'tema', i: 0 } : null;
 });
 

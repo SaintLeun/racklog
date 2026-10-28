@@ -77,6 +77,8 @@ const id = () => Math.random().toString(36).slice(2, 9);
 function inicial() {
   return {
     version: 1,
+    // Orden de PASOS con que se guardó: 2 = sin el paso "Tu bodega" (fusionado en "Arma tu layout", 28-10)
+    orden: 2,
     sesion: id() + Date.now().toString(36),
     paso: 'operacion' as Paso,
     // Pasos a los que ya llego (el stepper deja volver a cualquiera de ellos)
@@ -153,8 +155,15 @@ export const useProyecto = defineStore('proyecto', {
         const g = JSON.parse(localStorage.getItem(CLAVE) || 'null');
         if (g && g.version === 1) this.$patch({ ...inicial(), ...g, lead: { ...inicial().lead, ...g.lead }, bodega: { ...inicial().bodega, ...g.bodega }, accesorios: { ...inicial().accesorios, ...g.accesorios } });
         palletsSinCajas(this.pallets);
-        // Sesiones de antes de la fusión: el paso "Tu bodega" ya no existe; sigue con sus pallets
-        if (!PASOS.some((x) => x.k === this.paso)) { this.paso = 'pallets'; this.alcanzado = Math.min(this.alcanzado, 1); }
+        // Sesiones de antes de la fusión: los pasos después de "Tu operación" bajan uno. Quien estaba en "Tu bodega"
+        // sin haberla pasado sigue con sus pallets; si ya había avanzado, vuelve a su layout
+        if (g && g.version === 1 && g.orden !== 2) {
+          const antes = Number(g.alcanzado) || 0;
+          if (g.paso === 'dibujo') this.paso = antes > 1 ? 'bodega' : 'pallets';
+          this.alcanzado = antes > 1 ? antes - 1 : this.paso === 'pallets' ? 1 : antes;
+          this.orden = 2;
+          this.persistir();
+        }
       } catch { /* sin almacenamiento */ }
       // Atribucion: se guarda la primera vez que llega con parametros
       try {

@@ -876,20 +876,23 @@ function medidasAprox(v: boolean) {
   p.flags = v ? [...new Set([...p.flags, 'no_se:medidas'])] : p.flags.filter((f) => f !== 'no_se:medidas');
 }
 const p = useProyecto();
-// Si todavía no dibuja su bodega parte por ella; con medidas o racks puestos, directo a sus racks
-const fase = ref<Fase>(p.racks.length || p.flags.includes('medidas_ok') ? 'racks' : 'bodega');
+// Si todavía no termina su bodega parte por ella; si ya la pasó o tiene racks, directo a sus racks
+const fase = ref<Fase>(p.racks.length || p.flags.includes('bodega_lista') ? 'racks' : 'bodega');
 const modo = computed(() => (fase.value === 'bodega' ? 'dibujo' : 'layout'));
 function cambiarFase(f: Fase) {
   if (f === fase.value) return;
   if (dibujo.value) cancelarDibujo();
-  sel.value = null; elementoSel.value = null; menu.value = ''; pestana.value = '';
+  // Antes eran dos pasos y todo partía de cero al cambiar; lo que estaba a medias no pasa a la otra parte
+  sel.value = null; elementoSel.value = null; muroSel.value = null; menu.value = ''; pestana.value = '';
+  pincel.value = null; trazado.value = null; agregandoCruce.value = false; auto.abierto = false; escenario.value = 'propuesta';
+  if (f === 'racks' && !p.flags.includes('bodega_lista')) p.flags = [...p.flags, 'bodega_lista'];
   fase.value = f;
   marcar('layout_fase', { fase: f });
   if (import.meta.client) window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
-// Volver sin haber terminado la bodega cuenta como abandono de medidas (rescate §I)
+// Volver sin haber pasado nunca de la bodega cuenta como abandono de medidas (rescate §I)
 function salirAtras() {
-  if (!p.racks.length && !p.flags.includes('medidas_ok')) p.abandonoMedidas = true;
+  if (!p.racks.length && !p.flags.includes('bodega_lista')) p.abandonoMedidas = true;
   emit('atras');
 }
 const fm = formatoM;
