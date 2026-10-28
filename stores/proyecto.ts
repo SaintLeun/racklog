@@ -7,13 +7,13 @@ import { consulta } from '~/lib/flujo/consulta.js';
 import { palletsSinCajas } from '~/lib/tour/pallet.js';
 
 export const PASOS = [
-  // La bodega se dibuja primero (prompt v3 §1): todo lo que sigue se valida contra ella. Los accesorios van
-  // después del layout porque dependen de pasillos y cabeceras reales. 'bodega' es el layout (ubicar racks)
+  // 'bodega' es "Arma tu layout": primero dibuja la bodega y después ubica sus racks, en el mismo paso (dueño
+  // 28-10; antes la bodega era el paso 2 y repetía el plano). Los accesorios van después del layout porque
+  // dependen de pasillos y cabeceras reales
   { k: 'operacion', t: 'Tu operación', min: 1 },
-  { k: 'dibujo', t: 'Tu bodega', min: 1 },
   { k: 'pallets', t: 'Tus pallets', min: 1 },
   { k: 'rack', t: 'Arma tu rack', min: 1 },
-  { k: 'bodega', t: 'Arma tu layout', min: 1 },
+  { k: 'bodega', t: 'Arma tu layout', min: 2 },
   { k: 'accesorios', t: 'Accesorios y seguridad', min: 0.5 },
   { k: 'revisa', t: 'Revisa', min: 0.5 },
   { k: 'cotiza', t: 'Cotiza', min: 0.5 },
@@ -153,6 +153,8 @@ export const useProyecto = defineStore('proyecto', {
         const g = JSON.parse(localStorage.getItem(CLAVE) || 'null');
         if (g && g.version === 1) this.$patch({ ...inicial(), ...g, lead: { ...inicial().lead, ...g.lead }, bodega: { ...inicial().bodega, ...g.bodega }, accesorios: { ...inicial().accesorios, ...g.accesorios } });
         palletsSinCajas(this.pallets);
+        // Sesiones de antes de la fusión: el paso "Tu bodega" ya no existe; sigue con sus pallets
+        if (!PASOS.some((x) => x.k === this.paso)) { this.paso = 'pallets'; this.alcanzado = Math.min(this.alcanzado, 1); }
       } catch { /* sin almacenamiento */ }
       // Atribucion: se guarda la primera vez que llega con parametros
       try {

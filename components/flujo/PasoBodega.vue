@@ -1,13 +1,14 @@
 <template>
   <div>
-    <template v-if="modo === 'dibujo'">
-      <h1 class="fl-titulo">Tu bodega</h1>
-      <p class="fl-bajada">Dibuja tu bodega: medidas, forma, altura, pilares y portones. Todo lo que armes después se revisa contra ella.</p>
-    </template>
-    <template v-else>
-      <h1 class="fl-titulo">Arma tu layout</h1>
-      <p class="fl-bajada">Dibuja tus racks arrastrando en el plano, por el muro que quieras y del largo que quieras. Tú decides cuántos cuerpos van en cada lado. <button type="button" class="font-medium text-brand-700 underline underline-offset-2" @click="p.ir('dibujo')">Cambiar mi bodega</button></p>
-    </template>
+    <h1 class="fl-titulo">Arma tu layout</h1>
+    <!-- Un solo paso con dos partes (dueño 28-10): primero la bodega, después los racks. Se puede volver a la bodega
+         cuando quiera, sin salir del paso -->
+    <div class="mt-3 inline-grid grid-cols-2 gap-1 rounded-xl bg-neutral-100 p-1" role="tablist" aria-label="Partes de este paso">
+      <button v-for="(f, i) in FASES" :key="f.k" type="button" role="tab" :aria-selected="fase === f.k" :class="['flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold', fase === f.k ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600 hover:text-neutral-900']" @click="cambiarFase(f.k)">
+        <span :class="['inline-flex h-5 w-5 items-center justify-center rounded-full text-xs', fase === f.k ? 'bg-brand-600 text-white' : 'bg-neutral-300 text-neutral-700']">{{ i + 1 }}</span>{{ f.t }}
+      </button>
+    </div>
+    <p class="fl-bajada">{{ fase === 'bodega' ? 'Dibuja tu bodega: medidas, altura, portones y pilares. Así revisamos que tus racks quepan y que la grúa pase.' : 'Ahora pon tus racks: arrastra en el plano, por el muro y del largo que quieras. Tú decides cuántos cuerpos van en cada lado.' }}</p>
 
     <div class="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
       <div class="min-w-0 space-y-4">
@@ -39,7 +40,7 @@
           <button v-for="t in PESTANAS" :key="t.k" type="button" role="tab" :aria-selected="pestana === t.k" :class="['min-h-10 flex-auto whitespace-nowrap rounded-lg px-2.5 text-sm font-semibold', pestana === t.k ? 'bg-white text-brand-800 shadow-sm' : 'text-neutral-600']" @click="pestana = pestana === t.k ? '' : t.k">{{ t.t }}</button>
         </div>
 
-        <!-- Paso 2 (dueño 27-10): sin pestañas. Forma y medidas, altura libre, accesos y, al final, pilares (opcional).
+        <!-- Parte 1, tu bodega (dueño 27-10): sin pestañas. Forma y medidas, altura libre, accesos y, al final, pilares (opcional).
              En el celular el plano queda arriba y esto debajo -->
         <template v-if="modo === 'dibujo'">
         <section class="fl-card">
@@ -825,8 +826,8 @@
       </div>
     </div>
 
-    <FlujoAcciones v-if="modo === 'dibujo'" texto="Continuar con esta bodega" @atras="emit('atras')" @siguiente="emit('siguiente')" />
-    <FlujoAcciones v-else :deshabilitado="!p.racks.length" motivo="Agrega al menos un lineal." texto="Seguir con accesorios" @atras="emit('atras')" @siguiente="emit('siguiente')" />
+    <FlujoAcciones v-if="fase === 'bodega'" texto="Listo, ahora mis racks" @atras="salirAtras" @siguiente="cambiarFase('racks')" />
+    <FlujoAcciones v-else :deshabilitado="!p.racks.length" motivo="Agrega al menos un lineal." texto="Seguir con accesorios" @atras="cambiarFase('bodega')" @siguiente="emit('siguiente')" />
   </div>
 </template>
 
@@ -857,9 +858,10 @@ const MINI = 'h-7 min-w-7 rounded-md px-1 text-base font-semibold text-neutral-7
 const MENU_RACK = 'inline-flex h-9 items-center gap-1 whitespace-nowrap rounded-lg px-2.5 text-sm font-semibold text-neutral-800 hover:bg-neutral-100';
 const MENU = 'absolute left-0 top-full z-30 mt-1 w-64 rounded-xl bg-white p-1 shadow-lg ring-1 ring-black/10';
 const ITEM = 'flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-neutral-800 hover:bg-neutral-100';
-// 'dibujo' (paso 2): medidas, forma, altura, pilares y portones. 'layout' (paso 5): el cliente ubica sus lineales
-const props = withDefaults(defineProps<{ modo?: 'dibujo' | 'layout' }>(), { modo: 'layout' });
-const modo = computed(() => props.modo);
+// Dos partes del mismo paso: 'bodega' (medidas, forma, altura, pilares y portones) y 'racks' (el cliente ubica sus
+// lineales). Antes eran los pasos 2 y 5; se fusionaron (dueño 28-10). `modo` sigue nombrando lo que se ve
+const FASES = [{ k: 'bodega', t: 'Tu bodega' }, { k: 'racks', t: 'Tus racks' }] as const;
+type Fase = typeof FASES[number]['k'];
 function cambiarAltura(e: Event) {
   const v = Number((e.target as HTMLInputElement).value);
   p.bodega.altura = v >= 2.5 ? Math.min(40, v) : null;
@@ -874,6 +876,22 @@ function medidasAprox(v: boolean) {
   p.flags = v ? [...new Set([...p.flags, 'no_se:medidas'])] : p.flags.filter((f) => f !== 'no_se:medidas');
 }
 const p = useProyecto();
+// Si todavía no dibuja su bodega parte por ella; con medidas o racks puestos, directo a sus racks
+const fase = ref<Fase>(p.racks.length || p.flags.includes('medidas_ok') ? 'racks' : 'bodega');
+const modo = computed(() => (fase.value === 'bodega' ? 'dibujo' : 'layout'));
+function cambiarFase(f: Fase) {
+  if (f === fase.value) return;
+  if (dibujo.value) cancelarDibujo();
+  sel.value = null; elementoSel.value = null; menu.value = ''; pestana.value = '';
+  fase.value = f;
+  marcar('layout_fase', { fase: f });
+  if (import.meta.client) window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+}
+// Volver sin haber terminado la bodega cuenta como abandono de medidas (rescate §I)
+function salirAtras() {
+  if (!p.racks.length && !p.flags.includes('medidas_ok')) p.abandonoMedidas = true;
+  emit('atras');
+}
 const fm = formatoM;
 const n = (v: number) => Math.round(v).toLocaleString('es-CL');
 const num = (e: Event) => Math.max(0.2, Number((e.target as HTMLInputElement).value) || 0.2);
@@ -943,11 +961,9 @@ const PASILLOS_AR = Array.from({ length: Math.round((DISTANCIAS.pasilloAR.max - 
 const avisoMuro = ref('');
 // Pasillos en serie (panel del pasillo elegido)
 const serie = reactive({ cantidad: 1, separacion: 6 });
-const PESTANAS_DIBUJO = [{ k: 'medidas', t: 'Medidas' }, { k: 'pilares', t: 'Pilares' }, { k: 'accesos', t: 'Portones y andenes' }] as const;
-const PESTANAS_LAYOUT = [{ k: 'tengo', t: 'Lo que ya tengo' }, { k: 'hoy', t: 'Hoy vs propuesta' }] as const;
-const PESTANAS = computed(() => (modo.value === 'dibujo' ? PESTANAS_DIBUJO : PESTANAS_LAYOUT));
+const PESTANAS = [{ k: 'tengo', t: 'Lo que ya tengo' }, { k: 'hoy', t: 'Hoy vs propuesta' }] as const;
 // En el dibujo parte en Medidas; en el layout las pestañas de lo que ya tiene van cerradas hasta que las toque
-const pestana = ref<string>(props.modo === 'dibujo' ? 'medidas' : '');
+const pestana = ref<string>('');
 // Encuadre a lo diseñado: los racks con su pasillo (y los accesos). Se calcula al ubicar, no en cada arrastre
 // El plano parte mostrando toda la bodega; el zoom queda donde el cliente lo deja ("Ajustar a la bodega" lo vuelve)
 const plano = ref<{ restablecerVista(): void; acercar(factor: number): void; aPlanoCliente(x: number, y: number): Pto | null; cajaRack: { x: number; y: number; w: number; h: number; W: number; H: number } | null; moviendo: boolean } | null>(null);
@@ -1725,6 +1741,7 @@ const porPoner = computed(() => Math.max(0, demanda.value.necesita - demanda.val
 
 // ─── Asistente (el robot): le cuenta cómo va el layout y atiende lo que pide desde sus avisos ───
 const asistente = useAsistente();
+watchEffect(() => { asistente.estado.fase = fase.value; });
 watchEffect(() => {
   if (modo.value !== 'layout' || enHoy.value) { asistente.estado.layout = null; return; }
   const area = Math.abs(areaPoligono(contorno(p.bodega))), usado = Math.min(area, areaOcupada(p.racks, p.bodega));
@@ -1744,7 +1761,7 @@ watch(() => asistente.estado.accion, (a) => {
     if (a.id === 'autollenar-area') auto.donde = 'area';
   }
 });
-onBeforeUnmount(() => { asistente.estado.layout = null; });
+onBeforeUnmount(() => { asistente.estado.layout = null; asistente.estado.fase = null; });
 // ─── ¿Ya alcanza? El cliente tiene que saber cuándo sus racks cubren los pallets que pidió ───
 const filasJustas = ref(0);
 // Lo que aún le falta al modelo de ese rack (posiciones o cajas)

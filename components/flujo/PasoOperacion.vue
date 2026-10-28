@@ -4,17 +4,17 @@
       <!-- Entrada: el camino "no sé" es el principal y va primero -->
       <section v-if="vista === 'inicio'" key="inicio">
         <h1 class="fl-titulo">¿Sabes qué rack necesitas?</h1>
-        <p class="mt-2 text-neutral-600">Si no lo sabes, no importa: te hacemos 8 preguntas simples sobre tu bodega y te decimos cuál conviene.</p>
+        <p class="mt-2 text-neutral-600">Si no lo sabes, te ayudamos: con 8 preguntas simples sobre tu bodega te decimos cuál te conviene.</p>
         <p class="mt-2 text-sm text-neutral-500">{{ MENSAJE_INICIO }}</p>
         <div class="mt-6 grid gap-3 sm:grid-cols-2">
           <!-- Ninguna tarjeta parte marcada: solo se destaca lo que el cliente elige (dueño 27-10) -->
           <button type="button" class="fl-opcion !p-5 text-left" @click="empezar(false)">
-            <span class="block text-lg font-bold text-neutral-900">No, ayúdenme</span>
-            <span class="mt-1 block text-neutral-600">Respondes 8 preguntas (unos 2 minutos) y te recomendamos el sistema.</span>
+            <span class="block text-lg font-bold text-neutral-900">No, ayúdenme a elegir</span>
+            <span class="mt-1 block text-neutral-600">Responde 8 preguntas (unos 2 minutos) y te recomendamos el sistema.</span>
           </button>
           <button type="button" class="fl-opcion !p-5 text-left" @click="empezar(true)">
-            <span class="block text-lg font-bold text-neutral-900">Sí, ya sé</span>
-            <span class="mt-1 block text-neutral-600">Eliges entre rack selectivo, drive-in o ángulo ranurado.</span>
+            <span class="block text-lg font-bold text-neutral-900">Sí, lo tengo claro</span>
+            <span class="mt-1 block text-neutral-600">Elige entre rack selectivo, drive-in o ángulo ranurado.</span>
           </button>
         </div>
       </section>

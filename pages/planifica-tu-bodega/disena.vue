@@ -42,7 +42,7 @@
           <LazyFlujoCompartido v-if="compartido" key="compartido" :datos="compartido" @cotizar="cotizarCompartido" @propio="dejarCompartido" />
           <!-- A/B 'registro': con la variante "inicio" el registro va antes de la primera pregunta -->
           <FlujoRegistro v-else-if="registroAlInicio && p.paso === 'operacion' && !p.registrado" key="registro" @listo="registroAlInicio = false" />
-          <component :is="COMPONENTES[p.paso]" v-else :key="p.paso" class="fl-cascada" v-bind="p.paso === 'dibujo' ? { modo: 'dibujo' } : {}" @siguiente="siguiente" @atras="atras" />
+          <component :is="COMPONENTES[p.paso]" v-else :key="p.paso" class="fl-cascada" @siguiente="siguiente" @atras="atras" />
         </Transition>
         <!-- Mientras carga: esqueleto con la forma de un paso (título, bajada, dibujo y tarjetas) que aparece
              en cascada; así nunca se ve una pantalla en blanco -->
@@ -105,7 +105,7 @@ useHead({ meta: [{ name: 'robots', content: 'noindex' }] });
 
 const p = useProyecto();
 const COMPONENTES: Record<Paso, unknown> = {
-  operacion: FlujoPasoOperacion, dibujo: LazyFlujoPasoBodega, pallets: LazyFlujoPasoPallets, rack: LazyFlujoPasoRack, accesorios: LazyFlujoPasoAccesorios,
+  operacion: FlujoPasoOperacion, pallets: LazyFlujoPasoPallets, rack: LazyFlujoPasoRack, accesorios: LazyFlujoPasoAccesorios,
   bodega: LazyFlujoPasoBodega, revisa: LazyFlujoPasoRevisa, cotiza: LazyFlujoPasoCotiza,
 };
 // El paso 1 va en el primer golpe; el resto (plano, 3D) se baja cuando el navegador queda libre, así el
@@ -119,7 +119,7 @@ function precargarPasos() {
 const PASOS_CON_PLANO: Paso[] = ['bodega', 'accesorios'];
 // Los pasos con plano o 3D usan todo el ancho
 const ANCHO: Record<Paso, string> = {
-  operacion: 'max-w-4xl', dibujo: 'max-w-[1560px]', pallets: 'max-w-6xl', rack: 'max-w-6xl', accesorios: 'max-w-3xl', bodega: 'max-w-[1560px]', revisa: 'max-w-6xl', cotiza: 'max-w-3xl',
+  operacion: 'max-w-4xl', pallets: 'max-w-6xl', rack: 'max-w-6xl', accesorios: 'max-w-3xl', bodega: 'max-w-[1560px]', revisa: 'max-w-6xl', cotiza: 'max-w-3xl',
 };
 
 function ir(paso: Paso) {
@@ -128,11 +128,8 @@ function ir(paso: Paso) {
   if (import.meta.client) window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 }
 const siguiente = () => ir(PASOS[Math.min(PASOS.length - 1, p.indice + 1)].k);
-const atras = () => {
-  // Volver desde el dibujo de la bodega sin haberlo terminado cuenta como abandono de medidas (rescate §I)
-  if (p.paso === 'dibujo' && p.alcanzado <= PASOS.findIndex((x) => x.k === 'dibujo')) p.abandonoMedidas = true;
-  ir(PASOS[Math.max(0, p.indice - 1)].k);
-};
+// El abandono de medidas (rescate §I) lo marca PasoBodega al volver sin terminar la bodega
+const atras = () => ir(PASOS[Math.max(0, p.indice - 1)].k);
 // Datos reales o estimados del diseño: alimentan la precisión de la cotización
 const estados = computed(() => estadosDiseño(p));
 const movil = ref(false);
