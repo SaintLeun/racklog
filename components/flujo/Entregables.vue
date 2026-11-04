@@ -11,7 +11,7 @@
       <button type="button" class="fl-btn flex-1" @click="copiarLink">{{ copiado ? 'Link copiado ✓' : 'Copiar link de mi diseño' }}</button>
       <button v-if="puedeCompartir" type="button" class="fl-btn-sec flex-1" @click="compartirLink">Compartir por WhatsApp o correo</button>
     </div>
-    <p class="mt-2 text-sm text-neutral-500">Sin tus datos personales. Dura {{ DIAS_LINK }} días.</p>
+    <p class="mt-2 text-sm text-neutral-500">Sin tus datos personales, encriptado. Dura {{ HORAS_LINK }} horas.</p>
     <input v-if="linkManual" :value="linkManual" readonly class="form-input mt-2 w-full text-sm" aria-label="Link a tu diseño" @focus="($event.target as HTMLInputElement).select()">
     <p v-if="mensaje" class="mt-3 text-sm" :class="error ? 'text-red-700' : 'text-neutral-600'" role="status">{{ mensaje }}</p>
     </template>
@@ -36,7 +36,7 @@ import { useProyecto } from '~/stores/proyecto';
 import { pasillos } from '~/lib/rack3d/pasillos.js';
 import { proponerAccesorios, aplicarAjustes } from '~/lib/rack3d/accesorios.js';
 import { cifraPrincipal, imagenSvg, nombreArchivo } from '~/lib/flujo/exportar.js';
-import { enlaceParaVer, DIAS_LINK } from '~/lib/flujo/enlace.js';
+import { enlaceParaVer, HORAS_LINK } from '~/lib/flujo/enlace.js';
 
 defineProps<{ soloPlano?: boolean }>();
 const p = useProyecto();

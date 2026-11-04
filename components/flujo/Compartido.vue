@@ -1,7 +1,7 @@
 <template>
   <section v-if="caducado" class="fl-card mx-auto max-w-xl text-center">
-    <h1 class="fl-titulo">Este link venció</h1>
-    <p class="fl-bajada">Los links a un diseño duran {{ DIAS_LINK }} días. Pide uno nuevo a quien te lo compartió, o diseña tu bodega en unos minutos.</p>
+    <h1 class="fl-titulo">Este link venció o no es válido</h1>
+    <p class="fl-bajada">Los links a un diseño duran {{ HORAS_LINK }} horas. Pide uno nuevo a quien te lo compartió, o diseña tu bodega en unos minutos.</p>
     <button type="button" class="fl-btn mt-6" @click="emit('propio')">Diseñar mi bodega</button>
   </section>
   <section v-else>
@@ -33,14 +33,14 @@
       <button type="button" class="fl-btn-sec" @click="emit('propio')">Hacer mi propio diseño</button>
       <button type="button" class="fl-btn" @click="emit('cotizar')">Cotizar este diseño</button>
     </div>
-    <p v-if="hasta" class="mt-3 text-sm text-neutral-500">Este link vence el {{ hasta }}.</p>
+    <p v-if="hasta" class="mt-3 text-sm text-neutral-500">Este link vence el {{ hasta }} h.</p>
   </section>
 </template>
 
 <script lang="ts" setup>
-// Diseño compartido por link: solo lectura, con "Cotizar este diseño". Vence a los 30 días 
+// Diseño compartido por link: solo lectura, con "Cotizar este diseño". Vence a las 24 horas
 import { ref, computed } from 'vue';
-import { DIAS_LINK, vencido } from '~/lib/flujo/enlace.js';
+import { HORAS_LINK, vencido } from '~/lib/flujo/enlace.js';
 import { queCotizar } from '~/lib/flujo/calculos.js';
 import { focoDiseño } from '~/lib/flujo/perfiles.js';
 import { cifraPrincipal } from '~/lib/flujo/exportar.js';
@@ -56,5 +56,5 @@ const foco = computed(() => focoDiseño(props.datos.racks, props.datos.bodega) a
 const caducado = computed(() => vencido(props.datos));
 const cifra = computed(() => cifraPrincipal(props.datos.racks) as { n: number; unidad: string });
 const cotizar = computed(() => queCotizar(props.datos.modelos, props.datos.racks) as any[]);
-const hasta = computed(() => (props.datos.hasta ? new Date(props.datos.hasta).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }) : ''));
+const hasta = computed(() => (props.datos.hasta ? new Date(props.datos.hasta).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }) : ''));
 </script>

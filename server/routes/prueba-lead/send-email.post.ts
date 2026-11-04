@@ -3,13 +3,17 @@
 // Todo lo que pasa por aquí llega como PRUEBA: solo correos +prueba@racklog.cl, "Prueba: sí" en la cotización
 // (Kommo le pone la etiqueta PRUEBA, sin vendedor ni tarea de 24 h) y "[PRUEBA]" en los contactos.
 // Solo corre con `nuxt dev`: el sitio publicado es estático (nitro preset "static") y no incluye esta ruta.
-import { defineEventHandler, getRequestHeader, readMultipartFormData, readRawBody, setResponseStatus, setResponseHeader } from 'h3';
+import { defineEventHandler, getRequestHeader, getRequestURL, readMultipartFormData, readRawBody, setResponseStatus, setResponseHeader } from 'h3';
 import { URL_LEAD, esCorreoPrueba } from '~/lib/envioLead.js';
 
 type Payload = { type?: string; data?: Record<string, any>; website?: string };
 
-/** Marca el payload como prueba; false si el correo no es de prueba */
-function marcarPrueba(payload: Payload): boolean {
+/**
+ * Marca el payload como prueba; false si el correo no es de prueba.
+ * El link al diseño apunta a racklog.cl (la API solo acepta ese dominio), pero en prueba ese sitio puede no tener
+ * la versión nueva y la API publicada puede botar el link: se copia en los comentarios apuntando a este servidor.
+ */
+function marcarPrueba(payload: Payload, origenLocal: string): boolean {
   const d = payload?.data;
   if (!d || typeof d !== 'object') return false;
   const correo = payload.type === 'quote' ? d.customerEmail : d.email;
@@ -17,6 +21,11 @@ function marcarPrueba(payload: Payload): boolean {
   if (Array.isArray(d.products)) {
     // Primero, para que nunca quede fuera del límite de pares de la API
     d.products = d.products.map((p: any) => ({ ...p, config: { Prueba: 'sí', ...(p?.config ?? {}) } }));
+    if (typeof d.linkDiseno === 'string' && d.linkDiseno.startsWith('https://racklog.cl/')) {
+      const local = origenLocal + d.linkDiseno.slice('https://racklog.cl'.length);
+      const conLink = `${d.customerComments ?? ''}\n\nDiseño del cliente (PRUEBA, abre en este servidor):\n${local}`.trim();
+      if (conLink.length <= 5000) d.customerComments = conLink;   // la API corta los comentarios en 5000: un link cortado no abre
+    }
   } else {
     d.subject = `[PRUEBA] ${d.subject ?? ''}`.trim();
   }
@@ -31,6 +40,7 @@ export default defineEventHandler(async (event) => {
     return JSON.stringify(cuerpo);
   };
 
+  const origen = getRequestHeader(event, 'origin') || getRequestURL(event).origin;   // la página desde la que se envió
   let payload: Payload;
   let body: BodyInit;
   const headers: Record<string, string> = { Origin: 'https://racklog.cl' };
@@ -38,7 +48,7 @@ export default defineEventHandler(async (event) => {
     if (tipo.startsWith('multipart/form-data')) {
       const partes = (await readMultipartFormData(event)) ?? [];
       payload = JSON.parse(partes.find((p) => p.name === 'payload')?.data.toString('utf8') ?? '');
-      if (!marcarPrueba(payload)) return responder(422, { error: 'correo_prueba' });
+      if (!marcarPrueba(payload, origen)) return responder(422, { error: 'correo_prueba' });
       const fd = new FormData();
       fd.append('payload', JSON.stringify(payload));
       partes.filter((p) => p.name === 'attachments[]').forEach((p) => {
@@ -48,7 +58,7 @@ export default defineEventHandler(async (event) => {
       headers['X-Racklog-Form'] = '1';
     } else {
       payload = JSON.parse((await readRawBody(event, 'utf8')) ?? '');
-      if (!marcarPrueba(payload)) return responder(422, { error: 'correo_prueba' });
+      if (!marcarPrueba(payload, origen)) return responder(422, { error: 'correo_prueba' });
       body = JSON.stringify(payload);
       headers['Content-Type'] = 'application/json';
     }

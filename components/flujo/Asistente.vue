@@ -1,12 +1,12 @@
 <template>
   <!-- Asistente RACKLOG (dueño 28-10): el rack con cara de la marca va fijo a la izquierda, encima de todo, y guía
-       paso a paso con una burbuja. Aparece al entrar con "Diseñar mi bodega" y saluda. La voz parte apagada: el
-       parlante tachado al inicio del texto la enciende y ahí recién habla; desde ese momento lee cada mensaje
-       hasta que se vuelva a apagar. Al tocarlo abre el panel con los avisos de su diseño y el tutorial del paso.
+       paso a paso con una burbuja. Aparece al entrar con "Diseñar mi bodega" y saluda. Sin audio (dueño 04-11).
+       La × lo quita para siempre en este navegador (useAsistente: cerrarRobot). Al tocarlo abre el panel con los avisos de su diseño y el tutorial del paso.
        Contenido en lib/flujo/asistente.js. Sin animaciones en bucle -->
   <!-- En pantallas anchas se para al lado del título del paso (dueño 28-10: "casi al lado de la pregunta"), en el
        margen izquierdo; si no cabe (celular, tablet), abajo a la izquierda -->
   <div
+    v-if="!cerrado"
     :class="['pointer-events-none fixed z-[70] flex flex-col items-start gap-2', !junto && 'bottom-[5.5rem] left-3 sm:bottom-24 sm:left-5']"
     :style="junto ? { top: `${junto.top}px`, left: '12px', width: `${junto.ancho}px` } : undefined"
   >
@@ -21,17 +21,10 @@
             <p class="text-xs font-semibold uppercase tracking-wide text-brand-700">Paso {{ indice + 1 }} · {{ tituloPaso }}</p>
             <p class="mt-0.5 font-semibold leading-snug text-neutral-900">{{ actual.titulo }}</p>
           </div>
-          <button type="button" class="h-8 w-8 flex-shrink-0 rounded-md text-lg text-neutral-500 hover:bg-neutral-100" aria-label="Cerrar" @click="estado.abierto = false">×</button>
+          <button type="button" class="h-8 w-8 flex-shrink-0 rounded-md text-lg text-neutral-500 hover:bg-neutral-100" aria-label="Cerrar a RACKLOG" @click="quitar">×</button>
         </header>
         <div class="min-h-0 flex-1 overflow-y-auto px-4 py-3">
           <div class="flex items-start gap-2.5">
-            <button type="button" :class="['mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ring-1', voz ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white text-neutral-500 ring-neutral-300 hover:bg-neutral-50']" :aria-pressed="voz" :aria-label="voz ? 'Silenciar a RACKLOG' : 'Escuchar a RACKLOG'" @click="alternarVoz">
-              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M11 5 6 9H2v6h4l5 4V5z" fill="currentColor" stroke="none" />
-                <path v-if="voz" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" />
-                <path v-else d="M16 9l6 6M22 9l-6 6" />
-              </svg>
-            </button>
             <p class="text-[15px] leading-relaxed text-neutral-800">{{ actual.texto }}</p>
           </div>
           <button v-if="actual.accion" type="button" class="fl-btn mt-3 !min-h-10 !px-4 !text-sm" @click="pedir(actual.accion.id)">{{ actual.accion.texto }}</button>
@@ -73,7 +66,7 @@
         <!-- RACKLOG en 3D (dueño 28-10): llega caminando desde el fondo, explica en grande y después se achica a la
              esquina; al tocarlo vuelve a explicar -->
         <FlujoRobot3D
-          v-if="entrada !== 'espera'" :pose="poseAvatar" :caminar="entrada === 'camina'" :hablando="hablando"
+          v-if="entrada !== 'espera'" :pose="poseAvatar" :caminar="entrada === 'camina'"
           :class="['rl-tam drop-shadow-[0_8px_12px_rgba(0,0,0,0.2)]', !grande ? 'h-20 w-20 sm:h-24 sm:w-24' : !junto && 'h-36 w-32 sm:h-60 sm:w-56']"
           :style="grande ? tamaño : undefined" @llego="llegó"
         />
@@ -88,19 +81,12 @@
           :style="junto ? { width: `${Math.max(220, Math.min(300, junto.ancho))}px` } : undefined" role="status"
         >
           <div class="flex items-start gap-2.5">
-            <button type="button" :class="['flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ring-1', voz ? 'bg-brand-600 text-white ring-brand-600' : 'bg-white text-neutral-500 ring-neutral-300 hover:bg-neutral-50']" :aria-pressed="voz" :aria-label="voz ? 'Silenciar a RACKLOG' : 'Escuchar a RACKLOG'" @click="alternarVoz">
-              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M11 5 6 9H2v6h4l5 4V5z" fill="currentColor" stroke="none" />
-                <path v-if="voz" d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" />
-                <path v-else d="M16 9l6 6M22 9l-6 6" />
-              </svg>
-            </button>
             <div class="min-w-0 flex-1 pt-1">
               <p v-if="logro && guia?.tipo === 'tema' && guia.i === 0" class="mb-1 text-xs font-semibold uppercase tracking-wide text-green-700">{{ logro }}</p>
               <p v-if="guia?.tipo !== 'saludo' && guia?.tipo !== 'invitar' && mensaje.titulo" class="font-semibold text-neutral-900">{{ mensaje.titulo }}</p>
               <p :class="['leading-relaxed text-neutral-800', guia?.tipo === 'saludo' && 'text-[15px] font-medium']">{{ mensaje.texto }}</p>
             </div>
-            <button type="button" class="-mr-1 -mt-0.5 h-7 w-7 flex-shrink-0 rounded text-neutral-400 hover:bg-neutral-100" aria-label="Cerrar" @click="cerrarGuia">×</button>
+            <button type="button" class="-mr-1 -mt-0.5 h-7 w-7 flex-shrink-0 rounded text-neutral-400 hover:bg-neutral-100" aria-label="Cerrar a RACKLOG" @click="quitar">×</button>
           </div>
           <div class="mt-2.5 flex items-center justify-end gap-3">
             <button v-if="guia?.tipo === 'tema' || guia?.tipo === 'invitar'" type="button" class="font-medium text-neutral-600 underline underline-offset-2" @click="abrir">Más ayuda</button>
@@ -122,7 +108,7 @@ import { temasDe, avisosDe, porQueDe, SALUDO, FIN, type Aviso, type Tema } from 
 const props = defineProps<{ paso: string; indice: number; tituloPaso: string; invitar?: boolean; whatsapp: string }>();
 const emit = defineEmits<{ visto: [] }>();
 const p = useProyecto();
-const { estado, pedir } = useAsistente();
+const { estado, pedir, cerrado, cargarCerrado, cerrarRobot } = useAsistente();
 const { analytics } = useConsent();
 
 const TONO = { alerta: 'bg-red-50 text-red-900 ring-red-200 hover:bg-red-100', bien: 'bg-green-50 text-green-900 ring-green-200 hover:bg-green-100', info: 'bg-white text-neutral-800 ring-neutral-200 hover:bg-neutral-50' };
@@ -190,8 +176,14 @@ function cerrarGuia() {
   if (guia.value?.tipo === 'invitar') emit('visto');
   if (guia.value?.tipo === 'tema') logro.value = '';
   guia.value = null;
-  callar();
   setTimeout(revisarAvisos, 400);
+}
+// La × lo quita para siempre (dueño 04-11)
+function quitar() {
+  if (guia.value?.tipo === 'invitar') emit('visto');
+  guia.value = null;
+  cerrarRobot();
+  marcar('asistente_cerrar', { paso: props.paso });
 }
 // Entrada (dueño 28-10): al abrir la página RACKLOG llega caminando desde el fondo (en 3D, FlujoRobot3D) y recién ahí
 // saluda. Una sola vez, sin bucle; con "reducir movimiento" aparece directo
@@ -212,7 +204,6 @@ const logro = ref('');
 watch(() => props.indice, (nuevo, antes) => {
   estado.abierto = false;
   vista.value = { tipo: 'tema', i: 0 };
-  callar();
   vistos.clear();
   logro.value = nuevo > antes ? `¡Listo el paso ${antes + 1}, ${PASOS[antes]?.t.toLowerCase() ?? ''}!` : '';
   if (logro.value) {
@@ -227,7 +218,6 @@ watch(() => props.indice, (nuevo, antes) => {
 watch(() => estado.fase, (f, antes) => {
   if (props.paso !== 'bodega' || !f || (!antes && f === 'racks')) return;
   vista.value = { tipo: 'tema', i: 0 };
-  callar();
   if (antes) logro.value = '';
   guia.value = temas.value.length ? { tipo: 'tema', i: 0 } : null;
 });
@@ -266,65 +256,7 @@ watch(() => estado.explicar?.t, () => {
 watch(() => p.enviado, (v) => { if (v) { estado.abierto = false; guia.value = { tipo: 'fin', i: 0, tema: FIN }; } });
 watch(() => props.invitar, (v) => { if (v && !guia.value && !estado.abierto) guia.value = { tipo: 'invitar', i: 0 }; });
 
-// ─── Voz: parte apagada; el parlante la enciende y lee el mensaje que está a la vista ───
 const CLAVE_SALUDO = 'racklog_asistente_saludo';
-const CLAVE_VOZ = 'racklog_asistente_voz';
-const voz = ref(false);
-const ORDEN_VOCES = ['es-cl', 'es-419', 'es-us', 'es-mx', 'es-ar', 'es-co', 'es-es'];
-// RACKLOG es un niño (dueño 28-10): voces masculinas en español de Edge/Windows, macOS/iOS y Chrome. El navegador
-// no dice el género de la voz, así que se reconoce por el nombre
-const HOMBRES = /lorenzo|jorge|tom[aá]s|gonzalo|[aá]lvaro|pablo|ra[uú]l|diego|carlos|juan|andr[eé]s|alonso|gerardo|emilio|arnau|mateo|federico|sergio|rodrigo|enrique|male|hombre/i;
-function vozEspañol(): { voz: SpeechSynthesisVoice | null; hombre: boolean } {
-  const voces = window.speechSynthesis.getVoices().filter((v) => /^es\b/i.test(v.lang.replace('_', '-')));
-  const rango = (v: SpeechSynthesisVoice) => {
-    const i = ORDEN_VOCES.indexOf(v.lang.replace('_', '-').toLowerCase());
-    // Primero las voces neuronales (Microsoft "Online (Natural)" en Edge, Google en Chrome): las locales de Windows
-    // (Pablo, Raúl…) suenan a robot. Entre las naturales, hombre primero
-    return (/online|natural|google|premium|enhanced|mejorada/i.test(v.name) ? 0 : 100) + (HOMBRES.test(v.name) ? 0 : 20) + (i < 0 ? ORDEN_VOCES.length : i);
-  };
-  const voz = voces.sort((a, b) => rango(a) - rango(b))[0] ?? null;
-  return { voz, hombre: !!voz && HOMBRES.test(voz.name) };
-}
-const dicho = computed(() => {
-  const m = estado.abierto ? actual.value : mensaje.value;
-  if (!m) return '';
-  // Lo hablado va con exclamaciones: la voz del navegador las entona y suena alegre, no leída
-  if (m === SALUDO) return '¡Hola! ¡Soy Racklog! Y estoy aquí... para ayudarte a diseñar tu bodega.';
-  const t = m.titulo.trim();
-  const titulo = t && (estado.abierto || guia.value?.tipo !== 'invitar') ? `${/[?!]$/.test(t) ? t : `¡${t}!`} ` : '';
-  // "RACKLOG" en mayúsculas lo deletrean algunas voces
-  return (titulo + m.texto).replace(/RACKLOG/g, 'Racklog');
-});
-// Mientras suena la voz, RACKLOG mueve la boca
-const hablando = ref(false);
-function hablar(texto: string) {
-  if (!texto || !('speechSynthesis' in window)) return;
-  const s = window.speechSynthesis;
-  s.cancel();
-  const { voz: v, hombre } = vozEspañol();
-  // Frase por frase: pausas naturales entre una y otra, y las voces de Google no se cortan en los textos largos
-  const frases = texto.match(/[^.!?…]+[.!?…]+|[^.!?…]+$/g) ?? [texto];
-  frases.forEach((frase, n) => {
-    const u = new SpeechSynthesisUtterance(frase.trim());
-    u.onstart = () => { hablando.value = true; };
-    if (n === frases.length - 1) u.onend = u.onerror = () => { hablando.value = false; };
-    if (v) u.voice = v;
-    u.lang = v?.lang ?? 'es-CL';
-    // Voz de personaje (dueño 28-10): alegre y juvenil, pero sin forzar el tono, que es lo que la vuelve robótica
-    u.rate = 1.0;
-    u.pitch = hombre ? 1.3 : 1.15;
-    s.speak(u);
-  });
-}
-function callar() { hablando.value = false; if (import.meta.client && 'speechSynthesis' in window) window.speechSynthesis.cancel(); }
-function alternarVoz() {
-  voz.value = !voz.value;
-  guardar(CLAVE_VOZ, voz.value ? '1' : '');
-  if (voz.value) hablar(dicho.value);
-  else callar();
-  marcar('asistente_voz', { paso: props.paso, voz: voz.value });
-}
-watch(dicho, (t) => { if (voz.value) hablar(t); else callar(); });
 
 function guardar(clave: string, valor: string) {
   try { if (valor) sessionStorage.setItem(clave, valor); else sessionStorage.removeItem(clave); } catch { /* sin almacenamiento */ }
@@ -359,9 +291,7 @@ let t: ReturnType<typeof setTimeout> | null = null;
 onMounted(() => {
   anclarLuego();
   window.addEventListener('resize', anclarLuego);
-  // Precarga la lista de voces (Chrome la entrega tarde)
-  if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
-  voz.value = !!leer(CLAVE_VOZ);
+  if (cargarCerrado()) return;
   // Parte a caminar cuando ya sabe dónde pararse (al lado del título) y el aviso de cookies ya se respondió (en el
   // celular ocupan la misma esquina)
   const partir = () => {
@@ -374,7 +304,7 @@ onMounted(() => {
   if (analytics.value !== 'unset') partir();
   else { const parar = watch(analytics, (v) => { if (v !== 'unset') { parar(); partir(); } }); }
 });
-onBeforeUnmount(() => { for (const x of [t, tAncla, tAvisos, tFesteja]) if (x) clearTimeout(x); window.removeEventListener('resize', anclarLuego); callar(); });
+onBeforeUnmount(() => { for (const x of [t, tAncla, tAvisos, tFesteja]) if (x) clearTimeout(x); window.removeEventListener('resize', anclarLuego); });
 function marcar(event: string, datos: Record<string, unknown>) {
   const w = window as unknown as { dataLayer?: unknown[] };
   (w.dataLayer ??= []).push({ event, event_category: 'Planifica tu bodega', ...datos });

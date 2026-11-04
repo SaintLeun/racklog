@@ -4,7 +4,7 @@
        lib/flujo/asistente.js (INICIO). Bajo el aviso de cookies (z-60). Para no tapar los botones del hero: en
        computador va abajo a la derecha (junto al WhatsApp, sobre la imagen); en celular saluda chico y explica
        cuando el cliente baja o lo toca, con el globo sobre el botón de WhatsApp -->
-  <div v-if="entrada !== 'espera'" class="pointer-events-none fixed left-3 z-[55] flex items-end gap-1 sm:bottom-5 sm:left-5 lg:left-auto lg:right-24 lg:flex-row-reverse" :class="arriba ? 'bottom-20' : 'bottom-3'">
+  <div v-if="entrada !== 'espera' && !cerrado" class="pointer-events-none fixed left-3 z-[55] flex items-end gap-1 sm:bottom-5 sm:left-5 lg:left-auto lg:right-24 lg:flex-row-reverse" :class="arriba ? 'bottom-20' : 'bottom-3'">
     <button
       type="button" class="pointer-events-auto relative -mb-1 flex-shrink-0 rounded-2xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-500"
       :aria-label="i === null ? 'RACKLOG: ¿cómo funciona?' : 'Cerrar a RACKLOG'" :aria-expanded="i !== null" @click="i === null ? abrir() : cerrar()"
@@ -22,7 +22,7 @@
             <p class="font-semibold text-neutral-900">{{ tema.titulo }}</p>
             <p class="mt-0.5 leading-relaxed text-neutral-800">{{ tema.texto }}</p>
           </div>
-          <button type="button" class="-mr-1.5 -mt-1 h-7 w-7 flex-shrink-0 rounded text-neutral-400 hover:bg-neutral-100" aria-label="Cerrar" @click="cerrar">×</button>
+          <button type="button" class="-mr-1.5 -mt-1 h-7 w-7 flex-shrink-0 rounded text-neutral-400 hover:bg-neutral-100" aria-label="Cerrar a RACKLOG" @click="quitar">×</button>
         </div>
         <div class="mt-3 flex items-center justify-end gap-3">
           <button v-if="i! + 1 < INICIO.length" type="button" class="font-medium text-neutral-600 underline underline-offset-2" @click="i = i! + 1">{{ i === 0 ? '¿Cómo funciona?' : 'Siguiente' }}</button>
@@ -36,10 +36,12 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import { INICIO } from '~/lib/flujo/asistente.js';
+import { useAsistente } from '~/composables/useAsistente';
 
 // arriba: en el celular sube para no tapar la barra de cotizar
 defineProps<{ destino: string; arriba?: boolean }>();
 const { analytics } = useConsent();
+const { cerrado, cargarCerrado, cerrarRobot } = useAsistente();
 // Tema a la vista (null: chico en la esquina)
 const i = ref<number | null>(null);
 const tema = computed(() => (i.value === null ? null : INICIO[i.value]));
@@ -64,9 +66,12 @@ function alBajar() { if (!bajó()) return; dejarDeEsperar(); i.value = 0; }
 function dejarDeEsperar() { pendiente.value = false; window.removeEventListener('scroll', alBajar); }
 function abrir() { dejarDeEsperar(); i.value = 0; marcar('asistente_abrir', { paso: 'inicio' }); }
 function cerrar() { i.value = null; }
+// La × lo quita para siempre (dueño 04-11); tocar al robot solo lo achica
+function quitar() { dejarDeEsperar(); i.value = null; cerrarRobot(); marcar('asistente_cerrar', { paso: 'inicio' }); }
 
 let t: ReturnType<typeof setTimeout> | null = null;
 onMounted(() => {
+  if (cargarCerrado()) return;
   // La primera vez llega caminando cuando la portada ya cargó; después aparece chico, sin interrumpir
   if (leer(CLAVE)) { entrada.value = 'lista'; return; }
   // Espera a que el cliente responda el aviso de cookies, que va en el mismo lugar

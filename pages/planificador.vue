@@ -694,6 +694,8 @@ import {
 } from '~/lib/rack3d/planificador.js';
 import { capacidad } from '~/lib/rack3d/medidas.js';
 import { enlacePlanificador, planificadorDesdeTexto } from '~/lib/rack3d/enlacePlanificador.js';
+import { partesEnlace, limpiarUrl } from '~/lib/flujo/enlace.js';
+import { consulta, fragmento } from '~/lib/flujo/consulta.js';
 import { origenPublico } from '~/lib/envioLead.js';
 import { kpisPorSistema, derivados } from '~/lib/rack3d/kpis.js';
 import { ubicados, resolverMezcla, acomodar } from '~/lib/rack3d/mezcla.js';
@@ -1466,12 +1468,13 @@ function cargarDiseno(g: any) {
 const desdeLink = ref(false);
 
 onMounted(async () => {
-  const d = route.query.d;
-  const recibido = typeof d === 'string' ? await planificadorDesdeTexto(d) : null;
+  // La consulta y el fragmento (#k = clave) como llegaron: al hidratar el sitio compilado, el router los borra un instante
+  const { d, k } = partesEnlace(consulta() + fragmento());
+  const recibido = d ? await planificadorDesdeTexto(d, k) : null;
   if (recibido) {
     try { cargarDiseno(recibido); desdeLink.value = true; } catch { /* link dañado: se sigue con lo guardado */ }
-    router.replace({ query: {} });   // al recargar no se vuelve a pisar lo que cambie
   }
+  if (d) limpiarUrl();   // al recargar no se vuelve a pisar lo que cambie; la clave no queda en el historial
   if (!desdeLink.value) {
     try { cargarDiseno(JSON.parse(localStorage.getItem(GUARDADO) || 'null')); } catch { /* sin almacenamiento: se empieza vacio */ }
   }

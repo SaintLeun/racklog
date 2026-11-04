@@ -85,11 +85,11 @@
 
 <script lang="ts" setup>
 import { ref, reactive, computed, watch, onMounted, onBeforeUnmount } from 'vue';
-import { diseñoDesdeUrl, aplicarDiseño, limpiarUrl, pideRecorrido } from '~/lib/flujo/enlace.js';
+import { diseñoDesdeUrl, aplicarDiseño, limpiarUrl, pideRecorrido, partesEnlace } from '~/lib/flujo/enlace.js';
 import { leerVariante } from '~/composables/useVariante';
 import { MENSAJE_INICIO, estadosDiseño, pideRegistroAntes } from '~/lib/flujo/conversion.js';
 import { racksAlDia, cantidadesAlDia, conPilares } from '~/lib/flujo/calculos.js';
-import { consulta } from '~/lib/flujo/consulta.js';
+import { consulta, fragmento } from '~/lib/flujo/consulta.js';
 import { esSitioPrueba } from '~/lib/envioLead.js';
 import { useProyecto, PASOS, type Paso } from '~/stores/proyecto';
 import {
@@ -236,7 +236,9 @@ onMounted(async () => {
   // Link a un diseño (?d=...): se carga ese diseño (sin datos personales) y se limpia la URL
   try {
     const datos = await diseñoDesdeUrl();
-    if (datos?.ver) compartido.value = datos;
+    // Link con diseño que no abre (sin la clave, editado o dañado): se avisa en vez de partir en blanco
+    if (!datos && partesEnlace(consulta() + fragmento()).d) compartido.value = { ver: 1, hasta: 1, bodega: {}, racks: [], modelos: [] };
+    else if (datos?.ver) compartido.value = datos;
     else if (datos) {
       // Link del ejecutivo (llega en el lead): el diseño del cliente abierto en Revisa, listo para grabar el recorrido
       const recorrido = pideRecorrido() && datos.racks?.length;

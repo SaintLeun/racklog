@@ -206,6 +206,8 @@ $conPlan = fn($link) => validateQuoteData(['customerName' => 'P', 'customerEmail
     'products' => [['name' => 'Diseño del planificador de bodega', 'quantity' => 1, 'price' => 0, 'config' => ['Origen' => 'Planificador web']]]])[0];
 $plan = $conPlan('https://racklog.cl/planificador?d=zABC');
 check('link del planificador aceptado', $plan['linkDiseno'] === 'https://racklog.cl/planificador?d=zABC');
+check('link encriptado (clave en #k) aceptado completo', $conPlan('https://racklog.cl/planificador?d=eABC#k=XYZ')['linkDiseno'] === 'https://racklog.cl/planificador?d=eABC#k=XYZ');
+check('"continuar" acepta el link encriptado', linkDeDiseno('https://racklog.cl/planifica-tu-bodega/disena?d=eABC#k=XYZ') !== null);
 check('otra ruta descartada', $conPlan('https://racklog.cl/nosotros?d=x')['linkDiseno'] === '');
 check('planificador en otro sitio descartado', $conPlan('https://racklog.cl.evil.com/planificador?d=x')['linkDiseno'] === '');
 check('"continuar" sigue aceptando solo el flujo', linkDeDiseno('https://racklog.cl/planificador?d=x') === null);
