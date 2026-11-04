@@ -201,6 +201,17 @@ require_once __DIR__ . '/../utils/escape.php';
 require_once __DIR__ . '/../partials/template_quote.php';
 check('correo interno con el botón del recorrido', str_contains(recorridoSection($tour), 'Abrir diseño y grabar el recorrido') && recorridoSection($ajeno) === '');
 
+echo "Link del planificador 3D (04-11)\n";
+$conPlan = fn($link) => validateQuoteData(['customerName' => 'P', 'customerEmail' => 'p@example.com', 'linkDiseno' => $link,
+    'products' => [['name' => 'Diseño del planificador de bodega', 'quantity' => 1, 'price' => 0, 'config' => ['Origen' => 'Planificador web']]]])[0];
+$plan = $conPlan('https://racklog.cl/planificador?d=zABC');
+check('link del planificador aceptado', $plan['linkDiseno'] === 'https://racklog.cl/planificador?d=zABC');
+check('otra ruta descartada', $conPlan('https://racklog.cl/nosotros?d=x')['linkDiseno'] === '');
+check('planificador en otro sitio descartado', $conPlan('https://racklog.cl.evil.com/planificador?d=x')['linkDiseno'] === '');
+check('"continuar" sigue aceptando solo el flujo', linkDeDiseno('https://racklog.cl/planificador?d=x') === null);
+check('correo interno: botón "Abrir diseño en 3D"', str_contains(recorridoSection($plan), 'Abrir diseño en 3D') && !str_contains(recorridoSection($plan), 'grabar'));
+check('Kommo: link en el detalle', str_contains(formatLeadDetails($plan, 'quote'), "DISEÑO DEL CLIENTE (abre en 3D)\nhttps://racklog.cl/planificador?d=zABC"));
+
 $BEARER_TOKEN = 'PON_AQUI_EL_TOKEN_ROTADO';
 check('sin token no hace nada', procesarLeadTour($tour, 'quote', 'QT-1', $lead) === null);
 

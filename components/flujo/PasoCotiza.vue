@@ -72,7 +72,7 @@ import { capturaGuardada } from '~/lib/flujo/captura.js';
 import { enlaceDiseño, enlaceRecorrido } from '~/lib/flujo/enlace.js';
 import { validarRut } from '~/lib/tour/reglas.js';
 import { MENSAJE_INICIO, TEXTO_INGENIERIA, configConversion, estadosDiseño, payloadLead, enviarLead, ofertaRescate } from '~/lib/flujo/conversion.js';
-import { MENSAJES_PRUEBA } from '~/lib/envioLead.js';
+import { MENSAJES_PRUEBA, origenPublico } from '~/lib/envioLead.js';
 
 const emit = defineEmits<{ atras: [] }>();
 const p = useProyecto();
@@ -145,7 +145,7 @@ async function enviar({ visita }: { visita: boolean }) {
     const rut = validarRut(l.rut);
     p.flags = [...new Set([...p.flags.filter((f) => f !== 'persona_natural_con_giro'), ...(rut?.ok && rut.personaNatural ? ['persona_natural_con_giro'] : [])])];
     const item = producto(visita);
-    const linkDiseno = await enlaceRecorrido(p.$state).catch(() => '');
+    const linkDiseno = await enlaceRecorrido(p.$state, origenPublico()).catch(() => '');
     const r = await enviarLead(payloadLead({ nombre: l.nombre, correo: l.correo, empresa: l.empresa, rut: l.rut, telefono: l.telefono }, item, { linkDiseno }), archivos);
     if (!r.ok) {
       errorEnvio.value = ERRORES[r.error ?? ''] ?? 'No pudimos enviar tu diseño. Inténtalo de nuevo o escríbenos por WhatsApp al +56 9 3240 3819.';

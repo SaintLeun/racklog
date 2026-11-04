@@ -243,6 +243,10 @@ function formatLeadDetails(array $data, string $tipo, ?int $recibido = null): st
             $output .= $actualData['customerComments'] . "\n\n";
         }
         
+        if (!empty($actualData['linkDiseno'])) {
+            $output .= "DISEÑO DEL CLIENTE (abre en 3D)\n" . $actualData['linkDiseno'] . "\n\n";
+        }
+
         if (!empty($actualData['adjuntos'])) {
             $output .= "ARCHIVOS ADJUNTOS (en el correo a contacto@)\n" . implode("\n", $actualData['adjuntos']) . "\n\n";
         }

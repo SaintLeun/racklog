@@ -461,6 +461,11 @@ const props = defineProps({
     default: false
   },
   // Campos que se calculan al enviar con lo escrito en el formulario (p. ej. el puntaje del lead)
+  // Link que abre el diseño del cliente (planificador 3D): llega en el lead al ejecutivo y a la intranet
+  linkDiseno: {
+    type: Function as PropType<() => Promise<string>>,
+    default: null
+  },
   configExtra: {
     type: Function as PropType<(datos: { plazo: string; telefono: string }) => Record<string, string | number>>,
     default: null
@@ -852,6 +857,7 @@ async function submitForm() {
   try {
     const rut = formatRut(form.rut);
     const leadType = props.quoteItem ? 'quote' : 'contact';
+    const linkDiseno = props.quoteItem && props.linkDiseno ? await props.linkDiseno().catch(() => '') : '';
     // Con producto se usa el formato de cotizacion de la API: el vendedor recibe la configuracion
     const payloadData = props.quoteItem
       ? {
@@ -861,6 +867,7 @@ async function submitForm() {
           customerCompany: form.company,
           customerRut: rut,
           customerComments: form.message + rejectedNote(),
+          ...(linkDiseno ? { linkDiseno } : {}),
           products: [{
             name: props.quoteItem.name,
             quantity: 1,

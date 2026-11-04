@@ -1,5 +1,9 @@
 <template>
   <div>
+    <p v-if="desdeLink" class="bg-amber-400 px-4 py-1.5 text-center text-sm font-semibold text-amber-950" role="status">
+      Estás viendo un diseño abierto desde un link. Si lo cambias, se guarda en este navegador.
+      <button type="button" class="ml-2 underline" @click="desdeLink = false">Cerrar</button>
+    </p>
     <section class="page-hero">
       <div class="container-page">
         <div class="max-w-3xl">
@@ -675,6 +679,7 @@
       :initial-files="archivosPlano"
       require-project
       :config-extra="configAlEnviar"
+      :link-diseno="linkAlEnviar"
       @sent="alEnviar"
       @close="formularioAbierto = false"
     />
@@ -688,6 +693,8 @@ import {
   altoRack, indicadores, rectangulo, medidasRack, describir, formatoM, ELEMENTOS, grillaPilares, grillaPilaresXY, rectElemento,
 } from '~/lib/rack3d/planificador.js';
 import { capacidad } from '~/lib/rack3d/medidas.js';
+import { enlacePlanificador, planificadorDesdeTexto } from '~/lib/rack3d/enlacePlanificador.js';
+import { origenPublico } from '~/lib/envioLead.js';
 import { kpisPorSistema, derivados } from '~/lib/rack3d/kpis.js';
 import { ubicados, resolverMezcla, acomodar } from '~/lib/rack3d/mezcla.js';
 import { GRUAS, DISTANCIAS, esProvisorio } from '~/lib/rack3d/parametrosTecnicos.js';
@@ -764,6 +771,9 @@ function llenar(tipo: 'RS' | 'DI') {
   vista.value = '2d';
   marcar('planner_autofill', { rack_type: tipo, racks: racks.value.length, posiciones: total.value.pallets });
 }
+
+// Al enviar: link que abre este diseño (bodega y racks) para el ejecutivo y la intranet
+const linkAlEnviar = () => enlacePlanificador({ bodega: JSON.parse(JSON.stringify(bodega)), racks: JSON.parse(JSON.stringify(racks.value)) }, origenPublico());
 
 // Al enviar: puntaje del lead (con la fecha y el telefono del formulario) y materiales para el vendedor
 function configAlEnviar({ plazo, telefono }: { plazo: string; telefono: string }) {
@@ -1431,27 +1441,40 @@ function marcar(event: string, datos: Record<string, unknown>) {
 }
 
 // ─── El diseño se guarda en este navegador (si se recarga la pagina no se pierde) ───
-onMounted(() => {
-  try {
-    const g = JSON.parse(localStorage.getItem(GUARDADO) || 'null');
-    if (g?.bodega && Array.isArray(g.racks)) {
-      bodegaEntrada.ancho = g.bodega.ancho;
-      bodegaEntrada.largo = g.bodega.largo;
-      aplicarBodega();
-      bodega.altura = Number(g.bodega.altura) >= 2 ? Number(g.bodega.altura) : null;
-      bodega.grua = g.bodega.grua in GRUAS ? g.bodega.grua : 'contrapeso';
-      bodega.pesoPallet = Number(g.bodega.pesoPallet) > 0 ? Number(g.bodega.pesoPallet) : null;
-      bodega.pesoBandeja = Number(g.bodega.pesoBandeja) > 0 ? Number(g.bodega.pesoBandeja) : null;
-      bodega.pallets = Array.isArray(g.bodega.pallets) ? g.bodega.pallets.filter((t: any) => t && t.id && Number(t.alto) > 0) : [];
-      bodega.elementos = Array.isArray(g.bodega.elementos)
-        ? g.bodega.elementos.filter((e: Elemento) => e && e.clase in ELEMENTOS && [e.x, e.y, e.ancho, e.alto].every(Number.isFinite))
-        : [];
-      alturaEntrada.value = bodega.altura;
-      const forma = Array.isArray(g.bodega.forma) && g.bodega.forma.length >= 3 ? g.bodega.forma : null;
-      bodega.forma = forma && forma.every((p: Punto) => Number.isFinite(p?.x) && Number.isFinite(p?.y)) ? forma : null;
-      racks.value = g.racks.filter((r: RackPlano) => r && r.tipo in TIPOS).map((r: RackPlano) => dentroDeBodega(normalizar(r), bodega) as RackPlano);
-    }
-  } catch { /* sin almacenamiento: se empieza vacio */ }
+// Bodega y racks guardados (localStorage) o recibidos por link (?d=...)
+function cargarDiseno(g: any) {
+  if (g?.bodega && Array.isArray(g.racks)) {
+    bodegaEntrada.ancho = g.bodega.ancho;
+    bodegaEntrada.largo = g.bodega.largo;
+    aplicarBodega();
+    bodega.altura = Number(g.bodega.altura) >= 2 ? Number(g.bodega.altura) : null;
+    bodega.grua = g.bodega.grua in GRUAS ? g.bodega.grua : 'contrapeso';
+    bodega.pesoPallet = Number(g.bodega.pesoPallet) > 0 ? Number(g.bodega.pesoPallet) : null;
+    bodega.pesoBandeja = Number(g.bodega.pesoBandeja) > 0 ? Number(g.bodega.pesoBandeja) : null;
+    bodega.pallets = Array.isArray(g.bodega.pallets) ? g.bodega.pallets.filter((t: any) => t && t.id && Number(t.alto) > 0) : [];
+    bodega.elementos = Array.isArray(g.bodega.elementos)
+      ? g.bodega.elementos.filter((e: Elemento) => e && e.clase in ELEMENTOS && [e.x, e.y, e.ancho, e.alto].every(Number.isFinite))
+      : [];
+    alturaEntrada.value = bodega.altura;
+    const forma = Array.isArray(g.bodega.forma) && g.bodega.forma.length >= 3 ? g.bodega.forma : null;
+    bodega.forma = forma && forma.every((p: Punto) => Number.isFinite(p?.x) && Number.isFinite(p?.y)) ? forma : null;
+    racks.value = g.racks.filter((r: RackPlano) => r && r.tipo in TIPOS).map((r: RackPlano) => dentroDeBodega(normalizar(r), bodega) as RackPlano);
+  }
+}
+
+// Diseño abierto desde un link (el ejecutivo abre el del cliente): reemplaza el guardado en este navegador
+const desdeLink = ref(false);
+
+onMounted(async () => {
+  const d = route.query.d;
+  const recibido = typeof d === 'string' ? await planificadorDesdeTexto(d) : null;
+  if (recibido) {
+    try { cargarDiseno(recibido); desdeLink.value = true; } catch { /* link dañado: se sigue con lo guardado */ }
+    router.replace({ query: {} });   // al recargar no se vuelve a pisar lo que cambie
+  }
+  if (!desdeLink.value) {
+    try { cargarDiseno(JSON.parse(localStorage.getItem(GUARDADO) || 'null')); } catch { /* sin almacenamiento: se empieza vacio */ }
+  }
   // Desde la ficha de un producto (?rack=RS): ese rack ya puesto en la bodega
   const pedido = route.query.rack;
   if (typeof pedido === 'string' && pedido in TIPOS) {
@@ -1465,9 +1488,10 @@ onMounted(() => {
   try {
     const p = localStorage.getItem(GUARDADO_PERFIL);
     if (p) perfil.value = p === 'sin_perfil' ? null : p;
-    else mostrarPerfil.value = true;
-  } catch { mostrarPerfil.value = true; }
-  marcar('planner_open', { desde_producto: typeof pedido === 'string' ? pedido : '' });
+    // Quien abre un link (el ejecutivo) no es el cliente: sin la pregunta del rol
+    else mostrarPerfil.value = !desdeLink.value;
+  } catch { mostrarPerfil.value = !desdeLink.value; }
+  marcar('planner_open', { desde_producto: typeof pedido === 'string' ? pedido : '', desde_link: desdeLink.value });
 });
 
 watch([racks, () => ({ ...bodega })], () => {

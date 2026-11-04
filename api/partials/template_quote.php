@@ -244,6 +244,15 @@ function recorridoSection(array $data): string {
     if ($link === '') {
         return '';
     }
+    // Planificador 3D: no tiene video, solo abrir el diseño
+    if (rtrim((string) parse_url($link, PHP_URL_PATH), '/') === '/planificador') {
+        return "
+                <div style='background-color:#fff7ed; padding:14px; border-left:4px solid #ea580c; margin:20px 0;'>
+                    <p style='margin:0 0 8px; font-weight:600;'>Diseño del cliente en el planificador 3D</p>
+                    <p style='margin:0 0 10px;'>Ábrelo para ver la bodega y los racks tal como los dejó el cliente, en plano y en 3D.</p>
+                    <a href='" . esc($link) . "' style='display:inline-block; background-color:#ea580c; color:#ffffff; padding:10px 16px; border-radius:6px; text-decoration:none; font-weight:600;'>Abrir diseño en 3D</a>
+                </div>";
+    }
     return "
                 <div style='background-color:#fff7ed; padding:14px; border-left:4px solid #ea580c; margin:20px 0;'>
                     <p style='margin:0 0 8px; font-weight:600;'>Video recorrido para el cliente</p>

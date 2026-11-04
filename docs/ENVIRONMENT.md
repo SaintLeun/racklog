@@ -19,6 +19,7 @@
 ## Supabase de la intranet (servidor)
 - Cada formulario también se guarda en la tabla `leads_web` del proyecto Supabase `cierre-mes-intranet`.
 - Configuración solo en `api/config/supabase.php` (no está en git; ver `api/config/supabase.example.php`): URL, clave publicable (anon) y el token que genera [docs/supabase_leads_web.sql](supabase_leads_web.sql). Nunca la clave `service_role`.
+- Link al diseño 3D del cliente: columna `link_diseno`, que llena [docs/supabase_link_diseno.sql](supabase_link_diseno.sql) (ejecutar una vez, coordinado con la intranet). Antes de eso el link está en `datos->>'linkDiseno'`.
 - Rotar el token: volver a ejecutar el último bloque del SQL y actualizar `supabase.php`.
 - Sin `supabase.php` la API sigue enviando correo y creando el lead en Kommo; el log marca `intranet_error: not_configured`.
 

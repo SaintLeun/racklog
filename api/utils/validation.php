@@ -53,9 +53,14 @@ function validRut(string $rut): bool {
 // localhost solo en desarrollo (servidor local o pruebas por consola)
 const CONTINUAR_HOSTS = ['racklog.cl', 'www.racklog.cl', 'localhost'];
 const CONTINUAR_RUTA = '/planifica-tu-bodega/disena';
+// Planificador 3D (/planificador?d=...): el diseño del cliente para el ejecutivo (solo en el lead, no en "continuar")
+const PLANIFICADOR_RUTA = '/planificador';
 
-/** El link es del flujo en un host permitido; devuelve el link limpio o null */
-function linkDeDiseno($link): ?string {
+/**
+ * El link es del flujo (o, con $rutas, de otra pagina permitida) en un host permitido; devuelve el link limpio o null
+ * @param string[] $rutas rutas aceptadas
+ */
+function linkDeDiseno($link, array $rutas = [CONTINUAR_RUTA]): ?string {
     if (!is_string($link) || strlen($link) > 8000) {
         return null;
     }
@@ -70,7 +75,7 @@ function linkDeDiseno($link): ?string {
     if (($u['scheme'] === 'http' || isset($u['port'])) && !$local) {
         return null;
     }
-    if (isset($u['user']) || isset($u['pass']) || rtrim($u['path'] ?? '', '/') !== CONTINUAR_RUTA) {
+    if (isset($u['user']) || isset($u['pass']) || !in_array(rtrim($u['path'] ?? '', '/'), $rutas, true)) {
         return null;
     }
     return $link;
@@ -272,7 +277,7 @@ function validateQuoteData($data): array {
         'customerRut' => $rut,
         'customerComments' => cleanString($data['customerComments'] ?? null, 5000) ?? '',
         // Diseño del cliente abierto en el recorrido: el ejecutivo graba el video y se lo envía (dueño 27-10)
-        'linkDiseno' => linkDeDiseno($data['linkDiseno'] ?? null) ?? '',
+        'linkDiseno' => linkDeDiseno($data['linkDiseno'] ?? null, [CONTINUAR_RUTA, PLANIFICADOR_RUTA]) ?? '',
         'products' => $products,
         'cartTotal' => $cartTotal === false ? 0 : max(0, $cartTotal),
     ], null];
