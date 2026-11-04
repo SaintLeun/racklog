@@ -1,6 +1,6 @@
 <template>
   <div class="fl min-h-screen bg-neutral-50 pb-32">
-    <p v-if="p.prueba" class="bg-amber-400 px-4 py-1.5 text-center text-sm font-semibold text-amber-950" role="status">Modo prueba: el lead llega a Kommo con la etiqueta PRUEBA, sin vendedor ni tarea de 24 h.</p>
+    <p v-if="p.prueba" class="bg-amber-400 px-4 py-1.5 text-center text-sm font-semibold text-amber-950" role="status">Modo prueba: usa un correo +prueba@racklog.cl. El lead llega a Kommo y a la intranet marcado PRUEBA, sin vendedor ni tarea de 24 h.</p>
     <!-- Fijo arriba en los pasos de formulario; en el layout y los accesorios (plano grande) se suelta para no
          tapar el plano al hacer scroll (dueño 27-10) -->
     <div :class="['z-30 border-b border-neutral-200 bg-white/95 backdrop-blur', PASOS_CON_PLANO.includes(p.paso) ? 'relative' : 'sticky top-16']" :data-fijo-arriba="PASOS_CON_PLANO.includes(p.paso) ? undefined : ''">
@@ -90,6 +90,7 @@ import { leerVariante } from '~/composables/useVariante';
 import { MENSAJE_INICIO, estadosDiseño, pideRegistroAntes } from '~/lib/flujo/conversion.js';
 import { racksAlDia, cantidadesAlDia, conPilares } from '~/lib/flujo/calculos.js';
 import { consulta } from '~/lib/flujo/consulta.js';
+import { esSitioPrueba } from '~/lib/envioLead.js';
 import { useProyecto, PASOS, type Paso } from '~/stores/proyecto';
 import {
   FlujoPasoOperacion, LazyFlujoPasoPallets, LazyFlujoPasoRack, LazyFlujoPasoAccesorios, LazyFlujoPasoBodega, LazyFlujoPasoRevisa, LazyFlujoPasoCotiza,
@@ -229,7 +230,8 @@ onMounted(async () => {
   precargar3D();
   p.cargar();
   // Modo prueba: solo mientras la URL lo pida; el correo de prueba hace que Kommo lo marque PRUEBA
-  p.prueba = new URLSearchParams(consulta()).get('prueba') === '1';
+  // En la versión de prueba (fuera de racklog.cl) todo envío es de prueba
+  p.prueba = new URLSearchParams(consulta()).get('prueba') === '1' || esSitioPrueba();
   if (p.prueba && !p.lead.correo) p.lead.correo = 'comercial+prueba@racklog.cl';
   // Link a un diseño (?d=...): se carga ese diseño (sin datos personales) y se limpia la URL
   try {

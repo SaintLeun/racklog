@@ -72,6 +72,7 @@ import { capturaGuardada } from '~/lib/flujo/captura.js';
 import { enlaceDiseño, enlaceRecorrido } from '~/lib/flujo/enlace.js';
 import { validarRut } from '~/lib/tour/reglas.js';
 import { MENSAJE_INICIO, TEXTO_INGENIERIA, configConversion, estadosDiseño, payloadLead, enviarLead, ofertaRescate } from '~/lib/flujo/conversion.js';
+import { MENSAJES_PRUEBA } from '~/lib/envioLead.js';
 
 const emit = defineEmits<{ atras: [] }>();
 const p = useProyecto();
@@ -129,6 +130,7 @@ const ERRORES: Record<string, string> = {
   rate_limit: 'Recibimos muchas solicitudes desde tu conexión. Espera un minuto e inténtalo de nuevo.',
   too_large: 'El plano es muy pesado. Inténtalo de nuevo o escríbenos por WhatsApp.',
   rut: 'Revisa el RUT de tu empresa: sin un RUT válido no podemos enviarte la cotización ni tu diseño.',
+  ...MENSAJES_PRUEBA,
 };
 async function enviar({ visita }: { visita: boolean }) {
   if (preparando.value) return;

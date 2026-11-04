@@ -2,7 +2,7 @@
   <!-- Vía exprés (prompt de conversión §B): "lo diseñamos nosotros". 4 preguntas, foto o plano opcional y
        registro al final → cotización formal en máximo 24 h. Mismo circuito de Kommo, etiqueta via-expres -->
   <div class="fl min-h-screen bg-neutral-50 pb-24">
-    <p v-if="prueba" class="bg-amber-400 px-4 py-1.5 text-center text-sm font-semibold text-amber-950" role="status">Modo prueba: el lead llega a Kommo con la etiqueta PRUEBA, sin vendedor ni tarea de 24 h.</p>
+    <p v-if="prueba" class="bg-amber-400 px-4 py-1.5 text-center text-sm font-semibold text-amber-950" role="status">Modo prueba: usa un correo +prueba@racklog.cl. El lead llega a Kommo y a la intranet marcado PRUEBA, sin vendedor ni tarea de 24 h.</p>
     <div class="sticky top-16 z-30 border-b border-neutral-200 bg-white/95 backdrop-blur">
       <div class="container-page flex max-w-2xl flex-wrap items-center gap-x-4 gap-y-2 py-3">
         <p class="text-sm font-semibold text-neutral-900">{{ paso < 4 ? `Pregunta ${paso + 1} de 4` : paso === 4 ? 'Foto o plano (opcional)' : enviado ? 'Listo' : 'Tus datos' }}</p>
@@ -176,6 +176,7 @@ import {
   MENSAJE_INICIO, PORQUE, PIERDE, ESTIMADO, PESOS_TIPICOS, ALTURAS_TIPICAS, TOLERANCIA_MEDIDAS, TEXTO_INGENIERIA,
   estadosExpres, leadExpres, payloadLead, enviarLead, ofertaRescate,
 } from '~/lib/flujo/conversion.js';
+import { MENSAJES_PRUEBA, esSitioPrueba } from '~/lib/envioLead.js';
 
 definePageMeta({ layout: 'landing' });
 usePageSeo({
@@ -310,7 +311,8 @@ async function enviar({ visita }: { visita: boolean }) {
       error.value = r.error === 'rate_limit' ? 'Recibimos muchas solicitudes desde tu conexión. Espera un minuto e inténtalo de nuevo.'
         : r.error === 'too_large' ? 'Los archivos pesan mucho. Quita uno e inténtalo de nuevo.'
           : r.error === 'rut' ? 'Revisa el RUT de tu empresa: sin un RUT válido no podemos enviarte la cotización.'
-          : 'No pudimos enviar tus datos. Inténtalo de nuevo o escríbenos por WhatsApp al +56 9 3240 3819.';
+          : (MENSAJES_PRUEBA as Record<string, string>)[r.error ?? '']
+          ?? 'No pudimos enviar tus datos. Inténtalo de nuevo o escríbenos por WhatsApp al +56 9 3240 3819.';
       marcar('quote_error', { via: 'expres', error: r.error });
       return;
     }
@@ -334,7 +336,8 @@ const CLAVE = 'racklog-expres-v1';
 watch([e, cliente, paso], () => { try { sessionStorage.setItem(CLAVE, JSON.stringify({ e, cliente, paso: paso.value })); } catch { /* lleno o bloqueado */ } }, { deep: true });
 onMounted(() => {
   const q = new URLSearchParams(consulta());
-  prueba.value = q.get('prueba') === '1';
+  // En la versión de prueba (fuera de racklog.cl) todo envío es de prueba
+  prueba.value = q.get('prueba') === '1' || esSitioPrueba();
   ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'fbclid', 'li_fat_id'].forEach((k) => { const v = q.get(k); if (v) utm.value[k] = v.slice(0, 120); });
   try {
     const g = JSON.parse(sessionStorage.getItem(CLAVE) || 'null');

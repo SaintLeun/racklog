@@ -428,6 +428,7 @@
 <script lang="ts" setup>
 import { ref, reactive, watch, computed, onBeforeUnmount, type PropType } from 'vue';
 import type { QuoteItem } from '~/components/QuoteModal/ProductConfig';
+import { urlLead, errorEnvio, MENSAJES_PRUEBA } from '~/lib/envioLead.js';
 
 const props = defineProps({
   isVisible: Boolean,
@@ -895,11 +896,12 @@ async function submitForm() {
     } else {
       request = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload };
     }
-    const response = await fetch('https://api.racklog.cl/api/send-email', request);
+    const response = await fetch(urlLead(), request).catch(() => null);
+    if (!response) throw new Error(errorEnvio(0, null) ?? 'red');
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.status !== 'success') {
-      throw new Error(response.status === 429 ? 'rate_limit' : response.status === 413 ? 'too_large' : (data.error || 'api_error'));
+      throw new Error(errorEnvio(response.status, data) ?? (response.status === 429 ? 'rate_limit' : response.status === 413 ? 'too_large' : (data.error || 'api_error')));
     }
 
     formStatus.success = true;
@@ -950,7 +952,8 @@ async function submitForm() {
       ? 'Has enviado varios mensajes seguidos. Espera unos minutos e inténtalo de nuevo.'
       : reason === 'too_large'
       ? `Los archivos adjuntos superan los ${MAX_TOTAL_MB} MB. Quita alguno o envíalos a contacto@racklog.cl.`
-      : 'Ha ocurrido un error al enviar el mensaje. Por favor, inténtalo de nuevo más tarde o escríbenos a contacto@racklog.cl.';
+      : (MENSAJES_PRUEBA as Record<string, string>)[reason]
+      ?? 'Ha ocurrido un error al enviar el mensaje. Por favor, inténtalo de nuevo más tarde o escríbenos a contacto@racklog.cl.';
   } finally {
     isSubmitting.value = false;
   }

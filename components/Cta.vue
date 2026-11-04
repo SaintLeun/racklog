@@ -148,7 +148,8 @@
           </span>
           <div class="flex-1 text-sm">
             <p class="font-semibold text-neutral-900">Error al enviar</p>
-            <p class="mt-0.5 text-neutral-600">Por favor intenta nuevamente o contáctanos directamente al <b class="text-neutral-900">(+56) 9 3240 3819</b></p>
+            <p v-if="mensajePrueba" class="mt-0.5 text-neutral-600">{{ mensajePrueba }}</p>
+            <p v-else class="mt-0.5 text-neutral-600">Por favor intenta nuevamente o contáctanos directamente al <b class="text-neutral-900">(+56) 9 3240 3819</b></p>
           </div>
           <button type="button" aria-label="Cerrar mensaje" @click="showErrorMessage = false" class="-m-1 inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -163,6 +164,7 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { urlLead, errorEnvio, MENSAJES_PRUEBA } from '~/lib/envioLead.js';
 
 // Form data state
 const formData = ref({
@@ -187,6 +189,8 @@ function formatRutInput() {
 const isSubmitting = ref(false);
 const showSuccessMessage = ref(false);
 const showErrorMessage = ref(false);
+// Versión de prueba (fuera de racklog.cl): por qué no se envió
+const mensajePrueba = ref('');
 
 // Function to submit the form
 async function submitForm() {
@@ -215,7 +219,8 @@ async function submitForm() {
       serviceInfo: 'Formulario principal'
     };
 
-    const response = await fetch('https://api.racklog.cl/api/send-email', {
+    mensajePrueba.value = '';
+    const response = await fetch(urlLead(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -250,9 +255,11 @@ async function submitForm() {
         showSuccessMessage.value = false;
       }, 5000);
     } else {
+      mensajePrueba.value = (MENSAJES_PRUEBA as Record<string, string>)[errorEnvio(response.status, result) ?? ''] ?? '';
       showErrorMessage.value = true;
     }
   } catch {
+    mensajePrueba.value = (MENSAJES_PRUEBA as Record<string, string>)[errorEnvio(0, null) ?? ''] ?? '';
     showErrorMessage.value = true;
   } finally {
     isSubmitting.value = false;
